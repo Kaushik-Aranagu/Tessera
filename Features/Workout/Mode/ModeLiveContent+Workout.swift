@@ -1,37 +1,7 @@
 import Foundation
 
-/// The mode on the lock screen (sheet 326), as plain data: the Dynamic Island's word and number, and the Live
-/// Activity's
-/// three lines. Pure and Codable so it can ride an ActivityKit `ContentState`; every countdown is an end date drawn
-/// with
-/// `Text(timerInterval:)`, so it runs while the app sleeps.
-///
-/// Walls: a private workout carries only "Rest", the time and "Private workout". No lift name, weight, rep or set count
-/// is ever built into the payload (the strings are never made, rather than made and hidden).
-struct ModeLiveContent: Codable, Hashable {
-    /// The Dynamic Island's word, in the room's face ("Bench"); "Rest" for a private workout.
-    var word: String
-    /// Live Activity top line, in the room colour: "Rest, then bench".
-    var top: String
-    /// Middle line, left: the big thing when it is not a countdown ("185 lb × 5"); empty during a rest.
-    var big: String
-    /// Middle line, right: the next thing ("185 lb × 5, each side 45 + 25").
-    var next: String
-    /// Bottom line: one quiet fact ("Done about 7:22").
-    var quiet: String
-    /// The countdown's end and length (Island right, middle left); nil when nothing is counting.
-    var timerEnd: Date?
-    var timerTotal: TimeInterval
-    var isPrivate: Bool
-
-    /// The countdown as a range for `Text(timerInterval:)`.
-    var timerInterval: ClosedRange<Date>? {
-        timerEnd.map { end in
-            let start = end.addingTimeInterval(-max(timerTotal, 1))
-            return start ... max(end, start)
-        }
-    }
-
+/// Builds the lock-screen payload from the workout mode's state (the data type is in Shared, drawn by the widget).
+extension ModeLiveContent {
     static func workout(_ state: WorkoutModeState, at now: Date) -> ModeLiveContent {
         if state.isPrivate {
             return privateWorkout(state, at: now)
@@ -81,5 +51,23 @@ struct ModeLiveContent: Codable, Hashable {
     /// "Bench press" reads "Bench" on the Island.
     static func shortName(_ name: String) -> String {
         name.split(separator: " ").first.map(String.init) ?? name
+    }
+}
+
+/// What the open workout mode wants the lock screen to say. The mode screen writes it on every change; the rest Live
+/// Activity controller reads it when it builds the activity's state, so there is one activity, not two.
+@MainActor
+enum ModeLiveBridge {
+    static var current: ModeLiveContent?
+
+    /// The content with its countdown moved onto the real clock (the activity counts down in real time; the app clock
+    /// may be shifted by `-demoTime`).
+    static func onRealClock(appNow: Date, realNow: Date) -> ModeLiveContent? {
+        guard var content = current else { return nil }
+        let shift = realNow.timeIntervalSince(appNow)
+        content.timerEnd = content.timerEnd.map {
+            Date(timeIntervalSinceReferenceDate: $0.addingTimeInterval(shift).timeIntervalSinceReferenceDate.rounded())
+        }
+        return content
     }
 }

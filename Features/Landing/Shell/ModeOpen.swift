@@ -59,3 +59,17 @@ private struct ModeGrowModifier: ViewModifier {
         }
     }
 }
+
+/// The keystone slot's latest global frame, kept where a cover presented from the app root can reach it (the room is
+/// a different part of the hierarchy from the cover). Written by the shell's scene keystone, read by `WorkoutCover`.
+@MainActor
+enum ModeOpenFrames {
+    static var keystone: CGRect = .zero
+}
+
+extension View {
+    /// Records this view as the keystone slot for any live mode that opens from it.
+    func recordsModeKeystoneFrame() -> some View {
+        onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { ModeOpenFrames.keystone = $0 }
+    }
+}

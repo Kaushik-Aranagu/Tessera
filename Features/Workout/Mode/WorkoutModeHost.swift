@@ -7,7 +7,7 @@ import TesseraCore
 struct WorkoutCover: View {
     @Environment(AppModel.self) private var model
     /// The keystone's slot on the Deck, so the screen grows from it (sheet 330); empty falls back to a plain open.
-    var from: CGRect = .zero
+    var from: CGRect = ModeOpenFrames.keystone
 
     static var isChalkOn: Bool {
         LaunchFlags.has("-workoutChalk") || UserDefaults.standard.bool(forKey: "workoutMode.chalk")
@@ -40,8 +40,14 @@ struct WorkoutModeHost: View {
         }
         .onAppear {
             if state == nil {
-                state = WorkoutModeState.make(from: session, warmUp: CoreWarmUp())
+                let made = WorkoutModeState.make(from: session, warmUp: CoreWarmUp())
+                state = made
+                publish(made)
             }
+        }
+        .onDisappear {
+            ModeLiveBridge.current = nil
+            RestActivityController.shared.update(for: session)
         }
     }
 
@@ -50,8 +56,14 @@ struct WorkoutModeHost: View {
             close: { model.isWorkoutPresented = false },
             logged: { liftID, weight, reps in log(liftID: liftID, weight: weight, reps: reps) },
             finished: { session.finish() },
-            changed: { _ in }
+            changed: { state in publish(state) }
         )
+    }
+
+    /// Tells the lock screen what the mode says now (one activity, fed through the rest controller).
+    private func publish(_ state: WorkoutModeState) {
+        ModeLiveBridge.current = ModeLiveContent.workout(state, at: AppClock.now)
+        RestActivityController.shared.update(for: session)
     }
 
     private func log(liftID: String, weight: Double, reps: Int) {

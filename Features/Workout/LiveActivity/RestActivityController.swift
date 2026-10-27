@@ -72,6 +72,8 @@ final class RestActivityController {
         var state = Self.contentState(planned: session.isPrivate ? Self.maskedSet : planned,
                                       restEndsAt: session.restEndsAt, restTotal: session.restTotal,
                                       appNow: AppClock.adjust(realNow), realNow: realNow, isPrivate: session.isPrivate)
+        // The open chalk workout mode's lock-screen lines (sheet 326); a private workout's carry only the time.
+        state.mode = ModeLiveBridge.onRealClock(appNow: AppClock.adjust(realNow), realNow: realNow)
         // Surfaces v2 (Design 142): set marks beside the countdown, only with the Review switch On.
         if SurfacesWriter.isOn, !session.isPrivate, let marks = SurfaceActivityDrivers.marks(for: session) {
             state.setsDone = marks.done
