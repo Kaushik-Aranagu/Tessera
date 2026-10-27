@@ -14,7 +14,7 @@ struct DialDoor: Identifiable, Equatable {
     var lines: [String] = []
     /// Sheet 320: ledger rows (name, right-aligned number, unit). When present `DoorSummary` draws the ledger
     /// (`DoorLedger`) with `label` above and `more` below, instead of `lines`.
-    var rows: [Row] = []
+    var rows: [DialDoor.Row] = []
     /// The quiet last line of the ledger (12 pt): what opening the door adds.
     var more: String?
 }
