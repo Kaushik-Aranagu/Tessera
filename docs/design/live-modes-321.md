@@ -432,3 +432,13 @@ In cooking and routine modes, the step you just finished is struck in the step l
 Shopping mode's aisle list (bottom right) now uses the same pen stroke as 350: the moment the last item of an aisle goes in the basket, that aisle's name is struck left to right (320 ms, 100 ms delay), then stays struck. All three modes now share one rule: done things are struck by the pen, never ticked or greyed alone.
 
 - Test: t67 paper and black green; pja.js gets the three produce items and reads "Produce" as the just-struck aisle.
+
+## Sheet 352: changing lift wipes the board too
+
+In the lift phase, swiping across (or tapping a lift in the list) to change lift wipes the board with the 338 eraser instead of swapping it.
+
+- The wipe follows the swipe. A swipe to the left (next lift) sweeps the band right to left, the new lift appearing from the right. A swipe to the right sweeps left to right. Tapping a lift in the list wipes forward if it is later in the list and back if it is earlier.
+- Same band, timing and haze as 338 (460 ms, ease in-out, slanted, 7% haze).
+- During a rest, picking the next lift only queues it, so nothing is wiped until the rest ends.
+- Reduce Motion: no wipe.
+- Test: t67 paper and black green; ppk.js picks Press with a leftward swipe and freezes mid-wipe (PK1.png: warm-up on the left, Press arriving from the right); pwp.js (338) still passes.

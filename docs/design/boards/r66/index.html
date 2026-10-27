@@ -1385,9 +1385,9 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
  /* 338: when the rest ends the board is wiped, not swapped. A snapshot of the rest board stays on the right of an eraser
     band that sweeps left to right; the next lift is already written behind it, and the band leaves a faint haze. */
  let WP=null;const snap=document.createElement('canvas');snap.width=804;snap.height=1748;
- function wipe(){if(RM)return;snap.getContext('2d').drawImage(cv,0,0);WP={t0:performance.now()}}
- function drawWipe(){if(!WP)return;const e=(performance.now()-WP.t0)/460;if(e>=1){WP=null;return}const ez=e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2,bx=-60+ez*520;
-  g.save();g.beginPath();g.moveTo(bx+18,0);g.lineTo(402,0);g.lineTo(402,874);g.lineTo(bx-18,874);g.closePath();g.clip();g.drawImage(snap,0,0,402,874);g.restore();
+ function wipe(dir=1){if(RM)return;const c=snap.getContext('2d');c.clearRect(0,0,804,1748);c.drawImage(cv,0,0);WP={t0:performance.now(),dir}}
+ function drawWipe(){if(!WP)return;const e=(performance.now()-WP.t0)/460;if(e>=1){WP=null;return}const ez=e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2,R=WP.dir<0,bx=R?462-ez*520:-60+ez*520;
+  g.save();g.beginPath();if(R){g.moveTo(0,0);g.lineTo(bx+18,0);g.lineTo(bx-18,874);g.lineTo(0,874)}else{g.moveTo(bx+18,0);g.lineTo(402,0);g.lineTo(402,874);g.lineTo(bx-18,874)}g.closePath();g.clip();g.drawImage(snap,0,0,402,874);g.restore();
   const gr=g.createLinearGradient(bx-46,0,bx+20,0);gr.addColorStop(0,'rgba('+W+',0)');gr.addColorStop(.75,'rgba('+W+',.07)');gr.addColorStop(1,'rgba('+W+',0)');g.save();g.globalAlpha=1-Math.max(0,e-.8)*5;g.fillStyle=gr;g.fillRect(bx-46,130,66,720);g.restore()}
  let raf=0,smear=0;const loop=()=>{draw();drawWipe();if(smear>0){g.save();g.globalCompositeOperation='destination-out';g.globalAlpha=smear*.0;g.restore()}raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
  // input
@@ -1397,7 +1397,7 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
  pad.onpointermove=e=>{if(x0==null)return;const [x,y]=localXY(e,pad);const dx=x-x0,dy=y-y0;if(!mode&&Math.hypot(dx,dy)>10){clearTimeout(hold);hold=null;S.hold0=0;mode=y0>160&&y0<340&&S.phase==='lift'&&next(L())&&!next(L()).u&&Math.abs(dy)>Math.abs(dx)?'w':Math.abs(dy)>Math.abs(dx)?'y':'x'}
   if(mode==='w'&&Math.abs(dy-acc)>14){const d=dy-acc<0?5:-5;L().sets.slice(S.done[S.li]).forEach(s=>s.w=Math.max(L().kind==='bar'?BAR:5,s.w+d));acc=dy;pulse()}};
  pad.onpointerup=e=>{if(x0==null)return;const [x,y]=localXY(e,pad);const dx=x-x0,dy=y-y0;clearTimeout(hold);S.hold0=0;const was=x0;x0=null;if(hold===null&&inR(HIT.fin,was,y0)&&!mode)return;hold=null;
-  if(mode==='y'&&dy<-60)return log();if(mode==='x'&&Math.abs(dx)>60&&S.phase!=='done'){const n=(S.li+(dx<0?1:-1)+LIFTS.length)%LIFTS.length;return pick(n)}
+  if(mode==='y'&&dy<-60)return log();if(mode==='x'&&Math.abs(dx)>60&&S.phase!=='done'){const n=(S.li+(dx<0?1:-1)+LIFTS.length)%LIFTS.length;return pick(n,dx<0?-1:1)}
   if(mode)return;
   if(inR(HIT.back,x,y))return back();
   if(S.phase==='done'&&inR(HIT.done,x,y))return back();
@@ -1405,7 +1405,8 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   const lf=(HIT.lifts||[]).find(r=>inR(r.slice(1),x,y));if(lf)return pick(lf[0]);
   if(inR(HIT.done,x,y))return log();
   if(S.phase==='rest'&&y>140&&y<420){S.rest=0;endRest()}};
- function pick(n){if(S.phase==='rest')S.pending=n;else S.li=n;pulse()}
+ /* 352: changing lift in the lift phase wipes the board the way the swipe went (338's eraser, either direction) */
+ function pick(n,dir){if(S.phase==='rest')S.pending=n;else{if(n!==S.li)wipe(dir??(n>S.li?1:-1));S.li=n}pulse()}
  function setFeel(v){S.feel=v;const last=S.log[S.log.length-1];if(last)last.feel=v;const l=LIFTS[last.li],i=last.li;
   if(last.r&&S.done[i]<l.sets.length){const d=v==='Easy'?5:v==='Hard'?-5:0;if(S.f0==null)S.f0=l.sets[S.done[i]].w;const fe=()=>{const now=l.sets[S.done[i]].w;S.fix=now!==S.f0?{from:S.f0,li:i,t0:performance.now()}:null};const off=S.f0-l.sets[S.done[i]].w;l.sets.slice(S.done[i]).forEach(x=>x.w+=off+d);fe();if(d)receipt(el,(d>0?'Up':'Down')+' 5 lb for the next set')}pulse()}
  function log(){const l=L(),st=next(l);if(S.phase==='done')return back();if(S.phase==='rest'){S.rest=0;endRest();return}
