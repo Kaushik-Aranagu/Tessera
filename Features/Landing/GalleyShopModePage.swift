@@ -198,7 +198,11 @@ struct GalleyShopModePage: View {
                         }
                     }
                     Spacer(minLength: 8)
-                    GalleyModeRail(items: data.rail, tint: GalleyPaper.olive) { focus = $0 }
+                    GalleyModeRail(items: data.rail, tint: GalleyPaper.olive) { id in
+                        if id < GalleyShopScreen.doneIDBase {
+                            focus = id
+                        }
+                    }
                 }
             }
         }
@@ -418,6 +422,9 @@ struct GalleyShopModePage: View {
             let got = basket.filter { Aisle.shown($0.section ?? Aisle.other.rawValue) == aisle.aisle }.map(item)
             return GalleyShopFacts.Aisle(name: aisle.aisle, items: items, got: got)
         }
+        let open = Set(facts.aisles.map(\.name))
+        facts.doneAisles = Array(Set(basket.map { Aisle.shown($0.section ?? Aisle.other.rawValue) }))
+            .filter { !open.contains($0) }
         facts.got = basket.count
         let front = KitchenFront(model: model, now: AppClock.now)
         if let meal = front.tonight {

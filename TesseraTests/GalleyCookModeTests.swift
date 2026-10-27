@@ -127,6 +127,15 @@ struct GalleyShopModeTests {
         #expect(screen.thing == "Onions" && screen.why == "For the tacos tonight")
     }
 
+    @Test func aFinishedAisleStaysInTheRailInStoreOrderAndIsStruck() {
+        var shop = facts()
+        shop.doneAisles = ["Bakery"]
+        let rail = GalleyShopScreen(shop, aisle: 0).rail
+        #expect(rail.map(\.label) == ["Produce", "Bakery", "Dairy and eggs"])
+        #expect(rail.map(\.done) == [false, true, false])
+        #expect(rail[1].id >= GalleyShopScreen.doneIDBase && rail[0].id == 0 && rail[2].id == 1)
+    }
+
     @Test func anEmptyListSaysSo() {
         let screen = GalleyShopScreen(GalleyShopFacts(), aisle: 0)
         #expect(screen.empty && screen.topRight == "Nothing to get" && screen.rail.isEmpty)

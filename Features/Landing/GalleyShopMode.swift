@@ -34,6 +34,8 @@ struct GalleyShopFacts: Equatable {
     }
 
     var aisles: [Aisle] = []
+    /// Aisles with everything in the basket, kept in the aisle list so the pen can strike them (sheet 351).
+    var doneAisles: [String] = []
     /// What is in the basket so far.
     var got = 0
     /// Tonight's dish, short, for the rail's ticket; nil when none is planned.
@@ -84,6 +86,9 @@ struct GalleyShopScreen: Equatable {
     var rail: [GalleyRailItem] = []
     var empty = true
 
+    /// Rail ids from here up are finished aisles (no list to jump to).
+    static let doneIDBase = 1000
+
     init(_ facts: GalleyShopFacts, aisle index: Int) {
         let total = facts.left + facts.got
         var top = total == 0 ? "Nothing to get" : "\(facts.left) of \(total) to get"
@@ -91,9 +96,21 @@ struct GalleyShopScreen: Equatable {
             top += ", tonight \(facts.tonightGot.count) of \(facts.tonightLines.count)"
         }
         topRight = top
-        rail = facts.aisles.enumerated().map { offset, aisle in
-            GalleyRailItem(id: offset, label: aisle.name, detail: "\(aisle.items.count)", current: offset == index)
+        // Finished aisles stay in store order with a stable id (past the open ones) so the pen can strike them.
+        let open = facts.aisles.enumerated().map { offset, aisle in
+            (order: Aisle.order(of: aisle.name),
+             item: GalleyRailItem(
+                 id: offset,
+                 label: aisle.name,
+                 detail: "\(aisle.items.count)",
+                 current: offset == index
+             ))
         }
+        let finished = facts.doneAisles.map { name in
+            (order: Aisle.order(of: name),
+             item: GalleyRailItem(id: GalleyShopScreen.doneIDBase + Aisle.order(of: name), label: name, done: true))
+        }
+        rail = (open + finished).sorted { $0.order < $1.order }.map(\.item)
         guard facts.aisles.indices.contains(index), let first = facts.aisles[index].items.first else { return }
         empty = false
         let current = facts.aisles[index]
