@@ -123,6 +123,9 @@ public enum PyramidStats {
               value: average("weightKg", over: "weighIns")),
     ]
 
+    /// The totals strict shows. Only a claude-safe leaf adds to them.
+    static let safeKeys = Set(shown.filter { $0.taint == .claudeSafe }.map(\.key))
+
     /// A number as a line shows it: whole numbers plain, others to one place.
     static func format(_ value: Double) -> String {
         let rounded = (value * 10).rounded() / 10
@@ -187,8 +190,11 @@ public struct MemoryPyramid: Sendable {
                 paths.append(path)
                 let print = ([leaf.kind, String(leaf.at.timeIntervalSince1970), leaf.text]
                     + leaf.stats.keys.sorted().map { "\($0)=\(leaf.stats[$0] ?? 0)" }).joined(separator: "|")
+                // A walled leaf counts for nothing a strict total shows: its "notes 1" would tell strict it was there.
+                let stats = leaf.taint == .claudeSafe ? leaf.stats
+                    : leaf.stats.filter { !PyramidStats.safeKeys.contains($0.key) }
                 nodes[path] = PyramidNode(path: path, level: .leaf, title: leaf.kind, children: [], also: [],
-                                          stats: leaf.stats, residuals: PyramidResiduals(),
+                                          stats: stats, residuals: PyramidResiduals(),
                                           strictResiduals: PyramidResiduals(), hash: Self.fnv(print),
                                           text: PyramidLine(text: leaf.text, taint: leaf.taint),
                                           safeLeaves: leaf.taint == .claudeSafe ? 1 : 0)
