@@ -41,7 +41,7 @@ Haptics use the iOS feedback names. One haptic per move at most, and none while 
 | Rest day on the Deck | **The plates come back.** The glyph's plates are set down for a rest day; next morning they are back on the bar, with no motion. He only notices that they are back. | none | builders |
 | Watch: a routine done | **The water drop slides.** The drop on the watered tree runs down one leaf and is gone (420 ms). | soft | builders |
 | Log: a word sets in the wall (`add`) | **The wall makes room.** The neighbouring words shuffle 1 pt aside and back as the new word presses in. | none | builders |
-| Log: a list item checked | **The tick is drawn**, not shown: one stroke, 160 ms, slightly heavier at its start. | rigid, light | builders |
+| Log: a list item checked | **The tick is drawn**, not shown: one stroke, 160 ms, slightly heavier at its start. The line through the words follows once the pen lifts; unchecking lets the ink fade back to the faint mark. | rigid, light | on the board (300) |
 | Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | builders |
 | Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | builders |
 | Shape mode (sheet 287) | **The places loosen.** Each outline breathes once, 1.006 in scale, as the screen goes into shape mode. | soft | on the board (291) |
@@ -83,3 +83,14 @@ No full stops at the end of any of these (sheet 289).
 - For the builders: `appLook` changes go through `withTesseraAnimation(.look)`. Pin the outgoing palette in a
   snapshot layer (`.drawingGroup()` of the old palette), cross-fade the ground first, then the foreground with a 60 ms
   delay. Arrival transitions check `MotionPolicy.isLookChange` and stay still.
+
+## 6. The drawn tick, as built (sheet 300)
+
+- Where: any checkable list (Log lists are checkable notes), on the board in Trip packing.
+- Checking: the tick's stroke draws from its short arm to its long arm in 160 ms, easing out, so it lands quickly
+  and slows into the end. A short 1.7 pt segment at the start is drawn 0.7 pt heavier and stays, where the pen
+  pressed. At 170 ms the words take their line through.
+- Unchecking: the tick fades back to the faint mark (18%) in 160 ms. It never draws backwards.
+- Reduce Motion: the tick and the line appear at once.
+- For the builders: a `Path` with `.trim(from: 0, to: progress)` animated by `withTesseraAnimation(.tick)`, plus a
+  short heavier `Path` for the start. The strikethrough waits for the trim's completion.

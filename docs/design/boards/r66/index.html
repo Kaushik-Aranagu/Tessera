@@ -1946,7 +1946,16 @@ function lvRows(box,rows,color,open,form){form=form||'ranked';
   e.style.cssText='top:'+y+'px;height:'+hh+'px';y+=hh;e.onclick=()=>open(r);box.appendChild(e)});box.querySelectorAll('.lt').forEach(fitLine)}
 function lvBody(box,b,color){box.innerHTML='';const add=x=>{box.insertAdjacentHTML('beforeend',x)};
  if(b.kind==='checks'){const rh=292/b.l.length;b.l.forEach(([t,d])=>add('<div class="lbc'+(d?' dn':'')+'" style="height:'+rh+'px;line-height:'+rh+'px"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"'+(d?'':' opacity=".18"')+'/></svg>'+t+'</div>'));
-  box.querySelectorAll('.lbc').forEach(e=>e.onclick=()=>{e.classList.toggle('dn');e.querySelector('path').setAttribute('opacity',e.classList.contains('dn')?1:.18)})}
+  /* 290, built in 300: the tick is drawn, not shown. One stroke in 160 ms, the pen pressing a little harder where it
+     lands; the line through the words follows once the pen lifts. Unchecking lets the ink fade back to the faint mark. */
+  box.querySelectorAll('.lbc').forEach(e=>e.onclick=()=>{const on=!e.classList.contains('dn'),pth=e.querySelector('path'),svg=e.querySelector('svg');
+   svg.querySelectorAll('.nib').forEach(x=>x.remove());
+   if(!on){e.classList.remove('dn');if(RM){pth.setAttribute('opacity',.18);return}pth.animate([{opacity:1},{opacity:.18}],{duration:160,easing:'ease-out'});pth.setAttribute('opacity',.18);return}
+   pth.setAttribute('opacity',1);if(RM){e.classList.add('dn');return}
+   const L=pth.getTotalLength();pth.style.strokeDasharray=L;pth.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:160,easing:'cubic-bezier(.3,.7,.4,1)'}).onfinish=()=>{pth.style.strokeDasharray=''};
+   const nib=document.createElementNS('http://www.w3.org/2000/svg','path');nib.setAttribute('class','nib');nib.setAttribute('d','M3 8.5l1.7 1.7');nib.setAttribute('fill','none');nib.setAttribute('stroke','currentColor');nib.setAttribute('stroke-width','2.3');nib.setAttribute('stroke-linecap','round');svg.appendChild(nib);
+   nib.animate([{opacity:0},{opacity:1}],{duration:50,easing:'ease-out'});
+   setTimeout(()=>e.classList.add('dn'),170)})}
  else if(b.kind==='steps'){b.l.forEach((t,i)=>add('<div class="lbs'+(i===0?' on':'')+'"><b>'+(i+1)+'</b><span>'+t+'</span></div>'));box.querySelectorAll('.lbs').forEach((e,i)=>e.onclick=()=>{box.querySelectorAll('.lbs').forEach((z,j)=>z.classList.toggle('on',j===i))})}
  else if(b.kind==='sets'){b.l.forEach(([k,v,d],i)=>add('<div class="lbk'+(d?' dn':'')+(i===1?' on':'')+'"><span>'+k+'</span><b>'+v+'</b></div>'));if(b.note)add('<p class="lbn">'+b.note+'</p>')}
  else if(b.kind==='hours'){b.l.forEach(([t,w,v],i)=>add('<div class="lbk'+(i===1?' on':'')+'"><span>'+t+'</span><em>'+w+'</em><b>'+v+'</b></div>'));if(b.note)add('<p class="lbn">'+b.note+'</p>')}
