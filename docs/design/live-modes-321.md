@@ -356,7 +356,7 @@ In routine mode, a step put off with "not tonight" keeps a small note in the ste
 
 - The skipped step reads "tomorrow Tidy": the word "tomorrow" in Newsreader italic, 14 pt, ink2, 8 pt before the name; the row sits at 60% opacity.
 - Done steps stay struck (341), the current step stays bold in the routine colour, so the list reads done, now, later at a glance without new colours.
-- The receipt is unchanged: "Tidy, tomorrow, the streak is kept".
+- The receipt reads "Tidy, tomorrow" (no streak talk, see Sheet 335 note).
 - Test: t67 paper and black green; pst.js taps "not tonight" with a real pointer and reads "tomorrowTidy" in the list (ST1.png).
 
 ## Sheet 344: the Live Activity hears the timer too
@@ -396,3 +396,7 @@ The routine's "breathe in / breathe out" guide now shows only on the steps where
 - Tidy, Read and Journal keep the line empty (same 30 pt slot), so the time sits in the same place on every step and nothing jumps between steps.
 - It is a per-step flag in the routine definition (`breath: true`), so a user's own routine can turn it on for, say, a meditation step.
 - Test: t67 paper and black green; prd.js (Read step, RD1.png) shows no breath line; the Stretch probe still shows it.
+
+### Sheet 335 and 343 amendment (Oct 27, 9:56 AM): no streaks
+
+Core's rule stands: nothing in the app counts a streak, because a streak is pressure. The Evening tended cue is now "Evening tended. Sleep well" (it was "Six days in a row now. Sleep well"), and the "not tonight" receipt is "Tidy, tomorrow" (it was "Tidy, tomorrow, the streak is kept"). Any count of days in a row elsewhere (the Watch landing's "Tended five days in a row", the Deck's "5 weeks in a row on plan") falls under the same rule and goes to its room's owner.

@@ -1499,12 +1499,12 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
  el.innerHTML='<div class="dk-sky"></div><div class="dk-paper"></div><div class="dk-pad"></div>';const P=el.querySelector('.dk-paper'),sky=el.querySelector('.dk-sky'),pad=el.querySelector('.dk-pad');growFromKey([sky,P]);
  let x0=null,y0;pad.onpointerdown=e=>{const [x,y]=localXY(e,pad);x0=x;y0=y;pad.setPointerCapture(e.pointerId)};
  pad.onpointerup=e=>{if(x0==null)return;const [x,y]=localXY(e,pad);const dy=y-y0;x0=null;if(dy<-60)return next();pad.style.pointerEvents='none';const t=document.elementFromPoint(e.clientX,e.clientY);pad.style.pointerEvents='';const a=t&&t.closest('[data-a]');if(!a)return;const v=a.dataset.a;
-  if(v==='back')return back();if(v==='next')return next();if(v==='pause'){S.pause=!S.pause;return paint(1)}if(v==='skip'){S.skip.add(S.i);receipt(el,ST[S.i].k+', tomorrow, the streak is kept');return step()}if(v.startsWith('st')){go2(+v.slice(2))}};
+  if(v==='back')return back();if(v==='next')return next();if(v==='pause'){S.pause=!S.pause;return paint(1)}if(v==='skip'){S.skip.add(S.i);receipt(el,ST[S.i].k+', tomorrow');return step()}if(v.startsWith('st')){go2(+v.slice(2))}};
  function go2(i){S.i=i;S.j=0;S.left=ST[i].mv[0][1];paint()}
  let lastKey='';
  function paint(force){const s=ST[S.i],mv=s.mv[S.j];const night=(S.done.size+S.skip.size)/ST.length;sky.style.setProperty('--n',night);const dim=S.fin?1:S.i===ST.length-1?1-S.left/mv[1]:0;el.style.setProperty('--dim',dim.toFixed(3));
   const key=S.i+'|'+S.j+'|'+S.fin+'|'+S.done.size+'|'+S.pause;const breath=((Date.now()-S.b0)/1000)%10;const inh=breath<4;
-  if(key!==lastKey||force){P.innerHTML=(S.fin?'<div class="dk-top"><span data-a="back">Watch</span><span>Evening tended</span></div><div class="dk-h">Evening</div><div class="dk-big">Tended</div><div class="dk-cue">Six days in a row now. Sleep well</div><div class="dk-time o">'+S.done.size+'<span>of '+ST.length+'</span></div><div class="dk-verb" data-a="back">Back</div><div class="dk-sub">to the Watch</div>':
+  if(key!==lastKey||force){P.innerHTML=(S.fin?'<div class="dk-top"><span data-a="back">Watch</span><span>Evening tended</span></div><div class="dk-h">Evening</div><div class="dk-big">Tended</div><div class="dk-cue">Evening tended. Sleep well</div><div class="dk-time o">'+S.done.size+'<span>of '+ST.length+'</span></div><div class="dk-verb" data-a="back">Back</div><div class="dk-sub">to the Watch</div>':
    '<div class="dk-top"><span data-a="back">Watch</span><span>'+S.done.size+' of '+ST.length+' tended, bed about '+clock(new Date(Date.now()+minsLeft()*60000))+'</span></div>'+
    '<div class="dk-h">'+s.k+(s.mv.length>1?', '+(S.j+1)+' of '+s.mv.length:'')+'</div><div class="dk-big">'+mv[0]+'</div><div class="dk-cue">'+mv[2]+'</div>'+
    /* 347: the breath guide only comes with the steps where breathing is the point (Stretch, Lights); on reading, tidying and
