@@ -42,6 +42,23 @@ struct TestStoreTests {
         #expect(throws: TestStore.Refusal.hasHisHistory) { try SettingsStore(engine: otherEngine).stampAsTestStore() }
     }
 
+    @Test func aCopyOfHisDataWithNoOpsByHimIsStillRefused() throws {
+        // His rows made by the system (a restored or copied store has no .user ops in it).
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        _ = try engine.perform(CreateTask(title: "Call the bank"), by: .system)
+        store.context.operations.values.forEach { store.context.delete($0) }
+        #expect(!TestStore.hasHisHistory(store.context))
+        #expect(throws: TestStore.Refusal.hasHisRows("Task")) { try SettingsStore(engine: engine).stampAsTestStore() }
+        #expect(!SettingsStore.isTestStore(in: store))
+        // A store holding only the catalog still stamps.
+        let fresh = ObjectStore.open(inMemory: true)
+        _ = try fresh.prepareCatalog()
+        try TestStore.stamp(fresh)
+        #expect(TestStore.isStamped(fresh.context))
+    }
+
     @Test func onlyAFileUnderTheTemporaryFolderOrMemoryIsNotHis() {
         #expect(TestStore.isHisStore(url: TesseraSchema.defaultURL))
         #expect(TestStore.isHisStore(url: URL(fileURLWithPath: "/Users/someone/Documents/tessera.sqlite")))
