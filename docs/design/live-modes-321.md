@@ -400,3 +400,12 @@ The routine's "breathe in / breathe out" guide now shows only on the steps where
 ### Sheet 335 and 343 amendment (Oct 27, 9:56 AM): no streaks
 
 Core's rule stands: nothing in the app counts a streak, because a streak is pressure. The Evening tended cue is now "Evening tended. Sleep well" (it was "Six days in a row now. Sleep well"), and the "not tonight" receipt is "Tidy, tomorrow" (it was "Tidy, tomorrow, the streak is kept"). Any count of days in a row elsewhere (the Watch landing's "Tended five days in a row", the Deck's "5 weeks in a row on plan") falls under the same rule. Drawn replacements (board updated): Watch "Next" small line "Last walked yesterday, 6:10 pm" ("Not walked yet" if never); Deck top stat "14 sessions since Oct 1" (a total since the 1st, never reset). Rule: show the last time or a running total, never a run of days. The woodland's "Dry since Saturday" stays (a last-time line, from the locked board).
+
+## Sheet 348: the tick is drawn, not stamped
+
+In workout mode, back from a rest, the set you just did gets its tick drawn by hand in the set row ("185×5 ✓").
+
+- The short stroke takes the first third, the long stroke the rest. It takes 260 ms and starts 380 ms after the rest ends, so it lands as the eraser (338) passes.
+- Earlier sets keep their finished ticks. The lifts list's ticks are unchanged.
+- Reduce Motion: the tick is simply there.
+- Test: t67 paper and black green; ptk2.js freezes the clock mid-draw (TK1.png: short stroke only) and after (TK2.png: full tick).

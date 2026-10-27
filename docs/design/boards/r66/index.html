@@ -1336,7 +1336,9 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
  const chalkB=(t,x,y,sz,a,col)=>{g.save();g.font='600 '+Math.round(sz*1.04)+'px "Barlow Condensed"';g.textBaseline='alphabetic';const lw=Math.min(sz*.1,2.4);g.strokeStyle='rgba('+col+','+(a*.25)+')';g.lineWidth=lw;g.strokeText(t,x+.6,y+.8);g.fillStyle='rgba('+col+','+(a*.5)+')';g.fillText(t,x+.8,y+.5);g.fillStyle='rgba('+col+','+(a*.88)+')';g.fillText(t,x,y);const w=g.measureText(t).width;g.globalCompositeOperation='destination-out';const n=w*sz*.012;for(let k=0;k<n;k++){g.fillStyle='rgba(0,0,0,'+(.25+noise(k,x+y)*.6)+')';const s=sz>80?1.6:1;g.fillRect(x+noise(k,1)*w,y-sz*.72+noise(k,2)*sz*.86,s,s)}g.restore();return w};
  const T=(t,x,y,sz,a=.95,col=W,al='l')=>{g.save();g.font='600 '+Math.round(sz*1.04)+'px "Barlow Condensed"';const w=g.measureText(t).width;g.restore();const xx=al==='r'?x-w:al==='c'?x-w/2:x;if(a>0)(sz>40?chalkB:(...q)=>chalk(g,...q))(t,xx,y,sz,a,col);return w};
  const ln=(x1,y1,x2,y2,a,wd,col=W)=>{g.strokeStyle='rgba('+col+','+a+')';g.lineWidth=wd;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.quadraticCurveTo((x1+x2)/2,(y1+y2)/2+noise(x1,y2)*1.4,x2,y2);g.stroke()};
- const tick=(x,y,s=1,col=W)=>{g.strokeStyle='rgba('+col+',.9)';g.lineWidth=2.6*s;g.lineCap='round';g.beginPath();g.moveTo(x,y);g.lineTo(x+6*s,y+8*s);g.lineTo(x+16*s,y-10*s);g.stroke()};
+ /* 348: a tick can be drawn on: p runs 0 to 1, the short stroke takes the first third, the long one the rest. Back from
+    a rest, the set just done gets its tick drawn as the eraser passes (380 ms in, 260 ms) */
+ const tick=(x,y,s=1,col=W,p=1)=>{if(p<=0)return;g.strokeStyle='rgba('+col+',.9)';g.lineWidth=2.6*s;g.lineCap='round';g.beginPath();g.moveTo(x,y);const a=Math.min(1,p*3);g.lineTo(x+6*s*a,y+8*s*a);if(p>1/3){const b=(p-1/3)*1.5;g.lineTo(x+6*s+10*s*b,y+8*s-18*s*b)}g.stroke()};
  const PH={45:92,35:80,25:66,10:50,5:38,2.5:30},PW={45:17,35:15,25:13,10:10,5:8,2.5:6};
  /* 331: plates slide on and off as the weight changes. A new plate drops onto the sleeve from above and settles; one
     taken off slides out past the end of the bar and fades, the way you would strip it. 320 ms each. */
@@ -1372,7 +1374,7 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   else{const w=T(String(st.w),18,318,170,.97,W);T('lb',24+w,318,34,.7,D);T('× '+st.r,40+w+T('lb',-999,0,1,0),318,96,.95,ACC);HIT.w=[0,170,402,170];
    if(l.kind==='bar'){const ps=bar(st.w,420);T('each side '+(ps.length?ps.join(' + '):'just the bar'),24,506,24,.85,D);T('bar 45',378,506,18,.5,D,'r')}else{stack(st.w,440);T('pin at '+st.w,250,452,26,.9,W)}
    // sets
-   l.sets.forEach((x,j)=>{const xx=24+j*120,y=576;const a=j<d?.6:j===d?1:.35;const lg=S.log.filter(q=>q.li===S.li)[j];T('Set '+(j+1),xx,y-30,16,a*.8,D);const w2=T(x.w+'×'+x.r,xx,y,28,a,j===d?ACC:W);if(j<d){tick(xx+w2+6,y-12,.8);if(lg&&lg.feel)T(lg.feel.toLowerCase(),xx,y+24,16,.6,D)}});
+   l.sets.forEach((x,j)=>{const xx=24+j*120,y=576;const a=j<d?.6:j===d?1:.35;const lg=S.log.filter(q=>q.li===S.li)[j];T('Set '+(j+1),xx,y-30,16,a*.8,D);const w2=T(x.w+'×'+x.r,xx,y,28,a,j===d?ACC:W);if(j<d){const tp=RM||j!==d-1||!S.lt0?1:Math.max(0,Math.min(1,(performance.now()-S.lt0-380)/260));tick(xx+w2+6,y-12,.8,W,tp);if(lg&&lg.feel)T(lg.feel.toLowerCase(),xx,y+24,16,.6,D)}});
    const pv=l.prev[d];T('Last time '+pv[0]+' × '+pv[1]+(st.w!==pv[0]?', now '+(st.w>pv[0]?'+':'')+(st.w-pv[0])+' lb':''),24,650,22,.8,D);T('Estimated max '+e1(st.w,st.r)+(l.best?', best '+e1(...l.best):''),24,678,18,.6,D)}
   T(st?'Done':'Next lift',24,790,44,.97,ACC);T(st?(st.u?'the warm up':'set '+(d+1)+', swipe up'):'swipe across',24,816,15,.55,D);HIT.done=[0,740,250,874];drawLifts()}
  function drawLifts(){HIT.lifts=[];LIFTS.forEach((q,i)=>{const y=640+i*26;const on=i===S.li;const w=T(q.k,378,y,on?22:17,on?.98:.5,on?W:D,'r');if(!left(q))tick(378-w-22,y-7,.6,D);HIT.lifts.push([i,378-w-8,y-20,w+16,26])});
@@ -1411,7 +1413,7 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   const li=S.li;receipt(el,l.name+', '+(st.u?st.w+' min':st.w+' × '+st.r)+', logged',()=>{S.done[li]--;S.log.pop();S.phase='lift';S.rest=0;S.pending=null});
   if(!LIFTS.some(x=>left(x)))return finish();
   S.phase='rest';S.restOf=S.rest=l.rest;S.pending=left(l)?null:LIFTS.findIndex(x=>left(x))}
- function endRest(){wipe();S.phase='lift';S.pr=null;S.fix=null;S.f0=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
+ function endRest(){wipe();S.lt0=performance.now();S.phase='lift';S.pr=null;S.fix=null;S.f0=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
  function finish(){S.phase='done';pulse()}
  const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest()}},1000);
  Object.assign(window.__wo,{tickRest:n=>{S.rest=Math.max(1,S.rest-n+1)},finish:()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()},feel:setFeel,log,pick});
