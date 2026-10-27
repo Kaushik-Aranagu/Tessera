@@ -103,6 +103,33 @@ struct RehearseFlagsTests {
         #expect(refused.isError && refused.text == "Only calls offered here can be rehearsed, not logSpend")
     }
 
+    @Test func aRehearsalThatRunsOutOfTimeStopsEveryWriteInTheAsk() async throws {
+        let helper = TessRunTests()
+        let r = try helper.rig([:], policy: .strict)
+        r.run.rehearsalSeconds = 0
+        let before = r.rig.store.context.objects.count
+        let task = #"{"title":"Call the bank","startsAt":null,"about":[]}"#
+        let input = try JSONSerialization.data(withJSONObject: ["calls": [["name": "createTask", "arguments": task]]])
+        let offered: Set<String> = [RehearseFlags.tool, "createTask", "query"]
+        let runID = UUID()
+        let first = r.run.rehearsed(input, runID: runID, onDevice: false, offered: offered)
+        #expect(first.isError && first.text == TessRun.slowRehearsal)
+        // No second try, and the write she would have made is refused for the rest of the ask.
+        let second = r.run.rehearsed(input, runID: runID, onDevice: false, offered: offered)
+        #expect(second.text == TessRun.slowRehearsal && r.run.rehearsal?.rehearsal.tries == 1)
+        var budget = 10
+        let write = await r.run.runTool(id: "t2", name: "createTask", input: Data(task.utf8), handles: [:],
+                                        offered: offered, onDevice: false, budget: &budget, runID: runID,
+                                        sink: { _ in })
+        #expect(write.isError && write.text == TessRun.slowRehearsal)
+        #expect(r.rig.store.context.objects.count == before && budget == 10)
+        // Another ask writes as usual.
+        let next = await r.run.runTool(id: "t3", name: "createTask", input: Data(task.utf8), handles: [:],
+                                       offered: offered, onDevice: false, budget: &budget, runID: UUID(),
+                                       sink: { _ in })
+        #expect(!next.isError && budget == 9)
+    }
+
     @Test func theCopyIsDroppedWhenTheAskEnds() async throws {
         let helper = TessRunTests()
         let frame = ElementLooksTests().deckFrame()

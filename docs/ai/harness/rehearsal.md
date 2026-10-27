@@ -79,6 +79,9 @@ same tools for real, or says what went wrong and what she would do instead.
   receipts.
   - Under strict, a money, body or private line stays on the phone, and she hears how many were held back.
   - The last line is "All checks passed.", or "Checks failed: change nothing, and tell him why."
+- **Out of time:** a try that passes `Rehearsal.seconds` (2 s) returns `overBudget`. She then hears "That took too
+  long to try. Change nothing and ask him first", gets no more tries, and every write for the rest of the ask is
+  refused with the same line. A slow rehearsal proves nothing, so she never acts unrehearsed.
 - A money call inside a rehearsal on a Claude rung still fails its check (`moneyOffPhone`). The rehearsal itself writes
   nothing, so it isn't a ghost and doesn't use the ghost budget.
 - The spec Claude sees takes the tool's own input: `calls`, an array of `{name, arguments}` with the arguments as

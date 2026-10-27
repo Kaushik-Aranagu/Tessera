@@ -87,7 +87,11 @@ public final class TessRun {
     private var tries: LookTries?
     /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's. Dropped when the run ends,
     /// with its copy of his store.
-    private(set) var rehearsal: (runID: UUID, rehearsal: Rehearsal)?
+    private(set) var rehearsal: (runID: UUID, rehearsal: Rehearsal, slow: Bool)?
+    /// The time one rehearsal try may take (`Rehearsal.seconds`); a test sets it lower.
+    var rehearsalSeconds = Rehearsal.seconds
+    /// What she hears when a rehearsal ran out of time, and on every write after it in the same ask.
+    static let slowRehearsal = "That took too long to try. Change nothing and ask him first"
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -604,6 +608,9 @@ public final class TessRun {
             }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
             result = ("Shown.", false)
+        case _ where rehearsal?.runID == runID && rehearsal?.slow == true && !ToolPicker.reads.contains(name):
+            // A rehearsal that ran out of time proved nothing: she asks him instead of writing unrehearsed.
+            result = (Self.slowRehearsal, true)
         default:
             do {
                 let records = try TessTools.run(name, arguments: input, engine: engine, pending: true, now: now(),
@@ -658,10 +665,14 @@ public final class TessRun {
         }
         let current: Rehearsal
         if let kept = rehearsal, kept.runID == runID {
+            if kept.slow {
+                return (Self.slowRehearsal, true)
+            }
             current = kept.rehearsal
         } else {
             current = Rehearsal(engine: engine)
-            rehearsal = (runID, current)
+            current.seconds = rehearsalSeconds
+            rehearsal = (runID, current, false)
         }
         guard current.tries < Rehearsal.budget else {
             // Said here, not as the rehearsal's own refusal, which strict holds back with the other refusals.
@@ -669,6 +680,11 @@ public final class TessRun {
         }
         let result = current.try(asked.calls, expecting: asked.expecting,
                                  scope: MemoryScope(agent, policy: door.policy()), onDevice: onDevice)
+        if result.failed.contains(where: { if case .overBudget = $0 { true } else { false } }) {
+            // Nothing says the change is safe: no more tries, and no write for the rest of the ask.
+            rehearsal = (runID, current, true)
+            return (Self.slowRehearsal, true)
+        }
         if onDevice {
             return (result.text, false)
         }
