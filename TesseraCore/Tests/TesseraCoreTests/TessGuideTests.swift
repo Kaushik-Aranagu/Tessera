@@ -145,6 +145,33 @@ struct TessGuideTests {
         } == true)
     }
 
+    @Test func anInterruptedGuideReadThatDoesNotFitItsSchemaRunsNothingOnResume() async throws {
+        let helper = TessRunTests()
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Say pause on it")]])
+        let sonnet = ScriptedBrain(.sonnet, rounds: [[.text("Say pause on it")]])
+        let r = try helper.rig([.haiku: haiku, .sonnet: sonnet])
+        // Killed after the first read finished and before the guide ran; the second call's path isn't text.
+        let first = Data(#"{"path":"/rooms/watch"}"#.utf8)
+        let input = Data(#"{"path":5}"#.utf8)
+        var state = TessRunState(startedAt: .now, askText: "pause routine", aboutIDs: [],
+                                 messages: [BrainMessage(.user, text: "pause routine"),
+                                            BrainMessage(.assistant,
+                                                         [.toolUse(id: "t0", name: TessGuide.name, input: first),
+                                                          .toolUse(id: "t1", name: TessGuide.name, input: input)])])
+        state.doneToolIDs = ["t0"]
+        state.toolResults = ["t0": "Watch (Routines): what each place offers you"]
+        TessRunStore(url: r.url).save(state)
+        await r.run.resumeInterrupted()
+        let sent = try #require((haiku.requestsSeen + sonnet.requestsSeen).first)
+        #expect(sent.messages.last?.content.contains {
+            if case let .toolResult(id, content, true) = $0 {
+                id == "t1" && content.contains("\"path\" should be text")
+            } else {
+                false
+            }
+        } == true)
+    }
+
     @Test func thePackCarriesTheContentsOnlyWithTheGuide() throws {
         let helper = TessRunTests()
         let r = try helper.rig([:], policy: .strict)

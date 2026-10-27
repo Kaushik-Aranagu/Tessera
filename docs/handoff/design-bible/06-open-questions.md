@@ -42,7 +42,7 @@ Found while writing this bible. Settle each with Kaushik in one question with on
 - Routines dark accent: D79AA6 (219) vs D59AC4 (238, 241). The bible uses D59AC4.
 - Routines off the phone: all as "A routine" (228) vs only private ones as "Private routine" (238, newer, used here).
 - Money landing (226) has "About $40 a day left this month", against 133's no "left to spend".
-- Money values to Claude: 223 says never. Kaushik's later lab-mode ruling lets Claude calls carry money values; money actions are never offered. Lab mode wins while it is on.
+- Money values to Claude: 223 says never. Kaushik's later lab-mode ruling lets Claude calls carry money values; money actions are never offered. Lab mode wins while it is on. (Superseded Oct 27, 12:28 PM, by Kaushik's card answer: Claude may propose money changes, each pending with a 10 s Undo worded "Reversed"; see docs/product/decisions.md. Room agents still have no money tools.)
 - Claude cap: $100 a month shared (his ruling); CODEX.md says $50 in-app. The $50 is the in-app runner limit inside the $100.
 - Settings 203: underlined chosen word, pixel knob and pixel page flip clash with no underlines and pixels-only-on-Home.
 - Old left-swipe actions (routine editor drop, Money spend delete, pool reassign) clash with swipe left = Not now.

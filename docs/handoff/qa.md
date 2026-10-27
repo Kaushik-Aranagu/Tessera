@@ -72,7 +72,7 @@ Older stacked PRs (#1312 to #1357, #1361, #1364, #1365, #1397) were carried from
   their words: use shorter words, never a smaller body font. Only big fixed titles step down, 1 pt at a time, to
   about 0.75x.
 - **Walls**: walled titles read "Private ..." everywhere outside their room. Health, body, calendar and calories
-  never reach backups, logs or widgets. Money actions are never offered to Claude. No money amount on Home. Sample
+  never reach backups, logs or widgets. Money actions are never offered to Claude (superseded Oct 27, 12:28 PM: Claude may propose money changes, each pending with 10 s Undo; room agents have no money tools). No money amount on Home. Sample
   data never touches his real store. The Claude key is never printed, logged, copied or asked for. Lab mode (his
   pick) lets Claude calls carry health, body, calendar, calories and money; strict keeps them out (no Body or Money
   agent, lab-only belief classes and day kinds dropped). Opus is a second-try rung only. One $100 monthly cap
