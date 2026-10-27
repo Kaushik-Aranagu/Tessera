@@ -7,7 +7,7 @@ import TesseraCore
 ///
 /// Walls, both checked before the first write:
 /// - The store must be a test store: in memory, or a file in the temporary folder (the runner always makes a fresh
-///   one there). The app's own store file is never one. When Core's test stamp lands, a stamped store passes too.
+///   one there). The app's own store file is never one. A store stamped as a test store passes too.
 /// - The store must hold nothing but what a fresh catalog installs (the built-in plan, equipment, the Groceries
 ///   list). Any other live row of any class, one task included, means someone uses it, and the seed is refused.
 ///
@@ -38,6 +38,8 @@ public enum EvalWorldSeeder {
         if let row = try firstRowOfHis(in: store) {
             throw Refusal.storeHasData(row)
         }
+        // Stamped first: from here on the store is a test store (Claude rungs allowed, never backed up).
+        try SettingsStore(engine: engine).stampAsTestStore()
         var seeder = Seeder(engine: engine, world: world)
         seeder.training()
         seeder.kitchen()
@@ -53,6 +55,9 @@ public enum EvalWorldSeeder {
 
     /// In memory, or a file under the temporary folder.
     static func isTestStore(_ store: ObjectStore) -> Bool {
+        if SettingsStore.isTestStore(in: store) {
+            return true
+        }
         guard let url = store.context.url else { return true }
         let temp = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().standardizedFileURL.path
         let path = url.resolvingSymlinksInPath().standardizedFileURL.path

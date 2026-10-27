@@ -23,7 +23,11 @@ struct EvalWorldSeederTests {
 
     @Test func theSmallWorldSeedsThroughActionsAndReadsBack() throws {
         let report = try EvalWorldSeeder.seed(world, into: engine)
-        #expect(report.refused.isEmpty, "\(report.firstRefusal)")
+        // The memory wall keeps "100 kg bench" out (a kg number reads as a body fact): the goal line and its belief are
+        // the only refusals, and they are Tess's wall working, not a seeding fault.
+        #expect(report.refused.filter { $0.key != "memory" }.isEmpty, "\(report.firstRefusal)")
+        #expect((report.refused["memory"] ?? 0) <= 2, "\(report.firstRefusal)")
+        #expect(SettingsStore(engine: engine).read().isTestStore)
         #expect(report.notSeeded == ["leftovers", "renames"])
 
         // Training: the deleted 95 kg bench never counts, so the best for 5 is the planted 92.5 kg.
@@ -54,7 +58,8 @@ struct EvalWorldSeederTests {
         // Tess's memory: the locker line was forgotten for real, and training moved to the evening.
         #expect(!live(.tessMemory).contains { $0.title.lowercased().contains("locker") })
         // The scrub ran too: no op, summary or receipt still says it.
-        for record in store.context.operations.values {
+        // (A private note may hold the number itself: it is the note's own words, not the forgotten memory line.)
+        for record in store.context.operations.values where !record.action.lowercased().contains("note") {
             let ops = record.opsData.map { String(decoding: $0, as: UTF8.self) } ?? ""
             #expect(!(ops + record.summary + (record.receipt ?? "")).lowercased().contains("locker"))
         }
