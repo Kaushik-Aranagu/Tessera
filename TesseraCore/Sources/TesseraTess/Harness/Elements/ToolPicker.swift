@@ -98,6 +98,13 @@ public enum ToolPicker {
         if rehearse != nil {
             tools = [RehearseFlags.tool] + tools.filter { $0 != RehearseFlags.tool }
         }
+        if TessGuide.isAbout(ask) {
+            // How the app or she works: the guide rides right after the calls that lead (the ones he named, the look
+            // calls and the rehearsal), so the cut can only drop a shown call or a read, never one of those.
+            let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) || $0 == RehearseFlags.tool }
+                .count
+            tools.insert(TessGuide.name, at: lead)
+        }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks, rehearse: rehearse, count: rehearse == nil ? nil : RehearseFlags.count(ask))
     }

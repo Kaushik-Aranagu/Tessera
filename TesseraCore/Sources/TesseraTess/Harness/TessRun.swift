@@ -286,7 +286,7 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec]
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec, TessGuide.spec]
     }
 
     /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
@@ -341,6 +341,10 @@ public final class TessRun {
         }
         let specs = pick.map { Self.toolSpecs(only: $0.tools) }
             ?? Self.toolSpecs()
+        if withTools, pick?.tools.contains(TessGuide.name) == true {
+            // Tier 1 of the guide: what it holds, so she pages in only what the ask needs.
+            fragments.append(PackFragment(TessGuide.contentsLine))
+        }
         if let reason = pick?.rehearse, specs.contains(where: { $0.name == RehearseFlags.tool }) {
             // Only when the phone has the rehearsal: a line about a tool she wasn't given would mislead her.
             fragments.append(PackFragment(RehearseFlags.line(reason, count: pick?.count)))
@@ -560,6 +564,9 @@ public final class TessRun {
                 .flatMap { $0 as? String }?.hasPrefix("/") == true
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar, index: isPath ? memoryIndex(for: runID) : nil)
+        case TessGuide.name:
+            // What the app is, never his data: the same page on every rung and policy.
+            result = TessGuide.run(arguments: input)
         case Self.askAgent:
             // Tess asks her rooms; each runs as itself, in parallel, and its writes land as ghost rows.
             let answer = await askAgents(input, handles: handles, onDevice: onDevice)
@@ -837,16 +844,21 @@ public final class TessRun {
                 }
             }
             if last.role == .assistant {
-                let uses = last.content.compactMap { piece -> (String, String)? in
-                    if case let .toolUse(id, name, _) = piece {
-                        (id, name)
+                let uses = last.content.compactMap { piece -> (String, String, Data)? in
+                    if case let .toolUse(id, name, input) = piece {
+                        (id, name, input)
                     } else {
                         nil
                     }
                 }
-                state.messages.append(BrainMessage(.user, uses.map { id, name in
+                state.messages.append(BrainMessage(.user, uses.map { id, name, input in
                     if state.doneToolIDs.contains(id), let text = state.toolResults[id] {
                         return .toolResult(id: id, content: text, isError: false)
+                    }
+                    if name == TessGuide.name {
+                        // A pure read of what the app is: it runs again rather than reading as interrupted.
+                        let page = TessGuide.run(arguments: input)
+                        return .toolResult(id: id, content: page.text, isError: page.isError)
                     }
                     if name == TessOpenTool.name || name == "query" {
                         return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
