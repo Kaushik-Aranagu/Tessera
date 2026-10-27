@@ -230,6 +230,8 @@ struct GalleyModeReceipt: View {
 struct GalleyModeScreen<Content: View, Thumb: View>: View {
     let room: String
     let topRight: String
+    /// The top right line, bold in this colour for a moment ("Everything for the tacos"); nil is the quiet count.
+    var topRightEmphasis: Color?
     var back: () -> Void
     var verb: () -> Void
     @ViewBuilder var content: Content
@@ -251,8 +253,8 @@ struct GalleyModeScreen<Content: View, Thumb: View>: View {
                     .accessibilityLabel("Back to \(room)")
                     Spacer()
                     Text(topRight)
-                        .font(GalleyPaper.plex(.medium, 16))
-                        .foregroundStyle(GalleyPaper.inkSecondary)
+                        .font(GalleyPaper.plex(topRightEmphasis == nil ? .medium : .bold, 16))
+                        .foregroundStyle(topRightEmphasis ?? GalleyPaper.inkSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
@@ -357,4 +359,32 @@ enum GalleySpike {
     static let printDuration: TimeInterval = 0.62
     /// The fraction of the summary revealed after each step.
     static let reveal: [CGFloat] = (1 ... printSteps).map { CGFloat($0) / CGFloat(printSteps) }
+}
+
+extension View {
+    /// Sheet 332: a thing arrives from 30 pt right, 360 ms, 40 ms after the one before it; under Reduce Motion it is
+    /// simply there. While `shown` is false the block is invisible, so two things never overlap.
+    func arrives(_ shown: Bool, order: Int, reduceMotion: Bool) -> some View {
+        offset(x: shown || reduceMotion ? 0 : 30)
+            .opacity(shown || reduceMotion ? 1 : 0)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.36).delay(0.04 * Double(order)), value: shown)
+    }
+}
+
+/// "Not here" (sheet 339): the other rows slide up over 340 ms, then the skipped row settles in last over 440 ms and
+/// fades in on the second half. The rows are planned first so they never cross.
+enum GalleyNotHere {
+    static let slide: TimeInterval = 0.34
+    static let settle: TimeInterval = 0.44
+
+    /// The rows without the moving one, and the rows with it at the end of the open ones (before the struck ones).
+    static func plan(rows: [GalleyShopScreen.Line],
+                     moving id: String) -> (without: [GalleyShopScreen.Line], final: [GalleyShopScreen.Line])
+    {
+        guard let moved = rows.first(where: { $0.id == id }) else { return (rows, rows) }
+        let others = rows.filter { $0.id != id }
+        let open = others.filter { !$0.struck }
+        let struck = others.filter(\.struck)
+        return (others, open + [moved] + struck)
+    }
 }

@@ -284,5 +284,36 @@ struct CookAlertContentTests {
         #expect(url.scheme == "tessera" && url.host() == "cook")
         #expect(items.first { $0.name == "cook" }?.value == cook.uuidString)
         #expect(items.first { $0.name == "alert" }?.value == "Chicken")
+
+struct GalleyNotHereTests {
+    private func line(_ id: String, struck: Bool = false) -> GalleyShopScreen.Line {
+        .init(id: id, name: id, amount: nil, struck: struck)
+    }
+
+    /// Sheet 339: the other rows slide up without the moving one; it lands after the open rows and before the struck.
+    @Test func theSkippedRowSettlesInLastWithoutCrossingAnyOther() {
+        let rows = [line("a"), line("b"), line("c"), line("x", struck: true)]
+        let plan = GalleyNotHere.plan(rows: rows, moving: "a")
+        #expect(plan.without.map(\.id) == ["b", "c", "x"])
+        #expect(plan.final.map(\.id) == ["b", "c", "a", "x"])
+        #expect(GalleyNotHere.slide == 0.34 && GalleyNotHere.settle == 0.44)
+        // A thing that is not there changes nothing.
+        #expect(GalleyNotHere.plan(rows: rows, moving: "z").final.map(\.id) == ["a", "b", "c", "x"])
+    }
+}
+
+struct GalleyCoveredTests {
+    /// Sheet 342: covered only when a planned dish has things on the list and every one is in the basket.
+    @Test func tonightIsCoveredWhenEverythingIsGot() {
+        var facts = GalleyShopFacts()
+        #expect(!facts.tonightCovered && facts.coveredLine == nil)
+        facts.tonight = "Tacos"
+        #expect(!facts.tonightCovered)
+        facts.tonightLines = ["Onions", "Limes"]
+        facts.tonightGot = [0]
+        #expect(!facts.tonightCovered)
+        facts.tonightGot = [0, 1]
+        #expect(facts.tonightCovered && facts.coveredLine == "Everything for the tacos")
+        #expect(!(facts.coveredLine ?? "").hasSuffix("."))
     }
 }

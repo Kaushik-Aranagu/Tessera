@@ -45,6 +45,16 @@ struct GalleyShopFacts: Equatable {
     var left: Int {
         aisles.reduce(0) { $0 + $1.items.count }
     }
+
+    /// Everything for tonight's dish is in the basket (sheet 342): a planned dish with things on the list, all got.
+    var tonightCovered: Bool {
+        tonight != nil && !tonightLines.isEmpty && tonightGot.count == tonightLines.count
+    }
+
+    /// "Everything for the tacos", shown for a moment when tonight's dish goes from not covered to covered.
+    var coveredLine: String? {
+        tonight.map { "Everything for the \($0.lowercased())" }
+    }
 }
 
 /// Shopping mode's whole screen as data (sheet 328): the aisle and where it is, the thing at 64 pt with its amount, why
