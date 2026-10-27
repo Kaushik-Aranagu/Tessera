@@ -215,6 +215,8 @@ struct RoutineModePage: View {
                 }
                 Spacer(minLength: 8)
                 GalleyModeRail(items: data.rail, tint: ink) { _ in }
+                    // The thumb zone sits over the sky's lightest band: a soft shadow keeps the steps readable.
+                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
                     .allowsHitTesting(false)
             }
         }
@@ -226,6 +228,7 @@ struct RoutineModePage: View {
             .foregroundStyle(color)
             .lineLimit(1)
             .fixedSize()
+            .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
             .frame(minHeight: 36)
             .contentShape(Rectangle())
             .onTapGesture {
