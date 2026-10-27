@@ -284,6 +284,8 @@ struct CookAlertContentTests {
         #expect(url.scheme == "tessera" && url.host() == "cook")
         #expect(items.first { $0.name == "cook" }?.value == cook.uuidString)
         #expect(items.first { $0.name == "alert" }?.value == "Chicken")
+    }
+}
 
 struct GalleyNotHereTests {
     private func line(_ id: String, struck: Bool = false) -> GalleyShopScreen.Line {
