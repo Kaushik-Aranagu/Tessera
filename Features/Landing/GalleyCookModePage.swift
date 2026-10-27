@@ -30,6 +30,8 @@ struct GalleyCookModePage: View {
     @State private var retired = false
     @State private var eat: GalleyCookEat?
     @State private var eatReveal: CGFloat = 0
+    /// Counts Undos of Serve, so a Serve still printing stops when it is taken back.
+    @State private var served = 0
 
     var body: some View {
         ZStack {
@@ -82,7 +84,7 @@ struct GalleyCookModePage: View {
                 }
                 try? await Task.sleep(for: .seconds(1))
                 let last = Self.facts(session: session, model: model, now: AppClock.now, opened: opened)
-                if session.finish(note: nil) {
+                if session.finish(note: nil, takeBack: { reopen(session) }) {
                     await serve(last)
                 }
             } else {
@@ -155,6 +157,7 @@ struct GalleyCookModePage: View {
     /// 300 ms in the Eat summary prints down in eight steps over 620 ms.
     private func serve(_ facts: GalleyCookFacts) async {
         let summary = GalleyCookEat(facts)
+        let mine = served
         guard !reduceMotion else {
             eat = summary
             eatReveal = 1
@@ -170,13 +173,27 @@ struct GalleyCookModePage: View {
             retired = true
         }
         try? await Task.sleep(for: .milliseconds(Int(GalleySpike.printDelay * 1000)))
+        guard mine == served else { return }
         eatReveal = 0
         eat = summary
         let step = GalleySpike.printDuration / Double(GalleySpike.printSteps)
         for fraction in GalleySpike.reveal {
+            guard mine == served else { return }
             eatReveal = fraction
             try? await Task.sleep(for: .milliseconds(Int(step * 1000)))
         }
+    }
+
+    /// Undo of Serve: the cook is open again, so the Eat summary goes and the ticket comes back as it was.
+    private func reopen(_ session: CookClockSession) {
+        served += 1
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            eat = nil
+            eatReveal = 0
+            spiked = false
+            retired = false
+        }
+        session.armEnd()
     }
 
     /// The paper has fed `feed` points: the alert sits in the space it freed, on a 28 pt line with a dashed rule under
@@ -406,7 +423,7 @@ struct GalleyCookModePage: View {
     private func primary(_ session: CookClockSession, _ data: GalleyCookScreen) {
         if data.hold {
             let facts = Self.facts(session: session, model: model, now: AppClock.now, opened: opened)
-            if session.finish(note: nil) {
+            if session.finish(note: nil, takeBack: { reopen(session) }) {
                 Task { await serve(facts) }
             }
         } else {
