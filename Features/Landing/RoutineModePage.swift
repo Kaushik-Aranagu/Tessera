@@ -294,7 +294,7 @@ struct RoutineModePage: View {
     private func notTonight() {
         guard let before = run, let beat = before.beat else { return }
         mutate { $0.notTonight(now: AppClock.now) }
-        TessVoice.shared.say("\(before.steps[beat.step].title), left for tomorrow", takeBack: { run = before })
+        TessVoice.shared.say("Tidy, tomorrow", takeBack: { run = before })
     }
 
     private func finish() {
