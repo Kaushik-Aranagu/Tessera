@@ -12,6 +12,11 @@ struct DialDoor: Identifiable, Equatable {
     var label: String?
     /// Up to four short lines beside the focus, the first bold (16 pt): the door's own summary, in the room's way.
     var lines: [String] = []
+    /// Sheet 320: ledger rows (name, right-aligned number, unit). When present `DoorSummary` draws the ledger
+    /// (`DoorLedger`) with `label` above and `more` below, instead of `lines`.
+    var rows: [DialDoor.Row] = []
+    /// The quiet last line of the ledger (12 pt): what opening the door adds.
+    var more: String?
 }
 
 /// The landing dial: 3 places (focus plus one above, one below), 48 pt slots, loops, a tick per door, a spring
@@ -316,7 +321,9 @@ struct DoorSummary: View {
     }
 
     var body: some View {
-        if let door, door.label != nil || !door.lines.isEmpty {
+        if let door, !door.rows.isEmpty {
+            DoorLedger(label: door.label, rows: door.rows, more: door.more)
+        } else if let door, door.label != nil || !door.lines.isEmpty {
             switch style {
             case .plain:
                 // The standing shell plays the move itself (`ownMove` false): then the summary keeps one identity.
