@@ -239,3 +239,13 @@ When the weight changes (a drag, Easy or Hard, Lighter), the bar on the blackboa
 - With Reduce Motion the bar just redraws.
 
 For the builders: diff the per-side plate lists from the inside out; only the changed tail animates.
+
+## Sheet 332: a pen stroke for Got it
+
+On the shopping ticket, the thing you just got is struck through by a pen.
+- The stroke is a single 1.6 pt line drawn left to right in 300 ms, at a slight angle (−0.6°), like a hand stroke.
+- The words fade to 42% after the stroke has crossed them.
+- Earlier got lines stay struck and quiet.
+- With Reduce Motion the line is simply there.
+
+For the builders: an overlay `Path` with `.trim(from:0,to:p)` animated on insert.
