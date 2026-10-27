@@ -41,11 +41,12 @@ public enum TessZoomTool {
         }
         let read = pyramid.zoom(asked, policy: policy, gists: gists)
         guard read.isError else { return read }
-        // Nothing there: the nearest node above it that is, so she steps up instead of guessing.
+        // Nothing there: the nearest node above it that holds something, so she steps up instead of guessing. An
+        // empty root (no past yet) holds nothing.
         var path = asked.hasSuffix("/") ? String(asked.dropLast()) : asked
         while path.count > MemoryPyramid.root.count {
             path = MemoryPyramid.parent(path)
-            if !pyramid.zoom(path, policy: policy).isError {
+            if pyramid.nodes[path]?.children.isEmpty == false, !pyramid.zoom(path, policy: policy).isError {
                 return ("Nothing there. Try \(path)", true)
             }
         }
