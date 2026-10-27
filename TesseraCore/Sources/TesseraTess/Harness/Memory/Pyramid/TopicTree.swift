@@ -40,6 +40,8 @@ public struct TopicWords: Sendable {
 /// - **Collapse**: a node left with one child goes, and the child takes its place.
 /// - **Settle**: up to `settlePerNight` leaves move to the holder they fit at least one word better.
 /// - At most `changesPerNight` splits, merges and collapses a night, and every change is logged.
+/// - **Prune**: first each night, a leaf the tree may no longer see goes, and so does a holder it leaves empty. This
+///   is the walls, not the shape, so it has no cap.
 ///
 /// Finding is exact: `find` opens every child that holds a matching leaf, best first, so the tree ranks and never
 /// hides (in the simulation a reader that trusted shown keys lost half the recall). Walls: each policy keeps its own
@@ -64,6 +66,10 @@ public struct TopicTree: Codable, Sendable, Equatable {
         case merge(kept: String, removed: String)
         case collapse(String, child: String)
         case move(leaf: String, from: String, to: String)
+        /// A leaf this tree may no longer see (deleted, or walled since it was filed) left its holder.
+        case drop(leaf: String, from: String)
+        /// A holder left with nothing went.
+        case remove(String)
     }
 
     public struct Logged: Codable, Sendable, Equatable {
@@ -172,10 +178,11 @@ public struct TopicTree: Codable, Sendable, Equatable {
         }
     }
 
-    /// The night's upkeep: splits (biggest first), merges, collapses, under the cap, then leaves settle. Returns what
-    /// changed.
+    /// The night's upkeep: the prune, then splits (biggest first), merges and collapses under the cap, then leaves
+    /// settle. Returns what changed.
     @discardableResult
     public mutating func night(words: TopicWords, now: Date) -> [Change] {
+        let pruned = prune(words: words)
         var changes: [Change] = []
         for node in nodes.values.sorted(by: { ($0.size, $1.id) > ($1.size, $0.id) }) where node.size > splitAt {
             guard changes.count < changesPerNight else { break }
@@ -189,15 +196,57 @@ public struct TopicTree: Codable, Sendable, Equatable {
         while changes.count < changesPerNight, let lone = nodes.values.filter({ node in
             node.id != Self.root && node.leaves.isEmpty && node.children.count == 1
         }).map(\.id).min() {
-            changes.append(collapse(lone))
+            guard let change = collapse(lone) else { break }
+            changes.append(change)
         }
-        changes += settle(words: words)
+        changes = pruned + changes + settle(words: words)
         coUse = coUse.mapValues { $0 * 0.8 }.filter { $0.value >= 0.5 }
         log += changes.map { Logged(at: now, change: $0) }
         if log.count > Self.logLimit {
             log.removeFirst(log.count - Self.logLimit)
         }
         return changes
+    }
+
+    /// Takes out every leaf the words don't hold: under strict anything walled now, under both anything deleted. A
+    /// holder left empty goes, up the tree, and a node that leaves with one child collapses. Without it a stale id
+    /// would still count in sizes, splits, merges and settling.
+    mutating func prune(words: TopicWords) -> [Change] {
+        var changes: [Change] = []
+        var touched: Set<String> = []
+        for id in nodes.keys.sorted() {
+            guard let node = nodes[id] else { continue }
+            for leaf in node.leaves where words.of[leaf] == nil {
+                changes.append(.drop(leaf: leaf, from: id))
+            }
+            nodes[id]?.leaves.removeAll { words.of[$0] == nil }
+        }
+        while let empty = nodes.values.filter({ node in
+            node.id != Self.root && node.leaves.isEmpty && node.children.isEmpty
+        }).map(\.id).min() {
+            if let parent = nodes[empty]?.parent {
+                nodes[parent]?.children.removeAll { $0 == empty }
+                touched.insert(parent)
+            }
+            nodes[empty] = nil
+            forget(empty)
+            touched.remove(empty)
+            changes.append(.remove(empty))
+        }
+        while let lone = touched.filter({ id in
+            id != Self.root && nodes[id]?.leaves.isEmpty == true && nodes[id]?.children.count == 1
+        }).min() {
+            touched.remove(lone)
+            if let change = collapse(lone) {
+                changes.append(change)
+            }
+        }
+        return changes
+    }
+
+    /// Drops the co-use counts of a node that went.
+    mutating func forget(_ id: String) {
+        coUse = coUse.filter { !$0.key.split(separator: "|").contains(Substring(id)) }
     }
 
     mutating func newID() -> String {
@@ -313,17 +362,17 @@ public struct TopicTree: Codable, Sendable, Equatable {
             nodes[parent]?.children.removeAll { $0 == removed }
         }
         nodes[removed] = nil
-        coUse = coUse.filter { !$0.key.split(separator: "|").contains(Substring(removed)) }
+        forget(removed)
         return .merge(kept: kept, removed: removed)
     }
 
-    mutating func collapse(_ id: String) -> Change {
-        guard let node = nodes[id], let child = node.children.first, let parent = node.parent else {
-            return .collapse(id, child: "")
-        }
+    mutating func collapse(_ id: String) -> Change? {
+        guard let node = nodes[id], node.children.count == 1, let child = node.children.first,
+              let parent = node.parent else { return nil }
         nodes[parent]?.children = nodes[parent]?.children.map { $0 == id ? child : $0 } ?? []
         nodes[child]?.parent = parent
         nodes[id] = nil
+        forget(id)
         return .collapse(id, child: child)
     }
 
@@ -374,7 +423,8 @@ public struct TopicTree: Codable, Sendable, Equatable {
 }
 
 /// The topic axis under the walls: one tree per policy. Lab files every leaf; strict files only claude-safe ones, so
-/// its shape, keys and finds read exactly as if the walled leaves never happened.
+/// its shape, keys and finds read exactly as if the walled leaves never happened. A leaf walled or deleted later
+/// leaves at the next night's prune.
 public struct TopicMemory: Codable, Sendable, Equatable {
     public private(set) var lab = TopicTree()
     public private(set) var strict = TopicTree()

@@ -178,6 +178,60 @@ struct TopicTreeTests {
         #expect(tree.nodes[root]?.children == [y, c] && tree.nodes[y]?.parent == root && tree.nodes[x] == nil)
     }
 
+    // MARK: Pruning
+
+    @Test func aLeafWalledAfterItWasFiledLeavesTheStrictTree() throws {
+        let all = leaves()
+        var memory = TopicMemory()
+        memory.add(all, all: all)
+        memory.night(all, now: now)
+        let walled = id("garden", 0)
+        let holder = try #require(memory.strict.holder(of: walled))
+        let later = all.map { leaf in
+            var leaf = leaf
+            if leaf.id == walled {
+                leaf.taint = .deviceOnly
+            }
+            return leaf
+        }
+        let changes = memory.night(later, now: now.addingTimeInterval(86400))
+        #expect(changes.strict.first == .drop(leaf: walled, from: holder))
+        #expect(!changes.lab.contains { if case .drop = $0 { true } else { false } })
+        let strict = memory.strict
+        #expect(!strict.leaves(under: TopicTree.root).contains(walled) && strict.holder(of: walled) == nil)
+        #expect(strict.nodes.values.reduce(0) { $0 + $1.leaves.count } == all.count - 1)
+        #expect(strict.nodes[holder]?.leaves.contains(walled) == false)
+        #expect(memory.lab.leaves(under: TopicTree.root).contains(walled))
+        #expect(strict.log.contains { $0.change == .drop(leaf: walled, from: holder) })
+    }
+
+    @Test func aDeletedLeafLeavesBothTrees() {
+        let all = leaves()
+        var memory = TopicMemory()
+        memory.add(all, all: all)
+        memory.night(all, now: now)
+        let deleted = id("garden", 0)
+        let changes = memory.night(all.filter { $0.id != deleted }, now: now.addingTimeInterval(86400))
+        for (tree, night) in [(memory.lab, changes.lab), (memory.strict, changes.strict)] {
+            #expect(night.contains { if case .drop(deleted, _) = $0 { true } else { false } })
+            #expect(!tree.leaves(under: TopicTree.root).contains(deleted))
+            #expect(tree.nodes.values.reduce(0) { $0 + $1.leaves.count } == all.count - 1)
+        }
+    }
+
+    @Test func aHolderLeftEmptyGoesAndItsLoneParentCollapses() {
+        let words = TopicWords(leaves().filter { $0.id != id("garden", 0) }, policy: .lab)
+        let x = root + "/t5"
+        var tree = makeTree([node(root, nil, children: [x, c]), node(x, root, children: [a, b]),
+                             node(a, x, leaves: garden(0)), node(b, x, leaves: garden(1, 2, 3)),
+                             node(c, root, leaves: guitar(0, 1, 2))])
+        let first = tree.night(words: words, now: now)
+        #expect(first == [.drop(leaf: id("garden", 0), from: a), .remove(a), .collapse(x, child: b)])
+        #expect(tree.nodes[root]?.children == [b, c] && tree.nodes[b]?.parent == root)
+        #expect(tree.nodes[a] == nil && tree.nodes[x] == nil)
+        #expect(tree.night(words: words, now: now).isEmpty)
+    }
+
     // MARK: Walls
 
     @Test func strictReadsAsIfTheWalledLeavesNeverHappened() {
