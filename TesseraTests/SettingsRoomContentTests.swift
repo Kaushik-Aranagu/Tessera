@@ -10,8 +10,8 @@ struct SettingsRoomContentTests {
     static var facts: SettingsRoomContent.Facts {
         SettingsRoomContent.Facts(
             settings: SettingsLandingFacts(remembers: "12 things", asksClaude: true, units: ["kg", "km", "°F"],
-                                           backupLine: "Last backup this afternoon, 1:11 pm.", build: "1.0 (100)",
-                                           privacyLines: ["3 notes are private."]),
+                                           backupLine: "Last backup this afternoon, 1:11 pm", build: "1.0 (100)",
+                                           privacyLines: ["3 notes are private"]),
             seen: [:],
             colors: SettingsLandingWords.Colors(ink: .black, slate: .blue, green: .green, gold: .yellow)
         )

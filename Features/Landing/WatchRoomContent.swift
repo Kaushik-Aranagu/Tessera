@@ -153,8 +153,8 @@ struct WatchRoomContent: RoomContent {
     private func door(_ id: String) -> Screen {
         let door = facts.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
-        let line = rows.isEmpty ? "Nothing planted here yet."
-            : "\(rows.count) \(rows.count == 1 ? "routine" : "routines") growing here."
+        let line = rows.isEmpty ? "Nothing planted here yet"
+            : "\(rows.count) \(rows.count == 1 ? "routine" : "routines") growing here"
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "watch.nav.watch", kind: .text, payload: .navWord("Watch")),
@@ -203,7 +203,7 @@ enum WatchActions {
             return nil
         }
         guard let made = try? model.engine.perform(CreateRoutine(title: title), by: .user) else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return nil
         }
         var records = [made.record]
@@ -213,7 +213,7 @@ enum WatchActions {
             records.append(added.record)
         }
         model.touch()
-        TessVoice.shared.say("\(title) planted.", takeBack: { [model] in
+        TessVoice.shared.say("\(title) planted", takeBack: { [model] in
             for record in records.reversed() {
                 model.engine.undo(record)
             }
@@ -223,7 +223,7 @@ enum WatchActions {
     }
 
     static func watered(_ name: String) {
-        TessVoice.shared.say("\(name), watered.")
+        TessVoice.shared.say("\(name), watered")
     }
 
     /// Pause (or resume) today, on this phone only, with a take-back.
@@ -232,7 +232,7 @@ enum WatchActions {
         let was = WatchPause.isPaused(on: day)
         WatchPause.set(!was, on: day)
         model.touch()
-        TessVoice.shared.say(was ? "Watch back on for today." : "Watch paused for today. Nothing is marked missed.",
+        TessVoice.shared.say(was ? "Watch back on for today" : "Watch paused for today. Nothing is marked missed",
                              takeBack: { [model] in
                                  WatchPause.set(was, on: day)
                                  model.touch()

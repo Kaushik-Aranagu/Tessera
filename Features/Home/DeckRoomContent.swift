@@ -11,7 +11,7 @@ struct DeckRoomContent: RoomContent {
     static let title = "Deck"
     static let boardKey = "deck.board"
     static let boardLabel = "The board"
-    static let caption = ["Tap a number to open the lift. Swipe left to wipe."]
+    static let caption = ["Tap a number to open the lift. Swipe left to wipe"]
     static let firstDoor = "today"
 
     struct Facts: Equatable {
@@ -64,7 +64,7 @@ struct DeckRoomContent: RoomContent {
     private func door(_ id: String) -> Screen {
         let door = facts.wall.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
-        let line = door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet." : "")
+        let line = door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet" : "")
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "deck.nav.deck", kind: .text, payload: .navWord(Self.title)),
@@ -214,8 +214,8 @@ struct DeckActions {
         case "log": goTo(logOrPage)
         case "rest":
             // Nothing is written: the plan keeps its day; Tess only says so.
-            TessVoice.shared.say("Rest it is. Nothing logged, the plan keeps its day.")
-        case "walk": TessVoice.shared.say("Walks come in from Health.")
+            TessVoice.shared.say("Rest it is. Nothing logged, the plan keeps its day")
+        case "walk": TessVoice.shared.say("Walks come in from Health")
         case "startNext": startNext()
         case "library": goTo(.library)
         default: break

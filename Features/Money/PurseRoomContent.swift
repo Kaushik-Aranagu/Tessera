@@ -90,12 +90,12 @@ struct PurseRoomContent: RoomContent {
     static func doorLine(id _: String, rows: [ShellRow], isFirst: Bool) -> String {
         let real = rows.filter { !$0.id.hasPrefix(Facts.placeholderPrefix) }
         if real.isEmpty {
-            return isFirst ? "Nothing here yet." : "Not set up yet."
+            return isFirst ? "Nothing here yet" : "Not set up yet"
         }
         if isFirst {
-            return "\(real.count) \(real.count == 1 ? "spend" : "spends"), newest first."
+            return "\(real.count) \(real.count == 1 ? "spend" : "spends"), newest first"
         }
-        return "\(real.count) \(real.count == 1 ? "index" : "indices"), no figures here."
+        return "\(real.count) \(real.count == 1 ? "index" : "indices"), no figures here"
     }
 
     // MARK: Shared by both levels (same ids: the chart, title, caption and action are not touched)
@@ -186,7 +186,7 @@ extension PurseRoomContent.Facts {
 
     /// The chart in words, never a figure: "Heading down at this pace." / "Nothing yet".
     static func caption(_ wall: MoneyWall) -> String {
-        wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month."
+        wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month"
     }
 
     /// Two lines beside the switcher: the month in words, or that the longer views come next. Never a figure.
@@ -334,7 +334,7 @@ struct PurseShellHost: View {
                     navigator.binding(\.switcherIndex).wrappedValue = 0
                 }
             case "plan":
-                TessVoice.shared.say("Plans for the month come with Bills.")
+                TessVoice.shared.say("Plans for the month come with Bills")
             default:
                 draft = ""
                 adding = true

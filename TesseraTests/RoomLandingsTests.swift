@@ -69,8 +69,8 @@ struct RoomLandingsTests {
         #expect(MoneyWall.stateLine(monthCount: 0, monthName: "October", trend: nil) == ["Nothing yet"])
         let forms = MoneyWall.stateLine(monthCount: 12, monthName: "September",
                                         trend: "September is running a little under August.")
-        #expect(forms.first == "September is running a little under August, 12 spends so far.")
-        #expect(forms.last == "12 spends.")
+        #expect(forms.first == "September is running a little under August, 12 spends so far")
+        #expect(forms.last == "12 spends")
         Self.checkForms(forms, "Money state line")
         #expect(!forms.joined().contains("left"))
     }
@@ -121,8 +121,8 @@ struct RoomLandingsTests {
         #expect(pass.tickets[2].lines == ["Eggs", "Milk"])
         #expect(pass.tickets[0].opens != .recipes && pass.tickets[1].opens == .groceries && pass.tickets[2]
             .opens == .pantry)
-        #expect(pass.lowLine?.first?.text == "Eggs and Milk run out first.")
-        #expect(pass.stateLine.first == "Tacos tonight, start at 6:05 pm.")
+        #expect(pass.lowLine?.first?.text == "Eggs and Milk run out first")
+        #expect(pass.stateLine.first == "Tacos tonight, start at 6:05 pm")
         #expect(pass.tickets.count <= GalleyPass.maxTickets)
     }
 
@@ -139,7 +139,7 @@ struct RoomLandingsTests {
     @Test func galleyEmptyStateAndForms() {
         let empty = GalleyPass.build(dinner: nil, toGet: [], stock: [], cookable: [], cooking: nil)
         #expect(empty.tickets.map(\.title) == ["Tonight?"] && empty.tickets[0].sub == "nothing planned yet")
-        #expect(empty.stateLine == ["Tonight? Nothing planned yet."])
+        #expect(empty.stateLine == ["Tonight? Nothing planned yet"])
         let ask = GalleyPass.build(dinner: nil, toGet: [], stock: [], cookable: ["Dal", "Pasta"], cooking: nil)
         #expect(ask.tickets[0].lines == ["you could make", "Dal", "Pasta"])
         Self.checkForms(ask.stateLine, "Galley empty", size: 26)

@@ -111,15 +111,15 @@ struct GalleyPass: Equatable {
         }
         if let dinner {
             if let start = dinner.start {
-                forms.append("\(dinner.title) tonight, start at \(start).")
+                forms.append("\(dinner.title) tonight, start at \(start)")
             }
-            forms.append("\(dinner.title) tonight.")
+            forms.append("\(dinner.title) tonight")
             return forms
         }
         if cookable > 0 {
-            forms.append("Tonight? Nothing planned yet, you could make \(cookable).")
+            forms.append("Tonight? Nothing planned yet, you could make \(cookable)")
         }
-        forms.append("Tonight? Nothing planned yet.")
+        forms.append("Tonight? Nothing planned yet")
         return forms
     }
 
@@ -128,10 +128,10 @@ struct GalleyPass: Equatable {
         guard let first = low.first else { return nil }
         if low.count >= 2 {
             let pair = "\(low[0]) and \(low[1])"
-            return [LandingBrief.Form(text: "\(pair) run out first.", key: pair),
-                    LandingBrief.Form(text: "\(first) runs out first.", key: first)]
+            return [LandingBrief.Form(text: "\(pair) run out first", key: pair),
+                    LandingBrief.Form(text: "\(first) runs out first", key: first)]
         }
-        return [LandingBrief.Form(text: "\(first) runs out first.", key: first)]
+        return [LandingBrief.Form(text: "\(first) runs out first", key: first)]
     }
 }
 
@@ -418,7 +418,7 @@ struct KitchenLandingPage: View {
         }
         guard let cook = try? model.engine.perform(StartCooking(recipe: recipe, time: AppClock.now), by: .user).output
         else {
-            TessVoice.shared.say("Didn't start that. Try again.")
+            TessVoice.shared.say("Didn't start that. Try again")
             return
         }
         model.touch()

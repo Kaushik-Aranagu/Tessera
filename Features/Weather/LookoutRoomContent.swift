@@ -95,7 +95,7 @@ struct LookoutRoomContent: RoomContent {
                 let wet = WeatherWords.isWet(hour.kind)
                 return LookoutDetail(id: id, title: WeatherWords.hour(hour.date, calendar: calendar), lines: [
                     "\(WeatherWords.degrees(hour.temperature)), \(WeatherWords.name(hour.kind, night: false).lowercased())",
-                    wet ? "Wet. Take a coat." : "Dry.",
+                    wet ? "Wet. Take a coat" : "Dry.",
                     "Wind \(snapshot.wind) \(WeatherWords.windUnit(snapshot.fahrenheit))",
                 ])
             case .week:
@@ -106,7 +106,7 @@ struct LookoutRoomContent: RoomContent {
                 return LookoutDetail(id: id, title: weekday, lines: [
                     WeatherWords.name(day.kind, night: false),
                     "High \(WeatherWords.degrees(day.high)), low \(WeatherWords.degrees(day.low))",
-                    WeatherWords.isWet(day.kind) ? "Wet. Plan for rain." : "Dry.",
+                    WeatherWords.isWet(day.kind) ? "Wet. Plan for rain" : "Dry.",
                 ])
             case .air:
                 return LookoutDetail(id: id, title: "Air", lines: WeatherWords.airLines(snapshot))
@@ -164,9 +164,9 @@ struct LookoutRoomContent: RoomContent {
         let lines = facts.lines(door)
         let rows = lines.enumerated().map { ShellRow(id: "\(door.rawValue).\($0.offset)", title: $0.element) }
         let line = switch door {
-        case .hours: "The next \(lines.count) hours."
-        case .week: lines.isEmpty ? "A steady week." : "The days to note."
-        case .air: "Air, sun and wind now."
+        case .hours: "The next \(lines.count) hours"
+        case .week: lines.isEmpty ? "A steady week" : "The days to note"
+        case .air: "Air, sun and wind now"
         }
         return Screen(layout: .door, slots: [
             .title: title,

@@ -202,8 +202,8 @@ enum WatchWords {
 
     /// The caption at rest: how to touch the woodland, longest first.
     static func restCaption(hasTrees: Bool) -> [String] {
-        hasTrees ? ["Tap a tree to name it, hold it to water.", "Tap a tree, hold to water.", "Tap a tree."]
-            : ["Plant a routine and it grows here.", "Nothing planted yet."]
+        hasTrees ? ["Tap a tree to name it, hold it to water", "Tap a tree, hold to water", "Tap a tree"]
+            : ["Plant a routine and it grows here", "Nothing planted yet"]
     }
 
     /// The widget items (283): what is next, the thirstiest tree in wine, and the day's tally in words. Routines here

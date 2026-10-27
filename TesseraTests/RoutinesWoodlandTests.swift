@@ -120,13 +120,13 @@ struct RoutinesWoodlandTests {
     @Test func stateLineFormsAreLongestFirstWithNoCounters() {
         let trees = [Self.tree(done: true), Self.tree(), Self.tree(marks: [.slipped, .slipped, .slipped])]
         let forms = RoutinesWoodlandFacts.stateLine(trees)
-        #expect(forms.first == "1 done today, 1 to tend, 1 needs a little care.")
+        #expect(forms.first == "1 done today, 1 to tend, 1 needs a little care")
         #expect(forms == forms.sorted { $0.count > $1.count })
         for form in forms {
             #expect(!form.contains(" of "))
             #expect(!form.contains("..."))
         }
-        #expect(RoutinesWoodlandFacts.stateLine([]).last == "Quiet day.")
+        #expect(RoutinesWoodlandFacts.stateLine([]).last == "Quiet day")
     }
 
     @Test func theShortestFormsFitAtDefaultAndAX5() throws {

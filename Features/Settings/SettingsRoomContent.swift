@@ -10,7 +10,7 @@ struct SettingsRoomContent: RoomContent {
     static let room = "settings"
     static let title = "Settings"
     static let wallLabel = "Setting areas"
-    static let caption = ["Tap an area to open it.", "Tap an area."]
+    static let caption = ["Tap an area to open it", "Tap an area"]
     static let firstDoor = SettingsArea.tess.rawValue
 
     struct Facts: Equatable {

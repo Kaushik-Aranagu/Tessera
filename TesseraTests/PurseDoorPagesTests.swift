@@ -39,11 +39,11 @@ struct PurseDoorPagesTests {
     @Test func doorLinesAreHonest() {
         let pages = PurseRoomContent.Facts.pages([:], categories: Self.categories)
         #expect(PurseRoomContent.doorLine(id: "saving", rows: pages["saving"] ?? [], isFirst: false)
-            == "Not set up yet.")
+            == "Not set up yet")
         #expect(PurseRoomContent.doorLine(id: "month", rows: pages["month"] ?? [], isFirst: true)
-            == "Nothing here yet.")
+            == "Nothing here yet")
         #expect(PurseRoomContent.doorLine(id: "kinds", rows: pages["kinds"] ?? [], isFirst: false)
-            == "2 indices, no figures here.")
+            == "2 indices, no figures here")
     }
 
     @Test func aPageScreenIsNeverEmpty() {

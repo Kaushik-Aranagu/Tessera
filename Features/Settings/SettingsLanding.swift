@@ -177,7 +177,8 @@ extension SettingsLandingFacts {
         let real = realModel ?? model
         let privacy = PrivacyPage.lines(engine: real.engine, claudeOn: real.asksClaude, backupLine: backupLine ?? "")
         return Self(remembers: memory.countWord(), asksClaude: model.asksClaude, units: units,
-                    backupLine: backupLine, build: BuildStamp.short, privacyLines: privacy)
+                    backupLine: backupLine.map(SettingsLandingWords.unstopped), build: BuildStamp.short,
+                    privacyLines: privacy.map(SettingsLandingWords.unstopped))
     }
 }
 
@@ -204,9 +205,9 @@ enum SettingsLandingWords {
         let remembers = nothing ? "Tess remembers nothing yet" : "Tess remembers \(facts.remembers)"
         let claude = facts.asksClaude ? ", and asks Claude only with your key" : ", all on this phone"
         return [
-            "\(remembers)\(claude).",
-            "\(remembers).",
-            nothing ? "Nothing kept." : "Tess keeps \(facts.remembers.split(separator: " ").first ?? "").",
+            "\(remembers)\(claude)",
+            "\(remembers)",
+            nothing ? "Nothing kept" : "Tess keeps \(facts.remembers.split(separator: " ").first ?? "")",
         ]
     }
 
@@ -263,17 +264,17 @@ enum SettingsLandingWords {
     static func doorLine(_ area: SettingsArea, facts: SettingsLandingFacts) -> String {
         switch area {
         case .tess:
-            stateLine(facts).first ?? "Tess remembers \(facts.remembers)."
+            stateLine(facts).first ?? "Tess remembers \(facts.remembers)"
         case .privacy:
-            facts.privacyLines.first ?? "Everything stays on this phone."
+            facts.privacyLines.first ?? "Everything stays on this phone"
         case .units:
-            facts.units.isEmpty ? "Standard units." : "Measures in \(LandingList.joined(facts.units))."
+            facts.units.isEmpty ? "Standard units" : "Measures in \(LandingList.joined(facts.units))"
         case .claude:
-            facts.asksClaude ? "Tess asks Claude only with your key." : "Tess never asks Claude. Nothing leaves."
+            facts.asksClaude ? "Tess asks Claude only with your key" : "Tess never asks Claude. Nothing leaves"
         case .backups:
-            facts.backupLine.flatMap { sentences($0).first } ?? "No backup read yet."
+            facts.backupLine.flatMap { sentences($0).first } ?? "No backup read yet"
         default:
-            "Tessera, build \(facts.build)."
+            "Tessera, build \(facts.build)"
         }
     }
 
@@ -335,7 +336,12 @@ enum SettingsLandingWords {
         return first.lowercased() == "this" && words.count > 1 ? "this \(words[1])" : first
     }
 
-    /// "A. B." into ["A.", "B."].
+    /// A shown line without its closing full stop ("..." is never used, so it is left alone).
+    static func unstopped(_ line: String) -> String {
+        line.hasSuffix(".") && !line.hasSuffix("..") ? String(line.dropLast()) : line
+    }
+
+    /// "A. B." into ["A", "B"].
     static func sentences(_ text: String) -> [String] {
         var result: [String] = []
         var current = ""
@@ -349,7 +355,8 @@ enum SettingsLandingWords {
         if !current.isEmpty {
             result.append(current)
         }
-        return result
+        // No shown line ends in a full stop (Kaushik, Oct 26).
+        return result.map(Self.unstopped)
     }
 }
 
