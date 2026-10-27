@@ -76,7 +76,7 @@ public struct AgentNotebook {
 
     /// Whether text may be kept at all: never a key, a secret word or a word of a private thing.
     func isWalled(_ text: String) -> Bool {
-        looksLikeClaudeKey(text) || SecretWords.mentions(text) || ObjectPrivacy.containsPrivateWord(text, in: store)
+        !Wall.judge(text, in: store).isDisjoint(with: [.key, .secret, .privateWord])
     }
 
     func write(_ path: String, body text: String, to existing: ObjectRecord? = nil) throws {
