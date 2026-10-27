@@ -12,6 +12,8 @@ struct TesseraApp: App {
     @State private var model: AppModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var didWarmUp = false
+    /// The test world's $20 monthly allowance (a `-testStore` launch only; nil otherwise).
+    private let testAllowance: TestSpendAllowance?
 
     init() {
         FontRegistry.registerAll()
@@ -28,6 +30,7 @@ struct TesseraApp: App {
             try? LegacyStore.migrate(into: container.mainContext)
         }
         let model = AppModel(context: container.mainContext, seedsStarterLists: true)
+        testAllowance = TestSpendAllowance.begin(store: model.store, classes: model.classes)
         // Fake history only when asked for (simulator, recordings): never on Kaushik's phone.
         // -resetDemo starts the first-launch rest day over too (QA low on #641); LaunchFlags is simulator-only.
         if LaunchFlags.has("-resetDemo") {
@@ -129,6 +132,9 @@ struct TesseraApp: App {
                 WatchBridge.shared.update(for: model.session)
             }
             .onChange(of: scenePhase, initial: true) { _, phase in
+                if phase != .active {
+                    testAllowance?.commit()
+                }
                 // Once a day, on the way out: a backup copy (docs/research/free-signing-survival.md).
                 if phase == .background {
                     BackupKeeper.runDaily(model.context)
