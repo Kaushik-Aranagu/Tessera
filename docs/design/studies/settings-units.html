@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Settings units</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M3 slice 12 (docs/design/m3-steers.md §12): Settings as sentences; changing a unit re-sets every number on screen with a tabular roll. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#D6E2F0 0%,rgba(214,226,240,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.sec{position:absolute;left:22px;font-size:34px;font-weight:500;letter-spacing:-.035em}
+.row{position:absolute;left:22px;right:22px;font-size:21px;line-height:30px;color:rgba(43,36,64,.88)}
+.v{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.col{display:inline-block;position:relative;height:30px;overflow:hidden;vertical-align:top;text-align:center}
+.col span{position:absolute;left:0;right:0;top:0;height:30px}
+.word{display:inline-block;position:relative}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+#meas{position:absolute;visibility:hidden;font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;white-space:pre}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <div id="page" class="abs" style="inset:0">
+    <div class="abs" style="left:20px;top:84px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Settings</div>
+
+    <div class="sec" style="top:172px">Units</div>
+    <div class="row" style="top:220px">Weights in <span class="v" data-v="w">kg</span></div>
+    <div class="row" style="top:258px">You weigh <span class="v" data-v="bw">78.4 kg</span></div>
+
+    <div class="sec" style="top:318px">Your gym</div>
+    <div class="row" style="top:366px">Bar weighs <span class="v" data-v="bar">20 kg</span>, smallest plate <span class="v" data-v="pl">1.25 kg</span></div>
+    <div class="row" style="top:434px">Dumbbells go up in <span class="v" data-v="db">2 kg</span></div>
+
+    <div class="sec" style="top:494px">Rest</div>
+    <div class="row" style="top:542px"><span class="v">2:30</span> unless a lift says otherwise</div>
+
+    <div class="sec" style="top:602px">Motion</div>
+    <div class="row" style="top:650px">Motion <span class="v" id="motion">follows the system</span></div>
+  </div>
+
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12);z-index:6">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+  </div>
+  <div class="abs" style="left:36px;top:778px;width:28px;height:24px;border-radius:52% 48% 60% 40%;background:radial-gradient(closest-side,rgba(46,109,164,.7),rgba(46,109,164,0));filter:blur(2px);z-index:7"></div>
+  <div id="finger" class="abs"></div>
+  <span id="meas"></span>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const tapEl = async (el) => { const r = rel(el.getBoundingClientRect()); await fingerOn(r.left + r.width / 2, r.top + r.height / 2); await sleep(110); fingerOff(); };
+const W = (ch) => { $('meas').textContent = ch; return $('meas').getBoundingClientRect().width / ($('ph').getBoundingClientRect().width / 390); };
+
+const VALUES = {
+  w: { kg: 'kg', lb: 'lb' },
+  bw: { kg: '78.4 kg', lb: '172.8 lb' },
+  bar: { kg: '20 kg', lb: '44.1 lb' },
+  pl: { kg: '1.25 kg', lb: '2.76 lb' },
+  db: { kg: '2 kg', lb: '4.4 lb' }
+};
+
+// a value as a row of character columns (tabular), so it can roll like the portion drum
+function setChars(el, str) {
+  el.innerHTML = '';
+  for (const ch of str) { const c = document.createElement('span'); c.className = 'col'; c.style.width = W(ch) + 'px'; c.innerHTML = `<span>${ch === ' ' ? '&nbsp;' : ch}</span>`; el.appendChild(c); }
+}
+// roll from the current string to the next: numbers right-aligned, so units and digits line up column by column
+function roll(el, from, to, delay) {
+  const n = Math.max(from.length, to.length);
+  const a = from.padStart(n, '\u0000'), b = to.padStart(n, '\u0000');
+  el.innerHTML = '';
+  const cols = [];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('span'); c.className = 'col';
+    const o = a[i] === '\u0000' ? '' : a[i], nw = b[i] === '\u0000' ? '' : b[i];
+    const wo = o ? W(o) : 0, wn = nw ? W(nw) : 0;
+    c.style.width = wo + 'px';
+    const so = document.createElement('span'); so.innerHTML = o === ' ' ? '&nbsp;' : o;
+    const sn = document.createElement('span'); sn.innerHTML = nw === ' ' ? '&nbsp;' : nw; sn.style.transform = 'translateY(30px)';
+    c.append(so, sn); el.appendChild(c);
+    const d = delay + (n - 1 - i) * 26;
+    if (o !== nw) {
+      anim(so, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-30px)', opacity: 0 }], { duration: 440, delay: d, easing: HOUSE });
+      anim(sn, [{ transform: 'translateY(30px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 440, delay: d, easing: HOUSE });
+    } else sn.style.display = 'none';
+    anim(c, [{ width: wo + 'px' }, { width: wn + 'px' }], { duration: 440, delay: d, easing: HOUSE });
+    cols.push(c);
+  }
+}
+
+const vEls = [...document.querySelectorAll('[data-v]')];
+let unit = 'kg';
+for (const el of vEls) setChars(el, VALUES[el.dataset.v][unit]);
+
+async function switchUnit(to) {
+  vEls.forEach((el, k) => roll(el, VALUES[el.dataset.v][unit], VALUES[el.dataset.v][to], k * 40));
+  unit = to;
+}
+
+async function cycleWord(el, next) {
+  await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 });
+  el.textContent = next;
+  await anim(el, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE });
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; for (const el of vEls) setChars(el, VALUES[el.dataset.v][unit]);
+  await sleep(400); document.body.dataset.start = '1';
+  // the page enters from below (z down from Home's menu), sections first, rows after
+  const parts = [...$('page').children];
+  parts.forEach((p, k) => anim(p, [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: k * 30, easing: HOUSE }));
+  await sleep(1500);
+
+  // tap kg: the whole page re-sets in pounds
+  await tapEl(vEls[0]);
+  await switchUnit('lb');
+  await sleep(2200);
+
+  // a two-state-plus setting is a word that cycles with a short crossfade, no toggle
+  await tapEl($('motion'));
+  await cycleWord($('motion'), 'reduced');
+  await sleep(1300);
+  await tapEl($('motion'));
+  await cycleWord($('motion'), 'full');
+  await sleep(1300);
+
+  // and back to kg
+  await tapEl(vEls[0]);
+  await switchUnit('kg');
+  await sleep(2000);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

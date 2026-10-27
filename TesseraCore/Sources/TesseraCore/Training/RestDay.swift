@@ -23,6 +23,14 @@ public extension TrainingLedger {
         // A planned session beats rest (Product 3:05 AM; RG5): Now and Home agree, no "Rest day" beside a START key.
         guard let plan, !hasWorkoutUnderway(on: now, calendar: calendar),
               !hasPlannedSession(on: now, calendar: calendar) else { return nil }
+        // A rest he took for today (the Deck's "Rest" or Tess's restDay): today is a rest day; a rolling plan's next
+        // routine
+        // stays next, and the next session date is the next training day.
+        if RestBook(store: store, classes: classes).isTrainingRest(on: now, calendar: calendar),
+           let next = nextRoutine(in: plan, now: now, calendar: calendar)
+        {
+            return RestDay(next: next, nextDay: nil)
+        }
         let week = week(containing: now, plan: plan, now: now, sessionsPerWeek: sessionsPerWeek, calendar: calendar)
         guard let today = week.firstIndex(where: { $0.state == .today }), week[today].isRest else { return nil }
         if let ahead = week[(today + 1)...].first(where: { $0.planned != nil }), let routine = ahead.planned {

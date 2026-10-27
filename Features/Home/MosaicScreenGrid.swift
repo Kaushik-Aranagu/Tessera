@@ -2,8 +2,9 @@ import CoreGraphics
 import Foundation
 
 // Home is the mosaic (Design 202, Revision 2, the skin edge): a grid of 3.2 pt square tiles on a 4 pt step covers the
-// screen edge to edge, but only the mosaic's own space is drawn: its core is the living window, centred at 56% of the
-// width, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is the
+// screen edge to edge, but only the mosaic's own space is drawn: its core is the living window, its right edge on the
+// right margin, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is
+// the
 // pure geometry: the grid, the core, the region and the text shield.
 
 struct MosaicTileRect: Equatable {
@@ -32,7 +33,9 @@ struct MosaicScreenGrid: Equatable {
     /// The rim's width: the tiles around the window the skin edge is solved over (Revision 2).
     static let reach = MosaicRim.reach
     /// The most tiles the core can ever span (the largest mood window), and the margin the region keeps around it.
-    static let maxCore = (columns: 62, rows: 40)
+    static let maxCore = (columns: 88, rows: 40)
+    /// The right margin in tiles (24 pt): a face grows left from here (Home 236 v2.1).
+    static let gutterTiles = 6
     static let margin = reach + 2
 
     let columns: Int
@@ -59,11 +62,14 @@ struct MosaicScreenGrid: Equatable {
     }
 
     /// The tile's square, centred in its 4 pt cell.
-    func rect(column: Int, row: Int) -> CGRect {
-        let inset = (Self.step - Self.side) / 2
-        return CGRect(x: CGFloat(column) * Self.step + inset, y: CGFloat(row) * Self.step + inset, width: Self.side,
-                      height: Self.side)
+    func rect(column: Int, row: Int, side: CGFloat = MosaicScreenGrid.side) -> CGRect {
+        let inset = (Self.step - side) / 2
+        return CGRect(x: CGFloat(column) * Self.step + inset, y: CGFloat(row) * Self.step + inset, width: side,
+                      height: side)
     }
+
+    /// Home 236 v2.7: on a light page a tile grows to 3.6 pt of its 4 pt cell (a 0.4 pt gap); dark pages keep 3.2.
+    static let lightSide: CGFloat = 3.6
 
     func center(column: Int, row: Int) -> CGPoint {
         CGPoint(x: (CGFloat(column) + 0.5) * Self.step, y: (CGFloat(row) + 0.5) * Self.step)
@@ -73,22 +79,29 @@ struct MosaicScreenGrid: Equatable {
         (Int((point.x / Self.step).rounded(.down)), Int((point.y / Self.step).rounded(.down)))
     }
 
-    /// The core's centre column: 56% of the width.
-    var centreColumn: Int {
-        Int((0.56 * Double(columns)).rounded())
+    /// The core's right edge: its last column sits on the page's right margin.
+    var rightEdge: Int {
+        columns - 1 - Self.gutterTiles
     }
 
-    /// The core for a window of `columns` x `rows`: centred at 56% across, its top on the old block's top.
+    /// The centre column of the widest face, for a changeover's origin.
+    var centreColumn: Int {
+        rightEdge - Self.maxCore.columns / 2 + 1
+    }
+
+    /// The core for a window of `columns` x `rows`: it grows left from the right margin, its top on the old block's
+    /// top.
     func core(columns width: Int, rows height: Int) -> MosaicTileRect {
-        MosaicTileRect(left: centreColumn - width / 2, top: coreTop, width: width, height: height)
+        MosaicTileRect(left: max(rightEdge - width + 1, 0), top: coreTop, width: width, height: height)
     }
 
     /// The fixed box of tiles the mosaic can ever touch: the largest core plus the rim and a breath around it. The
     /// engine keeps scene colours only for these tiles and draws only these.
     var region: MosaicTileRect {
-        let width = Self.maxCore.columns + 2 * Self.margin
+        // From the widest core's left edge less the margin to the screen's right edge (the rim runs off the page).
+        let left = max(rightEdge - Self.maxCore.columns + 1 - Self.margin, 0)
         let height = Self.maxCore.rows + 2 * Self.margin
-        return MosaicTileRect(left: centreColumn - width / 2, top: coreTop - Self.margin, width: width, height: height)
+        return MosaicTileRect(left: left, top: coreTop - Self.margin, width: columns - left, height: height)
     }
 
     // MARK: Text shield
@@ -106,8 +119,15 @@ struct MosaicScreenGrid: Equatable {
             let first = tile(at: CGPoint(x: rect.minX, y: rect.minY))
             let last = tile(at: CGPoint(x: rect.maxX, y: rect.maxY))
             let left = first.column - 1, right = last.column + 1, top = first.row - 1, bottom = last.row + 1
-            for column in max(left - feather, 0) ... min(right + feather, columns - 1) {
-                for row in max(top - feather, 0) ... min(bottom + feather, rows - 1) {
+            // A text block can sit wholly outside the grid at large text sizes (below it, or off a side): that is no
+            // tiles, never a crash (a closed range with its bounds the wrong way round traps).
+            let columnLow = max(left - feather, 0), columnHigh = min(right + feather, columns - 1)
+            let rowLow = max(top - feather, 0), rowHigh = min(bottom + feather, rows - 1)
+            guard columnLow <= columnHigh, rowLow <= rowHigh else { continue }
+            let columnRange = columnLow ... columnHigh
+            let rowRange = rowLow ... rowHigh
+            for column in columnRange {
+                for row in rowRange {
                     let dx = max(left - column, 0, column - right), dy = max(top - row, 0, row - bottom)
                     let distance = max(dx, dy)
                     guard distance < feather else { continue }

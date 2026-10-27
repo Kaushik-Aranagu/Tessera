@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Made and done</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/task-reward.md (Design item 38): the moment a task is made and the moment it's done, across Tess capture, Home's Next and the Day log. Kaushik: making a task and finishing one should feel easy and rewarding, through motion, colour that arrives only in the moment, and a haptic on every beat. Board: six phones, then the haptic score. ?play records one Home phone: Write a task, the words fly into Next and dry, swipe it done, the fleck reaches the day stroke, then the Day log line lands with its wash. Porcelain. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px;position:relative}
+.cap .hx{display:block;color:rgb(23,20,31)}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--ctx:#6A4C9C;--liveInk:#C23A22;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px;white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.ask{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6}
+.ask .q{color:var(--tess);font-size:21px;line-height:28px}
+.ask .w{display:flex;justify-content:flex-end;gap:30px;margin-top:4px;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
+.ask .undo{color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:26px;line-height:24px}
+.dry{position:relative;display:inline-block}
+.dry .wetl{color:var(--tess)}
+.dry .inkl{position:absolute;left:0;top:0;color:rgb(var(--ink));clip-path:inset(0 100% 0 0)}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;transition:opacity .15s}
+.ln{display:grid;grid-template-columns:64px 1fr;min-height:30px;margin-bottom:4px}
+.ln .t{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:rgba(var(--ink),.66);padding-top:5px}
+.ln .x{font-size:21px;line-height:28px;white-space:nowrap}
+.date{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);height:34px}
+.date.today{color:rgb(var(--ink))}
+.score{display:flex;gap:36px;margin-top:10px}
+.score>div{width:390px}
+.score svg text{font-family:'Inter Tight',sans-serif}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<div class="score" id="score"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const VIO='#6A4C9C',COB='#2450D8';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=id=>`<div class="soul" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const line=(id,q,undo)=>`<div class="ask" id="${id}"><div class="q">${q}</div>${undo?'<div class="w"><span class="undo">UNDO</span></div>':''}</div>`;
+const tabs=on=>`<div class="abs lbl" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;letter-spacing:.06em">${['REVIEW','TODAY','TRAINING','KITCHEN'].map(t=>`<span style="position:relative;color:${t===on?'rgb(23,20,31)':'rgba(23,20,31,.38)'}">${t}${t===on?`<svg style="position:absolute;left:0;top:24px;overflow:visible" width="56" height="12"><path d="${lens(t.length*10.5,1.2)}" fill="rgb(23,20,31)"/></svg>`:''}</span>`).join('')}</div>`;
+// The day stroke: 07:00 at x 30 to 23:00 at x 358 (20.5pt an hour). Now is 14:10 (x 177). The bank call is 16:00 (x 214).
+const NOWX=177,BANKX=214;
+const dayStroke=(L,o={})=>`<svg class="abs" id="${L}ds" style="left:0;top:182px;overflow:visible" width="390" height="20"><defs><linearGradient id="${L}g" x1="30" x2="${NOWX}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FB7D6"/><stop offset=".55" stop-color="#7CC3B0"/><stop offset="1" stop-color="#E9A23B"/></linearGradient><radialGradient id="${L}bl"><stop offset="0" stop-color="${VIO}" stop-opacity=".55"/><stop offset="1" stop-color="${VIO}" stop-opacity="0"/></radialGradient></defs>
+ <circle id="${L}bloom" cx="${NOWX}" cy="9" r="30" fill="url(#${L}bl)" opacity="${o.bloom||0}"/>
+ <path id="${L}trav" d="M30 9 L${NOWX} 9" stroke="url(#${L}g)" stroke-width="6" stroke-linecap="round" opacity="${o.trav||.6}"/>
+ <path d="M${NOWX+8} 9 L358 9" stroke="rgba(23,20,31,.22)" stroke-width="1.5" stroke-dasharray="4 5"/>
+ <path id="${L}tick" d="M${BANKX-7} 9 L${BANKX+7} 9" stroke="${COB}" stroke-width="2.5" stroke-linecap="round" opacity="${o.tick||0}"/></svg>`;
+const ROWS=[['Groceries at Trader Joe’s','17:30'],['Stretch and mobility','20:30']];
+const rowAt=(L,k,t,h,y,extra='',dim=0)=>`<div class="abs" id="${L}r${k}" style="left:0;right:0;top:${y}px;height:46px;${dim?'opacity:.5;filter:blur(1.5px)':''}">${extra}<div class="abs b" style="left:22px;top:0">${t}</div><div class="abs lbl s2" style="right:22px;top:4px">${h}</div></div>`;
+const home=(L,o={})=>`<div class="abs" id="${L}page" style="inset:0;transform-origin:50% 40%;${o.recede?'opacity:.5;filter:blur(1.5px);transform:scale(.985)':''}">${tabs('TODAY')}
+ <div class="abs b" style="left:22px;top:138px">Thursday afternoon</div>${dayStroke(L,o)}
+ <div class="abs b" style="left:22px;top:246px;color:${VIO}">today</div>
+ <div class="abs hero" style="left:22px;top:280px">Push A</div>
+ <div class="abs lbl" style="left:22px;top:356px">START PUSH A<svg style="position:absolute;left:0;top:22px;overflow:visible" width="130" height="12"><path d="${lens(124,1.6)}" fill="rgb(23,20,31)"/></svg></div>
+ <div class="abs t34" style="left:22px;top:448px">Next</div>
+ <div id="${L}bank">${o.bank||''}</div>
+ ${ROWS.map(([t,h],k)=>rowAt(L,k,t,h,500+46*(k+(o.parted?1:0)),'',o.dimRows)).join('')}</div>`;
+// Capture surface after return: the page recedes, the ground at 96% from y 464, the ghost on the writing line with its cobalt line draining.
+const surface=(L,drain)=>`<div class="abs" id="${L}surf" style="left:0;right:0;top:464px;bottom:0;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.96) 22%);z-index:4">
+ <div class="abs b s2" id="${L}ghost" style="left:22px;top:226px">Call the bank at 4</div>
+ <svg class="abs" style="left:22px;top:254px;overflow:visible" width="346" height="12"><rect y="5.5" width="346" height=".5" fill="rgba(23,20,31,.3)"/><path id="${L}drain" d="${lens(346,1.25)}" fill="${COB}" style="transform-origin:0 0;transform:scaleX(${drain})"/></svg></div>`;
+const bankRow=(state)=>{
+ // state: wet (landing), dry (ink), strike p (0..1) with dried flag
+ const t='Call the bank';
+ if(state.kind==='land')return `<div class="abs" id="bankrow" style="left:0;right:0;top:500px;height:46px"><div class="abs b" style="left:22px;top:0"><span class="dry"><span class="wetl">${t}</span><span class="inkl" style="clip-path:inset(0 ${100-state.dry}% 0 0)">${t}</span></span></div><div class="abs lbl s2" style="right:22px;top:4px;opacity:${state.time}">16:00</div></div>`;
+ const p=state.p;
+ return `<div class="abs" id="bankrow" style="left:0;right:0;top:500px;height:${state.h??46}px;overflow:hidden;opacity:${state.op??1}"><div class="abs b" style="left:22px;top:0;color:rgba(23,20,31,${state.dried?.45:1})"><span style="position:relative">${t}<svg style="position:absolute;left:-3px;top:8px;overflow:visible" width="140" height="12"><path d="${lens(140,2)}" fill="${state.dried?'rgba(23,20,31,.45)':VIO}" style="transform-origin:0 0;transform:scaleX(${p})"/></svg></span></div><div class="abs lbl s2" style="right:22px;top:4px;opacity:${state.time??1}">16:00</div></div>`;
+};
+const fleck=(x,y,o=1)=>`<svg class="abs" style="left:${x-6}px;top:${y-6}px;overflow:visible;z-index:8;opacity:${o}" width="12" height="12"><path d="${lens(12,2.2)}" fill="${VIO}"/></svg>`;
+const finger=(x,y)=>`<div class="abs" style="left:${x-22}px;top:${y-22}px;width:44px;height:44px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);z-index:20"></div>`;
+const dayLog=(L,o={})=>`<div class="abs" id="${L}dl" style="inset:0"><div class="abs lbl s2" style="left:22px;top:58px">‹ TODAY</div><div class="abs t44" style="left:22px;top:84px">October</div>
+ <div class="abs" style="left:22px;right:22px;top:${o.top||420}px">
+  <div class="date">WED 14</div>
+  <div class="ln"><div class="t">18:40</div><div class="x">Pull Day A, 6 sets</div></div>
+  <div class="ln"><div class="t">21:05</div><div class="x">Done: water the plants</div></div>
+  <div style="height:30px"></div>
+  <div class="date today">TODAY</div>
+  <div class="ln"><div class="t">08:10</div><div class="x">Added <span id="${L}cnt">${o.cnt||2}</span> tasks</div></div>
+  <div class="ln" id="${L}new" style="${o.hideNew?'opacity:0':''}"><div class="t">16:04</div><div class="x"><span style="position:relative;display:inline-block"><span id="${L}wash" style="position:absolute;left:-8px;right:-8px;top:0;bottom:0;border-radius:8px;background:rgba(106,76,156,.18);filter:blur(4px);opacity:${o.wash??1}"></span><span style="position:relative">Done: call the bank</span></span></div></div>
+ </div></div>`;
+const phone=(c,hx,inner,L)=>`<div><div class="cap">${c}<span class="hx" id="${L}hx">${hx}</span></div><div class="ph" id="${L}ph">${inner}${soul(L+'s')}${L==='P'?'<div id="fing"></div>':''}</div></div>`;
+
+// Arc samples: a quadratic from (x0,y0) to (x1,y1) through control (cx,cy).
+const arc=(x0,y0,cx,cy,x1,y1,n=18)=>Array.from({length:n+1},(_,i)=>{const t=i/n,u=1-t;return[u*u*x0+2*u*t*cx+t*t*x1,u*u*y0+2*u*t*cy+t*t*y1]});
+
+if(PLAY){
+ $('row').innerHTML=phone('HE WRITES “CALL THE BANK AT 4”','HAPTIC: NONE YET',home('P',{})+`<div id="Pslot"></div><div id="Pfx"></div>`,'P');
+}else{
+ // Phone 2's words mid-flight: wet cobalt, rows parting.
+ const mid=arc(22,690,230,620,22,500)[16];
+ $('row').innerHTML=
+  phone('MADE · 1 · THE GHOST DRIES','HAPTIC: NONE',home('A',{recede:1})+surface('A',.35),'A')+
+  phone('MADE · 2 · HIS WORDS FLY TO THEIR SLOT','HAPTIC: SOFT 0.6 AS THEY LAND',home('B',{parted:1,tick:1,dimRows:1})+`<div class="abs b" style="left:${mid[0]}px;top:${mid[1]}px;color:${COB};z-index:5;transform:scale(1.04)">Call the bank</div>`,'B')+
+  phone('MADE · 3 · LANDED, DRYING TO INK','HAPTIC: NONE (ONE PER MOMENT)',home('C',{parted:1,tick:.5,bank:bankRow({kind:'land',dry:55,time:1})})+line('C1','Call the bank, today 4 pm.',true),'C')+
+  phone('DONE · 1 · PAST 140 IT RUNS ITSELF OUT','HAPTIC: SELECTION AT ARMED',home('D',{parted:1,bank:bankRow({p:1,time:0})})+finger(168,514),'D')+
+  phone('DONE · 2 · LET GO, THE TIP BLOOMS','HAPTIC: 3-BEAT DONE, SOFT 0.4 AT TIP',home('E',{parted:1,bloom:.9,trav:.85,bank:bankRow({p:1,dried:1,time:0,h:24,op:.5})})+line('E1','Call the bank done.',true),'E')+
+  phone('DAY LOG · ITS LINE LANDS WITH A WASH','HAPTIC: NONE (NEVER ON APPEAR)',dayLog('F',{wash:.9}),'F');
+ $('note').innerHTML='MADE AND DONE. MADE: THE GHOST DRIES, HIS OWN WORDS LIFT OFF AND FLY TO THEIR SORTED SLOT IN NEXT (420MS, HOUSE CURVE), THE ROWS PART ON THE SETTLE SPRING, THE WORDS LAND WET IN COBALT AND DRY TO INK LEFT TO RIGHT (700MS), THE DAY STROKE LIGHTS THE TASK’S TIME AND DRIES BACK. DONE: SWIPE RIGHT, THE STRIKE FOLLOWS THE FINGER WET IN THE ROW’S PIGMENT, PAST 140 IT RUNS ITSELF OUT; LET GO AND A FLECK OF IT ARCS TO THE DAY STROKE AT NOW, THE TIP BLOOMS, THE ROW FOLDS (UNDER 1S IN ALL). NO COLOUR STAYS. ONE HAPTIC PER BEAT, NEVER TWO SOURCES FOR ONE MOMENT.';
+ // The haptic score: each moment's beats on a 0 to 1000ms line, bar height = intensity.
+ const score=(title,beats,len=1000)=>{const W=390,x=t=>10+t/len*370;return `<div><div class="lbl" style="color:rgba(23,20,31,.66);margin-bottom:8px">${title}</div><svg width="${W}" height="96" style="overflow:visible"><rect x="10" y="70" width="370" height=".5" fill="rgba(23,20,31,.4)"/>${[0,250,500,750,1000].filter(t=>t<=len).map(t=>`<text x="${x(t)}" y="92" font-size="16" font-weight="600" fill="rgba(23,20,31,.66)" text-anchor="middle">${t}</text>`).join('')}${beats.map(b=>`<rect x="${x(b.t)-2}" y="${70-b.i*56}" width="4" height="${b.i*56}" rx="2" fill="rgb(23,20,31)" opacity="${.35+b.s*.65}"/>${b.l?`<text x="${x(b.t)+6}" y="${70-b.i*56+12}" font-size="16" font-weight="700" letter-spacing="1.2" fill="rgb(23,20,31)">${b.l}</text>`:''}`).join('')}</svg></div>`};
+ $('score').innerHTML=
+  score('MADE · ONE BEAT',[{t:420,i:.6,s:.2,l:'SOFT, LANDING'}])+
+  score('DONE · ARMED',[{t:0,i:.3,s:.5,l:'SELECTION'}])+
+  score('DONE · LET GO, THEN THE TIP',[{t:0,i:.45,s:.35},{t:60,i:.65,s:.45},{t:130,i:1,s:.6,l:'3-BEAT'},{t:520,i:.4,s:.1,l:'SOFT'}])+
+  score('UNDO',[{t:0,i:.5,s:.5,l:'DECREASE'}])+
+  score('REPS · ONE PER STEP',[{t:0,i:.3,s:.5},{t:150,i:.3,s:.5},{t:300,i:.6,s:.5,l:'LIGHT AT LAST'},{t:750,i:.8,s:.9,l:'RIGID'}])+
+  score('SHUTDOWN COMPLETE',[{t:0,i:1,s:.5,l:'SUCCESS'}]);
+}
+
+const setCap=(t,hx)=>{const c=document.querySelector('.cap');c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{c.firstChild.textContent=t;$('Phx').textContent=hx||'';c.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})}};
+const buzz=t=>{const h=$('Phx');h.textContent='HAPTIC: '+t;h.animate([{opacity:1,transform:'translateX(-3px)'},{opacity:1,transform:'translateX(3px)'},{opacity:1,transform:'none'},{opacity:.66}],{duration:500,fill:'forwards'})};
+async function play(){
+ const ph=$('Pph');await sleep(900);
+ // 1 · the capture surface, the ghost on its line, the cobalt line draining over 2s
+ const page=$('Ppage');page.animate([{opacity:1,filter:'blur(0)',transform:'none'},{opacity:.5,filter:'blur(1.5px)',transform:'scale(.985)'}],{duration:300,easing:H,fill:'forwards'});
+ $('Pfx').innerHTML=surface('P',1);$('Psurf').animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+ setCap('MADE · THE GHOST DRIES (2S)','HAPTIC: NONE');
+ await sleep(400);
+ await $('Pdrain').animate([{transform:'scaleX(1)'},{transform:'scaleX(0)'}],{duration:2000,easing:'linear',fill:'forwards'}).finished;
+ // 2 · his words lift off and fly to their slot; the surface folds under them; the rows part
+ setCap('MADE · HIS WORDS FLY TO THEIR SLOT','HAPTIC: SOFT 0.6 AT LANDING');
+ const g=$('Pghost');const fly=document.createElement('div');fly.className='abs b';fly.textContent='Call the bank';fly.style.cssText='left:0;top:0;z-index:9;color:rgba(23,20,31,.66)';ph.appendChild(fly);
+ g.style.opacity=0;
+ $('Psurf').animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'});
+ page.animate([{opacity:.5,filter:'blur(1.5px)',transform:'scale(.985)'},{opacity:1,filter:'blur(0)',transform:'none'}],{duration:320,easing:H,fill:'forwards'});
+ ROWS.forEach((_,k)=>$('Pr'+k).animate([{opacity:1,filter:'blur(0)'},{opacity:.5,filter:'blur(1.5px)'}],{duration:320,fill:'forwards'}));
+ const pts=arc(22,690,230,620,22,500);
+ fly.animate([{color:'rgba(23,20,31,.66)'},{color:COB}],{duration:160,fill:'forwards'});
+ fly.animate(pts.map(([x,y],i)=>({transform:`translate(${x}px,${y}px) scale(${1+.04*Math.sin(Math.PI*i/(pts.length-1))})`})),{duration:420,easing:H,fill:'forwards'});
+ await sleep(160);
+ ROWS.forEach((_,k)=>$('Pr'+k).animate([{top:(500+46*k)+'px'},{top:(546+46*k)+'px'}],{duration:420,easing:SET,fill:'forwards'}));
+ await sleep(260);buzz('SOFT 0.6');
+ ROWS.forEach((_,k)=>$('Pr'+k).animate([{opacity:.5,filter:'blur(1.5px)'},{opacity:1,filter:'blur(0)'}],{duration:300,easing:H,fill:'forwards'}));
+ // the landing: a 2pt settle, the words dry to ink left to right, the time rises in, the day stroke lights 16:00
+ fly.remove();$('Pbank').innerHTML=bankRow({kind:'land',dry:0,time:0});
+ const br=$('bankrow');br.animate([{transform:'translateY(2px)'},{transform:'none'}],{duration:260,easing:SET});
+ const ink=br.querySelector('.inkl');ink.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,delay:120,easing:H,fill:'forwards'});
+ br.querySelector('.lbl').animate([{opacity:0,filter:'blur(6px)',transform:'translateY(6px)'},{opacity:1,filter:'blur(0)',transform:'none'}],{duration:300,delay:80,easing:H,fill:'forwards'});
+ $('Ptick').animate([{opacity:0},{opacity:1,offset:.2},{opacity:0}],{duration:1400,delay:100,easing:'ease-out',fill:'forwards'});
+ $('Pslot').innerHTML=line('PL','Call the bank, today 4 pm.',true);
+ $('PL').animate([{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:H,fill:'forwards'});
+ await sleep(2600);
+ // UNDO goes; the row rests in ink
+ await $('PL').animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'}).finished;$('Pslot').innerHTML='';
+ $('Pbank').innerHTML=bankRow({p:0});
+ await sleep(700);
+ // 3 · done: swipe right, the strike follows, armed at 140 runs itself out
+ setCap('DONE · SWIPE RIGHT, THE STRIKE FOLLOWS','HAPTIC: SELECTION AT 140');
+ const f=$('fing');f.style.left='40px';f.style.top='514px';f.style.opacity=1;await sleep(250);
+ const sp=()=>$('bankrow').querySelector('path');
+ const steps=24;
+ for(let i=1;i<=steps;i++){const d=i/steps*150;f.style.left=(40+d)+'px';
+  sp().style.transform=`scaleX(${Math.min(d/240,1)})`;$('bankrow').querySelector('.lbl').style.opacity=Math.max(0,1-d/40);
+  if(d>=140&&!f.dataset.armed){f.dataset.armed=1;buzz('SELECTION');sp().animate([{transform:`scaleX(${d/240})`},{transform:'scaleX(1)'}],{duration:160,easing:H,fill:'forwards'})}
+  await sleep(18)}
+ await sleep(220);
+ // 4 · let go: the 3-beat, the name dries to 45%, a fleck arcs to the stroke's tip at now, the tip blooms, the row folds
+ setCap('DONE · LET GO','HAPTIC: 3-BEAT DONE, SOFT 0.4 AT THE TIP');
+ f.style.opacity=0;buzz('3-BEAT DONE');
+ const name=$('bankrow').querySelector('.b');name.animate([{color:'rgb(23,20,31)'},{color:'rgba(23,20,31,.45)'}],{duration:500,delay:120,fill:'forwards'});
+ sp().animate([{fill:VIO},{fill:'rgba(23,20,31,.45)'}],{duration:700,delay:200,fill:'forwards'});
+ const fl=document.createElement('div');fl.className='abs';fl.style.cssText='left:0;top:0;z-index:9';fl.innerHTML=`<svg style="overflow:visible;position:absolute;left:-6px;top:-6px" width="12" height="12"><path d="${lens(12,2.2)}" fill="${VIO}"/></svg>`;ph.appendChild(fl);
+ const fp=arc(162,514,250,330,NOWX,191,22);
+ fl.animate(fp.map(([x,y],i)=>({transform:`translate(${x}px,${y}px) scale(${1.2-.5*i/(fp.length-1)})`})),{duration:520,easing:H,fill:'forwards'});
+ await sleep(520);fl.remove();buzz('SOFT 0.4');
+ $('Pbloom').animate([{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.2)'}],{duration:900,easing:'ease-out',fill:'forwards'});
+ $('Pbloom').style.transformOrigin=`${NOWX}px 9px`;$('Pbloom').style.transformBox='view-box';
+ $('Ptrav').animate([{opacity:.6},{opacity:.92,offset:.3},{opacity:.6}],{duration:1100,easing:'ease-out',fill:'forwards'});
+ const s=$('Ps');s.animate([{transform:'scale(1)',filter:'saturate(1)'},{transform:'scale(1.12)',filter:'saturate(1.5)'},{transform:'scale(1)',filter:'saturate(1)'}],{duration:600,easing:SET});
+ await sleep(80);
+ const br2=$('bankrow');br2.animate([{height:'46px',opacity:1},{height:'0px',opacity:0}],{duration:320,easing:H,fill:'forwards'});
+ ROWS.forEach((_,k)=>$('Pr'+k).animate([{top:(546+46*k)+'px'},{top:(500+46*k)+'px'}],{duration:420,easing:SET,fill:'forwards'}));
+ $('Pslot').innerHTML=line('PL','Call the bank done.',true);
+ $('PL').animate([{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:H,fill:'forwards'});
+ await sleep(2800);
+ // 5 · later, the Day log: its line lands under TODAY with the pigment wash, drying over 2.8s; no haptic
+ setCap('DAY LOG · THE LINE LANDS WITH ITS WASH','HAPTIC: NONE (NEVER ON APPEAR)');
+ await $('PL').animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}).finished;$('Pslot').innerHTML='';
+ page.animate([{transform:'none',opacity:1},{transform:'scale(.97)',opacity:0}],{duration:360,easing:H,fill:'forwards'});
+ await sleep(240);
+ ph.insertAdjacentHTML('afterbegin',dayLog('Q',{hideNew:1,wash:0,cnt:2}));
+ $('Qdl').animate([{transform:'translateY(30px)',opacity:0},{transform:'none',opacity:1}],{duration:420,easing:H,fill:'forwards'});
+ await sleep(600);
+ // the new line rises out of a 6pt blur with its wash, which dries over 2.8s
+ $('Qnew').animate([{opacity:0,filter:'blur(6px)',transform:'translateY(6px)'},{opacity:1,filter:'blur(0)',transform:'none'}],{duration:320,easing:H,fill:'forwards'});
+ $('Qwash').animate([{opacity:0},{opacity:1,offset:.12},{opacity:0}],{duration:2800,easing:'ease-out',fill:'forwards'});
+ await sleep(3200);
+ document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

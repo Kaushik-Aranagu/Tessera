@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Title progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 72, round 2 (Kaushik 1:50 PM PT Oct 16): no half-and-half split. The whole title moves together as the thing gets done: it grows bolder and its ink leans toward the area's colour; the word that matters wears the colour from the start and the rest catches up; at done every effect joins (full weight, full colour, a strike drawn through), then it dries back to quiet ink with the strike kept. ?play records a workout on Home, Porcelain. -->
+<style>
+:root{--board:#E9E6EE}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.row{display:flex;gap:18px;margin-bottom:18px;align-items:flex-start}
+.cap{width:220px;flex:none;padding-top:6px}
+.cap h2{margin:0 0 8px;font-size:24px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0 0 8px;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:320px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;flex:none;border-radius:26px 26px 0 0}
+.ph.full{height:852px;border-radius:0}
+.stage{position:absolute;left:22px;bottom:14px;font-weight:700;font-size:12px;letter-spacing:.08em;color:rgba(var(--ink),.45)}
+.por{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--train:#C23A22;--kit:#12936A;--ctx:#5A3DAF}
+.obs{--ink:245,242,236;--bg:#121014;--tess:#86B4FF;--train:#FF7D62;--kit:#52D3A3;--ctx:#B8A3FF}
+.abs{position:absolute}
+.tabs{left:22px;top:46px;display:flex;gap:22px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.45)}
+.tabs b{color:rgb(var(--ink));font-weight:700;border-bottom:2px solid rgb(var(--ink));padding-bottom:5px}
+.day{left:22px;top:100px;font-size:17px;color:rgba(var(--ink),.66)}
+.ctxl{left:22px;top:150px;font-size:17px;color:var(--ctx)}
+.hero{left:22px;top:174px;width:350px;font-size:44px;line-height:50px}
+/* p: 0..1 progress. The whole title: weight 500 → 640, tracking tightens to hold its width, ink leans to the area's colour (0 → 60%). */
+.t{--p:0;--acc:var(--train);font-weight:calc(500 + 140 * var(--p));letter-spacing:calc(-.02em - .012em * var(--p));
+   color:color-mix(in oklab,var(--acc) calc(60% * var(--p)),rgb(var(--ink)))}
+/* The word that matters wears the colour from the start. */
+.t .w{white-space:nowrap;color:color-mix(in oklab,var(--acc) 72%,rgb(var(--ink)))}
+/* The strike: a 3 pt line through the x-height, drawn left to right, wrapping with the lines. */
+.t .s{background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-position:0 58%;background-size:calc(var(--k,0) * 100%) 3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.t.dry{color:rgba(var(--ink),.5)}
+.t.dry .w{color:rgba(var(--ink),.5)}
+.key{left:22px;font-weight:700;font-size:15px;letter-spacing:.08em}
+.key i{display:block;height:2px;margin-top:5px;background:currentColor}
+.lbl{left:22px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.next{left:22px;width:350px;font-size:19px;line-height:26px}
+.next div{display:flex;justify-content:space-between;gap:16px;margin-bottom:12px}
+.next em{font-style:normal;color:rgba(var(--ink),.62);white-space:nowrap}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tline{right:71px;top:768px;width:270px;text-align:right;font-size:18px;color:var(--tess);opacity:0;transition:opacity .4s}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+
+// The hero: "<name>, <the word that matters>", the strike span wrapping the whole title.
+const heroHTML = (name, word) => `<span class="s">${name}, <span class="w">${word}</span></span>`;
+function phone(look, s) {
+  const struck = s.done ? ' style="--k:1"' : '';
+  return `<div class="ph ${look}">
+    <div class="abs tabs"><span>REVIEW</span><b>TODAY</b><span>TRAINING</span><span>KITCHEN</span></div>
+    <div class="abs day">Friday evening</div>
+    <div class="abs ctxl">${s.ctx}</div>
+    <div class="abs hero"><span class="t${s.dry ? ' dry' : ''}" style="--p:${s.p};--acc:var(--${s.area})">${heroHTML(s.name, s.word).replace('class="s"', 'class="s"' + struct(s))}</span></div>
+    <div class="stage">${s.stage}</div></div>`;
+}
+const struct = s => s.done ? ' style="--k:1"' : '';
+
+const train = [
+  { p: 0,   name: 'Push Day A', word: 'bench set 1', ctx: 'now, 0 of 20 sets', stage: 'STARTED' },
+  { p: .35, name: 'Push Day A', word: 'bench set 4', ctx: 'now, 7 of 20 sets', stage: 'A THIRD IN' },
+  { p: .7,  name: 'Push Day A', word: 'fly set 2', ctx: 'now, 14 of 20 sets', stage: 'TWO THIRDS' },
+  { p: 1,   name: 'Push Day A', word: 'done', ctx: 'done, 52 min', stage: 'DONE: ALL JOIN', done: 1 },
+  { p: 0,   name: 'Push Day A', word: 'done', ctx: 'done, 52 min', stage: 'DRIED, 2 S LATER', done: 1, dry: 1 },
+];
+const cook = [
+  { p: 0,   name: 'Paprika chicken', word: 'step 1', ctx: 'cooking, step 1 of 6', stage: 'STARTED' },
+  { p: .5,  name: 'Paprika chicken', word: 'step 4', ctx: 'cooking, step 4 of 6', stage: 'HALFWAY' },
+  { p: 1,   name: 'Paprika chicken', word: 'cooked', ctx: 'done, 40 min', stage: 'DONE: ALL JOIN', done: 1 },
+];
+
+if (!play) {
+  let h = '';
+  h += `<div class="row"><div class="cap"><h2>The whole title moves</h2><p>As sets land, the whole title gets a little bolder and its ink leans toward Training's colour. Every in-between state looks finished.</p><p>The word that matters wears the colour from the first set. The rest catches up.</p></div>${train.map(s => phone('por', { ...s, area: 'train' })).join('')}</div>`;
+  h += `<div class="row"><div class="cap"><h2>At done, all join</h2><p>Full weight and full colour, and a strike draws through, left to right. Two seconds later it dries to quiet ink, still struck.</p></div>${train.map(s => phone('obs', { ...s, area: 'train' })).join('')}</div>`;
+  h += `<div class="row"><div class="cap"><h2>Same in every area</h2><p>A cook in Kitchen's green. Each area's own colour, no new ones. At rest every title is plain ink.</p></div>${cook.map(s => phone('por', { ...s, area: 'kit' })).join('')}</div>`;
+  document.getElementById('board').innerHTML = h;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por full">
+    <div class="abs tabs"><span>REVIEW</span><b>TODAY</b><span>TRAINING</span><span>KITCHEN</span></div>
+    <div class="abs day" style="top:118px">Friday evening</div>
+    <div class="abs ctxl" id="ctx" style="top:186px">now, 0 of 20 sets</div>
+    <div class="abs hero" style="top:212px"><span class="t" id="t" style="--p:0"><span class="s" id="s"><span id="nm">Push Day A</span>, <span class="w" id="w">bench set 1</span></span></span></div>
+    <div class="abs key" id="key" style="top:332px">RESUME<i></i></div>
+    <div class="abs lbl" style="top:400px">NEXT</div>
+    <div class="abs next" style="top:428px"><div><span>Stretch &amp; mobility</span><em>8:30 pm</em></div><div><span>Read Designing Data-Intensive Applications</span><em>9:10 pm</em></div></div>
+    <div class="abs soul"></div>
+    <div class="abs tline" id="tl">Push Day A, done. 20 of 20 sets.</div></div>`;
+  const t = document.getElementById('t'), s = document.getElementById('s'), wd = document.getElementById('w'), ctx = document.getElementById('ctx'), tl = document.getElementById('tl');
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const anim = (el, prop, from, to, ms, f = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); el.style.setProperty(prop, from + (to - from) * f(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  let p = 0;
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1400);
+    const steps = [[5, 'bench set 4'], [10, 'squat set 2'], [15, 'fly set 1'], [20, 'fly set 4']];
+    for (const [n, word] of steps) {
+      ctx.textContent = `now, ${n} of 20 sets`; wd.textContent = word;
+      await anim(t, '--p', p, n / 20 * .85, 600); p = n / 20 * .85;
+      await wait(1000);
+    }
+    // Done: every effect joins. Full weight and colour, the strike draws through, one lift.
+    wd.textContent = 'done'; ctx.textContent = 'done, 52 min'; tl.style.opacity = 1;
+    await anim(t, '--p', p, 1, 300);
+    await anim(s, '--k', 0, 1, 420, x => 1 - Math.pow(1 - x, 3));
+    t.style.transition = 'filter .25s ease-out'; t.style.filter = 'brightness(1.12)'; await wait(260); t.style.filter = 'none';
+    await wait(900);
+    // It dries: weight and colour settle back to quiet ink over 2 s, the strike stays.
+    t.style.transition = 'color 2s ease-in-out'; wd.style.transition = 'color 2s ease-in-out'; t.classList.add('dry'); await anim(t, '--p', 1, 0, 2000);
+    document.getElementById('key').style.transition = 'opacity .4s'; document.getElementById('key').style.opacity = 0;
+    await wait(1600);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

@@ -1,0 +1,145 @@
+<title>Tessera, Living Ideas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+<style>
+/* Layout: the page is a playable phone, then plain notes on what is new. No cards. */
+:root{
+  --ground:#F6F2EA; --ink:#1D1A16; --ink2:rgba(29,26,22,.66); --ink3:rgba(29,26,22,.38); --rule:rgba(29,26,22,.14);
+  --phone:#FBF8F2; --edge:rgba(29,26,22,.18);
+  --training:#C4472A; --kitchen:#A8701F; --money:#3F7A62; --notes:#5B3FB8; --lists:#5E6B1F; --routines:#A4505F; --tess:#2E6DA4; --live:#D8512B;
+  --words:"Figtree",ui-sans-serif,system-ui,sans-serif; --nums:"Outfit","Figtree",ui-sans-serif,sans-serif;
+  --rest-training:rgba(196,71,42,.34); --rest-kitchen:rgba(168,112,31,.34); --rest-money:rgba(63,122,98,.34); --rest-notes:rgba(91,63,184,.34); --rest-lists:rgba(94,107,31,.34); --rest-routines:rgba(164,80,95,.34);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#121013; --ink:#EFE8DC; --ink2:rgba(239,232,220,.72); --ink3:rgba(239,232,220,.38); --rule:rgba(239,232,220,.14);
+  --phone:#19161A; --edge:rgba(239,232,220,.16);
+  --training:#EE6A4C; --kitchen:#E0A458; --money:#8DBFA7; --notes:#B9A9E0; --lists:#B5BE7A; --routines:#D79AA6; --tess:#9DBFE6; --live:#FF7A55;
+  --rest-training:rgba(238,106,76,.4); --rest-kitchen:rgba(224,164,88,.4); --rest-money:rgba(141,191,167,.4); --rest-notes:rgba(185,169,224,.4); --rest-lists:rgba(181,190,122,.4); --rest-routines:rgba(215,154,166,.4);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#121013; --ink:#EFE8DC; --ink2:rgba(239,232,220,.72); --ink3:rgba(239,232,220,.38); --rule:rgba(239,232,220,.14);
+  --phone:#19161A; --edge:rgba(239,232,220,.16);
+  --training:#EE6A4C; --kitchen:#E0A458; --money:#8DBFA7; --notes:#B9A9E0; --lists:#B5BE7A; --routines:#D79AA6; --tess:#9DBFE6; --live:#FF7A55;
+  --rest-training:rgba(238,106,76,.4); --rest-kitchen:rgba(224,164,88,.4); --rest-money:rgba(141,191,167,.4); --rest-notes:rgba(185,169,224,.4); --rest-lists:rgba(181,190,122,.4); --rest-routines:rgba(215,154,166,.4);
+  color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-weight:500;font-size:clamp(44px,8vw,72px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-weight:500;font-size:clamp(26px,4vw,34px);letter-spacing:-.03em;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0;max-width:60ch}
+.sub{color:var(--ink2);font-size:19px}
+.n{font-family:var(--nums);font-weight:300;font-variant-numeric:tabular-nums}
+.ink2{color:var(--ink2)} .ink3{color:var(--ink3)}
+.stage{display:grid;grid-template-columns:392px minmax(0,1fr);gap:56px;align-items:start}
+@media(max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}}
+.try{display:flex;flex-direction:column;gap:22px}
+.try div{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px}
+.try .k{font-family:var(--nums);font-weight:200;font-size:30px;line-height:1;color:var(--ink3)}
+.try b{font-weight:500}
+
+.ideas{display:flex;flex-direction:column;gap:72px}
+.idea{display:grid;grid-template-columns:360px minmax(0,1fr);gap:40px;align-items:start}
+@media(max-width:820px){.idea{grid-template-columns:minmax(0,1fr)}}
+.st{position:relative;width:360px;max-width:100%;height:260px;background:var(--phone);border:1px solid var(--edge);border-radius:28px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.st canvas{display:block;width:100%;height:100%}
+.idea h2{margin-bottom:10px}
+.idea p{margin-bottom:10px}
+.cap{position:absolute;left:18px;right:18px;bottom:12px;color:var(--ink2);font-size:16px;pointer-events:none}
+/* split-flap */
+.flap{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:0 14px;cursor:pointer}
+.frow{display:flex;gap:2px;justify-content:flex-end}
+.fc{width:14px;height:26px;position:relative;perspective:200px}
+.fc span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:500 18px var(--words);color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,var(--phone));border-radius:2px}
+.fc span::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--phone)}
+.fc span.f{transform-origin:50% 50%;animation:fl .07s linear}
+@keyframes fl{0%{transform:rotateX(0)}50%{transform:rotateX(-90deg)}100%{transform:rotateX(0)}}
+@media (prefers-reduced-motion:reduce){.fc span.f{animation:none}}
+</style>
+<main>
+<section style="display:flex;flex-direction:column;gap:18px">
+  <h1>Living ideas</h1>
+  <p class="sub">More ideas like the mosaic: something on Home with a life of its own that also tells you about your day. Each one plays. Pick the ones you want; any of them can sit where the mosaic sits, or take turns with it.</p>
+</section>
+<div class="ideas">
+  <div class="idea"><div class="st" id="s1"></div><div><h2>Departure board</h2><p>The day sentence on a split-flap board, like an old station. When Home opens, every letter clacks through the alphabet and lands, left to right, with a soft tick per line. Tap it and it flips to the next thing worth saying: what is next, the weather, a best you just set.</p><p class="ink2">Feels like: arriving. Tells you: the day, one sentence at a time.</p></div></div>
+  <div class="idea"><div class="st" id="s2"><div class="cap" id="c2">Run a finger down across the threads.</div></div><div><h2>Loom</h2><p>Your day as threads stretched across the page, one per part of the day. Run a finger through them and they twang: a wave runs along each one and settles, with a tick as you cross. Each thing you finish is woven in as a short stitch across the threads at its hour, so the cloth gets denser as the day goes.</p><p class="ink2">Feels like: a harp. Tells you: how full the day was, where.</p></div></div>
+  <div class="idea"><div class="st" id="s3"><div class="cap" id="c3">Drag to tip it.</div></div><div><h2>Hourglass</h2><p>What is left of today as grains of sand. They trickle down through the evening; at midnight the glass turns. Drag sideways and the sand slides and piles. Each thing you finish drops in as a darker stone that stays.</p><p class="ink2">Feels like: holding time. Tells you: how much day is left, how much got done.</p></div></div>
+  <div class="idea"><div class="st" id="s4"><div class="cap" id="c4">Stir it with a finger.</div></div><div><h2>Pinwheels</h2><p>The mosaic's cousin: every tile is a small blade that can turn. The day's colours run across them; a finger stirs a swirl that spreads and slowly unwinds. Through the day the blades change shape, square at dawn, diamond at noon, slim at night.</p><p class="ink2">Feels like: wind in a field. Tells you: the hour by its shape and colour.</p></div></div>
+</div>
+</main>
+<script>
+(function(){
+  var RM=false; try{RM=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+  function $(i){return document.getElementById(i)} function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+  function buzz(){try{navigator.vibrate&&navigator.vibrate(5)}catch(e){}}
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() }
+  function canvasIn(el){ var c=document.createElement('canvas'); el.insertBefore(c,el.firstChild); var D=Math.min(devicePixelRatio||1,3); function fit(){ c.width=c.clientWidth*D; c.height=c.clientHeight*D } fit(); addEventListener('resize',fit); return {c:c,g:c.getContext('2d'),D:D,w:function(){return c.clientWidth},h:function(){return c.clientHeight}} }
+  var sky=[[0,[233,185,160]],[.15,[240,214,180]],[.3,[236,228,206]],[.5,[234,214,176]],[.62,[214,160,138]],[.7,[176,122,140]],[.8,[104,98,146]],[.9,[58,54,90]],[1,[36,34,58]]];
+  function skyAt(t){ for(var k=1;k<sky.length;k++){ if(t<=sky[k][0]){ var a=sky[k-1],b=sky[k],u=(t-a[0])/(b[0]-a[0]); return [0,1,2].map(function(i){return a[1][i]+(b[1][i]-a[1][i])*u}) } } return sky[sky.length-1][1] }
+  function rgb(a,k){ k=k||1; return 'rgb('+Math.round(a[0]*k)+','+Math.round(a[1]*k)+','+Math.round(a[2]*k)+')' }
+
+  /* 1. departure board */
+  (function(){ var el=$('s1'), box=document.createElement('div'); box.className='flap'; el.appendChild(box); var N=22, rows=[];
+    for(var r=0;r<3;r++){ var row=document.createElement('div'); row.className='frow'; var cells=[]; for(var i=0;i<N;i++){ var c=document.createElement('div'); c.className='fc'; c.innerHTML='<span> </span>'; row.appendChild(c); cells.push(c.firstChild) } box.appendChild(row); rows.push(cells) }
+    var AL=' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:,.°';
+    var msgs=[['Push A at 6:15.','Tacos, start 6:05 pm.','Rent is due Friday.'],['Next, in 23 min:','Tacos.','Then Push A at 6:15.'],['64° and clear.','Cooling to 58°','by 9 pm. Dry.'],['Bench, 106 kg.','A new best.','Well done.']], mi=0;
+    function show(m){ m.forEach(function(line,r){ var pad=line.length<N?' '.repeat(N-line.length)+line:line.slice(0,N); rows[r].forEach(function(sp,i){ var target=pad[i], cur=sp.textContent, ci=AL.indexOf(cur), ti=AL.indexOf(target); if(ti<0) ti=0; if(ci<0) ci=0; var steps=RM?1:((ti-ci+AL.length)%AL.length); steps=Math.min(steps, 8+((i*7+r*3)%9)); var k=0; var start=RM?0:(i*28+r*90);
+          setTimeout(function tick(){ if(k>=steps||RM){ sp.textContent=target; return } k++; var idx=(AL.indexOf(sp.textContent)+1)%AL.length; if(k===steps) idx=ti; sp.textContent=AL[idx]; sp.classList.remove('f'); void sp.offsetWidth; sp.classList.add('f'); setTimeout(tick,55) },start) }); setTimeout(buzz,r*90+N*28) }) }
+    show(msgs[0]); box.onclick=function(){ mi=(mi+1)%msgs.length; show(msgs[mi]) } })();
+
+  /* 2. loom */
+  (function(){ var el=$('s2'), C=canvasIn(el), g=C.g, S=7, P=60, str=[], stitches=[[.06,'t'],[.2],[.36],[.52],[.12]];
+    for(var k=0;k<S;k++){ str.push({y:0,u:new Float32Array(P),v:new Float32Array(P)}) }
+    var ptr=null, lastY=null;
+    el.addEventListener('pointerdown',function(e){ el.setPointerCapture(e.pointerId); ptr=pos(e); lastY=ptr.y });
+    el.addEventListener('pointermove',function(e){ if(!ptr) return; var p=pos(e); str.forEach(function(s,k){ if((lastY-s.y)*(p.y-s.y)<=0&&lastY!==p.y){ var i=clamp(Math.round(p.x/C.w()*(P-1)),1,P-2); s.v[i]+=(p.y>lastY?1:-1)*9; s.v[i-1]+=(p.y>lastY?1:-1)*5; s.v[i+1]+=(p.y>lastY?1:-1)*5; buzz() } }); lastY=p.y; ptr=p });
+    el.addEventListener('pointerup',function(){ ptr=null }); el.addEventListener('pointercancel',function(){ ptr=null });
+    function pos(e){ var r=el.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+    var auto=0;
+    function frame(t){ var W=C.w(), H=C.h(), top=40, gap=(H-90)/(S-1); g.setTransform(C.D,0,0,C.D,0,0); g.clearRect(0,0,W,H);
+      if(!RM&&t-auto>2600){ auto=t; var s=str[Math.floor(Math.random()*S)]; s.v[Math.floor(Math.random()*(P-10))+5]+=3 }
+      str.forEach(function(s,k){ s.y=top+k*gap; for(var it=0;it<2;it++){ for(var i=1;i<P-1;i++){ s.v[i]+=(s.u[i-1]+s.u[i+1]-2*s.u[i])*.35 } for(var i2=1;i2<P-1;i2++){ s.v[i2]*=.985; s.u[i2]+=s.v[i2]*.5 } }
+        var col=skyAt(k/(S-1)*.95), dx=W/(P-1); g.strokeStyle=rgb(col,.72); g.lineWidth=2; g.beginPath(); for(var i3=0;i3<P;i3++){ var x=i3*dx, y=s.y+s.u[i3]; i3?g.lineTo(x,y):g.moveTo(x,y) } g.stroke() });
+      var nowX=W*.65; g.strokeStyle=css('--ink3'); g.lineWidth=1; g.beginPath(); g.moveTo(nowX,top-14); g.lineTo(nowX,top+gap*(S-1)+14); g.stroke();
+      stitches.forEach(function(st,j){ var x=st[0]*W+6, a=Math.floor(j%3)+1; for(var k=a;k<a+3&&k<S;k++){ var s=str[k-1], s2=str[k], i=Math.round(x/(W/(P-1))); g.strokeStyle=st[1]?css('--training'):css('--ink'); g.lineWidth=3; g.beginPath(); g.moveTo(x,s.y+s.u[i]); g.lineTo(x,s2.y+s2.u[i]); g.stroke() } });
+      requestAnimationFrame(frame) } requestAnimationFrame(frame) })();
+
+  /* 3. hourglass (falling sand) */
+  (function(){ var el=$('s3'), C=canvasIn(el), g=C.g, CW=90, CH=62, grid=new Uint8Array(CW*CH), tone=new Uint8Array(CW*CH), tilt=0, tiltT=0;
+    function at(x,y){ return grid[y*CW+x] } function set(x,y,v,t){ grid[y*CW+x]=v; tone[y*CW+x]=t||0 }
+    for(var y=CH-1;y>CH-22;y--) for(var x=0;x<CW;x++){ if(Math.random()<.92) set(x,y,1,Math.floor(Math.random()*4)) }
+    [[12],[30],[48],[62]].forEach(function(s,i){ set(s[0],CH-22-i%2,2,0) });
+    var drip=0;
+    el.addEventListener('pointerdown',function(e){ el.setPointerCapture(e.pointerId); el._x=e.clientX });
+    el.addEventListener('pointermove',function(e){ if(el._x==null) return; var d=e.clientX-el._x; tilt=clamp(d/60,-1,1); if(Math.abs(d)>6&&!el._b){ el._b=1; buzz() } });
+    function rel(){ el._x=null; el._b=0; tilt=0 } el.addEventListener('pointerup',rel); el.addEventListener('pointercancel',rel);
+    el.addEventListener('dblclick',function(){ var x=Math.floor(CW/2); set(x,0,2,0); buzz() });
+    function step(){ var dir=tilt>.25?1:tilt<-.25?-1:0;
+      for(var y=CH-2;y>=0;y--){ var xs=(y%2)?[...Array(CW).keys()]:[...Array(CW).keys()].reverse(); for(var q=0;q<CW;q++){ var x=xs[q], v=at(x,y); if(!v) continue; var t=tone[y*CW+x];
+        if(!at(x,y+1)){ set(x,y,0); set(x,y+1,v,t); continue }
+        var a=x+(dir||((Math.random()<.5)?1:-1)), b=x-(dir||((Math.random()<.5)?1:-1));
+        if(a>=0&&a<CW&&!at(a,y+1)){ set(x,y,0); set(a,y+1,v,t); continue } if(b>=0&&b<CW&&!at(b,y+1)&&!dir){ set(x,y,0); set(b,y+1,v,t); continue }
+        if(dir&&a>=0&&a<CW&&!at(a,y)&&Math.random()<.5){ set(x,y,0); set(a,y,v,t) } } } }
+    function frame(t){ if(!RM){ step(); if(t-drip>90){ drip=t; var x=Math.floor(CW/2+(Math.random()*6-3)); if(!at(x,0)) set(x,0,1,Math.floor(Math.random()*4)) } }
+      var W=C.w(), H=C.h(), cs=Math.min(W/CW,(H-40)/CH), ox=(W-CW*cs)/2, oy=8; g.setTransform(C.D,0,0,C.D,0,0); g.clearRect(0,0,W,H);
+      var sand=[[226,196,160],[214,180,146],[232,206,172],[205,170,140]];
+      for(var y=0;y<CH;y++) for(var x=0;x<CW;x++){ var v=at(x,y); if(!v) continue; g.fillStyle=v===2?'rgb(90,72,68)':rgb(sand[tone[y*CW+x]]); g.fillRect(ox+x*cs,oy+y*cs,cs-.4,cs-.4) }
+      requestAnimationFrame(frame) } requestAnimationFrame(frame);
+    $('c3').textContent='Drag to tip it. Double-tap drops a stone, like finishing something.' })();
+
+  /* 4. pinwheels */
+  (function(){ var el=$('s4'), C=canvasIn(el), g=C.g, COLS=20, ROWS=13, ang=new Float32Array(COLS*ROWS), vel=new Float32Array(COLS*ROWS), P=null, shape=0, sh=0;
+    el.addEventListener('pointerdown',function(e){ el.setPointerCapture(e.pointerId); P=pos(e) }); el.addEventListener('pointermove',function(e){ if(!P) return; var p=pos(e), dx=p.x-P.x, dy=p.y-P.y; stir(p,dx,dy); P=p });
+    el.addEventListener('pointerup',function(){ P=null }); el.addEventListener('pointercancel',function(){ P=null });
+    function pos(e){ var r=el.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+    var cell=0, ox=0, oy=0, lastBuzz=0;
+    function stir(p,dx,dy){ for(var c=0;c<COLS;c++) for(var r=0;r<ROWS;r++){ var x=ox+c*cell+cell/2, y=oy+r*cell+cell/2, ddx=x-p.x, ddy=y-p.y, d=Math.hypot(ddx,ddy); if(d<70){ var cross=(ddx*dy-ddy*dx)/(d+8); vel[c*ROWS+r]+=cross*.012*(1-d/70) } } var n=performance.now(); if(n-lastBuzz>90){ lastBuzz=n; buzz() } }
+    var t0=performance.now();
+    function frame(t){ var W=C.w(), H=C.h()-34; cell=Math.min(W/COLS,H/ROWS); ox=(W-COLS*cell)/2; oy=6; g.setTransform(C.D,0,0,C.D,0,0); g.clearRect(0,0,W,H+40);
+      sh=((t-t0)/12000)%3; var k=Math.floor(sh), f=sh-k; f=f<.8?0:(f-.8)/.2; var s0=[1,.72,.42][k], s1=[1,.72,.42][(k+1)%3], aspect=s0+(s1-s0)*f, rot0=[0,Math.PI/4,Math.PI/4][k], rot1=[0,Math.PI/4,Math.PI/4][(k+1)%3], baseRot=rot0+(rot1-rot0)*f;
+      for(var c=0;c<COLS;c++) for(var r=0;r<ROWS;r++){ var i=c*ROWS+r; vel[i]+=(-ang[i])*.02; vel[i]*=.95; ang[i]+=vel[i]; if(!RM) ang[i]+=Math.sin(t/2200+c*.35+r*.2)*.0015;
+        var col=skyAt(c/COLS), x=ox+c*cell+cell/2, y=oy+r*cell+cell/2, a=baseRot+ang[i], w=cell*.72, h=cell*.72*aspect; g.save(); g.translate(x,y); g.rotate(a); g.fillStyle=rgb(col, c/COLS<.65?1:.96); g.fillRect(-w/2,-h/2,w,h); g.restore() }
+      requestAnimationFrame(frame) } requestAnimationFrame(frame) })();
+})();
+</script>

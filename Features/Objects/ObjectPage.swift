@@ -33,7 +33,12 @@ struct ObjectPage: View {
         {
             FinishedWorkoutPage(workout: workout)
         } else if case .routinesLanding = route {
-            RoutinesLandingPage()
+            // The woodland landing on the shared kit (248); the route only opens while "Landing pages" is On.
+            if LandingSwitch.isOn {
+                RoutinesWoodlandLandingPage()
+            } else {
+                RoutinesLandingPage()
+            }
         } else if case .routinesBrowse = route {
             RoutinesBrowsePage()
         } else if case let .routines(id) = route, let plan = model.object(id) {

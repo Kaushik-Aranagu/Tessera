@@ -25,10 +25,28 @@ struct KitchenPartsTests {
         #expect(FocusWheel<TestItem, EmptyView>.height(others: 4) == 202)
         #expect(FocusWheel<TestItem, EmptyView>.height(others: 9) == 392)
         // Rows tile: a row's top plus its height is the next row's top.
-        for place in stride(from: CGFloat(-1), through: 3, by: 0.25) {
-            let end = FocusWheel<TestItem, EmptyView>.y(place) + FocusWheel<TestItem, EmptyView>.height(at: place)
-            #expect(abs(end - FocusWheel<TestItem, EmptyView>.y(place + 1)) < 0.001)
+        for focus in [CGFloat(50), 80] {
+            for place in stride(from: CGFloat(-1), through: 3, by: 0.25) {
+                let end = FocusWheel<TestItem, EmptyView>.y(place, focusHeight: focus)
+                    + FocusWheel<TestItem, EmptyView>.height(at: place, focusHeight: focus)
+                #expect(abs(end - FocusWheel<TestItem, EmptyView>.y(place + 1, focusHeight: focus)) < 0.001)
+            }
         }
+        #expect(FocusWheel<TestItem, EmptyView>.height(others: 4, focusHeight: 80) == 232)
+        #expect(FocusWheel<TestItem, EmptyView>.height(others: 9, focusHeight: 80) == 422)
+    }
+
+    @Test func theWheelBlursByDistanceAndNeverOnTheFocus() {
+        typealias Wheel = FocusWheel<TestItem, EmptyView>
+        #expect(Wheel.blurRadius(at: 0) == 0)
+        #expect(abs(Wheel.blurRadius(at: 1) - 0.65) < 0.001)
+        #expect(abs(Wheel.blurRadius(at: -1) - 0.65) < 0.001)
+        #expect(Wheel.blurRadius(at: 2) == 1 && Wheel.blurRadius(at: 5) == 1)
+        #expect(Wheel.blurs(switchOn: true, reduceMotion: false, reduceTransparency: false, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: false, reduceMotion: false, reduceTransparency: false, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: true, reduceMotion: true, reduceTransparency: false, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: true, reduceMotion: false, reduceTransparency: true, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: true, reduceMotion: false, reduceTransparency: false, lowPower: true))
     }
 
     @Test func aPlaceIsSpokenWithItsCount() {
@@ -99,5 +117,197 @@ struct KitchenTextTests {
     @Test func theBriefNeverNamesAPrivateThing() {
         // The brief is built from shown labels, so a walled name reads as the label.
         #expect(PantryRoomCopy.brief(low: ["Private item"]) == "Low on private item.")
+    }
+}
+
+@MainActor
+struct RecipesRoomBoardTests {
+    private func item(_ name: String, minutes: Int?, shorts: [String] = [], lows: [String] = [],
+                      pinned: Bool = false) -> RecipesRoomBoard.Item
+    {
+        RecipesRoomBoard.Item(id: UUID(), name: name, shown: name, isPrivate: false, minutes: minutes,
+                              isPinned: pinned, shorts: shorts, lows: lows, uses: ["a", "b", "c", "d", "e", "f"],
+                              plannedFor: nil)
+    }
+
+    @Test func quickestFirstPinsOnTopNoTimeLast() {
+        let slow = item("Stew", minutes: 90), quick = item("Rice", minutes: 20), none = item("Toast", minutes: nil)
+        let pinned = item("Dal", minutes: 45)
+        let out = RecipesRoomBoard.ordered([slow, none, quick, pinned], pinOrder: [pinned.id])
+        #expect(out.map(\.name) == ["Dal", "Rice", "Stew", "Toast"])
+    }
+
+    @Test func theSecondDetailLineSaysWhatItNeedsFirst() {
+        #expect(RecipesRoomBoard.detail(shorts: ["feta"], lows: ["milk"], uses: []) == "needs feta")
+        #expect(RecipesRoomBoard.detail(shorts: ["feta", "oil"], lows: [], uses: []) == "needs feta and oil")
+        #expect(RecipesRoomBoard.detail(shorts: ["a", "b", "c"], lows: [], uses: []) == "needs a and 2 more")
+        #expect(RecipesRoomBoard.detail(shorts: [], lows: ["milk"], uses: ["x"]) == "milk low")
+        #expect(RecipesRoomBoard
+            .detail(shorts: [], lows: [], uses: ["a", "b", "c", "d", "e", "f"]) == "a, b and 4 more")
+    }
+
+    @Test func aPrivateRecipeIsNeverNamedInTheBrief() {
+        let rice = item("Fried rice", minutes: 20)
+        let secret = RecipesRoomBoard.Item(id: UUID(), name: "Melatonin tea", shown: "Private recipe", isPrivate: true,
+                                           minutes: 30, isPinned: false, shorts: [], lows: ["honey"], uses: [],
+                                           plannedFor: nil)
+        let lines = RecipesRoomBoard.brief([rice, secret])
+        #expect(!lines.first.contains("Melatonin") && !lines.second.contains("Melatonin"))
+        #expect(lines.second == "")
+    }
+
+    @Test func theFootFollowsTheFocus() {
+        #expect(RecipesRoomBoard.footWord(shorts: 0) == "Cook now")
+        #expect(RecipesRoomBoard.footWord(shorts: 1) == "Get it")
+        #expect(RecipesRoomBoard.footWord(shorts: 2) == "Get 2 things")
+        #expect(RecipesRoomBoard.getReceipt(["feta", "mascarpone"]) == "Feta and mascarpone, on To get.")
+    }
+
+    @Test func aBriefOfOnlyPrivateRecipesNamesNone() {
+        let secret = RecipesRoomBoard.Item(id: UUID(), name: "Melatonin tea", shown: "Private recipe", isPrivate: true,
+                                           minutes: 30, isPinned: false, shorts: [], lows: ["honey"], uses: [],
+                                           plannedFor: nil)
+        let lines = RecipesRoomBoard.brief([secret, secret])
+        #expect(lines.first == "Nothing is ready yet." && lines.second == "")
+    }
+
+    @Test func theBriefNamesTheQuickestAndWhatUsesTheLow() {
+        let rice = item("Fried rice", minutes: 20)
+        let pasta = item("Lemon pasta", minutes: 25, lows: ["lemons"])
+        let lines = RecipesRoomBoard.brief([rice, pasta])
+        #expect(lines.first == "Fried rice is the quickest, 20 min.")
+        #expect(lines.second == "Lemon pasta uses the lemons.")
+        #expect(RecipesRoomBoard.sectionLine(.ready, count: 7) == "7 you can make now, quickest first")
+    }
+}
+
+@MainActor
+struct PantryPackerTests {
+    private func sections(_ rows: [Int], urgent: [Int]? = nil, height: CGFloat = 34) -> [PantryPacker.Section] {
+        rows.enumerated().map { index, count in
+            PantryPacker.Section(title: "S\(index)", rows: count, height: height, urgent: urgent?[index] ?? 0)
+        }
+    }
+
+    @Test func aColumnHoldsWholeSectionsThatFitWithTheirGap() {
+        // 26 + 6 x 34 = 230 fits a column; the next section does not fit beside it.
+        let packer = PantryPacker(sections: sections([6, 1, 2]))
+        #expect(packer.columns[0].map(\.section) == [0])
+        // 26 + 34 = 60, a gap of 18 and 26 + 68 = 94: 172 in all.
+        #expect(packer.columns[1].map(\.section) == [1, 2])
+        #expect(packer.columns[1].reduce(0) { $0 + $1.height } + PantryPacker.gap == 172)
+    }
+
+    @Test func twoSectionsAlwaysTakeBothColumns() {
+        let packer = PantryPacker(sections: sections([1, 1]))
+        #expect(packer.columns[0].map(\.section) == [0])
+        #expect(packer.columns[1].map(\.section) == [1])
+        let single = PantryPacker(sections: sections([1, 1]), columnCount: 1)
+        #expect(single.columns.count == 1 && single.columns[0].map(\.section) == [0, 1])
+    }
+
+    @Test func aSectionTooBigForAColumnSplitsWithAMoreRow() {
+        // Header 26 + the "more" row 26 leaves 180: five rows of 34 (170) fit.
+        let packer = PantryPacker(sections: sections([20]))
+        let block = packer.columns[0][0]
+        #expect(block.count == 5 && block.more == 15 && block.height == 26 + 5 * 34 + 26)
+        #expect(packer.nextLine == "Next: the rest of S0")
+    }
+
+    @Test func rowsOfDifferentHeightsAreAddedUp() {
+        // 28 pt rows hold more of them than 34 pt rows do.
+        let tall = PantryPacker(sections: sections([20], height: 34)).columns[0][0].count
+        let short = PantryPacker(sections: sections([20], height: 28)).columns[0][0].count
+        #expect(short > tall)
+    }
+
+    @Test func theEntrySectionIsTheFirstLowOne() {
+        let packer = PantryPacker(sections: sections([2, 2, 2], urgent: [0, 1, 0]))
+        #expect(packer.columns[0][0].section == 1)
+    }
+
+    @Test func swipingContinuesASplitThenPacksOnAndStopsWhenNothingIsLeft() {
+        var packer = PantryPacker(sections: sections([20, 2]))
+        let first = packer.columns[0][0].count
+        let moved = packer.advance()
+        #expect(moved)
+        #expect(packer.columns[0][0].start == first)
+        var moves = 0
+        while packer.advance() {
+            moves += 1; if moves > 30 {
+                break
+            }
+        }
+        #expect(moves < 30)
+        let stuck = packer.advance()
+        #expect(stuck == false)
+    }
+
+    @Test func backGoesUpToSixSteps() {
+        var packer = PantryPacker(sections: sections([60]))
+        for _ in 0 ..< 8 {
+            packer.advance()
+        }
+        var back = 0
+        while packer.back() {
+            back += 1
+        }
+        #expect(back == 6)
+    }
+
+    @Test func aHeaderIsSpokenWithItsCountAndLow() {
+        let packer = PantryPacker(sections: [.init(title: "Dairy and eggs", rows: 5, height: 34, urgent: 2)])
+        #expect(packer.spokenHeader(packer.columns[0][0]) == "Dairy and eggs, 5, 2 low")
+    }
+}
+
+@MainActor
+struct PantryRowLayoutTests {
+    @Test func aShortValueSitsBesideTheNameAtTheDefaultSize() {
+        let fit = PantryRowLayout.fit(name: "Eggs", value: "half", column: 170)
+        #expect(fit.beside && fit.height == 28)
+    }
+
+    @Test func aLongValueDropsBelowAndTheRowGrowsToThirtyFour() {
+        let fit = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday evening", column: 120)
+        #expect(!fit.beside && fit.height == 34)
+    }
+
+    @Test func aRowWithNoValueIsTwentyEight() {
+        #expect(PantryRowLayout.fit(name: "Milk", value: nil, column: 170).height == 28)
+    }
+
+    @Test func rowsGrowWithTheTextSize() {
+        let base = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday", column: 120)
+        let ax1 = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday", column: 120, scale: 1.6,
+                                      large: true)
+        let ax3 = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday", column: 120, scale: 2.2,
+                                      large: true)
+        #expect(ax1.height > base.height && ax3.height > ax1.height)
+    }
+
+    @Test func aTurnedLowThingOffersTheNudge() {
+        let receipts = KitchenReceipts()
+        var asked = 0
+        receipts.say("Butter, low.", undo: nil, action: ("Add to To get", { asked += 1 }))
+        receipts.line?.action?.run()
+        #expect(asked == 1 && receipts.line?.action?.title == "Add to To get")
+    }
+}
+
+@MainActor
+struct PantryTouchTests {
+    @Test func aTouchTwoPointsIntoARowIsThatRowsNotTheOneAbove() {
+        let heights: [CGFloat] = [28, 28, 28]
+        #expect(PantryTouch.row(at: 30, heights: heights, lastReach: 8) == 1)
+        #expect(PantryTouch.row(at: 27.9, heights: heights, lastReach: 8) == 0)
+        #expect(PantryTouch.row(at: 28, heights: heights, lastReach: 8) == 1)
+    }
+
+    @Test func onlyTheLastRowReachesPastItself() {
+        let heights: [CGFloat] = [28, 28]
+        #expect(PantryTouch.row(at: 60, heights: heights, lastReach: 8) == 1)
+        #expect(PantryTouch.row(at: 64.5, heights: heights, lastReach: 8) == nil)
+        #expect(PantryTouch.row(at: -1, heights: heights, lastReach: 8) == nil)
     }
 }

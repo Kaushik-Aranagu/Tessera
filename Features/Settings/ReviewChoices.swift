@@ -365,6 +365,32 @@ final class ReviewChoices {
                    "Off": "Pantry, Recipes, the Kitchen page and cooking stay as they were.",
                ],
                readiness: .live),
+        // Kaushik, Oct 23: any wheel blurs the rows away from its focus; this switch turns it off.
+        Choice(id: "depthOnWheels", name: "Depth on wheels", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "Rows a little way from the focus of a wheel go softly out of focus.",
+                      "Off": "Every row of a wheel is sharp."],
+               readiness: .live),
+        // Harness H1b: Claude may be given health, body, calendar, calories and money in calls from this phone; never
+        // the key. Off keeps those on the phone. Ships On.
+        Choice(id: "tessLabPolicy", name: "Lab mode for Claude", values: ["Off", "On"], defaultValue: "On",
+               says: ["Off": "Health, body, calendar, calories and money stay on this phone.",
+                      "On": "Tess may give Claude those in a call from this phone. The key never leaves the Keychain."],
+               needsClaude: true, readiness: .live),
+        // Harness H2: a small model fills the day's looks ahead of time (burst shapes, her palette, the open reaction).
+        // It sends no word of his. Off keeps the rules.
+        Choice(id: "tessDirectorPlaybook", name: "Tess picks her looks", values: ["Off", "On"], defaultValue: "On",
+               says: ["Off": "Her bursts, palette and reactions follow fixed rules.",
+                      "On": "Once a day Tess asks Claude to plan her looks; nothing of yours is sent."],
+               needsClaude: true, readiness: .live),
+        // Harness H3: Tess answers open questions and makes small changes with tools, streamed. Off (or Tess asks
+        // Claude Off) leaves only the phone's own model, with no tools.
+        Choice(id: "tessAsks",
+               name: "Ask Tess anything",
+               values: ["Off", "On"],
+               defaultValue: "On",
+               says: ["Off": "Tess answers only with the phone's own model, and makes no changes by asking.",
+                      "On": "Ask Tess a question or for a small change; Claude may answer, and changes wait for your OK."],
+               needsClaude: true, readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],
@@ -382,7 +408,7 @@ final class ReviewChoices {
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
                readiness: .arrivesWith("calories burned")),
-    ]
+    ] + MosaicFaceChoices.all
 
     /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
@@ -398,7 +424,10 @@ final class ReviewChoices {
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "quietHoursV2", "calendar", "health"]),
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
-        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2"]),
+        (
+            "Notes and lists",
+            ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2", "depthOnWheels"]
+        ),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
@@ -409,6 +438,9 @@ final class ReviewChoices {
         ("Kitchen v2", ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
+        ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
+        // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
+        ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

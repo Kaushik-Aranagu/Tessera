@@ -29,12 +29,14 @@ struct MosaicScreenTests {
         #expect(grid.tile(at: CGPoint(x: 14, y: 22)) == (3, 5))
     }
 
-    @Test func theCoreIsCentredAtFiftySixPercentWithItsTopOnTheOldBlocksTop() {
+    @Test func theCoreGrowsLeftFromTheRightMarginWithItsTopOnTheOldBlocksTop() {
         let core = grid.core(columns: 50, rows: 28)
         #expect(core.width == 50 && core.height == 28)
         #expect(core.top == 120)
-        let centre = Double(core.left) + 25
-        #expect(abs(centre - 0.56 * Double(grid.columns)) <= 1)
+        #expect(core.right == grid.columns - 1 - MosaicScreenGrid.gutterTiles)
+        // A wider face grows left and keeps the same right edge.
+        #expect(grid.core(columns: 88, rows: 28).right == core.right)
+        #expect(grid.core(columns: 72, rows: 28).left > grid.core(columns: 88, rows: 28).left)
     }
 
     @Test func theCornersAreASuperellipseBetweenASquareAndACircle() {
@@ -182,6 +184,16 @@ struct MosaicScreenTests {
         #expect(retinted.colour.green > later.colour.green)
     }
 
+    /// At the largest text sizes a text block can sit wholly outside the grid: that is no shield, never a crash.
+    @Test func aTextBlockOutsideTheGridShieldsNothingAndDoesNotCrash() {
+        let engine = engine()
+        let far = [CGRect(x: 0, y: 5000, width: 300, height: 80), CGRect(x: 9000, y: 100, width: 80, height: 80),
+                   CGRect(x: -900, y: -900, width: 80, height: 80)]
+        for rect in far {
+            #expect(engine.grid.shield(for: [rect]).isEmpty)
+        }
+    }
+
     @Test func theTextShieldKeepsAFifthUnderWordsAndFeathersBackOverFiveTiles() throws {
         let engine = engine()
         engine.settle { _, _ in (0.2, 0.2, 0.9) }
@@ -213,11 +225,11 @@ struct MosaicScreenTests {
 
     @Test func theRegionHoldsTheLargestCorePlusTheRimAndABreath() {
         let region = grid.region
-        let core = grid.core(columns: 62, rows: 40)
-        #expect(region.left <= core.left - 16 && region.right >= core.right + 16)
+        let core = grid.core(columns: 88, rows: 40)
+        #expect(region.left <= max(core.left - 16, 0) && region.right >= core.right + 6)
         #expect(region.top <= core.top - 16 && region.bottom >= core.bottom + 16)
         // About six thousand tiles of the screen's twenty-two thousand.
-        #expect(region.width * region.height < 8000)
+        #expect(region.width * region.height < 9000)
         #expect(grid.count > 20000)
     }
 

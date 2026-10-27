@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lists and Recipes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 87 (E6): the Recipes front (a class page) and the Lists shelf in empty, one, long and private states, with their sides and the row remove. Board by default; ?play records: Recipes scroll past a Private recipe, the right edge opens the glance and the full side, then Groceries removes Rice with UNDO. -->
+<style>
+/* TYPE TOKENS: swap these to re-skin (sheet 86 options). Current Tessera tokens. */
+:root{
+--ty-title:500 44px/50px 'Inter Tight';--ty-title-ls:-.035em;
+--ty-hero:500 56px/62px 'Inter Tight';--ty-t34:500 34px/40px 'Inter Tight';
+--ty-body:400 21px/28px 'Inter Tight';--ty-body-ls:0;
+--ty-tess:400 19px/25px 'Inter Tight';
+--ty-label:700 16px/20px 'Inter Tight';--ty-label-s:700 13px/18px 'Inter Tight';--ty-label-ls:.08em;
+--ty-note:600 16px/28px 'Inter Tight';
+--ty-ax-title:500 58px/64px 'Inter Tight';--ty-ax-body:400 34px/42px 'Inter Tight';
+--ink-soft:.66;
+}
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1000px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:22px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--live:#C23A22}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--live:#FF7D62}
+.abs{position:absolute}
+.lbl{font:var(--ty-label);letter-spacing:var(--ty-label-ls);white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)}
+.t44{font:var(--ty-title);letter-spacing:var(--ty-title-ls);white-space:nowrap}
+.t34{font:var(--ty-t34);letter-spacing:-.025em;white-space:nowrap}
+.hero{font:var(--ty-hero);letter-spacing:-.03em;white-space:nowrap}
+.ctx{left:22px;font:var(--ty-body);color:var(--ctx);white-space:nowrap}
+.sw{right:22px;font:var(--ty-label-s);line-height:28px;letter-spacing:var(--ty-label-ls)}
+.wl{left:22px;top:200px;width:346px;font-size:18px;line-height:24px;color:rgba(var(--ink),.66)}
+.hair{left:22px;top:232px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.nr{left:22px;width:280px;font:var(--ty-body);letter-spacing:var(--ty-body-ls)}
+.nr.two{width:270px}
+.nr.pv{color:rgba(var(--ink),.66)}
+.nt{right:22px;font:var(--ty-note);color:rgba(var(--ink),.66);white-space:nowrap}
+.quiet{left:22px;top:280px;font:var(--ty-body);color:rgba(var(--ink),.66)}
+.pin{left:0;right:0;top:0;height:104px;background:linear-gradient(var(--bg) 78%,var(--bg0))}
+.clip{left:0;right:0;top:0;height:736px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl{position:absolute;right:71px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font:var(--ty-tess);color:var(--tess)}
+.undo{position:absolute;right:71px;top:797px;font:var(--ty-label-s);letter-spacing:var(--ty-label-ls);color:var(--tess)}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+/* side */
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,var(--bg0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.sl{left:22px;width:350px;font-size:21px;line-height:28px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.sl em{font-style:normal;font-size:19px;color:rgba(var(--ink),.62)}
+.glab{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+/* dynamic type */
+.ax .nr{width:346px;font:var(--ty-ax-body)}
+.rm{right:22px;font:var(--ty-label);letter-spacing:var(--ty-label-ls);color:var(--live)}
+.sub{font:var(--ty-label-s);letter-spacing:var(--ty-label-ls);color:rgba(var(--ink),.62)}
+.ax .nt{position:static;display:block;font-size:20px;line-height:26px}
+/* voiceover */
+.vo{left:22px;width:350px;font-size:17px;line-height:22px}
+.vo b{display:inline-block;width:26px;font-weight:700;font-size:13px;letter-spacing:.04em;color:rgba(var(--ink),.5)}
+.vo i{font-style:normal;color:rgba(var(--ink),.62)}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = (line, undo) => `<div class="abs soul"></div>${line ? `<div class="tl"${undo ? ' style="top:770px"' : ''}>${line}</div>` : ''}${undo ? '<div class="undo">UNDO</div>' : ''}`;
+const PR = 'Private recipe';
+const T_REC = 'Chili is the one you cook most.';
+const T_REC_EMPTY = 'Paste a link or a page and I’ll read it.';
+const T_REC_ONE = 'Tacos, cooked 2 times.';
+const RECIPES = [['Dal','Thu'],[PR,'Wed',1],['Tacos','Tue'],['Pad thai','Mon'],['Shakshuka','Oct 12'],['Chili','Oct 11'],['Lemon pasta','Oct 9'],[PR,'Oct 8',1],['Banana bread','Oct 7'],['Congee','Oct 5'],['Roast chicken with potatoes and thyme','Oct 3'],['Miso soup','Oct 2'],['Focaccia','Sep 30'],['Green curry','Sep 28'],['Pancakes','Sep 26'],['Black bean burgers','Sep 24'],['Ramen eggs','Sep 22'],['Gnocchi','Sep 20']];
+const isTwo = t => t.length > 30;
+const rows = (list, y0 = 232) => { let y = y0; return list.map(([t, w, pv]) => { const two = isTwo(t); const h = `<div class="abs nr${two ? ' two' : ''}${pv ? ' pv' : ''}" style="top:${y}px">${t}</div><div class="abs nt" style="top:${y + 2}px">${w}</div>`; y += two ? 74 : 46; return h; }).join(''); };
+const frame = (back, title, ctx, word, inner) => `<div class="abs lbl s2" style="left:22px;top:58px">${back}</div><div class="abs t44" style="left:22px;top:84px">${title}</div><div class="abs ctx" style="top:146px">${ctx}</div><div class="abs sw" style="top:146px">${word}</div>${inner}`;
+const recPage = (ctx, list) => frame('‹ KITCHEN', 'Recipes', ctx, 'ITS OBJECTS', rows(list));
+const recEmpty = () => frame('‹ KITCHEN', 'Recipes', 'None yet', 'ITS OBJECTS', '<div class="abs quiet" style="top:232px">No recipes yet.</div>');
+const recOne = () => frame('‹ KITCHEN', 'Recipes', '1 recipe', 'ITS OBJECTS', rows([['Tacos', 'Tue']]));
+const scrolled = (page, dy, back) => `<div class="abs clip"><div class="abs" id="pg" style="left:0;top:0;width:393px;height:1500px;transform:translateY(${-dy}px)">${page.replace(/<div class="abs lbl s2"[^>]*>[^<]*<\/div>/, '')}</div></div><div class="abs pin"></div><div class="abs lbl s2" style="left:22px;top:58px">${back}</div>`;
+const recGlance = () => `<div class="gl"><div class="gk">ITS OBJECTS</div><div class="big">38<small>recipes</small></div><div class="gr">Newest, Dal</div><div class="gr">Most used, Chili</div><div class="more">ALL LINKS<i></i></div></div>`;
+const sideRow = (n, c, top) => `<div class="abs sl" style="top:${top}px"><span>${n}</span><em>${c}</em></div>`;
+const recFull = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ RECIPES</div><div class="abs ctx" style="top:84px">38 recipes</div><div class="abs sw" style="top:84px">RECIPES</div>
+  <div class="abs glab" style="left:22px;top:168px">NEWEST</div>${sideRow('Dal','Thu',196)}${sideRow(PR,'Wed',236)}${sideRow('Tacos','Tue',276)}<div class="abs sl" style="top:316px;color:rgba(var(--ink),.55)"><span>and 35 more</span></div>
+  <div class="abs glab" style="left:22px;top:384px">MOST USED</div>${sideRow('Chili','4 cooks',412)}${sideRow('Tacos','3 cooks',452)}${sideRow('Dal','3 cooks',492)}
+  <div class="abs glab" style="left:22px;top:560px">EVERY RECIPE HAS</div><div class="abs sl" style="top:588px"><span>Servings, time, from</span></div>
+  <div class="abs glab" style="left:22px;top:644px">KEPT PRIVATE</div>${sideRow(PR,'2',672)}`;
+const T_LISTS = 'Packing has 9 left.';
+const T_LISTS_EMPTY = 'Say “new list: packing” and I’ll start it.';
+const LIVE = 'color:var(--live)';
+const shelf = (ctx, items) => { let y = 200; const out = items.map(([n, st, tier, run]) => { let h; if (tier === 56) { h = `<div class="abs hero" style="left:22px;top:${y}px">${n}</div><div class="abs sub" style="left:24px;top:${y + 68}px;${run ? LIVE : ''}">${st}</div>`; y += 108; } else if (tier === 34) { h = `<div class="abs t34" style="left:22px;top:${y}px">${n}</div><div class="abs sub" style="left:24px;top:${y + 44}px">${st}</div>`; y += 80; } else { h = `<div class="abs" style="left:22px;top:${y}px;font:var(--ty-body);color:rgba(var(--ink),.75)">${n}</div><div class="abs sub" style="left:24px;top:${y + 29}px">${st}</div>`; y += 66; } return h; }).join(''); return frame('‹ KITCHEN', 'Lists', ctx, 'ON THEM', out); };
+const LONG = [['Packing', 'RUNNING, 9 LEFT', 56, 1], ['Gym bag', '3 OF 7', 34], ['Groceries', '14 TO GET', 34], ['Camping', 'REUSABLE', 21], ['Birthday ideas', '6 THINGS', 21], ['Hardware store', 'REUSABLE', 21], ['Movies', '11 THINGS', 21], ['Gifts', 'EMPTY', 21], ['Garage', 'EMPTY', 21]];
+const listEmpty = () => shelf('Just Groceries', [['Groceries', 'NOTHING TO GET', 56]]) + '<div class="abs quiet" style="top:322px">No other lists yet.</div>';
+const listOne = () => shelf('2 lists, Packing running', [['Packing', 'RUNNING, 9 LEFT', 56, 1], ['Groceries', '14 TO GET', 34]]);
+const listLong = () => shelf('9 lists, Packing running', LONG);
+const lGlance = () => `<div class="gl"><div class="gk">ON THEM</div><div class="big">9<small>lists</small></div><div class="gr">Packing <em>9 left</em></div><div class="gr">Groceries <em>14 to get</em></div><div class="more">ALL OF THEM<i></i></div></div>`;
+const lFull = () => { let y = 168; const sec = (l, rs) => { let h = `<div class="abs glab" style="left:22px;top:${y}px">${l}</div>`; y += 26; rs.forEach(([n, c]) => { h += sideRow(n, c, y); y += 38; }); y += 14; return h; }; return `<div class="abs lbl s2" style="left:22px;top:58px">‹ LISTS</div><div class="abs ctx" style="top:84px">9 lists</div><div class="abs sw" style="top:84px">LISTS</div>` + sec('RUNNING', [['Packing', '9 left']]) + sec('OPEN', [['Gym bag', '3 of 7'], ['Groceries', '14 to get'], ['Birthday ideas', '6'], ['Movies', '11']]) + sec('REUSABLE', [['Camping', '12'], ['Hardware store', '5']]) + sec('EMPTY', [['Gifts', ''], ['Garage', '']]) + sec('KEPT PRIVATE', [['Private item', '2']]); };
+const gRows = (rice, off) => { const R = [['2', 'Limes'], ['1 bunch', 'Cilantro']]; let h = `<div class="abs glab" style="left:22px;top:204px">PRODUCE</div>`; R.forEach(([a, n], i) => h += `<div class="abs nr" style="top:${232 + i * 46}px"><b style="font-weight:600">${a}</b>  ${n}</div>`);
+  h += `<div class="abs glab" style="left:22px;top:352px">PANTRY</div>`;
+  const P = [['2 lb', 'Rice'], ['1', 'Black beans'], ['1 jar', 'Salsa'], ['', 'Private item']].filter(r => rice || r[1] !== 'Rice'); P.forEach(([a, n], i) => { const isR = n === 'Rice'; const pvi = n === 'Private item'; h += `<div class="abs nr${pvi ? ' pv' : ''}" style="top:${380 + i * 46}px;${isR && off ? `transform:translateX(${-off}px)` : ''}">${a ? `<b style="font-weight:600">${a}</b>  ` : ''}${n}</div>`; });
+  if (off) h += `<div class="abs rm" style="top:382px;opacity:1">REMOVE</div>`; return h; };
+const gPage = (rice, off, n) => frame('‹ KITCHEN', 'Groceries', `${n} to get`, 'FOR WHAT', gRows(rice, off));
+const axPage = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ KITCHEN</div><div class="abs" style="left:22px;top:84px;font:var(--ty-ax-title);letter-spacing:-.035em">Lists</div><div class="abs ctx" style="top:158px;font-size:30px;line-height:38px;white-space:normal;width:340px">9 lists, Packing running</div><div class="abs sw" style="top:236px;font-size:20px">ON THEM</div>
+  <div class="abs hero" style="left:22px;top:300px">Packing</div><div class="abs sub" style="left:24px;top:372px;color:var(--live);font-size:18px">RUNNING, 9 LEFT</div>
+  <div class="abs t34" style="left:22px;top:430px">Gym bag</div><div class="abs sub" style="left:24px;top:476px;font-size:18px">3 OF 7</div>
+  <div class="abs t34" style="left:22px;top:530px">Groceries</div><div class="abs sub" style="left:24px;top:576px;font-size:18px">14 TO GET</div>`;
+const voice = () => `<div class="abs lbl s2" style="left:22px;top:58px">VOICEOVER, IN ORDER</div>
+  ${[['1', 'Back, Kitchen, button'], ['2', 'Recipes, heading'], ['3', '38 recipes, 2 private'], ['4', 'Its objects, button. Swipes right too.'], ['5', 'Dal, Thursday'], ['6', 'Private recipe, Wednesday'], ['7', 'Tacos, Tuesday, and on down, one recipe a stop'], ['8', 'Lists: Packing, running, 9 left. Groceries, 14 to get.'], ['9', 'A list row: actions Check off, Remove'], ['10', 'Remove says: Rice, removed. UNDO waits 10 s']].map(([n, t], i) => `<div class="abs vo" style="top:${110 + i * 60}px"><b>${n}</b>${t}</div>`).join('')}
+  <div class="abs vo" style="top:730px;font-size:15px;color:rgba(var(--ink),.62);line-height:20px"><i>Each side is a custom action too (“Show its objects”, “Show on them”). A Private recipe is never read as its words.</i></div>`;
+const ph = (cls, inner, opt, h, p) => `<div><div class="ph ${cls}">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+const dim = inner => `<div class="abs" style="inset:0;opacity:.3">${inner}</div>`;
+const finger = (x, y) => `<div class="finger" style="left:${x}px;top:${y}px;opacity:1"></div>`;
+
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 87: Lists and Recipes, the front</h1><p>Recipes is a class page (the only recipe list there is) and Lists is the shelf. Each is drawn empty, with one, long, and with a private recipe; each declares its side (Recipes ITS OBJECTS, matching sheet 77; Lists ON THEM, proposed); and a list item is removed with "Rice, removed." and a 10 s UNDO. All type sits in the token block at the top of the study CSS, so sheet 86 can re-skin it. A private recipe reads only "Private recipe", in the list, the side, Tess's line and VoiceOver.</p></div><div class="grid">`;
+  b += ph('por', listEmpty() + band(T_LISTS_EMPTY), 'LISTS, EMPTY', 'Just Groceries', 'Groceries is always on the shelf, so empty means no other list: it takes the 56, says "Nothing to get", and one quiet line follows. Tess says how to start one.');
+  b += ph('por', listOne() + band(T_LISTS), 'LISTS, ONE LIST', 'Packing runs', 'The running list takes the 56 with its state in the live colour, Groceries the 34 under it. The context line names the run. Tess says what is left.');
+  b += ph('por', scrolled(listLong(), 0, '‹ KITCHEN') + band(T_LISTS), 'LISTS, LONG', 'Tiers, then one line each', 'Nine lists: the run at 56, two at 34, the rest at 21 and 75%. The shelf scrolls as one sheet under the back word and melts into Tess\'s band at 736.');
+  b += ph('por', gPage(1, 18, 9) + band(T_LISTS), 'REMOVE, THE SWIPE', 'Rice, at 96 pt', 'The row slides with the finger; REMOVE rises in the live colour at 60 pt and commits past 96 (sheet 65, NE11). A private item sits in PANTRY and reads only "Private item" at 66%. List item rows keep this swipe; shelf and recipe rows have none.');
+  b += ph('por', gPage(0, 0, 8) + band('Rice, removed.', 1), 'REMOVE, THE RECEIPT', 'Rice, removed.', 'The rows close up, the count rolls to 8, and Tess says the thing first. UNDO sits under her line for 10 s in the one app-wide slot; 10 s under VoiceOver too. A private item says "Private item, removed." (10 s UNDO) and "Private item, on Groceries." when it lands.');
+  b += ph('por', dim(scrolled(listLong(), 0, '‹ KITCHEN')) + lGlance() + finger(372, 420) + band(T_LISTS), 'LISTS SIDE, STOP 1', 'ON THEM: 9 lists', 'Proposed (PARTS). Right edge or the word ON THEM. The big count, the running list, Groceries\' count. Foot word ALL OF THEM.');
+  b += ph('por', lFull() + band(T_LISTS), 'LISTS SIDE, STOP 2', 'Running, open, reusable, empty', 'One plain line each with its count; a tap opens the list. No controls. KEPT PRIVATE is a count only: "Private item, 2", nothing tappable. With only Groceries the right edge opens straight to "Nothing else to show yet."');
+  b += ph('por', recEmpty() + band(T_REC_EMPTY), 'RECIPES, EMPTY', 'No recipes yet.', 'One quiet line, no art, no guilt. Tess tells him how to bring one in. The side has nothing to group, so the right edge opens straight to "Nothing to show yet."');
+  b += ph('por', recOne() + band(T_REC_ONE), 'RECIPES, ONE RECIPE', 'Tacos', 'One row with when it was added. Tess states the phone\'s fact. The side shows its glance with no "most used" line under 2 cooks.');
+  b += ph('por', scrolled(recPage('38 recipes, 2 private', RECIPES), 0, '‹ KITCHEN') + band(T_REC), 'RECIPES, A PRIVATE RECIPE', 'It reads “Private recipe”', 'The second row, at 66% where a recipe\'s name is ink, with its day like any row. The name appears nowhere else: not the context (a count, "2 private"), not the side, not Tess, not VoiceOver.');
+  b += ph('por', scrolled(recPage('38 recipes, 2 private', RECIPES), 330, '‹ KITCHEN') + band(T_REC), 'RECIPES, LONG', 'Thirty-eight, one line each', 'A long name wraps to two lines, never cut. Pull down at the top opens the area index (73). Rows have no swipe, so the middle also goes in (76).');
+  b += ph('por', dim(scrolled(recPage('38 recipes, 2 private', RECIPES), 0, '‹ KITCHEN')) + recGlance() + finger(372, 420) + band(T_REC), 'RECIPES SIDE, STOP 1', 'ITS OBJECTS: 38', 'As sheet 77 draws it (the unit is the class\'s plural, "recipes"). Newest and most used are single names. Foot word ALL LINKS.');
+  b += ph('por', recFull() + band(T_REC), 'RECIPES SIDE, STOP 2', 'Newest, most used, private', 'Three named and "and 35 more". The private recipes are one line, "Private recipe", 2, with no words and nothing tappable behind it.');
+  b += ph('obs', scrolled(recPage('38 recipes, 2 private', RECIPES), 0, '‹ KITCHEN') + band(T_REC), 'OBSIDIAN', 'Recipes, same frame', 'Context #B8A3FF, Tess #86B4FF, ink 245,242,236. The Private recipe row stays at 66% of ink.');
+  b += ph('obs ax', axPage() + band(T_LISTS), 'DYNAMIC TYPE, ACCESSIBILITY 3', 'Lists, one column', 'Names wrap in full, the context wraps and ON THEM drops under it. Tess\'s line stays inside the band at three lines at most. Rows are at least 44 pt.');
+  b += ph('por', voice(), 'VOICEOVER', 'Reads in this order', 'Each row reads its name then its day; a Private recipe reads only that. A list row carries Check off and Remove. Reduce Motion: every stop and the row leaving are a 150 ms crossfade.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.start = '1'; document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph">
+    <div class="abs" style="inset:0" id="s1"><div class="abs" style="inset:0" id="front">${scrolled(recPage('38 recipes, 2 private', RECIPES), 0, '‹ KITCHEN')}</div>
+    <div class="abs" style="inset:0;opacity:0" id="gb">${recGlance()}</div>
+    <div class="abs" style="inset:0;opacity:0" id="fb"><div class="abs" style="inset:0;background:var(--bg)"></div>${recFull()}</div>
+    <div class="abs soul"></div><div class="tl" id="t1">${T_REC}</div></div>
+    <div class="abs" style="inset:0;opacity:0;background:var(--bg)" id="s2"><div id="g2" class="abs" style="inset:0"></div><div class="abs soul"></div><div class="tl" id="t2" style="top:770px;opacity:0">Rice, removed.</div><div class="undo" id="u2" style="opacity:0">UNDO</div></div>
+    <div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const fg = $('fg'), pg = $('pg'), fr = $('front'), gb = $('gb'), fb = $('fb');
+  const fing = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const scroll = dy => { pg.style.transform = `translateY(${-dy}px)`; };
+  const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+    fr.style.opacity = 1 - .7 * p1 - .3 * p2; fr.style.transform = `translateX(${-44 * p2}px)`;
+    gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+    fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`; };
+  const g = (off, rice, n) => { $('g2').innerHTML = gPage(rice, off, n); };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    g(0, 1, 9); await wait(900);
+    fing(300, 560); await tween(1200, q => { fing(300, 560 - 220 * q); scroll(330 * q); }); fing(0, 0, 0); await wait(900);
+    fing(300, 340); await tween(900, q => { fing(300, 340 + 220 * q); scroll(330 * (1 - q)); }); fing(0, 0, 0); await wait(500);
+    await tween(380, q => { fing(386 - 150 * q, 420); inn(q); }); fing(0, 0, 0); await wait(1500);
+    await tween(380, q => { fing(300 - 170 * q, 420); inn(1 + q); }); fing(0, 0, 0); await wait(1700);
+    await tween(420, q => { fing(6 + 220 * q, 420); inn(2 - 2 * q); }); fing(0, 0, 0); await wait(500);
+    await tween(400, q => { $('s2').style.opacity = q; });
+    await wait(500);
+    await tween(700, q => { fing(330 - 140 * q, 410); g(110 * q, 1, 9); });
+    await wait(300); fing(0, 0, 0);
+    g(0, 0, 8); $('t2').style.opacity = 1; $('u2').style.opacity = 1; await wait(1700);
+    fing(340, 802); await wait(300); fing(0, 0, 0); g(0, 1, 9); $('t2').textContent = 'Rice, back on Groceries.'; $('u2').style.opacity = 0; await wait(1800);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

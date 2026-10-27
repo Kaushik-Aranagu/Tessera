@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Habits week</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M3 slice 2 (habits, x of 7, no streaks). Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.hb{position:absolute;left:0;right:0;height:160px}
+.hb .n{position:absolute;left:22px;top:0;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px}
+.hb .c{position:absolute;right:22px;top:8px;font-size:21px;color:rgba(43,36,64,.75);text-align:right}
+.hb .c b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;display:inline-block;overflow:hidden;height:30px;vertical-align:top}
+.slot{position:absolute;width:36px;height:32px;margin:-16px 0 0 -18px}
+.dab{position:absolute;inset:0;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.ltr{position:absolute;width:36px;margin-left:-18px;text-align:center;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(110,100,128,.7)}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <section id="page" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px">TODAY › HABITS</div>
+    <div class="abs" style="left:20px;top:84px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">This week</div>
+    <div class="abs" style="left:22px;top:150px;font-size:21px;color:var(--ctx)">Thursday, three days to go</div>
+    <div id="list"></div>
+  </section>
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+  <div id="say" class="abs" style="right:78px;top:775px;font-size:21px;color:var(--cobalt);text-align:right;opacity:0;z-index:12;white-space:nowrap"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SPRING = 'cubic-bezier(.3,1.4,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+
+const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'], TODAY = 3, X0 = 40, DX = 50;
+const HABITS = [
+  { n: 'Stretch', target: 5, colour: '224,163,92', done: [0, 1, 2, 4].filter((d) => d < TODAY), extra: [] },
+  { n: 'Read', target: 7, colour: '46,109,164', done: [0, 2] },
+  { n: 'Train', target: 4, colour: '200,69,47', done: [0, 1], auto: 'counts when a workout finishes' }
+];
+HABITS[0].done = [0, 1, 2]; HABITS[0].count = 4; HABITS[0].extraDone = true;   // Stretch: Mon Tue Wed + one from last Sunday? keep it simple: 4 so far
+HABITS[0].done = [0, 1, 2]; HABITS[0].count = 3;
+HABITS.forEach((h, i) => {
+  h.count = h.done.length;
+  const e = document.createElement('div'); e.className = 'hb'; e.style.top = (208 + i * 168) + 'px';
+  e.innerHTML = `<div class="n">${h.n}</div><div class="c"><b><span class="cn" style="display:block">${h.count}</span></b> of ${h.target}</div>` + (h.auto ? `<div class="lbl abs" style="left:22px;top:44px;opacity:.7">${h.auto.toUpperCase()}</div>` : '');
+  const rowY = h.auto ? 100 : 82;
+  DAYS.forEach((d, k) => {
+    const x = X0 + k * DX;
+    const s = document.createElement('div'); s.className = 'slot'; s.style.left = x + 'px'; s.style.top = rowY + 'px';
+    const on = h.done.includes(k);
+    s.innerHTML = `<div class="dab" style="background:radial-gradient(closest-side,rgba(${h.colour},${on ? .9 : .14}) 0%,rgba(${h.colour},${on ? .65 : .1}) 50%,rgba(${h.colour},0) 100%)"></div>`;
+    e.appendChild(s);
+    const l = document.createElement('div'); l.className = 'ltr'; l.style.left = x + 'px'; l.style.top = (rowY + 20) + 'px'; l.textContent = d; if (k === TODAY) l.style.color = 'var(--ink)';
+    e.appendChild(l);
+  });
+  $('list').appendChild(e); h.el = e; h.rowY = rowY;
+});
+// past days without a mark are simply faint, never red, never counted against; future days are fainter still
+HABITS.forEach((h) => [...h.el.querySelectorAll('.slot')].forEach((s, k) => { if (k > TODAY) s.style.opacity = .55; }));
+
+async function rollCount(h, to) {
+  const b = h.el.querySelector('.c b'); const old = b.querySelector('.cn');
+  const nw = document.createElement('span'); nw.className = 'cn'; nw.style.display = 'block'; nw.textContent = to; b.appendChild(nw);
+  anim(old, [{ transform: 'none' }, { transform: 'translateY(-30px)' }], { duration: 380, easing: HOUSE }).then(() => old.remove());
+  anim(nw, [{ transform: 'none' }, { transform: 'translateY(-30px)' }], { duration: 380, easing: HOUSE }).then(() => { nw.getAnimations().forEach((a) => a.cancel()); });
+}
+// a check-in: paint drops onto today's slot, lands wet, spreads and dries
+async function paint(h, k) {
+  const s = h.el.querySelectorAll('.slot')[k];
+  const wet = document.createElement('div'); wet.className = 'dab'; wet.style.background = `radial-gradient(closest-side,rgba(${h.colour},.95) 0%,rgba(${h.colour},.7) 50%,rgba(${h.colour},0) 100%)`;
+  s.appendChild(wet);
+  await anim(wet, [{ transform: 'translateY(-26px) scale(.3)', opacity: 0, filter: 'blur(3px)' }, { transform: 'translateY(0) scale(1.25)', opacity: 1, filter: 'blur(2px)', offset: .55 }, { transform: 'scale(1)', opacity: 1, filter: 'blur(1.2px)' }], { duration: 460, easing: 'cubic-bezier(.5,0,.3,1)' });
+}
+async function say(text, undo) {
+  await anim($('say'), [{ opacity: getComputedStyle($('say')).opacity }, { opacity: 0 }], { duration: 120 });
+  $('say').textContent = text;
+  anim($('say'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  if (undo) anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 120 });
+}
+const slotXY = (h, k) => [X0 + k * DX, 208 + HABITS.indexOf(h) * 168 + h.rowY];
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  anim($('page'), [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  HABITS.forEach((h, i) => [...h.el.querySelectorAll('.slot')].forEach((s, k) => anim(s, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: k > TODAY ? .55 : 1, transform: 'none' }], { duration: 360, delay: 200 + i * 90 + k * 28, easing: SPRING })));
+  await sleep(1700);
+
+  // 1 · tap today on Read: paint drops into the slot, the count rolls 2 → 3
+  const read = HABITS[1]; await fingerOn(...slotXY(read, TODAY)); await sleep(90); fingerOff();
+  await paint(read, TODAY); rollCount(read, 3);
+  say('Read, 3 of 7.', true);
+  await sleep(1500);
+
+  // 2 · Stretch reaches its target: 4 → 5 would need two more; here today makes it 4, then tomorrow's is shown arriving as the week completes
+  const st = HABITS[0]; await fingerOn(...slotXY(st, TODAY)); await sleep(90); fingerOff();
+  await paint(st, TODAY); rollCount(st, 4);
+  say('Stretch, 4 of 5.', true);
+  await sleep(1300);
+  // (a day later) Friday's check-in hits the target: a single stroke paints under the week, joining the marks
+  await fingerOn(...slotXY(st, TODAY + 1)); await sleep(90); fingerOff();
+  st.el.querySelectorAll('.slot')[TODAY + 1].style.opacity = 1;
+  await paint(st, TODAY + 1); rollCount(st, 5);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'abs'); svg.setAttribute('width', 340); svg.setAttribute('height', 20); svg.style.cssText = `left:${X0 - 16}px;top:${st.rowY - 9}px;overflow:visible`;
+  svg.innerHTML = `<path d="M0 8 C 60 4, 140 11, ${DX * 4 + 32} 6" stroke="rgb(${st.colour})" stroke-width="6" fill="none" opacity=".55" filter="url(#rough)"/>`;
+  st.el.insertBefore(svg, st.el.querySelector('.slot')); const p = svg.firstChild; const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+  anim(p, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 700, easing: 'cubic-bezier(.3,.7,.2,1)' });
+  anim(st.el.querySelector('.c'), [{ color: 'rgba(43,36,64,.75)' }, { color: 'rgb(176,120,60)' }], { duration: 400 });
+  say('Stretch done for the week.', false); anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  await sleep(1700);
+
+  // 3 · Train counts itself: a workout finishing elsewhere sends its mark in from above
+  const tr = HABITS[2]; const [tx, ty] = slotXY(tr, TODAY);
+  const fly = document.createElement('div'); fly.className = 'slot'; fly.style.cssText = `left:${tx}px;top:${ty}px;z-index:9`;
+  fly.innerHTML = `<div class="dab" style="background:radial-gradient(closest-side,rgba(${tr.colour},.95) 0%,rgba(${tr.colour},.7) 50%,rgba(${tr.colour},0) 100%)"></div>`;
+  $('ph').appendChild(fly);
+  await anim(fly, [{ transform: `translate(${300 - tx}px,${-ty - 40}px) scale(.6)`, opacity: 0 }, { opacity: 1, offset: .2 }, { transform: 'none', opacity: 1 }], { duration: 700, easing: 'cubic-bezier(.5,0,.2,1)' });
+  anim(fly, [{ transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 240 });
+  rollCount(tr, 3);
+  say('Push Day A counted for Train.', true);
+  await sleep(2200);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

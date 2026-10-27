@@ -95,10 +95,7 @@ struct TessSoul: View {
         let palette = onWorkoutGround
             ? SoulPalette.look(store.workoutLook)
             : SoulPalette.look(colorScheme == .dark ? store.pair.night : store.pair.day)
-        TimelineView(.animation(
-            minimumInterval: slow ? 1 / 30 : 1 / 60,
-            paused: reduceMotion && work == nil
-        )) { context in
+        LiveClock(minimumInterval: slow ? 1 / 30 : 1 / 60, paused: reduceMotion && work == nil) { context in
             let drawn = frame(at: context.date)
             let cloud = SoulCloud.image(cloudInput(drawn.frame, at: context.date, dark: palette.layered == false))
             Canvas(rendersAsynchronously: true) { context, canvasSize in
@@ -122,6 +119,7 @@ struct TessSoul: View {
             }
         }
         .frame(width: 96, height: 96)
+        .liveRegion(LiveFeatures.tessSoul)
         .onGeometryChange(for: CGPoint.self) { proxy in
             let frame = proxy.frame(in: .global)
             return CGPoint(x: frame.midX, y: frame.midY)
@@ -277,7 +275,7 @@ struct TessSoul: View {
             toward: look.ground,
             by: 0.14
         ))
-        return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
+        return LiveClock(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60) { context in
             let frame = baseFrame(at: context.date)
             // Waking: shut, then open, then one blink (a 200 ms crossfade under Reduce Motion or Low Power).
             // A moment's own blink (the beat's landing, a stroke's leaving), else the wake's lids, else the schedule.

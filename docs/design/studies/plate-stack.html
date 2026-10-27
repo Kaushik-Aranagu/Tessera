@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Plate stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Concept prototype: the plate stack (docs/design/plate-stack.md). Plays once on load; add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--mute:#A39AAE;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--amber:#E0A35C}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 30%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 70%,#BFD8E2 0%,rgba(191,216,226,0) 70%),radial-gradient(70% 40% at 10% 95%,#F2D3C4 0%,rgba(242,211,196,0) 70%),#F4EEE4}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.ctx{font-size:21px;font-weight:400;color:var(--ctx)}
+.hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
+.plate{position:absolute;left:22px;right:22px;height:64px}
+.plate .seam{position:absolute;left:0;right:0;top:0;height:2px}
+.plate .lit{background:var(--verm);box-shadow:0 0 8px rgba(200,69,47,.45)}
+.plate .eng{height:1px;background:rgba(43,36,64,.12);box-shadow:0 1px 0 rgba(255,255,255,.8)}
+.plate .body{position:absolute;left:0;right:0;top:10px;height:54px;display:grid;grid-template-columns:1fr auto;align-items:center;opacity:0}
+.row{position:absolute;left:22px;right:22px;height:48px;display:grid;grid-template-columns:30px 1fr auto;align-items:center}
+.dabr{width:18px;height:15px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px}.b{--c:46,109,164;--x:14px;--y:-8px}.y{--c:224,179,65;--x:0px;--y:13px}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.86)}}
+@keyframes procGlint{0%{background-position:180% 0}30%,100%{background-position:-80% 0}}
+@keyframes wetTip{0%,100%{transform:scale(1);opacity:.75;filter:blur(3px)}50%{transform:scale(1.35);opacity:.4;filter:blur(6px)}}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <span class="abs" style="left:0;right:0;top:0;height:2px;z-index:5;background:linear-gradient(90deg,#C8452F 0%,#C8452F 40%,#FFE2A8 50%,#C8452F 60%,#C8452F 100%);background-size:300% 100%;animation:procGlint 4.5s ease-in-out infinite;box-shadow:0 0 12px rgba(200,69,47,.55)"></span>
+  <div class="abs lbl" style="left:22px;right:22px;top:58px;display:grid;grid-template-columns:1fr 1fr 1fr">
+    <span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink);text-align:center">TODAY</span><span style="color:var(--mute);text-align:right">TRAINING</span>
+  </div>
+  <span class="abs" style="left:163px;top:84px;width:64px;height:4px;border-radius:2px 6px 3px 5px;background:var(--verm);filter:blur(.5px)"></span>
+  <span class="abs ctx" style="left:22px;top:100px;color:var(--ink)">Thursday afternoon</span>
+  <svg width="346" height="56" viewBox="0 0 346 56" class="abs" style="left:22px;top:134px;overflow:visible" aria-hidden="true">
+    <defs><filter id="wetF" filterUnits="userSpaceOnUse" x="-20" y="-20" width="390" height="96"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+    <linearGradient id="day" x1="4" x2="342" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9EC3D6"/><stop offset=".3" stop-color="#8FB58A"/><stop offset=".55" stop-color="#7A5C8E"/><stop offset=".8" stop-color="#E0A35C"/><stop offset="1" stop-color="#C8452F"/></linearGradient></defs>
+    <path d="M4 28 C 120 25, 230 31, 342 27" fill="none" stroke="#2B2440" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="2 6"/>
+    <path d="M4 28 C 120 25, 230 31, 342 27" fill="none" stroke="url(#day)" stroke-width="20" stroke-linecap="round" filter="url(#wetF)" opacity=".85" stroke-dasharray="340" stroke-dashoffset="150"/>
+  </svg>
+  <span class="abs" style="left:200px;top:149px;width:26px;height:26px;border-radius:50%;background:var(--amber);animation:wetTip 3.6s ease-in-out infinite"></span>
+
+  <!-- the plates: suspended and waiting processes, behind Now -->
+  <div id="plateClip" class="abs" style="left:0;right:0;top:0;height:216px;overflow:hidden;z-index:2"><div id="plates"></div></div>
+
+  <!-- Now: the front plate -->
+  <div id="now" class="abs" style="left:0;right:0;top:0;height:844px;pointer-events:none;z-index:3">
+    <div id="nowLine" class="abs ctx" style="left:22px;top:222px">running now, until four</div>
+    <div id="hero" class="abs hero" style="left:20px;right:20px;top:252px">Draft the<br>push‑day plan</div>
+    <div id="key" class="abs key" style="left:22px;width:220px;top:452px;height:58px;background:var(--ink);color:#F6F0E6;display:flex;align-items:center;padding:0 20px;box-sizing:border-box;font-size:21px;font-weight:600">Hold to finish</div>
+    <span id="meta" class="abs lbl" style="left:258px;top:460px;line-height:1.35">22 MIN<br>LEFT</span>
+  </div>
+
+  <div id="queue" class="abs" style="left:0;right:0;top:0;height:844px">
+    <div class="abs" style="left:22px;top:560px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px">Next</div>
+  </div>
+
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12);z-index:6">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+  </div>
+  <div class="abs" style="left:50px;top:789px;width:0;height:0;transform:scale(.5);z-index:7">
+    <span class="d r" style="animation:idle 7s ease-in-out infinite"></span><span class="d b" style="animation:idle 8.5s ease-in-out -3s infinite"></span><span class="d y" style="animation:idle 10s ease-in-out -6s infinite"></span>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const spring = (t) => 1 - Math.pow(1 - t, 3);
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+// Next rows under the stack
+[['Call the dentist', '15:40', '#E0A35C'], ['Groceries', '16:30', '#6E9E6A']].forEach(([n, t, c], k) => {
+  const r = document.createElement('div'); r.className = 'row'; r.style.top = (608 + k * 48) + 'px'; r.style.opacity = [1, .88][k];
+  r.innerHTML = `<span class="dabr" style="background:${c}"></span><span style="font-size:21px;font-weight:500">${n}</span><span class="lbl" style="color:#5E5470">${t}</span>`;
+  $('queue').appendChild(r);
+});
+
+// closed: each plate is a stepped sliver under Now's key, deeper ones narrower; open: a full ledger row above Now
+const P = [
+  { n: 'Push Day A', s: 'Bench, set 3 of 4, 40 min ago', st: 'lit', k: 'Resume' },
+  { n: 'Weekly review', s: 'Left at Tuesday, yesterday', st: 'lit', k: 'Resume' },
+  { n: 'Sam’s gym times', s: 'Waiting since Monday, check now', st: 'eng', k: 'Open' }
+];
+// the most recent plate sits right under Now; deeper plates peek out higher and narrower, like a stepped stack seen edge on
+const SLIVER_Y = (i) => 210 - i * 6, INSET = (i) => 10 + i * 14, ROW_Y = (i) => 368 - i * 76;
+function makePlate(p, i) {
+  const e = document.createElement('div'); e.className = 'plate';
+  e.innerHTML = `<span class="seam ${p.st}"></span><div class="body"><span style="display:flex;flex-direction:column;line-height:1.2"><span class="pn" style="font-size:21px;font-weight:600">${p.n}</span><span class="ps" style="font-size:18px;color:#6E6480">${p.s}</span></span><span style="font-size:21px;font-weight:600;color:${p.st === 'lit' ? '#C8452F' : '#2B2440'}">${p.k}</span></div>`;
+  $('plates').appendChild(e); p.el = e; p.body = e.querySelector('.body'); place(p, i, 0);
+}
+function place(p, i, t) {
+  p.el.style.top = lerp(SLIVER_Y(i), ROW_Y(i), t) + 'px';
+  const ins = lerp(INSET(i), 0, t); p.el.style.left = (22 + ins) + 'px'; p.el.style.right = (22 + ins) + 'px';
+  p.body.style.opacity = Math.max(0, (t - .45) / .55);
+  p.el.style.opacity = lerp(1 - i * .18, 1, t);
+}
+const PULL = 300; // how far Now travels when the stack is fanned
+function setOpen(t) {
+  $('now').style.transform = `translateY(${t * PULL}px)`;
+  $('plateClip').style.height = (216 + t * PULL) + 'px';
+  $('queue').style.opacity = 1 - Math.min(1, t * 1.6);
+  P.forEach((p, i) => place(p, i, Math.min(1, Math.max(0, t * 1.15 - i * .06))));
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  P.forEach(makePlate);
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // arrival: Now enters, then the slivers step out from under it one by one
+  anim($('now'), [{ opacity: 0, transform: 'translateY(14px)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 340, easing: HOUSE }).then(() => $('now').getAnimations().forEach((a) => a.cancel()));
+  P.forEach((p, i) => p.el.animate([{ transform: 'translateY(-8px)', opacity: 0 }, { transform: 'none', opacity: 1 - i * .18 }], { duration: 300, delay: 360 + i * 70, easing: HOUSE, fill: 'backwards' }));
+  await sleep(1800);
+
+  // pull Now down: it slides like a plate, and the stack behind it fans out into rows
+  await fingerOn(180, 300);
+  await tween(700, (t) => { fingerAt(180, 300 + t * PULL); setOpen(t); });
+  fingerOff();
+  tessSay('Two paused, one waiting.');
+  await sleep(1800);
+
+  // tap a plate: it comes forward and becomes Now; the old Now goes back as the top plate
+  const pick = P[0]; const pr = rel(pick.el.querySelector('.pn').getBoundingClientRect());
+  await fingerOn(120, pr.top + 14); await sleep(100); fingerOff();
+  const ghost = document.createElement('div'); ghost.className = 'abs'; ghost.innerHTML = 'Bench press,<br>set 3 of 4';
+  Object.assign(ghost.style, { left: pr.left + 'px', top: pr.top + 'px', fontSize: '21px', fontWeight: 600, lineHeight: '1', zIndex: 8, width: '350px', opacity: 0 });
+  $('ph').appendChild(ghost);
+  pick.el.style.visibility = 'hidden';
+  // old Now leaves its slot: the hero shrinks into the stack's top sliver
+  await Promise.all(['hero', 'nowLine', 'key', 'meta'].map((id) => anim($(id), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(4px)' }], { duration: 220, easing: 'ease-in' })));
+  anim(ghost, [{ opacity: 0 }, { opacity: 1 }], { duration: 120 });
+  // the stack closes behind the new Now
+  P.splice(0, 1, { n: 'Draft the push‑day plan', s: 'Paused just now, 22 min left', st: 'lit', k: 'Resume' });
+  P[0].el = pick.el; P[0].body = pick.body;
+  pick.el.querySelector('.pn').textContent = P[0].n; pick.el.querySelector('.ps').textContent = P[0].s;
+  const close = tween(520, (t) => setOpen(1 - t), spring);
+  await anim(ghost, [
+    { left: pr.left + 'px', top: pr.top + 'px', fontSize: '21px', letterSpacing: '-.005em' },
+    { left: '20px', top: '252px', fontSize: '56px', letterSpacing: '-.04em' }
+  ], { duration: 520, easing: HOUSE });
+  await close;
+  pick.el.style.visibility = 'visible';
+  pick.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  $('hero').getAnimations().forEach((a) => a.cancel()); $('hero').innerHTML = 'Bench press,<br>set 3 of 4'; ghost.remove();
+  $('nowLine').textContent = 'running now, Push Day A';
+  $('key').style.background = '#C8452F'; $('key').textContent = 'Resume';
+  $('meta').innerHTML = 'SET 3<br>IS UP';
+  ['nowLine', 'key', 'meta'].forEach((id) => { $(id).getAnimations().forEach((a) => a.cancel()); anim($(id), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: HOUSE }); });
+  tessSay('Back to bench. Draft is paused.');
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

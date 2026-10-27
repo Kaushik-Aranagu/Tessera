@@ -63,6 +63,24 @@ enum KitchenText {
     }
 }
 
+// MARK: - Measuring
+
+extension KitchenText {
+    /// The width of `text` in a face at a size, measured with the real font (Figtree), so a line can be fitted before
+    /// it is drawn. A face that cannot be found measures with the system font.
+    static func width(_ text: String, weight: UIFont.Weight, size: CGFloat) -> CGFloat {
+        let font: UIFont
+        if UIFont.fontNames(forFamilyName: "Figtree").isEmpty {
+            font = .systemFont(ofSize: size, weight: weight)
+        } else {
+            let descriptor = UIFontDescriptor(fontAttributes: [.family: "Figtree"])
+                .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+            font = UIFont(descriptor: descriptor, size: size)
+        }
+        return NSAttributedString(string: text, attributes: [.font: font]).size().width.rounded(.up)
+    }
+}
+
 // MARK: - Place dial
 
 /// The headline dial (sheet 231 to 233): three 64 pt slots in a 196 pt headline. The focus is 44 pt Figtree 600 in
@@ -196,18 +214,22 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     @Binding var top: Int
     /// Rows under the focus: 4 in a band (202 pt), 9 on a full page (392 pt).
     var others = 4
+    /// The focus slot: 50 pt for plain names, about 80 pt where it carries two detail lines.
+    var focusHeight: CGFloat = FocusWheel<Item, Content>.defaultFocusHeight
     var onOpen: (Item) -> Void = { _ in }
     /// The row at a fractional place: `focus` runs 1 on the focus down to 0 a row away, so size and weight can carry
     /// the distance; `distance` is the whole places from the top.
     @ViewBuilder let content: (Item, _ focus: Double, _ distance: Int) -> Content
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var drag: CGFloat = 0
     @State private var turned = 0
     @State private var ticks = 0
+    @State private var lowPower = PowerState.isLowPower
 
-    static var focusHeight: CGFloat {
+    static var defaultFocusHeight: CGFloat {
         50
     }
 
@@ -215,9 +237,15 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
         38
     }
 
-    /// 202 pt for a band, 392 pt for a full page: the focus plus the rows under it.
-    static func height(others: Int) -> CGFloat {
+    /// 202 pt for a band, 392 pt for a full page (with the 50 pt focus; 232 and 422 with the 80 pt one): the focus
+    /// plus the rows under it, always ending on a row boundary.
+    static func height(others: Int, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         focusHeight + CGFloat(others) * rowHeight
+    }
+
+    private var depth: Bool {
+        Self.blurs(switchOn: Tier1b.depthIsOn, reduceMotion: reduceMotion, reduceTransparency: reduceTransparency,
+                   lowPower: lowPower)
     }
 
     private var rowsShown: Int {
@@ -225,7 +253,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     }
 
     /// Where the top edge of a row `place` places from the top sits, in points (the focus row is taller).
-    static func y(_ place: CGFloat) -> CGFloat {
+    static func y(_ place: CGFloat, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         if place >= 1 {
             return focusHeight + (place - 1) * rowHeight
         }
@@ -233,7 +261,22 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     }
 
     /// A row's height at a fractional place: the focus height at 0, the plain row height a place away.
-    static func height(at place: CGFloat) -> CGFloat {
+    /// Depth blur (Kaushik, Oct 23, on every wheel): 0.65 pt one row away, 1 pt from two rows on, none on the focus.
+    static func blurRadius(at place: CGFloat) -> CGFloat {
+        let distance = abs(place)
+        if distance < 0.05 {
+            return 0
+        }
+        return distance <= 1 ? 0.65 * distance : min(0.65 + 0.35 * (distance - 1), 1)
+    }
+
+    /// Whether the wheels blur: the "Depth on wheels" switch is On, and not under Reduce Motion, Reduce Transparency
+    /// or Low Power.
+    static func blurs(switchOn: Bool, reduceMotion: Bool, reduceTransparency: Bool, lowPower: Bool) -> Bool {
+        switchOn && !reduceMotion && !reduceTransparency && !lowPower
+    }
+
+    static func height(at place: CGFloat, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         rowHeight + (focusHeight - rowHeight) * max(0, 1 - abs(place))
     }
 
@@ -254,17 +297,18 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                     } label: {
                         content(items[index], Double(max(0, 1 - abs(at))), place)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(height: Self.height(at: at), alignment: .top)
+                            .frame(height: Self.height(at: at, focusHeight: focusHeight), alignment: .top)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .offset(y: Self.y(at))
+                    .blur(radius: depth ? Self.blurRadius(at: at) : 0)
+                    .offset(y: Self.y(at, focusHeight: focusHeight))
                     .accessibilityHidden(true)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: Self.height(others: rowsShown), alignment: .top)
+        .frame(height: Self.height(others: rowsShown, focusHeight: focusHeight), alignment: .top)
         .clipped()
         .contentShape(Rectangle())
         .gesture(
@@ -288,6 +332,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                 }
         )
         .tesseraFeedback(.dialStep, trigger: ticks)
+        .onReceive(PowerState.changes) { _ in lowPower = PowerState.isLowPower }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("List")
         .accessibilityAdjustableAction { direction in
@@ -318,6 +363,8 @@ final class KitchenReceipts {
         let id = UUID()
         let text: String
         var undo: (() -> Void)?
+        /// A word after the text that does one more thing ("Add to To get"), kitchenText 600.
+        var action: (title: String, run: () -> Void)?
 
         static func == (lhs: Line, rhs: Line) -> Bool {
             lhs.id == rhs.id
@@ -327,8 +374,8 @@ final class KitchenReceipts {
     private(set) var line: Line?
 
     /// "Milk, used up. On To get." with the one Undo, kept 10 s.
-    func say(_ text: String, undo: (() -> Void)? = nil) {
-        let next = Line(text: text, undo: undo)
+    func say(_ text: String, undo: (() -> Void)? = nil, action: (title: String, run: () -> Void)? = nil) {
+        let next = Line(text: text, undo: undo, action: action)
         line = next
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(10))
@@ -359,6 +406,14 @@ struct ReceiptLine: View {
                         .font(Theme.voice(size: 15))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(1)
+                    if let action = line.action {
+                        Button(action.title) { action.run() }
+                            .font(Theme.voice(size: 15).weight(.semibold))
+                            .foregroundStyle(Theme.Colors.Accent.kitchenText)
+                            .buttonStyle(.plain)
+                            .frame(minHeight: 26)
+                            .contentShape(Rectangle().inset(by: -10))
+                    }
                     if line.undo != nil {
                         Button("Undo") { receipts.undo() }
                             .font(Theme.voice(size: 15).weight(.semibold))
@@ -388,6 +443,31 @@ struct ReceiptClip: ViewModifier {
         content.mask(alignment: .top) {
             Rectangle().scaleEffect(y: max(progress, 0.001), anchor: .top)
         }
+    }
+}
+
+// MARK: - Brief
+
+/// One brief line (22 pt, one line, no wrap): a line that changes is clipped in from the top, never faded.
+struct KitchenBriefLine: View {
+    let text: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    static let height: CGFloat = 22
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Text(text.isEmpty ? " " : text)
+                .font(Theme.voice(size: 17))
+                .foregroundStyle(Theme.Colors.ink)
+                .lineLimit(1)
+                .id(text)
+                .transition(reduceMotion ? .identity : .modifier(active: ReceiptClip(progress: 0),
+                                                                 identity: ReceiptClip(progress: 1)))
+        }
+        .frame(maxWidth: .infinity, minHeight: Self.height, maxHeight: Self.height, alignment: .leading)
+        .clipped()
+        .animation(MotionPolicy.resolve(.easeOut(duration: 0.3), reduceMotion: reduceMotion), value: text)
     }
 }
 

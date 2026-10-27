@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Lists shelf</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for Lists screen 9 against the Kitchen lead's docs/product/lists-screens-acceptance.md (docs/design/kitchen/lists-9-12.md): the Lists word on Home's Kitchen page (G1), the shelf settling with the running list first and largest (G10), a pasted block as a ghost list, and Pick one held on a shelf name (G12) through to "That's all of them." (G13). Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--mute:#A39AAE;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A;--cad:#E0B341}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 90% 5%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(70% 45% at 0% 35%,#BFD8E2 0%,rgba(191,216,226,0) 70%),radial-gradient(80% 50% at 100% 75%,#D8CBE6 0%,rgba(216,203,230,0) 70%),#F4F0EA}
+.abs{position:absolute}
+.page{position:absolute;inset:0}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);white-space:nowrap}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+.nm{position:absolute;left:22px;white-space:nowrap;font-weight:500;letter-spacing:-.035em;line-height:1;transition:top .42s cubic-bezier(.2,.8,.2,1),font-size .42s cubic-bezier(.2,.8,.2,1),opacity .3s,filter .3s}
+.nm .st{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);margin-top:8px;line-height:1}
+.nm .ul{position:absolute;left:0;height:3px;top:0;background:var(--ink);transform:scaleX(0);transform-origin:left;border-radius:1px}
+#seam{position:absolute;left:22px;height:2px;background:var(--verm);box-shadow:0 0 10px rgba(200,69,47,.6);transition:top .42s cubic-bezier(.2,.8,.2,1)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+
+  <!-- Home, the Kitchen page -->
+  <section id="kitchen" class="page">
+    <div class="abs lbl" style="left:22px;right:22px;top:58px;display:flex;gap:22px"><span>REVIEW</span><span>TODAY</span><span>TRAINING</span><span style="color:var(--ink)">KITCHEN</span></div>
+    <div class="abs" style="left:22px;top:120px;font-size:21px;color:var(--ctx)">14 to buy, dal tonight</div>
+    <div class="abs" style="left:46px;top:200px;font-size:34px;font-weight:500;letter-spacing:-.03em">Groceries</div>
+    <div class="d" style="--c:110,158,106;left:24px;top:222px;transform:scale(.55)"></div>
+    <div id="door" class="abs" style="left:46px;top:270px;font-size:34px;font-weight:500;letter-spacing:-.03em">Lists<span class="lbl" style="font-size:16px;margin-left:16px;color:var(--verm);letter-spacing:.08em">PACKING · 9 LEFT</span></div>
+    <div class="d" style="--c:224,179,65;left:24px;top:292px;transform:scale(.55)"></div>
+    <div class="abs" style="left:46px;top:340px;font-size:34px;font-weight:500;letter-spacing:-.03em">Recipes</div>
+    <div class="d" style="--c:110,158,106;left:24px;top:362px;transform:scale(.55)"></div>
+    <div class="abs" style="left:22px;top:640px;font-size:21px;font-weight:600">Paste a recipe</div>
+  </section>
+
+  <!-- the shelf -->
+  <section id="shelf" class="page" style="opacity:0">
+    <div class="abs lbl" id="back" style="left:22px;top:58px">‹ KITCHEN</div>
+    <div class="abs lbl" style="left:22px;top:96px;color:var(--ink)">LISTS</div>
+    <div id="ctx" class="abs" style="left:22px;top:124px;font-size:21px;color:var(--ctx)">6 lists, packing running</div>
+    <div id="col" class="abs" style="left:0;right:0;top:0;height:760px;-webkit-mask-image:linear-gradient(#000 700px,transparent 744px);mask-image:linear-gradient(#000 700px,transparent 744px)">
+      <span id="seam"></span>
+    </div>
+    <div id="pick" class="abs" style="left:22px;right:22px;top:0;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1.02;opacity:0;z-index:9;transform-origin:0 50%"></div>
+  </section>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;text-align:right;color:var(--cobalt);opacity:0;z-index:12"></div>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function say(t) { const s = $('say'); s.innerHTML = t; await anim(s, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE }); }
+const hush = () => anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+
+// the shelf: running first and largest (G10), then by last touched: 56, two at 34, the rest at 21 at 75%
+const L = [
+  { k: 'packing', n: 'Packing', st: 'RUNNING · 9 LEFT', run: 1 },
+  { k: 'films', n: 'Films', st: 'PICK ONE' },
+  { k: 'gym', n: 'Gym bag', st: 'REUSABLE' },
+  { k: 'gifts', n: 'Gifts', st: '3 OF 7' },
+  { k: 'groceries', n: 'Groceries', st: '14 TO BUY' },
+  { k: 'read', n: 'To read', st: '2 OF 9' },
+  { k: 'clean', n: 'Cleaning round', st: 'REUSABLE' },
+  { k: 'arch', n: 'Archived', arch: 1 },
+];
+const col = $('col');
+for (const l of L) { const e = document.createElement('div'); e.className = 'nm'; e.innerHTML = `<span class="tx">${l.n}<span class="ul"></span></span>${l.st ? `<span class="st" style="${l.run ? 'color:var(--verm)' : ''}">${l.st}</span>` : ''}`; col.appendChild(e); l.el = e; }
+const SZ = [56, 34, 34];
+function layout(order) {
+  let y = 172;
+  order.forEach((l, i) => {
+    const fs = l.arch ? 21 : (SZ[i] || 21);
+    l.el.style.top = y + 'px'; l.el.style.fontSize = fs + 'px';
+    l.el.style.opacity = l.arch ? .45 : (fs === 21 ? .75 : 1);
+    l.el.style.fontWeight = fs === 21 ? 500 : 500;
+    if (l.run) $('seam').style.top = (y - 10) + 'px';
+    y += fs === 56 ? 108 : fs === 34 ? 80 : 58;
+  });
+}
+let order = [...L];
+// arrival: every name starts at Body and settles into its tier, 25ms apart
+L.forEach((l) => { l.el.style.transition = 'none'; l.el.style.fontSize = '21px'; });
+let yy = 172; L.forEach((l) => { l.el.style.top = yy + 'px'; yy += 40; });
+$('seam').style.width = '0px'; $('seam').style.top = '162px';
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  await sleep(900);
+
+  // 1 · Home's Kitchen page: the Lists word (G1), under Groceries. Tap zooms into the shelf
+  const dr = $('door'); const [dx, dy] = centre(dr.firstChild.parentNode); await fingerOn(70, dy);
+  await sleep(120); fingerOff();
+  anim($('kitchen'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(1.06)', filter: 'blur(3px)' }], { duration: 380, easing: HOUSE });
+  const sh = $('shelf'); sh.style.transformOrigin = `70px ${dy}px`;
+  await sleep(120);
+  anim(sh, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  await sleep(200);
+  let y = 172; const tops = [];
+  order.forEach((l, i) => { const fs = l.arch ? 21 : (SZ[i] || 21); tops.push([y, fs]); y += fs === 56 ? 108 : fs === 34 ? 80 : 58; });
+  for (let i = 0; i < order.length; i++) {
+    const l = order[i]; l.el.style.transition = '';
+    await sleep(25);
+    l.el.style.top = tops[i][0] + 'px'; l.el.style.fontSize = tops[i][1] + 'px'; l.el.style.opacity = l.arch ? .45 : (tops[i][1] === 21 ? .75 : 1);
+  }
+  await sleep(300);
+  $('seam').style.transition = 'none'; $('seam').style.top = (tops[0][0] - 10) + 'px';
+  await tween(300, (t) => { $('seam').style.width = (150 * t) + 'px'; });
+  await sleep(1500);
+
+  // 2 · paste a block: a wet cobalt ghost list at the foot of the column; Tess counts it; it dries, then takes its place by last touched
+  const g = { k: 'moving', n: 'Moving day', st: '12 THINGS · 2 SECTIONS' };
+  const ge = document.createElement('div'); ge.className = 'nm'; ge.innerHTML = `<span class="tx">${g.n}<span class="ul"></span></span><span class="st">${g.st}</span>`;
+  ge.style.top = L[7].el.style.top; ge.style.fontSize = '21px'; ge.style.color = 'var(--cobalt)'; ge.style.opacity = 0; col.appendChild(ge); g.el = ge;
+  L[7].el.style.opacity = 0;
+  await anim(ge, [{ opacity: 0, transform: 'translateY(10px)', filter: 'blur(3px)' }, { opacity: .55, transform: 'none', filter: 'blur(0)' }], { duration: 420, easing: HOUSE });
+  ge.style.opacity = .55;
+  say('Twelve things, two sections.');
+  await sleep(1300);
+  // dries: cobalt to ink over the 2 s
+  await tween(700, (t) => { ge.style.color = `rgb(${Math.round(46 + (43 - 46) * t)},${Math.round(109 + (36 - 109) * t)},${Math.round(164 + (64 - 164) * t)})`; ge.style.opacity = .55 + .45 * t; });
+  ge.getAnimations().forEach((a) => a.cancel()); ge.style.opacity = 1;
+  hush();
+  await sleep(250);
+  order = [order[0], g, ...order.slice(1)];
+  layout(order);
+  $('ctx').animate([{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(4px)' }], { duration: 160, fill: 'forwards' }).finished.then(() => { $('ctx').textContent = '7 lists, packing running'; anim($('ctx'), [{ opacity: 0, filter: 'blur(4px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 220 }); });
+  await sleep(1600);
+
+  // 3 · hold Films on the shelf (Pick one is on): its underline fills, the shelf steps back, one film lifts out and lands at the centre
+  const films = L[1]; const tx = films.el.querySelector('.tx'); const ul = films.el.querySelector('.ul');
+  const r = rel(tx.getBoundingClientRect());
+  ul.style.width = r.width + 'px'; ul.style.top = (r.height + 2) + 'px';
+  await fingerOn(r.left + r.width / 2, r.top + r.height / 2);
+  await tween(600, (t) => { ul.style.transform = `scaleX(${t})`; }, (t) => 1 - Math.pow(1 - t, 2));
+  fingerOff();
+  const others = [...order.map((l) => l.el)];
+  const pk = $('pick');
+  const films3 = ['Past Lives', 'Paris, Texas', 'Columbus'];
+  async function pickOne(name) {
+    pk.textContent = name; const fr = rel(tx.getBoundingClientRect());
+    await anim(pk, [{ opacity: 0, top: fr.top + 'px', transform: 'scale(.6)' }, { opacity: 1, top: '372px', transform: 'scale(1.06)', offset: .8 }, { opacity: 1, top: '372px', transform: 'scale(1)' }], { duration: 520, easing: HOUSE });
+  }
+  async function sendBack() {
+    const fr = rel(tx.getBoundingClientRect());
+    await fingerOn(260, 400);
+    tween(220, (t) => fingerAt(260 - 150 * t, 400));
+    await anim(pk, [{ opacity: 1, top: '372px', transform: 'translateX(0) scale(1)' }, { opacity: 0, top: fr.top + 'px', transform: 'translateX(-40px) scale(.6)' }], { duration: 300, easing: HOUSE });
+    fingerOff(); await sleep(200);
+  }
+  others.forEach((e) => { e.style.transition = 'opacity .3s, filter .3s'; e.style.opacity = .14; e.style.filter = 'blur(2px)'; });
+  $('seam').style.opacity = .14; $('ctx').style.opacity = .14;
+  ul.style.transform = 'scaleX(0)';
+  await pickOne(films3[0]); await sleep(1100);
+  await sendBack(); await pickOne(films3[1]); await sleep(900);
+  await sendBack(); await pickOne(films3[2]); await sleep(900);
+  // last skip: the column comes back and Tess says so (G13)
+  await sendBack();
+  others.forEach((e) => { e.style.filter = 'none'; });
+  order.forEach((l, i) => { l.el.style.opacity = l.arch ? .45 : (i < 3 ? 1 : .75); });
+  $('seam').style.opacity = 1; $('ctx').style.opacity = 1;
+  await say("That's all of them.");
+  await sleep(2200);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

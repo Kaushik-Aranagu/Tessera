@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Today on Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M2 slices 8 and 9 (docs/design/today-on-home.md). Plays once on load; reload to replay. -->
+<style>
+:root{--ink:#2B2440;--mute:#A39AAE;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--amber:#E0A35C;--sage:#6E9E6A;--house:cubic-bezier(.2,.8,.2,1)}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 30%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 70%,#BFD8E2 0%,rgba(191,216,226,0) 70%),radial-gradient(70% 40% at 10% 95%,#F2D3C4 0%,rgba(242,211,196,0) 70%),#F4EEE4}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.ctx{font-size:21px;font-weight:400;color:var(--ctx)}
+.hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
+.abs{position:absolute}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
+#win{left:22px;right:22px;top:540px;height:196px}
+#clip{left:0;right:0;top:44px;bottom:0;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+#head{left:0;top:0;height:40px;width:200px;overflow:hidden;z-index:3}
+#head span{position:absolute;left:0;top:0;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px}
+#lane{left:0;right:0;top:0;height:2000px}
+.row{position:absolute;left:0;right:0;height:48px}
+.row .in{position:absolute;inset:0;display:grid;grid-template-columns:30px 1fr auto;align-items:center}
+.row .dab{width:18px;height:15px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(.4px)}
+.row .nm{position:relative;font-size:21px;font-weight:500;white-space:nowrap;justify-self:start}
+.row .tm{color:#5E5470}
+.row .trk{position:absolute;right:0;top:0;height:48px;display:flex;align-items:center;opacity:0}
+.strike{position:absolute;left:-6px;top:0;overflow:visible;pointer-events:none}
+.sec{position:absolute;left:0;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px;color:var(--ink)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px}.b{--c:46,109,164;--x:14px;--y:-8px}.y{--c:224,179,65;--x:0px;--y:13px}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.86)}}
+@keyframes wetTip{0%,100%{transform:scale(1);opacity:.75;filter:blur(3px)}50%{transform:scale(1.35);opacity:.4;filter:blur(6px)}}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+
+  <!-- rail -->
+  <div class="abs lbl" style="left:22px;right:22px;top:58px;display:grid;grid-template-columns:1fr 1fr 1fr">
+    <span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink);text-align:center">TODAY</span><span style="color:var(--mute);text-align:right">TRAINING</span>
+  </div>
+  <span class="abs" style="left:163px;top:84px;width:64px;height:4px;border-radius:2px 6px 3px 5px;background:var(--verm);filter:blur(.5px)"></span>
+
+  <!-- day stroke -->
+  <span class="abs ctx" style="left:22px;top:100px;color:var(--ink)">Thursday afternoon</span>
+  <svg width="346" height="56" viewBox="0 0 346 56" class="abs" style="left:22px;top:134px;overflow:visible" aria-hidden="true">
+    <defs><filter id="wet"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+    <linearGradient id="day" x1="0" x2="1"><stop offset="0" stop-color="#9EC3D6"/><stop offset=".3" stop-color="#8FB58A"/><stop offset=".55" stop-color="#7A5C8E"/><stop offset=".8" stop-color="#E0A35C"/><stop offset="1" stop-color="#C8452F"/></linearGradient></defs>
+    <path d="M4 28 C 60 18, 110 34, 182 24 S 300 26, 342 22" fill="none" stroke="#2B2440" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="2 6"/>
+    <path id="dayStroke" d="M4 28 C 60 18, 110 34, 182 24 S 300 26, 342 22" fill="none" stroke="url(#day)" stroke-width="20" stroke-linecap="round" filter="url(#wet)" opacity=".85" stroke-dasharray="400" stroke-dashoffset="400"/>
+  </svg>
+  <span id="tip" class="abs" style="left:213px;top:148px;width:26px;height:26px;border-radius:50%;background:var(--amber);opacity:0"></span>
+  <span id="tmrw" class="abs" style="left:352px;top:146px;width:30px;height:30px;border-radius:50%;background:radial-gradient(closest-side,rgba(224,163,92,.9),rgba(224,163,92,0));filter:blur(3px);opacity:0"></span>
+
+  <!-- now -->
+  <div id="nowLine" class="abs ctx" style="left:22px;top:222px">now, until twenty to four</div>
+  <div id="hero" class="abs hero" style="left:20px;right:20px;top:252px"></div>
+
+  <!-- hold to finish -->
+  <div id="key" class="abs key" style="left:22px;width:220px;top:452px;height:58px;overflow:hidden;background:var(--ink);color:#F6F0E6">
+    <span id="fill" class="abs" style="inset:-20px;background:radial-gradient(closest-side,#C8452F 0%,#C8452F 70%,rgba(200,69,47,0) 100%);transform-origin:15% 50%;transform:scale(0);filter:blur(4px)"></span>
+    <span id="keyText" style="position:relative;display:flex;height:100%;align-items:center;padding:0 20px;font-size:21px;font-weight:600">Hold to finish</span>
+  </div>
+  <span id="meta" class="abs lbl" style="left:258px;top:460px;line-height:1.35">14 MIN<br>LEFT</span>
+
+  <!-- the queue: Next, then Later, in one bounded window -->
+  <div id="win" class="abs">
+    <div id="clip" class="abs"><div id="lane" class="abs"></div></div>
+    <div id="head" class="abs"><span id="headA">Next</span><span id="headB" style="opacity:0">Later</span></div>
+  </div>
+
+  <!-- Ask Tess -->
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12)">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+    <span id="undo" class="abs" style="right:20px;top:24px;font-size:21px;font-weight:600;color:var(--verm);opacity:0">Undo</span>
+  </div>
+  <div id="soul" class="abs" style="left:50px;top:789px;width:0;height:0;transform:scale(.5)">
+    <span class="d r" style="animation:idle 7s ease-in-out infinite"></span><span class="d b" style="animation:idle 8.5s ease-in-out -3s infinite"></span><span class="d y" style="animation:idle 10s ease-in-out -6s infinite"></span>
+  </div>
+
+  <div id="finger" class="abs"></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+// ---- data ----
+const ROW = 48, NEXT_TOP = 4, GAP = 24;
+// page coordinates even when the phone is scaled up for recording (?x2)
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const items = [
+  { n: 'Call the dentist', t: '15:40', c: '#E0A35C', s: 'next' },
+  { n: 'Text Sam back', t: '16:00', c: '#2E6DA4', s: 'next' },
+  { n: 'Groceries', t: '16:30', c: '#6E9E6A', s: 'next' },
+  { n: 'Push Day A', t: '18:00', c: '#C8452F', s: 'today' },
+  { n: 'Shutdown', t: '21:30', c: '#7A5C8E', s: 'today' },
+  { n: 'Renew passport', t: '', c: '#E0A35C', s: 'later' },
+  { n: 'Book the car service', t: '', c: '#9EC3D6', s: 'later' },
+  { n: 'Read Piranesi', t: '', c: '#6E9E6A', s: 'later' }
+];
+const lane = $('lane');
+let laterWord;
+
+function strikeSvg(w) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const s = document.createElementNS(ns, 'svg');
+  s.setAttribute('width', w + 12); s.setAttribute('height', 48); s.setAttribute('class', 'strike');
+  const p = document.createElementNS(ns, 'path');
+  p.setAttribute('d', `M2 25 C ${w * .3} 22, ${w * .62} 27.5, ${w + 10} 23.5`);
+  p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#2B2440'); p.setAttribute('stroke-width', '3');
+  p.setAttribute('stroke-linecap', 'round'); p.setAttribute('pathLength', '100');
+  p.setAttribute('stroke-dasharray', '100'); p.setAttribute('stroke-dashoffset', '100'); p.style.opacity = '.85';
+  s.appendChild(p); return s;
+}
+function makeRow(it) {
+  const r = document.createElement('div'); r.className = 'row';
+  r.innerHTML = `<div class="trk lbl" style="color:var(--ink)">TOMORROW</div><div class="in"><span class="dab" style="background:${it.c};transform:rotate(${(it.n.length * 7) % 20 - 10}deg)"></span><span class="nm">${it.n}</span><span class="tm lbl">${it.t}</span></div>`;
+  lane.appendChild(r); it.el = r; it.inner = r.querySelector('.in'); it.nm = r.querySelector('.nm'); it.trk = r.querySelector('.trk');
+  return r;
+}
+// where each live item sits: Next = first 3 of today, then the rest of today folds into Later's top (dated), then undated
+function slots() {
+  const live = items.filter((i) => !i.gone);
+  const today = live.filter((i) => i.s !== 'later');
+  const next = today.slice(0, 3), rest = today.slice(3).concat(live.filter((i) => i.s === 'later'));
+  const out = new Map();
+  next.forEach((it, k) => out.set(it, { y: NEXT_TOP + k * ROW, op: [1, .88, .76][k], w: 500 }));
+  const laterTop = NEXT_TOP + next.length * ROW + GAP;
+  rest.forEach((it, k) => out.set(it, { y: laterTop + 48 + k * ROW, op: .62, w: 400 }));
+  return { out, laterTop };
+}
+function layout(dur = 0, enterFrom = null) {
+  const { out, laterTop } = slots();
+  const jobs = [];
+  for (const [it, s] of out) {
+    const from = it.y == null ? (enterFrom ?? s.y + 60) : it.y;
+    const wasNew = it.y == null;
+    it.y = s.y;
+    it.el.style.transform = `translateY(${s.y}px)`;
+    it.nm.style.fontWeight = s.w;
+    if (dur) {
+      jobs.push(anim(it.el, [{ transform: `translateY(${from}px)`, opacity: wasNew ? 0 : it.el.style.opacity || 1 }, { transform: `translateY(${s.y}px)`, opacity: s.op }], { duration: dur, easing: HOUSE }));
+    } else { it.el.style.opacity = s.op; }
+    it.el.style.opacity = s.op;
+  }
+  if (dur) jobs.push(anim(laterWord, [{ transform: getComputedStyle(laterWord).transform }, { transform: `translateY(${laterTop}px)` }], { duration: dur, easing: HOUSE }));
+  laterWord.style.transform = `translateY(${laterTop}px)`;
+  laterWord.dataset.y = laterTop;
+  return Promise.all(jobs);
+}
+
+// ---- finger ----
+const finger = $('finger');
+function fingerAt(x, y) { finger.style.left = x + 'px'; finger.style.top = y + 'px'; }
+async function fingerOn(x, y) { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); }
+async function fingerOff() { await anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }); }
+function tween(dur, fn, e = ease) {
+  return new Promise((res) => { const t0 = performance.now(); const step = (now) => { const t = Math.min(1, (now - t0) / dur); fn(e(t)); if (t < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
+}
+function rowScreen(it) { const r = rel(it.el.getBoundingClientRect()); return { x: r.left, y: r.top + 24 }; }
+
+// ---- Tess bar ----
+async function tessSay(text, undo, colour = '#2E6DA4') {
+  const t = $('tess');
+  await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+  anim($('undo'), [{ opacity: undo ? 0 : 1 }, { opacity: undo ? 1 : 0 }], { duration: 240 });
+}
+function soulDone() { anim($('soul'), [{ transform: 'scale(.5)' }, { transform: 'scale(.66)' }, { transform: 'scale(.5)' }], { duration: 900, easing: 'ease-in-out' }); }
+
+// ---- the moments ----
+async function arrive() {
+  $('dayStroke').animate([{ strokeDashoffset: 400 }, { strokeDashoffset: 220 }], { duration: 700, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards', delay: 60 });
+  anim($('tip'), [{ opacity: 0 }, { opacity: .75 }], { duration: 300, delay: 700 }).then(() => $('tip').style.animation = 'wetTip 3.6s ease-in-out infinite');
+  setHero(['Draft the', 'push‑day plan']);
+  anim($('hero'), [{ opacity: 0, transform: 'translateY(14px)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 340, easing: HOUSE, delay: 120 });
+  anim($('headA'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: HOUSE, delay: 220 });
+  const { out } = slots();
+  [...out.keys()].forEach((it, k) => anim(it.el, [{ opacity: 0, transform: `translateY(${it.y + 10}px)` }, { opacity: out.get(it).op, transform: `translateY(${it.y}px)` }], { duration: 320, easing: 'ease-out', delay: 260 + k * 40 }));
+  await sleep(1100);
+}
+function setHero(lines) {
+  const h = $('hero'); h.innerHTML = '';
+  for (const l of lines) { const s = document.createElement('div'); s.style.position = 'relative'; s.style.width = 'max-content'; s.textContent = l; h.appendChild(s); }
+}
+
+// swipe right: the strike follows the finger; release past 40% finishes
+async function swipeDone(it) {
+  const sv = strikeSvg(it.nm.offsetWidth); it.nm.appendChild(sv); const p = sv.querySelector('path');
+  const s = rowScreen(it); const x0 = s.x + 40, x1 = s.x + 290;
+  await fingerOn(x0, s.y);
+  let armed = false;
+  await tween(560, (t) => {
+    const x = lerp(x0, x1, t); fingerAt(x, s.y);
+    const prog = Math.min(1, (x - x0) / (x1 - x0) * 1.05);
+    p.setAttribute('stroke-dashoffset', 100 - prog * 92);
+    it.inner.style.transform = `translateX(${prog * 10}px)`;
+    if (!armed && prog > .4) { armed = true; }
+  });
+  fingerOff();
+  // commit: the strike runs out, the finish haptic fires here (.impact medium 0.8)
+  p.animate([{ strokeDashoffset: 8 }, { strokeDashoffset: 0 }], { duration: 180, fill: 'forwards' });
+  anim(it.inner, [{ transform: 'translateX(10px)' }, { transform: 'none' }], { duration: 260, easing: HOUSE });
+  anim(it.nm, [{ opacity: 1 }, { opacity: .45 }], { duration: 260 });
+  soulDone(); tessSay('Done. Call the dentist.', true);
+  await sleep(600);
+  // fold: the struck row leaves, the queue closes up, and Next refills from below
+  anim(it.el, [{ opacity: it.el.style.opacity }, { opacity: 0 }], { duration: 280 });
+  await sleep(120);
+  it.gone = true;
+  await layout(420);
+}
+
+// swipe left: "not now" sends a today task to tomorrow, which lives at the right end of the day stroke
+async function swipeTomorrow(it) {
+  const s = rowScreen(it); const x0 = s.x + 310, x1 = s.x + 70;
+  await fingerOn(x0, s.y);
+  await tween(480, (t) => {
+    const dx = lerp(0, x1 - x0, t); fingerAt(x0 + dx, s.y);
+    const d = dx > -150 ? dx : -150 + (dx + 150) * .35; // rubber band past 150
+    it.inner.style.transform = `translateX(${d}px)`;
+    // the word rises once the row has slid clear of it (120pt), which is also the commit threshold
+    it.trk.style.opacity = Math.max(0, Math.min(1, (-d - 110) / 20));
+  });
+  fingerOff();
+  // commit: the row's dab flies to tomorrow, the row collapses
+  const dab = rel(it.el.querySelector('.dab').getBoundingClientRect());
+  const fly = document.createElement('span'); fly.className = 'abs';
+  Object.assign(fly.style, { left: dab.left + 'px', top: dab.top + 'px', width: '18px', height: '15px', borderRadius: '55% 45% 60% 40%/50% 60% 40% 50%', background: '#2E6DA4', zIndex: 10, filter: 'blur(.4px)' });
+  $('ph').appendChild(fly);
+  it.el.querySelector('.dab').style.opacity = 0;
+  anim(it.inner, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim(it.trk, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, delay: 120 });
+  const tx = 360 - dab.left, ty = 154 - dab.top;
+  fly.animate([
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${tx * .55}px,${ty * .35}px) scale(1.3)`, offset: .45 },
+    { transform: `translate(${tx}px,${ty}px) scale(.7)` }
+  ], { duration: 620, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' });
+  tessSay('Moved to tomorrow.', true);
+  await sleep(600);
+  fly.remove();
+  anim($('tmrw'), [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.25)' }, { opacity: 0, transform: 'scale(1)' }], { duration: 700, easing: 'ease-out' });
+  it.gone = true;
+  await layout(420);
+}
+
+// hold to finish Now: paint fills the key, the hero is struck, then the first Next row rises into the hero
+async function holdFinish() {
+  const k = rel($('key').getBoundingClientRect());
+  await fingerOn(k.left + 110, k.top + 29);
+  $('keyText').textContent = 'Keep holding';
+  await anim($('fill'), [{ transform: 'scale(0)' }, { transform: 'scale(1.4)' }], { duration: 700, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  fingerOff();
+  // commit: finish haptic (.impact medium 0.8); the strike runs across each hero line in turn
+  const lines = [...$('hero').children];
+  for (const l of lines) {
+    const sv = strikeSvg(l.offsetWidth); sv.setAttribute('height', 56); sv.querySelector('path').setAttribute('d', `M2 30 C ${l.offsetWidth * .3} 27, ${l.offsetWidth * .62} 33, ${l.offsetWidth + 10} 29`);
+    sv.querySelector('path').setAttribute('stroke-width', '5');
+    l.appendChild(sv);
+    await sv.querySelector('path').animate([{ strokeDashoffset: 100 }, { strokeDashoffset: 0 }], { duration: 240, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards' }).finished;
+  }
+  soulDone(); tessSay('Done. Next one is up.', false);
+  anim($('fill'), [{ transform: 'scale(1.4)' }, { transform: 'scale(0)' }], { duration: 220, easing: 'ease-out' });
+  $('keyText').textContent = 'Hold to finish';
+  await sleep(220);
+  await anim($('hero'), [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'translateY(-14px)', filter: 'blur(4px)' }], { duration: 260, easing: 'ease-in' });
+  // promotion: matched geometry from the row's name to the hero
+  const first = items.filter((i) => !i.gone && i.s !== 'later')[0];
+  const r = rel(first.nm.getBoundingClientRect());
+  const ghost = document.createElement('div'); ghost.className = 'abs';
+  Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', fontSize: '21px', fontWeight: 500, lineHeight: r.height + 'px', letterSpacing: '-.005em', whiteSpace: 'nowrap', zIndex: 10 });
+  ghost.textContent = first.n; $('ph').appendChild(ghost);
+  first.el.style.visibility = 'hidden';
+  first.gone = true;
+  layout(460);
+  anim($('nowLine'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { $('nowLine').textContent = 'next, by half four'; anim($('nowLine'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: HOUSE }); });
+  anim($('meta'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { $('meta').innerHTML = 'DUE<br>16:30'; anim($('meta'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 }); });
+  await anim(ghost, [
+    { left: r.left + 'px', top: r.top + 'px', fontSize: '21px', lineHeight: r.height + 'px', letterSpacing: '-.005em' },
+    { left: '20px', top: '252px', fontSize: '56px', lineHeight: '56px', letterSpacing: '-.04em' }
+  ], { duration: 460, easing: HOUSE });
+  setHero(['Groceries']); $('hero').getAnimations().forEach((a) => a.cancel()); $('hero').style.opacity = 1; ghost.remove();
+  await sleep(500);
+}
+
+// scroll the window: the pinned heading rolls from Next to Later when Later reaches it
+async function scrollQueue(dist) {
+  const s = rel($('win').getBoundingClientRect());
+  await fingerOn(200, s.top + 150);
+  const top = +laterWord.dataset.y; let rolled = false;
+  await tween(900, (t) => {
+    const y = -dist * t; lane.style.transform = `translateY(${y}px)`; fingerAt(200, s.top + 150 + y);
+    if (!rolled && top + y < 2) { rolled = true; rollHead(); }
+  });
+  await fingerOff();
+}
+function rollHead() {
+  anim($('headA'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-14px)' }], { duration: 260, easing: HOUSE });
+  anim($('headB'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE });
+  anim(laterWord, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  laterWord = document.createElement('div'); laterWord.className = 'sec'; laterWord.textContent = 'Later'; lane.appendChild(laterWord);
+  items.forEach(makeRow); layout(0);
+  await document.fonts.ready; await sleep(400);
+  document.body.dataset.start = '1';
+  await arrive();
+  await swipeDone(items[0]);
+  await sleep(700); tessSay('Ask Tess…', false, '#8A7F96');
+  await sleep(300);
+  await swipeTomorrow(items[1]);
+  await sleep(700); tessSay('Ask Tess…', false, '#8A7F96');
+  await sleep(300);
+  await holdFinish();
+  await sleep(400);
+  await scrollQueue(130);
+  await sleep(900);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

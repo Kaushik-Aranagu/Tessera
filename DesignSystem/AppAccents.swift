@@ -14,19 +14,34 @@ extension Theme.Colors {
             )
         }
 
-        /// Training: hot red.
+        /// Training: cobalt (sheets 226, 227, 230; the dark half is the Soft palette).
         static var training: Color {
-            tuned(\.training, light: 0xC4472A, dark: 0xEE6A4C)
+            tuned(\.training, light: 0x0B62AE, dark: 0x8FB0EE)
         }
 
         /// Kitchen: ochre.
         static var kitchen: Color {
-            tuned(\.kitchen, light: 0xA8701F, dark: 0xC49A5E)
+            tuned(\.kitchen, light: 0xA8701F, dark: 0xD49A52)
         }
 
         /// Kitchen's small words (sheet 231: Cook now, Undo, low, Get it): darker by day so they reach 4.5:1.
         static var kitchenText: Color {
             Color(light: 0x93611A, dark: 0xC49A5E)
+        }
+
+        /// Kitchen's section names (a slate, so the names stand apart from the place and its actions).
+        static var kitchenSection: Color {
+            Color(light: 0x34506F, dark: 0xA7BCD6)
+        }
+
+        /// Kitchen's low, eat by tomorrow and throw out today (a wine).
+        static var kitchenWarn: Color {
+            Color(light: 0x9A2541, dark: 0xEE8E9C)
+        }
+
+        /// Kitchen's leftover days that are fine (a pine).
+        static var kitchenFresh: Color {
+            Color(light: 0x2F6450, dark: 0x8EC7AE)
         }
 
         /// Money: sage.
@@ -47,6 +62,11 @@ extension Theme.Colors {
         /// Routines: dusk rose.
         static var routines: Color {
             tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
+        }
+
+        /// Rain (Home 236 v2.1): the colour of a rain highlight, in place of the sunset wash. 557A93 light, 9DBACE dark.
+        static var rain: Color {
+            Color(light: 0x557A93, dark: 0x9DBACE)
         }
 
         /// The sky word's two stops ("Sunset").

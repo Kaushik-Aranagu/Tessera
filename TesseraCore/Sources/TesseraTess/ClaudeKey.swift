@@ -4,7 +4,7 @@ import Foundation
 #endif
 import TesseraCore
 
-// The Claude key: kept in the Keychain only, checked with one free call, and counted against the $50 month
+// The Claude key: kept in the Keychain only, checked with one free call, and counted against the $100 month
 // (docs/research/claude-key-test.md). The key is read once per call into a local and put only in that request's
 // Authorization header. It never reaches UserDefaults, the op log, objects, backups, exports, logs or errors.
 
@@ -80,19 +80,23 @@ public final class InMemoryKeychain: TessKeychain, @unchecked Sendable {
 
 // MARK: - Ledger
 
-/// The $50 month, in nano-dollars (one Haiku input token is 100 n$). The month turns at 04:00 on the 1st in the
+/// The $100 month, in nano-dollars (one Haiku input token is 100 n$). The month turns at 04:00 on the 1st in the
 /// phone's calendar, his house day (Product 8:24 PM PT Oct 17), not midnight and not Anthropic's UTC.
 @MainActor
 public struct TessUsageLedger {
-    /// The month's cap: $50 (Kaushik, decisions.md Oct 16). Settings' spend line and the paused copy read this.
-    public static let capNano: Int64 = 50_000_000_000
-    /// The cap in whole dollars, for the words ("of 50 dollars this month").
+    /// The month's cap: $100 (Kaushik, Oct 23: accuracy comes before cost). It exists only to stop a runaway bug, not
+    /// to ration calls. Settings' spend line and the paused copy read this.
+    public static let capNano: Int64 = 100_000_000_000
+    /// The cap in whole dollars, for the words ("of 100 dollars this month").
     public static let capDollars = Int(capNano / 1_000_000_000)
 
     /// Per-token prices in nano-dollars: (input, output, cache read, cache write).
     public static let prices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
         "claude-haiku-5-5": (100, 500, 10, 125),
-        "claude-sonnet-5-5": (2000, 10000, 200, 2500),
+        // Cache hits on Sonnet 5.5 and Opus 5.5 are 0.05x the input price (the pricing page).
+        "claude-sonnet-5-5": (2000, 10000, 100, 2500),
+        // Opus 5.5 is an escalation rung only: $4 / $20 per million, reads at $0.20, 5-minute writes at 1.25x.
+        "claude-opus-5-5": (4000, 20000, 200, 5000),
     ]
 
     public let store: ObjectStore
@@ -131,7 +135,7 @@ public struct TessUsageLedger {
     /// ledger on the app's one store shares it, and a test's own store never sees another test's calls in flight.
     private static var pending: [ObjectIdentifier: Int64] = [:]
 
-    private var pendingNano: Int64 {
+    var pendingNano: Int64 {
         get { Self.pending[ObjectIdentifier(store.context)] ?? 0 }
         nonmutating set { Self.pending[ObjectIdentifier(store.context)] = newValue }
     }
@@ -155,17 +159,44 @@ public struct TessUsageLedger {
         pendingNano = max(0, pendingNano - reservation.nano)
     }
 
-    /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out.
-    public static func estimate(text: String, maxTokens: Int, model: String) -> Int64 {
-        guard let price = prices[model] else { return 0 }
-        let input = Int64((text.utf8.count + 3) / 4 + 10)
-        return input * price.input + Int64(maxTokens) * price.output
+    /// Haiku 5.5 costs more once a prompt passes 100K tokens ($0.50 in and $2.50 out per million, from $0.10 and
+    /// $0.50). Cache prices scale with it (a read at a tenth of the input price, a 5-minute write at 1.25x, a 1-hour
+    /// write at 2x).
+    public static let stepTokens = 100_000
+    static let steppedPrices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
+        "claude-haiku-5-5": (500, 2500, 50, 625),
+    ]
+
+    /// $10 per 1,000 searches. A web fetch costs only its tokens.
+    public static let webSearchNano: Int64 = 10_000_000
+
+    /// The price row for a prompt of this many tokens.
+    static func price(model: String, promptTokens: Int) -> (input: Int64, output: Int64, cacheRead: Int64,
+                                                            cacheWrite: Int64)?
+    {
+        if promptTokens > stepTokens, let stepped = steppedPrices[model] {
+            return stepped
+        }
+        return prices[model]
     }
 
-    public static func cost(model: String, input: Int, output: Int, cacheRead: Int = 0, cacheWrite: Int = 0) -> Int64 {
-        guard let price = prices[model] else { return 0 }
+    /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out (at the stepped price past 100K tokens).
+    public static func estimate(text: String, maxTokens: Int, model: String) -> Int64 {
+        let tokens = (text.utf8.count + 3) / 4 + 10
+        guard let price = price(model: model, promptTokens: tokens) else { return 0 }
+        return Int64(tokens) * price.input + Int64(maxTokens) * price.output
+    }
+
+    /// `cacheWrite` is all tokens written to the cache; `cacheWrite1h` is the part of them written with the 1-hour
+    /// lifetime, which costs 2x the input price instead of 1.25x.
+    public static func cost(model: String, input: Int, output: Int, cacheRead: Int = 0, cacheWrite: Int = 0,
+                            cacheWrite1h: Int = 0, webSearches: Int = 0) -> Int64
+    {
+        guard let price = price(model: model, promptTokens: input + cacheRead + cacheWrite) else { return 0 }
+        let longWrites = min(max(cacheWrite1h, 0), cacheWrite)
         return Int64(input) * price.input + Int64(output) * price.output + Int64(cacheRead) * price.cacheRead
-            + Int64(cacheWrite) * price.cacheWrite
+            + Int64(cacheWrite - longWrites) * price.cacheWrite + Int64(longWrites) * 2 * price.input
+            + Int64(webSearches) * webSearchNano
     }
 
     /// One row per call, written straight to the store (no op: it isn't something he did, and undo shouldn't see it).

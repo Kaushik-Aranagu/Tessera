@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Recipe and paste</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for kitchen sheets 10 and 11 (docs/design/kitchen/10-11-recipe-page-and-paste.md). Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#DCE8D2 0%,rgba(220,232,210,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2D9C0 0%,rgba(242,217,192,0) 70%),#F5F0E6}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
+.pl{position:relative;font-size:21px;line-height:30px;color:rgba(43,36,64,.85);white-space:pre-wrap}
+.amt{position:relative;display:inline-block}
+.amt i{font-style:normal;position:absolute;left:0;bottom:2px;height:3px;width:0;border-radius:2px;background:var(--cad);opacity:.8}
+.dab{display:inline-block;width:0;height:8px;margin-right:0;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;background:var(--sage);transform:scale(0)}
+.tick{display:inline-block;color:var(--cad);font-weight:700;opacity:0;margin-left:4px;width:0;overflow:visible}
+.num{position:absolute;left:-14px;top:0;font-size:16px;font-weight:700;color:var(--sub);opacity:0}
+.ing{position:absolute;left:22px;height:44px;line-height:44px;font-size:21px;white-space:nowrap}
+.ing .a{display:inline-block;min-width:74px;font-weight:600;font-variant-numeric:tabular-nums;overflow:hidden;height:44px;vertical-align:top;position:relative}
+.ing .a span{display:block}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+
+  <!-- 11 · the paste reader -->
+  <section id="paste" class="abs" style="inset:0">
+    <div id="tessLine" class="abs" style="left:22px;right:22px;top:70px;font-size:21px;color:var(--cobalt);opacity:0">Six ingredients, two timers.</div>
+    <div id="raw" class="abs" style="left:30px;right:22px;top:130px"></div>
+    <div id="band" class="abs" style="left:0;right:0;top:110px;height:80px;background:linear-gradient(rgba(224,163,92,0),rgba(224,163,92,.55) 55%,rgba(224,163,92,0));mix-blend-mode:multiply;opacity:0;filter:blur(6px)"></div>
+    <div id="save" class="abs key" style="left:22px;width:220px;top:690px;height:58px;background:var(--ink);color:#F6F0E6;display:flex;align-items:center;padding:0 20px;box-sizing:border-box;font-size:21px;font-weight:600;opacity:0">Save recipe</div>
+  </section>
+
+  <!-- 10 · the recipe page -->
+  <section id="page" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">RECIPES</div>
+    <div id="rhero" class="abs hero" style="left:20px;top:90px">Carbonara</div>
+    <div class="abs" style="left:22px;top:160px;font-size:21px;color:var(--ctx)">serves 2, 25 min</div>
+    <div id="col" class="abs" style="left:0;top:256px;width:300px;height:400px"></div>
+    <!-- portion drum -->
+    <div class="abs" style="left:300px;top:250px;width:68px;height:150px">
+      <div class="abs" style="left:0;top:0;width:68px;height:132px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)">
+        <div id="drum" class="abs" style="left:0;top:0;width:68px;transform:translateY(0px)"></div>
+      </div>
+      <div class="abs" style="left:0;right:0;top:132px;text-align:center;font-size:18px;color:var(--sub)">serves</div>
+    </div>
+    <div id="toBuy" class="abs" style="left:22px;right:22px;top:262px;font-size:21px;color:var(--sage);opacity:0;display:flex;justify-content:space-between"><span><b style="font-weight:600">5</b> to buy, in Groceries</span><span style="color:var(--verm);font-weight:600">Undo</span></div>
+    <div class="abs lbl" style="left:22px;top:666px">6 STEPS</div>
+    <div class="abs key" style="left:22px;width:220px;top:690px;height:58px;background:var(--ink);color:#F6F0E6;display:flex;align-items:center;padding:0 20px;box-sizing:border-box;font-size:21px;font-weight:600">Cook</div>
+    <span class="abs lbl" style="left:258px;top:708px">25 MIN</span>
+  </section>
+
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12);z-index:6">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+  </div>
+  <div class="abs" style="left:36px;top:778px;width:28px;height:24px;border-radius:52% 48% 60% 40%;background:radial-gradient(closest-side,rgba(46,109,164,.7),rgba(46,109,164,0));filter:blur(2px);z-index:7"></div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(ease(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+
+// the pasted text, as it arrived; [a]mounts, [n]ames, [d]urations, [s]tep breaks
+const RAW = [
+  { t: 'Carbonara', title: 1 },
+  { t: '' },
+  { t: '[a:200 g] [n:spaghetti]' },
+  { t: '[a:100 g] [n:guanciale], diced' },
+  { t: '[a:3] [n:egg yolks] + [a:1] whole [n:egg]' },
+  { t: '[a:50 g] [n:pecorino], grated' },
+  { t: '' },
+  { t: 'Boil the pasta [d:10 min].', step: 1 },
+  { t: 'Crisp the guanciale [d:6 min].', step: 2 },
+  { t: 'Whisk eggs, cheese, lots of pepper.', step: 3 },
+  { t: 'Toss off the heat with a splash', step: 4 },
+  { t: 'of pasta water.' }
+];
+const lines = RAW.map((l) => {
+  const d = document.createElement('div'); d.className = 'pl';
+  d.innerHTML = (l.t || ' ').replace(/\[a:([^\]]+)\]/g, '<span class="amt">$1<i></i></span>').replace(/\[n:([^\]]+)\]/g, '<span class="dab"></span>$1').replace(/\[d:([^\]]+)\]/g, '$1<span class="tick">✓</span>');
+  if (l.step) d.insertAdjacentHTML('afterbegin', `<span class="num">${l.step}</span>`);
+  $('raw').appendChild(d); l.el = d; return l;
+});
+
+// the recipe page: amounts for 2, scaled through RecipeMath
+const ING = [[200, 'g', 'spaghetti'], [100, 'g', 'guanciale'], [3, '', 'egg yolks'], [1, '', 'whole egg'], [50, 'g', 'pecorino'], ['', '', 'salt, pepper', 1]];
+const fmt = (v, u) => v === '' ? '' : (Math.round(v * 10) / 10) + (u ? ' ' + u : '');
+const rows = ING.map(([v, u, n, staple], k) => {
+  const r = document.createElement('div'); r.className = 'ing'; r.style.top = (k * 44) + 'px'; if (staple) r.style.opacity = .45;
+  r.innerHTML = `<span class="a"><span>${fmt(v, u)}</span></span> ${n}`; $('col').appendChild(r); return { r, v, u, staple };
+});
+for (let n = 1; n <= 6; n++) { const d = document.createElement('div'); d.textContent = n; Object.assign(d.style, { height: '44px', lineHeight: '44px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }); $('drum').appendChild(d); }
+function drumAt(serves) {
+  $('drum').style.transform = `translateY(${66 - 22 - (serves - 1) * 44}px)`;
+  [...$('drum').children].forEach((d, k) => { const c = k + 1 === serves; d.style.fontSize = c ? '48px' : '21px'; d.style.fontWeight = c ? 300 : 400; d.style.opacity = c ? 1 : .35; });
+}
+async function rollTo(serves) {
+  rows.forEach((x, k) => {
+    if (x.v === '') return;
+    const box = x.r.querySelector('.a'); const old = box.firstElementChild;
+    const nu = document.createElement('span'); nu.textContent = fmt(x.v * serves / 2, x.u); box.appendChild(nu);
+    nu.style.position = 'absolute'; nu.style.left = 0; nu.style.top = 0;
+    old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-60%)', opacity: 0 }], { duration: 220, delay: k * 15, easing: HOUSE, fill: 'forwards' });
+    nu.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, delay: k * 15, easing: HOUSE, fill: 'backwards' })
+      .finished.then(() => { old.remove(); nu.style.position = 'static'; });
+  });
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  drumAt(2);
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // the paste lands as it is
+  lines.forEach((l, k) => l.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: k * 12, fill: 'backwards' }));
+  await sleep(900);
+  // the brush passes, top to bottom; marks paint in under it
+  const top = rel($('raw').getBoundingClientRect()).top, bottom = top + lines.length * 30;
+  $('band').style.opacity = 1;
+  const marked = new Set();
+  await tween(700, (t) => {
+    const y = top - 40 + t * (bottom - top + 40);
+    $('band').style.top = (y - 40) + 'px';
+    lines.forEach((l, k) => {
+      if (marked.has(k) || top + k * 30 > y) return; marked.add(k);
+      l.el.querySelectorAll('.amt i').forEach((i) => i.animate([{ width: '0px' }, { width: '100%' }], { duration: 180, fill: 'forwards' }));
+      l.el.querySelectorAll('.dab').forEach((d) => d.animate([{ transform: 'scale(0)', width: '0px', marginRight: '0px' }, { transform: 'scale(1)', width: '10px', marginRight: '6px' }], { duration: 220, easing: HOUSE, fill: 'forwards' }));
+      l.el.querySelectorAll('.tick').forEach((d) => d.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' }));
+      l.el.querySelectorAll('.num').forEach((d) => d.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' }));
+      if (l.title) l.el.animate([{ fontSize: '21px', fontWeight: 400, lineHeight: '30px' }, { fontSize: '34px', fontWeight: 500, lineHeight: '40px', color: '#2B2440', letterSpacing: '-.03em' }], { duration: 300, easing: HOUSE, fill: 'forwards' });
+    });
+  });
+  anim($('band'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim($('tessLine'), [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  anim($('save'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE, delay: 150 });
+  await sleep(1800);
+
+  // save: ghost commit, then zoom into the new recipe page
+  await fingerOn(130, 719); await sleep(100); fingerOff();
+  tessSay('Carbonara saved.');
+  await anim($('paste'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(1.04)' }], { duration: 260, easing: 'ease-in' });
+  $('page').style.pointerEvents = 'auto';
+  anim($('page'), [{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+  anim($('rhero'), [{ opacity: 0, transform: 'translateX(18px)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 340, easing: HOUSE });
+  rows.forEach((x, k) => x.r.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: x.staple ? .45 : 1, transform: 'none' }], { duration: 320, delay: 120 + k * 30, easing: 'ease-out', fill: 'backwards' }));
+  await sleep(1300);
+
+  // the portion drum: 2 → 3 → 4, and every amount rolls
+  await fingerOn(334, 316);
+  for (const s of [3, 4]) {
+    await tween(200, (t) => { $('drum').style.transform = `translateY(${66 - 22 - (s - 2 + t) * 44}px)`; fingerAt(334, 316 - (s - 3 + t) * 44 * .6); });
+    drumAt(s); rollTo(s); await sleep(260);
+  }
+  fingerOff();
+  await sleep(1300);
+
+  // swipe left across the column: it slides off toward Groceries, staples stay
+  await fingerOn(240, 380);
+  await tween(380, (t) => { fingerAt(240 - 160 * t, 380); rows.forEach((x) => { if (!x.staple) x.r.style.transform = `translateX(${-130 * t}px)`; }); });
+  fingerOff();
+  rows.forEach((x, k) => { if (!x.staple) x.r.animate([{ transform: 'translateX(-130px)', opacity: 1 }, { transform: 'translateX(-420px)', opacity: 0 }], { duration: 360, delay: k * 20, easing: 'cubic-bezier(.5,0,.6,1)', fill: 'forwards' }); });
+  await sleep(380);
+  anim($('toBuy'), [{ opacity: 0, transform: 'translateX(14px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  tessSay('Five things on Groceries.');
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

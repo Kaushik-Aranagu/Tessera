@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The recipe clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/recipe-clock.md (Design item 69). Kaushik's pick of sheet 45 (16 Oct, 9:47 AM PT): C, the clock, is the base; the step or steps he is on are lit; steps that run at once are drawn side by side; B's ingredient list is one swipe away. ?play records it in Porcelain. -->
+<style>
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;padding:28px 30px 30px;transform-origin:0 0}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px;margin-bottom:28px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:18,16,22;--s2:.66;--s3:.42;--tess:#2450D8;--ctx:#5A3DAF;--now:#F0A500;--g:255,255,255;background:#fff;color:rgb(var(--ink))}
+.ph.obs{--ink:245,242,236;--s2:.72;--s3:.36;--tess:#86B4FF;--ctx:#B7A6E0;--now:#FFC23D;--g:0,0,0;background:#000}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}.sm{font-size:16px;line-height:22px}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
+.v{font-weight:600;font-variant-numeric:tabular-nums}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.undo{position:absolute;right:71px;top:806px;z-index:6;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--liveInk,#C23A22)}
+.obs .undo{color:#FF7A5C}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:4px;line-height:24px;max-width:1700px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35);opacity:0;z-index:30}
+@keyframes ripple{0%{transform:scale(1);opacity:.35}70%{transform:scale(2.6);opacity:0}100%{transform:scale(2.6);opacity:0}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.bead{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--now);box-shadow:0 0 10px var(--now);animation:breathe 2.4s ease-in-out infinite;z-index:3}
+.bead::after{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--now);animation:ripple 2.4s ease-out infinite}
+.fade{position:absolute;left:0;right:0;top:686px;height:50px;background:linear-gradient(rgba(var(--g),0),rgb(var(--g)));z-index:4;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="row" id="r1"></div>
+<div class="row" id="r2"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=obs=>{const P=obs?['#86B4FF','#FF5B3A','#FFC23D']:['#2450D8','#E2432A','#F0A500'],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33);mix-blend-mode:${obs?'screen':'multiply'}"></i>`).join('')}</div>`};
+// One US recipe with a step that runs alongside another (the sauce while it roasts). Minutes are start..end.
+const STEPS=[
+ {m:0,e:5,lane:0,t:'Oven <b>425°F</b>, potatoes on',l:['2 sweet potatoes, in chunks','1 tbsp olive oil, ½ tsp salt'],say:'Oven on, potatoes in.',use:[1,2,4]},
+ {m:5,e:10,lane:0,t:'Chicken in, on the pan',l:['1½ lb chicken thighs, bone-in','2 tbsp oil, 1 tsp paprika, ½ tsp salt'],say:'Chicken in, on the pan.',use:[0,3]},
+ {m:10,e:45,lane:0,timed:1,t:'Roast <b>35 min</b>',l:['until the skin is crisp'],say:'Roasting, 35 min.',use:[]},
+ {m:30,e:35,lane:1,timed:1,t:'Whisk the sauce',l:['½ cup Greek yogurt, 1 garlic clove','juice of ½ lemon'],say:'Sauce now, while it roasts.',use:[5,6]},
+ {m:45,e:45,lane:0,t:'Lemon over, parsley, serve',l:['½ lemon, a handful of parsley'],say:'Lemon over, then serve.',use:[7,8]}];
+const ING=[['1½ lb','chicken thighs','buy'],['2','sweet potatoes','have'],['3 tbsp','olive oil','have'],['1 tsp','smoked paprika','have'],['1 tsp','kosher salt','have'],['½ cup','Greek yogurt','buy'],['1','garlic clove','have'],['1','lemon','have'],['','parsley, a handful','have']];
+const AN=[[0,256],[5,338],[10,420],[30,500],[35,568],[45,596]];
+const yof=m=>{for(let i=1;i<AN.length;i++){if(m<=AN[i][0]){const [a,ya]=AN[i-1],[b,yb]=AN[i];return ya+(yb-ya)*(m-a)/(b-a)}}return AN[AN.length-1][1]};
+const X0=66,X1=88; // the main stroke and the lane
+const laneD=(ya,yb)=>`M${X0} ${ya} C ${X0} ${ya+8}, ${X1} ${ya+4}, ${X1} ${ya+12} L ${X1} ${yb-12} C ${X1} ${yb-4}, ${X0} ${yb-8}, ${X0} ${yb}`;
+const laneAt=(ya,yb,y)=>y<ya+12?X0+(X1-X0)*Math.min(1,(y-ya)/12):y>yb-12?X1-(X1-X0)*Math.min(1,(y-(yb-12))/12):X1;
+const head=()=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ RECIPES</div>
+ <div class="abs t44" style="left:22px;top:84px;width:346px">Sheet-pan paprika chicken</div>`;
+const key=(y,w,meta,right)=>`<div class="abs lbl" style="left:22px;top:${y}px">${w}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="60" height="12"><path d="${lens(w.length*11.5,1.6)}" fill="rgb(var(--ink))"/></svg></div>${meta?`<div class="abs lbl s2" style="left:${34+w.length*11.5}px;top:${y}px">${meta}</div>`:''}${right?`<div class="abs lbl s2" style="right:22px;top:${y}px">${right}</div>`:''}`;
+// The page at minute t (t<0: at rest). o.peek 0..1 slides the ingredient side page in; o.pantry draws have / buy.
+function page(obs,t=-1,o={}){
+ const p=o.peek||0,cooking=t>=0;
+ const live=s=>cooking&&t>=s.m&&(t<s.e||(s.e===s.m&&t>=s.m)),past=s=>cooking&&t>=s.e&&!(s.e===s.m&&t>=s.m);
+ const y0=AN[0][1],yN=AN[AN.length-1][1],s3=STEPS[3],ya=yof(s3.m),yb=yof(s3.e);
+ // strokes: rest guide, dry past, wet now
+ const rc=o.done?'rgba(var(--ink),.55)':'rgba(var(--ink),.2)';
+ let sv=`<path d="M${X0} ${y0} L ${X0} ${yN}" stroke="${rc}" stroke-width="3" stroke-linecap="round" fill="none"/><path d="${laneD(ya,yb)}" stroke="${rc}" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+ if(cooking){const yt=yof(t);
+  // the main lane: dry ink up to the current main step's start, wet now from there to t
+  const mainLive=STEPS.filter(s=>s.lane===0&&live(s)).pop(),ws=mainLive?yof(mainLive.m):yt;
+  sv+=`<path d="M${X0} ${y0} L ${X0} ${Math.min(ws,yt)}" stroke="rgba(var(--ink),.55)" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+  if(ws<yt)sv+=`<path d="M${X0} ${ws} L ${X0} ${yt}" stroke="var(--now)" stroke-width="3.6" stroke-linecap="round" fill="none"/>`;
+  if(t>=s3.m){const yl=Math.min(yt,yb),dash=t>=s3.e;const len=1000;
+   sv+=`<clipPath id="lc${obs}"><rect x="0" y="${ya-2}" width="200" height="${yl-ya+2}"/></clipPath><path d="${laneD(ya,yb)}" clip-path="url(#lc${obs})" stroke="${dash?'rgba(var(--ink),.55)':'var(--now)'}" stroke-width="${dash?3:3.6}" stroke-linecap="round" fill="none"/>`}}
+ let beads='';if(cooking&&t<45){const yt=yof(t);beads+=`<div class="bead" style="left:${X0}px;top:${yt}px"></div>`;if(t>=s3.m&&t<s3.e)beads+=`<div class="bead" style="left:${laneAt(ya,yb,yt)}px;top:${yt}px"></div>`}
+ if(cooking&&t>=45)beads+=`<div class="bead" style="left:${X0}px;top:${yN}px;animation:none"></div>`;
+ const steps=STEPS.map(s=>{const y=yof(s.m)-10,L=live(s),P=past(s),x=s.lane?108:96;const left=s.timed&&L?Math.ceil(s.e-t):0;
+  const tc=L?'font-weight:600':P?`color:rgba(var(--ink),var(--s3))`:'';const lc=L?'color:rgba(var(--ink),.8)':P?'color:rgba(var(--ink),var(--s3))':'';
+  return `${s.lane?'':`<div class="abs lbl s2 mn" style="left:22px;top:${y+5}px;width:30px;text-align:right;font-size:16px;${L?'color:var(--ctx)':''}">${s.m}</div>`}${s.lane?`<div class="abs lbl s2 mn" style="left:22px;top:${y+5}px;width:30px;text-align:right;font-size:16px;${L?'color:var(--ctx)':''}">${s.m}</div>`:''}
+   <div class="abs b" data-s="${s.m}" style="left:${x}px;top:${y}px;width:${368-x-(left?64:0)}px;${tc}">${s.t.replace(/<b>/g,'<span class="v">').replace(/<\/b>/g,'</span>')}</div>
+   ${left?`<div class="abs lbl" style="right:22px;top:${y+5}px;color:var(--now)">${left} MIN</div>`:''}
+   ${s.l.map((q,k)=>`<div class="abs sm s2" style="left:${x}px;top:${y+30+22*k}px;width:${368-x}px;${lc}">${q}</div>`).join('')}`}).join('');
+ const used=new Set(cooking?STEPS.filter(s=>t>=s.m).flatMap(s=>s.use):[]);
+ const list=`<div class="abs lbl s2" style="left:56px;top:236px">SERVES <span style="color:rgb(var(--ink))">4</span></div>`+ING.map(([a,n,h],i)=>{const u=used.has(i);return `<div class="abs b nw" style="left:56px;top:${268+40*i}px;${u?'color:rgba(var(--ink),var(--s3))':''}">${a?`<span class="v">${a}</span> `:''}${n}</div>${o.pantry?`<div class="abs lbl" style="right:22px;top:${273+40*i}px;font-weight:600;letter-spacing:.02em;${h==='buy'&&!u?'color:rgb(var(--ink))':'color:rgba(var(--ink),var(--s3))'}">${u?'used':h==='buy'?'to buy':'on hand'}</div>`:''}`}).join('');
+ const keyRow=p>.5?key(664,o.pantry?'ADD 2 TO GROCERIES':'ADD 7 TO GROCERIES','', 'STEPS'):cooking?(t>=45?key(664,'DONE','HOLD','INGREDIENTS'):key(664,'STOP',`${45-Math.floor(t)} MIN LEFT`,'INGREDIENTS')):key(664,'COOK','45 MIN','INGREDIENTS');
+ return `${head()}
+ <div class="abs b s2" style="left:22px;top:196px;opacity:${1-p}">serves <span class="v" style="color:rgb(var(--ink))">4</span>, 45 min, cooked 12 days ago</div>
+ <div class="abs clk" style="inset:0;transform:translateX(${-44*p}px)">
+  <svg class="abs" style="left:0;top:0;overflow:visible" width="390" height="844">${sv}</svg>${beads}
+  <div class="abs" style="inset:0;opacity:${1-p}">${steps}</div>
+ </div>
+ <div class="abs" style="left:0;top:220px;width:390px;height:440px;opacity:${p};background:linear-gradient(90deg,rgba(var(--g),0) 30px,rgba(var(--g),.94) 46px)"></div>
+ <div class="abs" style="inset:0;opacity:${p};transform:translateX(${(1-p)*120}px)">${list}</div>
+ ${keyRow}<div class="fade"></div>`}
+const phone=(c,inner,obs,opt={})=>`<div><div class="cap">${c}</div><div class="ph ${obs?'obs':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}</div>`:''}${opt.undo?'<div class="undo">UNDO</div>':''}${soul(obs)}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+if(PLAY){
+ $('r1').innerHTML=phone('THE CLOCK, AT REST',`<div id="stage" class="abs" style="inset:0"></div>`,0,{id:'P',fing:1});$('r2').remove();
+}else{
+ $('r1').innerHTML=phone('AT REST: THE SAUCE FORKS OFF THE ROAST, BECAUSE IT RUNS AT THE SAME TIME',page(0),0)
+  +phone('COOKING, 12 MIN IN: THE ROAST IS LIT, WITH ITS OWN MINUTES LEFT',page(0,12),0,{line:'Roasting, 35 min.'})
+  +phone('COOKING, 32 MIN IN: TWO STEPS AT ONCE, BOTH LIT, A BEAD ON EACH',page(0,32),0,{line:'Sauce now, while it roasts.'})
+  +phone('SWIPE LEFT: THE INGREDIENTS, THE CLOCK STAYS AS THE SPINE',page(0,12,{peek:1}),0);
+ $('r2').innerHTML=phone('WITH PANTRY, LATER: WHAT IT NEEDS AGAINST WHAT YOU HAVE',page(0,-1,{peek:1,pantry:1}),0)
+  +phone('OBSIDIAN, 32 MIN IN',page(1,32),1,{line:'Sauce now, while it roasts.'})
+  +phone('OBSIDIAN, THE LAST STEP: HOLD DONE',page(1,45),1,{line:'Lemon over, then serve.'})
+  +phone('DONE: THE RECIPE DRIES, THE RECEIPT NAMES IT',page(0,-1,{done:1}),0,{line:'Paprika chicken, cooked.',undo:1});
+ $('note').innerHTML='DESIGN 69, FROM HIS PICK OF SHEET 45: C IS THE BASE. Y IS TIME; THE STEP HE IS ON IS LIT (WEIGHT 600, ITS MINUTE IN CONTEXT, ITS OWN MINUTES LEFT IN NOW AT THE RIGHT); STEPS THAT RUN AT ONCE FORK INTO A SECOND LANE AND BOTH LIGHT; THE BEAD BREATHES AND RIPPLES, THE STROKE WETS BEHIND IT AND DRIES TO INK AS EACH STEP ENDS. SWIPE THE PAGE LEFT (OR TAP INGREDIENTS) AND B\'S LIST SLIDES IN, WITH THE STROKE LEFT AS A SPINE SO HE KEEPS HIS PLACE; USED INGREDIENTS DIM. WITH PANTRY, EACH ROW SAYS ON HAND OR TO BUY, AND THE KEY ADDS ONLY WHAT IS MISSING.';
+ document.fonts.ready.then(()=>setTimeout(()=>document.body.dataset.done='1',300));
+}
+async function play(){
+ const st=$('stage'),f=$('fing'),cap=document.querySelector('.cap'),P=$('P');
+ const tl=(s,u)=>{P.querySelectorAll('.tl,.undo').forEach(e=>e.remove());if(s){P.insertAdjacentHTML('beforeend',`<div class="tl">${s}</div>${u?'<div class="undo">UNDO</div>':''}`);P.querySelector('.tl').animate([{opacity:0,color:'#2450D8'},{opacity:1}],{duration:300})}};
+ const draw=(t,o)=>{st.innerHTML=page(0,t,o)};
+ draw(-1);await sleep(1400);
+ // 1 · swipe left: the ingredients slide in; swipe right: back to the clock
+ cap.textContent='SWIPE LEFT: THE INGREDIENTS, THE CLOCK STAYS AS THE SPINE';
+ f.style.opacity=1;for(let i=0;i<=20;i++){const p=i/20,e=1-Math.pow(1-p,3);f.style.left=(300-200*p)+'px';f.style.top='420px';draw(-1,{peek:e});await sleep(18)}f.style.opacity=0;
+ await sleep(1800);
+ cap.textContent='SWIPE RIGHT: BACK TO THE CLOCK';
+ f.style.opacity=1;for(let i=0;i<=20;i++){const p=i/20,e=1-Math.pow(1-p,3);f.style.left=(100+200*p)+'px';draw(-1,{peek:1-e});await sleep(18)}f.style.opacity=0;
+ await sleep(900);
+ // 2 · COOK: the bead starts; each step lights as the bead reaches it, wet, then dries to ink
+ cap.textContent='COOK: THE STEP YOU ARE ON LIGHTS, THE BEAD WALKS THE STROKE';
+ f.style.left='40px';f.style.top='676px';f.style.opacity=1;await sleep(220);f.style.opacity=0;
+ let said=new Set();
+ const wet=m=>{const el=st.querySelector(`[data-s="${m}"]`);if(el)el.animate([{color:getComputedStyle(P).getPropertyValue('--now')},{color:'rgb(18,16,22)'}],{duration:2000,easing:'cubic-bezier(.2,.8,.2,1)'})};
+ for(let t=0;t<=45;t+=.25){draw(t);
+  const s=STEPS.find(s=>s.m<=t&&s.m>t-.25&&!said.has(s.m));
+  if(s){said.add(s.m);wet(s.m);tl(s.say);if(s.m===30)cap.textContent='30 MIN: THE SAUCE RUNS WHILE IT ROASTS, BOTH LIT';if(s.m===45)cap.textContent='THE LAST STEP: HOLD DONE'}
+  else if(said.size){const last=[...said].pop();const el=st.querySelector(`[data-s="${last}"]`);}
+  await sleep(t<11?55:t<29?16:t<36?60:22)}
+ await sleep(1200);
+ // 3 · hold DONE: the line fills, the recipe dries, the receipt names it
+ f.style.left='40px';f.style.top='676px';f.style.opacity=1;await sleep(800);f.style.opacity=0;
+ draw(-1,{done:1});tl('Paprika chicken, cooked.',1);
+ cap.textContent='DONE: THE RECEIPT NAMES THE RECIPE, WITH UNDO';
+ await sleep(2400);document.body.dataset.done='1';
+}
+if(PLAY)document.fonts.ready.then(()=>{document.body.dataset.start='1';play()});
+</script>
+</body>
+</html>
