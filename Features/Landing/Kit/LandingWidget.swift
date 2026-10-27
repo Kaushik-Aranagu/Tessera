@@ -24,9 +24,6 @@ struct WidgetItem: Identifiable, Equatable {
     /// The room's own short Middle and Small lines, shown at accessibility sizes (contract §8); nil keeps the cuts.
     var middleShort: String?
     var smallShort: String?
-    /// Sheet 325, the scoreboard: a quiet fact on the right edge of the top line ("Medium high", "Right by the
-    /// doors"), cut to a whole-word form that fits.
-    var trailing: String?
 
     enum BigFace { case figtree, deck, galley }
 }
@@ -84,11 +81,6 @@ struct LandingWidget<Glyph: View>: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .lineLimit(1)
                 .offset(y: 17)
-            if let trailing = item.trailing {
-                FitLine(forms: FitLine.cuts(trailing), size: 13, color: Theme.Colors.inkSecondary, weight: .medium)
-                    .frame(width: 140, alignment: .trailing)
-                    .offset(x: 262 - 140, y: 14)
-            }
             bigLine(item, done: done).offset(y: 32)
             FitLine(forms: FitLine.cuts(item.middle), size: 20, color: Theme.Colors.ink, weight: .medium,
                     short: item.middleShort)

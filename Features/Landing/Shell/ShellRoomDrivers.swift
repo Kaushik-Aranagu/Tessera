@@ -149,7 +149,6 @@ final class GalleyRoomDriver: ShellRoomDriver {
         case .recipes: link = .recipes
         case .groceries: link = .groceries
         case .pantry: link = .pantry
-        case .cookTimer: break
         }
     }
 

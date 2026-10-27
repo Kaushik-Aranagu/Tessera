@@ -1,8 +1,10 @@
 import SwiftUI
 import TesseraCore
 
-/// Cooking mode on the standing shell (sheet 322), over the existing cook session: Next, Timer, Read and Finish do
-/// what the clock's own keys do. Behind the "Cooking mode" switch (On); Off keeps the clock page.
+/// Cooking mode (sheets 322, 325, 328): the whole ticket, cream paper full bleed in IBM Plex Sans Condensed. It reads
+/// top to bottom: the dish, the step number with its heat, the instruction, how and when it is done, what it needs
+/// with dotted leaders, the timers; the verb bottom left, the steps down the right edge. Swipe up anywhere is Next.
+/// Behind the "Cooking mode" switch (On); Off keeps the clock page.
 struct GalleyCookModePage: View {
     let cookID: UUID
     @Environment(AppModel.self) private var model
@@ -10,74 +12,168 @@ struct GalleyCookModePage: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var session: CookClockSession?
-    @State private var navigator = ShellNavigator(root: .landing(GalleyCookContent.room))
 
     var body: some View {
         ZStack {
+            GalleyPaper.sheet.ignoresSafeArea()
             if let session {
-                modeView(session)
+                LiveClock(LiveFeatures.cookClock, minimumInterval: 1, paused: scenePhase != .active) { context in
+                    let _ = model.revision
+                    screen(session, now: AppClock.adjust(context.date))
+                }
             }
         }
         .onAppear(perform: begin)
         .onDisappear { session?.pauseArming() }
     }
 
-    private func modeView(_ session: CookClockSession) -> some View {
-        LiveClock(LiveFeatures.cookClock, minimumInterval: 1, paused: scenePhase != .active) { context in
-            let _ = model.revision
-            let facts = Self.facts(session: session, model: model, now: AppClock.adjust(context.date))
-            ShellView(room: GalleyCookContent(facts: facts), navigator: navigator, accent: LandingAccent.kitchen) {
-                handle($0, session: session, facts: facts)
-            }
-            .environment(\.doorSummaryStyle, .ticket)
-            .environment(\.shellGlyphRoom, .galley)
-            .environment(\.shellScene) { _ in
-                AnyView(GalleyRail(tickets: GalleyCookContent.tickets(facts)) { opens in
-                    if case let .cookTimer(index) = opens {
-                        startTimer(index, session: session, facts: facts)
+    private func screen(_ session: CookClockSession, now: Date) -> some View {
+        let facts = Self.facts(session: session, model: model, now: now)
+        let data = GalleyCookScreen(facts)
+        return GalleyModeScreen(room: "Galley", topRight: data.topRight, back: { dismiss() },
+                                verb: { primary(session, data) })
+        {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(data.title)
+                    .font(GalleyPaper.plex(.bold, 26))
+                    .foregroundStyle(GalleyPaper.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .padding(.top, 4)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(data.number)
+                        .font(GalleyPaper.number(104))
+                        .foregroundStyle(Color(hex: 0x9C4B2C))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    Spacer(minLength: 12)
+                    if let heat = data.heat {
+                        Text(heat)
+                            .font(GalleyPaper.plex(.medium, 18))
+                            .foregroundStyle(GalleyPaper.ochre)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 150, alignment: .trailing)
                     }
-                })
-            }
-        }
-    }
-
-    // MARK: Intents
-
-    private func handle(_ intent: ShellIntent, session: CookClockSession, facts: GalleyCookFacts) {
-        switch intent {
-        case .back:
-            dismiss()
-        case .openItem:
-            // The whole sentence place is the tap for Next, so a knuckle works.
-            advance(session)
-        case let .action(id):
-            switch id {
-            case "next": advance(session)
-            case "timer": startTimer(facts.current, session: session, facts: facts)
-            case "read": TessSpeech.shared.say(session.text(of: session.current))
-            case "finish":
-                if session.finish(note: nil) {
-                    dismiss()
                 }
-            default: break
+                .frame(height: 112)
+                Text(data.instruction)
+                    .font(GalleyPaper.plex(.bold, 46))
+                    .foregroundStyle(GalleyPaper.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.55)
+                    .lineSpacing(-2)
+                    .fixedSize(horizontal: false, vertical: true)
+                if !data.how.isEmpty {
+                    Text(data.how)
+                        .font(GalleyPaper.plex(.regular, 19))
+                        .foregroundStyle(GalleyPaper.inkSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .padding(.top, 6)
+                }
+                if let done = data.doneWhen {
+                    section("Done when") {
+                        Text(done)
+                            .font(GalleyPaper.plex(.medium, 19))
+                            .foregroundStyle(GalleyPaper.ink)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.7)
+                    }
+                }
+                if !data.needs.isEmpty {
+                    section("Needs") {
+                        VStack(spacing: 5) {
+                            ForEach(Array(data.needs.enumerated()), id: \.offset) { _, need in
+                                GalleyLeaderRow(name: need.name, amount: need.amount)
+                            }
+                        }
+                        .frame(maxWidth: 230)
+                    }
+                }
+                if !data.timers.isEmpty || data.start != nil {
+                    section("Timers") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(data.timers) { timer in
+                                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                    Text(timer.time)
+                                        .font(GalleyPaper.number(26, weight: .bold))
+                                        .monospacedDigit()
+                                        .foregroundStyle(timer.ready ? GalleyPaper.wine : GalleyPaper.ink)
+                                        .contentTransition(.numericText(countsDown: true))
+                                    Text(timer.label)
+                                        .font(GalleyPaper.plex(.regular, 18))
+                                        .foregroundStyle(GalleyPaper.inkSecondary)
+                                        .lineLimit(1)
+                                }
+                                .accessibilityElement(children: .combine)
+                            }
+                            if let start = data.start {
+                                Button { startTimer(session, facts: facts) } label: {
+                                    Text(start)
+                                        .font(GalleyPaper.plex(.bold, 18))
+                                        .foregroundStyle(GalleyPaper.ochre)
+                                        .frame(minHeight: 36, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
             }
-        default:
-            break
+        } thumb: {
+            VStack(alignment: .leading, spacing: 0) {
+                GalleyModeReceipt()
+                HStack(alignment: .bottom) {
+                    GalleyModeVerb(word: data.verb, object: data.object, hold: data.hold) {
+                        primary(session, data)
+                    }
+                    Spacer(minLength: 8)
+                    GalleyModeRail(items: data.rail) { jump(session, to: $0) }
+                }
+            }
         }
     }
 
-    private func advance(_ session: CookClockSession) {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = session.next() }
+    private func section(_ title: String, @ViewBuilder _ body: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(GalleyPaper.plex(.bold, 13))
+                .tracking(13 * 0.1)
+                .foregroundStyle(GalleyPaper.inkSecondary)
+            body()
+        }
+        .padding(.top, 14)
     }
 
-    /// Starts the step's pan timer, or gives a running one a minute more.
-    private func startTimer(_ index: Int, session: CookClockSession, facts: GalleyCookFacts) {
-        if let line = session.timer(ofStep: index) {
-            session.extend(line, minutes: 1)
-        } else if index >= 0, facts.steps.indices.contains(index) {
-            let step = facts.steps[index]
-            session.startSpoken(label: step.short, minutes: step.panMinutes ?? 5)
+    // MARK: Doing
+
+    private func primary(_ session: CookClockSession, _ data: GalleyCookScreen) {
+        if data.hold {
+            if session.finish(note: nil) {
+                dismiss()
+            }
+        } else {
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = session.next() }
         }
+    }
+
+    /// Jumps to a step by walking the bead; a cook never skips a step's own timer start.
+    private func jump(_ session: CookClockSession, to target: Int) {
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            var guardSteps = session.steps.count
+            while session.current != target, guardSteps > 0 {
+                guardSteps -= 1
+                let moved = session.current < target ? session.next() : session.back()
+                if !moved {
+                    break
+                }
+            }
+        }
+    }
+
+    private func startTimer(_ session: CookClockSession, facts: GalleyCookFacts) {
+        guard let step = facts.step else { return }
+        session.startSpoken(label: step.short, minutes: step.panMinutes ?? 5)
     }
 
     private func begin() {
@@ -99,6 +195,7 @@ struct GalleyCookModePage: View {
     static func facts(session: CookClockSession, model: AppModel, now: Date) -> GalleyCookFacts {
         var facts = GalleyCookFacts()
         facts.recipe = session.isPrivate ? "Private recipe" : session.recipeName
+        facts.serves = session.serves
         facts.current = session.current
         facts.now = now
         facts.minutesLeft = Int(session.minutesLeft(at: now).rounded())
@@ -111,13 +208,16 @@ struct GalleyCookModePage: View {
             let text = session.text(of: index)
             let short = GalleyCookWords.short(text)
             let uses = Set(step.uses.map(\.id))
-            let ingredients = session.isPrivate ? [] : lines.filter { uses.contains($0.object.id) }.map(ledger)
+            let used = session.isPrivate ? [] : lines.filter { uses.contains($0.object.id) }
             let timer = session.timer(ofStep: index).map {
                 GalleyCookFacts.Timer(id: $0.id.uuidString, label: $0.label, endsAt: $0.endsAt)
             }
             return GalleyCookFacts.Step(index: index, short: short,
                                         how: GalleyCookWords.how(text, short: short),
-                                        ingredients: ingredients, heat: GalleyCues.heat(text),
+                                        ingredients: used.map(ledger),
+                                        needs: used.map(need),
+                                        line: GalleyCookWords.line(text),
+                                        heat: GalleyCues.heat(text),
                                         cue: GalleyCues.doneness(text),
                                         panMinutes: step.timers.first.map(\.lowerBound), timer: timer)
         }
@@ -129,11 +229,17 @@ struct GalleyCookModePage: View {
 
     /// "Chicken thighs 1 lb".
     static func ledger(_ line: RecipeBook.Line) -> String {
+        let parts = need(line)
+        return parts.amount.map { "\(parts.name) \($0)" } ?? parts.name
+    }
+
+    /// The name and its amount, split for the dotted leaders.
+    static func need(_ line: RecipeBook.Line) -> GalleyCookFacts.Need {
         let parts = line.line
-        guard let amount = parts.amount else { return parts.name }
+        guard let amount = parts.amount else { return .init(name: parts.name, amount: nil) }
         let number = amount.rounded() == amount ? String(Int(amount)) : String(format: "%g", amount)
         let unit = parts.unit.map { " \($0.rawValue)" } ?? ""
-        return "\(parts.name) \(number)\(unit)"
+        return .init(name: parts.name, amount: "\(number)\(unit)")
     }
 }
 

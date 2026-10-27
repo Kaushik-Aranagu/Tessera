@@ -10,29 +10,20 @@ struct GalleyCookModeTests {
         let timerStep = GalleyCookFacts.Timer(id: "t", label: "Brown", endsAt: now.addingTimeInterval(167))
         var facts = GalleyCookFacts()
         facts.recipe = "Tacos"
+        facts.serves = 2
         facts.current = current
         facts.now = now
         facts.minutesIn = 6
         facts.minutesLeft = 19
         facts.steps = [
-            .init(
-                index: 0,
-                short: "Char the peppers",
-                how: "Until blistered",
-                ingredients: ["Peppers 2"],
-                panMinutes: 4
-            ),
-            .init(
-                index: 1,
-                short: "Brown the chicken",
-                how: "Cumin and salt",
-                ingredients: ["Chicken thighs 1 lb", "Cumin 2 tsp"],
-                heat: "Medium high",
-                cue: "Turn it when it lets go of the pan",
-                panMinutes: 5,
-                timer: timer ? timerStep : nil
-            ),
-            .init(index: 2, short: "Soften the onion", how: "", ingredients: []),
+            .init(index: 0, short: "Char the peppers", how: "Until blistered", ingredients: ["Peppers 2"],
+                  needs: [.init(name: "Peppers", amount: "2")], line: "Char the peppers", panMinutes: 4),
+            .init(index: 1, short: "Brown the chicken", how: "Cumin and salt",
+                  ingredients: ["Chicken thighs 1 lb", "Cumin 2 tsp"],
+                  needs: [.init(name: "Chicken thighs", amount: "1 lb"), .init(name: "Cumin", amount: "2 tsp")],
+                  line: "Brown the chicken in the oil", heat: "Medium high",
+                  cue: "Turn it when it lets go of the pan", panMinutes: 5, timer: timer ? timerStep : nil),
+            .init(index: 2, short: "Soften the onion", how: "", line: "Soften the onion"),
         ]
         return facts
     }
@@ -44,63 +35,51 @@ struct GalleyCookModeTests {
         #expect(GalleyCookWords.how("Brown the chicken in the oil for 5 minutes.", short: "Brown the chicken")
             == "In the oil for 5 minutes")
         #expect(!GalleyCookWords.short("Serve it warm.").hasSuffix("."))
+        #expect(GalleyCookWords.line("Brown the chicken in the oil for 5 minutes. Then flip it.")
+            == "Brown the chicken in the oil for 5 minutes")
     }
 
-    @Test func clocksAndBands() {
+    @Test func clocks() {
         #expect(GalleyCookWords.clock(167) == "2:47")
         #expect(GalleyCookWords.clock(3905) == "1:05:05")
-        let facts = facts()
-        #expect(GalleyCookWords.band(facts) == ["6 min in", "3 steps, about 19 min to eat"])
-        #expect(GalleyCookWords.header(facts) == "Step 2 of 3")
-        #expect(GalleyCookWords.timerLine(facts) == "2:47 left on chicken")
-        #expect(GalleyCookWords.timerLine(self.facts(timer: false)) == nil)
-        #expect(GalleyCookWords.after(facts) == "Next, soften the onion")
+        #expect(GalleyCookWords.minutes(5) == "5 min")
     }
 
-    @Test func eachPlaceHasItsJob() throws {
-        let content = GalleyCookContent(facts: facts())
-        let screen = content.screen(for: .landing(GalleyCookContent.room), state: RoomState(dialFocus: 1))
-        #expect(screen.layout == .landing)
-        guard case let .title(title, _)? = screen[.title]?.payload else { throw Failure.none }
-        #expect(title == "Tacos")
-        guard case let .widget(items)? = screen[.widget]?.payload else { throw Failure.none }
-        #expect(items.first?.big == "Brown the chicken" && items.first?.trailing == "Medium high")
-        #expect(items.first?.middle == "Turn it when it lets go of the pan")
-        #expect(items.first?.header == "Step 2 of 3" && items.first?.small == "2:47 left on chicken")
-        guard case let .dial(doors)? = screen[.dial]?.payload else { throw Failure.none }
-        #expect(doors.map(\.name) == ["Char the peppers", "Brown the chicken", "Soften the onion"])
-        #expect(doors[1].count == "2:47" && doors[0].count == nil)
-        guard case let .summary(door)? = screen[.doorSummary]?.payload else { throw Failure.none }
-        #expect(door.lines == ["Chicken thighs 1 lb", "Cumin 2 tsp", "Pan time 5 min"])
-        guard case let .action(steps, _)? = screen[.actionWord]?.payload else { throw Failure.none }
-        #expect(steps.map(\.verb) == ["Next", "Timer", "Read", "Finish"])
-        #expect(steps.last?.hold == true && steps.first?.hold == false)
+    @Test func theWholeScreenReadsTopToBottom() {
+        let screen = GalleyCookScreen(facts())
+        #expect(screen.title == "Tacos for 2" && screen.topRight == "6 min in")
+        #expect(screen.number == "2" && screen.heat == "Medium high")
+        #expect(screen.instruction == "Brown the chicken in the oil" && screen.how == "Cumin and salt")
+        #expect(screen.doneWhen == "Turn it when it lets go of the pan")
+        #expect(screen.needs.map(\.name) == ["Chicken thighs", "Cumin"] && screen.needs.first?.amount == "1 lb")
+        #expect(screen.timers.map(\.time) == ["2:47"] && screen.timers.first?.ready == false)
+        #expect(screen.start == nil)
+        #expect(screen.verb == "Next" && screen.object == "Soften the onion" && !screen.hold)
+        #expect(screen.rail.map(\.label) == ["Char the peppers", "Brown the chicken", "Soften the onion"])
+        #expect(screen.rail.map(\.current) == [false, true, false] && screen.rail[0].done)
     }
 
-    @Test func theLastStepFinishesAndNoShownLineHasAStop() throws {
-        let last = GalleyCookContent(facts: facts(current: 2))
-        let screen = last.screen(for: .landing(GalleyCookContent.room), state: RoomState(dialFocus: 2))
-        guard case let .action(steps, _)? = screen[.actionWord]?.payload else { throw Failure.none }
-        #expect(steps.first?.verb == "Finish" && steps.first?.hold == true)
-        for place in [Place.title, .needs, .caption] {
-            if case let .lines(lines)? = screen[place]?.payload {
-                #expect(lines.allSatisfy { !$0.hasSuffix(".") })
-            }
+    @Test func aStepWithAPanTimeOffersToStartIt() {
+        let screen = GalleyCookScreen(facts(timer: false))
+        #expect(screen.timers.isEmpty && screen.start == "Start 5 min")
+    }
+
+    @Test func aDoneTimerReadsReadyAndTheLastStepFinishes() {
+        var facts = facts(current: 2)
+        facts.steps[1].timer = .init(id: "u", label: "Chicken", endsAt: now.addingTimeInterval(-5))
+        let screen = GalleyCookScreen(facts)
+        #expect(screen.timers.first?.time == "Ready" && screen.timers.first?.ready == true)
+        #expect(screen.verb == "Finish" && screen.hold && screen.object == "Tacos")
+    }
+
+    @Test func noShownLineEndsWithAFullStop() {
+        let screen = GalleyCookScreen(facts())
+        for line in [screen.title, screen.topRight, screen.instruction, screen.how, screen.heat ?? "",
+                     screen.doneWhen ?? "", screen.object]
+        {
+            #expect(!line.hasSuffix("."))
         }
     }
-
-    @Test func theRailHoldsTheStepAndEachPanTimer() {
-        var facts = facts()
-        facts.steps[0].timer = .init(id: "u", label: "Peppers", endsAt: now.addingTimeInterval(-5))
-        let tickets = GalleyCookContent.tickets(facts)
-        // The big ticket is the next step to prep; each running timer prints its time large.
-        #expect(tickets.map(\.id) == ["cook.step", "cook.timer.0", "cook.timer.1"])
-        #expect(tickets[0].big && tickets[0].title == "Get ready" && tickets[0].sub == "Soften the onion")
-        #expect(tickets[1].time == "Ready" && tickets[1].ink == .runsOut)
-        #expect(tickets[2].time == "2:47" && tickets[2].ink == .toGet)
-    }
-
-    private enum Failure: Error { case none }
 }
 
 @MainActor
@@ -110,54 +89,42 @@ struct GalleyShopModeTests {
         facts.aisles = [
             .init(name: "Produce", items: [.init(id: "a", name: "Onions", amount: "2", why: "For the tacos tonight"),
                                            .init(id: "b", name: "Limes", amount: nil, why: nil)]),
-            .init(name: "Dairy", items: [.init(id: "c", name: "Milk", amount: "1 gal", why: "You are low"),
-                                         .init(id: "d", name: "Eggs", amount: "12", why: nil),
-                                         .init(id: "e", name: "Butter", amount: nil, why: nil)]),
+            .init(name: "Dairy and eggs", items: [.init(id: "c", name: "Milk", amount: "1 gal", why: "You are low"),
+                                                  .init(id: "d", name: "Eggs", amount: "12", why: nil)],
+                  got: [.init(id: "x", name: "Butter", amount: nil, why: nil)]),
         ]
         facts.got = 4
         facts.tonight = "Tacos"
+        facts.tonightLines = ["Onions 2", "Limes"]
+        facts.tonightGot = [1]
         return facts
     }
 
-    @Test func wordsAndBand() {
-        let facts = facts()
-        #expect(GalleyShopWords.band(facts) == ["5 of 9 to get", "2 aisles to go"])
-        #expect(GalleyShopWords.header(facts, aisle: 1) == "Dairy, 2 of 2")
-        #expect(GalleyShopWords.after(facts.aisles[1]) == "After it, eggs, butter")
-        #expect(GalleyShopWords.after(.init(name: "Last", items: [facts.aisles[0].items[0]])) == "Last in this aisle")
-    }
-
-    @Test func notHereMovesAThingToTheEnd() {
-        let moved = GalleyShopWords.notHere(facts().aisles[1], item: "c")
-        #expect(moved.items.map(\.name) == ["Eggs", "Butter", "Milk"])
-    }
-
-    @Test func eachPlaceHasItsJob() throws {
-        let screen = GalleyShopContent(facts: facts()).screen(for: .landing(GalleyShopContent.room),
-                                                              state: RoomState(dialFocus: 1))
-        guard case let .widget(items)? = screen[.widget]?.payload else { throw Failure.none }
-        #expect(items.first?.big == "Milk" && items.first?.middle == "The date furthest out is at the back")
-        #expect(items.first?.small == "You are low" && items.first?.trailing == "Along the back wall")
-        #expect(items.first?.header == "Dairy, 2 of 2")
-        guard case let .dial(doors)? = screen[.dial]?.payload else { throw Failure.none }
-        #expect(doors.map(\.name) == ["Produce", "Dairy"] && doors.map(\.count) == ["2", "3"])
-        guard case let .summary(door)? = screen[.doorSummary]?.payload else { throw Failure.none }
-        #expect(door.lines == ["Milk 1 gal", "Eggs 12", "Butter"])
-        guard case let .action(steps, _)? = screen[.actionWord]?.payload else { throw Failure.none }
-        #expect(steps.map(\.verb) == ["Got", "Not here", "Pay"] && steps.last?.hold == true)
-        var withTonight = facts()
-        withTonight.tonightLines = ["Onions 2", "Limes"]
-        withTonight.tonightGot = [0]
-        #expect(GalleyShopContent.tickets(withTonight, aisle: 1)[1].struck == [0])
-        let rail = GalleyShopContent.tickets(facts(), aisle: 1)
-        #expect(rail.map(\.id) == ["shop.aisle", "shop.tonight"] && rail[0].lines == [
-            "Milk 1 gal",
-            "Eggs 12",
-            "Butter",
+    @Test func theWholeScreenReadsTopToBottom() {
+        let screen = GalleyShopScreen(facts(), aisle: 1)
+        #expect(screen.aisle == "Dairy and eggs" && screen.spot == "Along the back wall")
+        #expect(screen.topRight == "4 of 8 to get, tonight 1 of 2")
+        #expect(screen.thing == "Milk" && screen.amount == "1 gal" && screen.why == "You are low")
+        #expect(screen.tip == "The date furthest out is at the back")
+        #expect(screen.inAisle.map(\.name) == ["Milk", "Eggs", "Butter"] && screen.inAisle.map(\.struck) == [
+            false,
+            false,
+            true,
         ])
+        #expect(screen.after == nil && screen.verb == "Got" && screen.object == "Milk")
+        #expect(screen.rail.map(\.detail) == ["2", "2"] && screen.rail.map(\.current) == [false, true])
     }
 
-    private enum Failure: Error { case none }
+    @Test func theFirstAisleSaysWhatIsAfterIt() {
+        let screen = GalleyShopScreen(facts(), aisle: 0)
+        #expect(screen.spot == "Right by the doors" && screen.after == "Dairy and eggs, along the back wall")
+        #expect(screen.thing == "Onions" && screen.why == "For the tacos tonight")
+    }
+
+    @Test func anEmptyListSaysSo() {
+        let screen = GalleyShopScreen(GalleyShopFacts(), aisle: 0)
+        #expect(screen.empty && screen.topRight == "Nothing to get" && screen.rail.isEmpty)
+    }
 }
 
 struct GalleyCuesTests {

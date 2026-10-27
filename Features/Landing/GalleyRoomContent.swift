@@ -345,7 +345,6 @@ struct GalleyShellHost: View {
         case .recipes: link = .recipes
         case .groceries: link = .groceries
         case .pantry: link = .pantry
-        case .cookTimer: break
         }
     }
 
