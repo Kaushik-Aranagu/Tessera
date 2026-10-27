@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import TesseraCore
+import UIKit
 
 /// What happened, from the views' side (docs/design/motion/tess-motion.md §14). Views emit events; they never set
 /// her mode.
@@ -217,7 +218,7 @@ final class SoulRouter {
         case .claudeDone:
             // The lights gather first; Done begins as they land (§5).
             guard !isWorking else { return gather(thenDone: true) }
-            playDone()
+            playDone(blinks: true)
         case .liveAnswered, .setLogged, .swapped, .topSetAccepted, .workoutGathered:
             playDone()
         case .newBest:
@@ -359,7 +360,7 @@ final class SoulRouter {
             let next = queued
             if thenDone {
                 // Done plays as built; an ask that arrived during the gather starts when it ends.
-                playDone()
+                playDone(blinks: true)
                 queued = next
             } else {
                 queued = nil
@@ -440,9 +441,26 @@ final class SoulRouter {
         setWear(0)
     }
 
+    /// Sheet 290: Tess blinks once as her change lands, the way you blink after doing something. One blink, no loop,
+    /// no haptic of its own; Reduce Motion drops it.
+    private func blinkOnce() {
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
+        let blink = Date.now.addingTimeInterval(0.05)
+        strokeBlink = blink
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(0.6))
+            if self?.strokeBlink == blink {
+                self?.strokeBlink = nil
+            }
+        }
+    }
+
     /// Done's one-shot (1.8 s), then whatever was queued behind it, else rest.
-    private func playDone(then seconds: Double = 1.8) {
+    private func playDone(then seconds: Double = 1.8, blinks: Bool = false) {
         timer?.cancel()
+        if blinks {
+            blinkOnce()
+        }
         // A Done answers whatever thinking was queued behind the last one (F4).
         queued = nil
         mode = .done

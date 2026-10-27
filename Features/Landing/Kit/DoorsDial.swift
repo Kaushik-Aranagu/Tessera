@@ -49,6 +49,9 @@ struct DoorsDial: View {
     @State private var drag: CGFloat = 0
     @State private var cue = HapticCue()
     @State private var settledAt = Date.distantPast
+    /// Sheet 290, the detent: the new focus word settles 3 pt past its slot and back in 280 ms, like a dial clicking
+    /// into place. Zero at rest.
+    @State private var detent: CGFloat = 0
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
     private var large: Bool {
@@ -137,7 +140,7 @@ struct DoorsDial: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: style == .landing ? 160 : 190, alignment: style == .landing ? .trailing : .leading)
-        .offset(y: offset)
+        .offset(y: offset + (place == 0 ? detent : 0))
         .accessibilityLabel("\(door.name)\(door.count.map { ", \($0)" } ?? "")")
         .accessibilityAddTraits(place == 0 ? .isSelected : [])
         .accessibilityHint(place == 0 ? "Opens it" : "Turns to it")
@@ -198,6 +201,19 @@ struct DoorsDial: View {
         }
         cue.play(.selection)
         settledAt = Date()
+        click(delta)
+    }
+
+    /// The detent: as the spring arrives, the word goes 3 pt on in the direction it travelled (the list moves up when
+    /// the next door comes to the focus) and back, inside 280 ms. Reduce Motion drops it.
+    private func click(_ delta: Int) {
+        guard !reduceMotion else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            withTesseraAnimation(.easeOut(duration: 0.06), reduceMotion: reduceMotion) { detent = delta > 0 ? -3 : 3 }
+            try? await Task.sleep(for: .milliseconds(60))
+            withTesseraAnimation(.easeInOut(duration: 0.12), reduceMotion: reduceMotion) { detent = 0 }
+        }
     }
 }
 

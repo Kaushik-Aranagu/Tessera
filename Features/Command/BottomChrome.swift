@@ -228,6 +228,7 @@ struct BottomChrome: View {
                     if canUndo {
                         Button("Undo") { undo() }
                             .buttonStyle(InkLabelWordStyle.undo)
+                            .undoDries(id: slot?.text ?? "")
                     }
                 }
                 .padding(.vertical, Theme.Spacing.xs)
