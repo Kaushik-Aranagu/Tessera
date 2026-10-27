@@ -87,3 +87,14 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 - A short swipe (under 40 pt) springs back with a small overshoot and changes nothing. A swipe never picks the place, and a tap still does (sheet 360)
 - Builder A: a way is a `look` trait value on the part (`way: row | one | ladder`), so each way is a renderer of the same `row` part, not a new part. Number views carry `matchedGeometryEffect` keyed by the bound object id, which gives the flight for free. Core: a "show me other ways" sentence returns up to three `look` patches as variants; the room keeps them as unwritten previews, and Keep writes the chosen one as a normal op group
 - Probe: `docs/design/boards/r66/pvw.js` (three ways, nothing outside the keystone place and no overlap in any way, Keep and Undo, a short swipe changes nothing, the voice path)
+
+## Sheet 364: the room stays live
+
+- A room built by talking holds no copies of his data. Its parts are bound to his plants, so when one changes, the room re-ranks by itself, and that move is the proof
+- Watered the orchid: its 6 rolls down to 0 (one step every 40 to 60 ms), and it walks to the end of the row while the others close up. The wine glow hands over to the monstera only once the move has settled (the last 28% of the 520 ms), with one light haptic tick. The name in the line and in the caption ("the monstera is thirsty", "the monstera first") rises 0.4 em into place after 180 ms
+- The action word moves on to "Watered the monstera". The receipt reads "Orchid, watered" with Undo, and Undo plays the same move backwards (the number rolls back up to 6 and the orchid takes the glow again)
+- When all four are watered, the line reads "4 plants, all watered", the caption is just "Days since water", nothing glows, and the action word goes back to "Say anything else"
+- It works the same in every way from sheet 363. In the one-number way the monstera's 4 grows out of the side list into the big spot, and the orchid's 0 shrinks into the list's end
+- Reduce Motion: no roll, no walk, no rise. The room changes in place, and the haptic tick stays
+- Builder A: the re-rank is `ForEach` keyed by the bound object id, inside `withTesseraAnimation`, with `contentTransition(.numericText(countsDown:))` for the roll. The glow is a separate state that follows the ranking after a short delay, so it never travels with the old leader. Core: no new work. A bind resolves at render time, which R1 already specifies
+- Probe: `docs/design/boards/r66/plv.js` (order after watering, the glow and both sentences follow, Undo restores, all watered, nothing outside the keystone place)
