@@ -50,6 +50,9 @@ struct GalleyCookModeTests {
         #expect(screen.title == "Tacos for 2" && screen.topRight == "6 min in")
         #expect(screen.number == "2" && screen.heat == "Medium high")
         #expect(screen.instruction == "Brown the chicken in the oil" && screen.how == "Cumin and salt")
+        var dup = facts()
+        dup.steps[1] = .init(index: 1, short: "Heat the oven", how: "To 425°F", line: "Heat the oven to 425°F")
+        #expect(GalleyCookScreen(dup).how.isEmpty)
         #expect(screen.doneWhen == "Turn it when it lets go of the pan")
         #expect(screen.needs.map(\.name) == ["Chicken thighs", "Cumin"] && screen.needs.first?.amount == "1 lb")
         #expect(screen.timers.map(\.time) == ["2:47"] && screen.timers.first?.ready == false)
@@ -105,6 +108,7 @@ struct GalleyShopModeTests {
         #expect(screen.aisle == "Dairy and eggs" && screen.spot == "Along the back wall")
         #expect(screen.topRight == "4 of 8 to get, tonight 1 of 2")
         #expect(screen.thing == "Milk" && screen.amount == "1 gal" && screen.why == "You are low")
+        #expect(GalleyShopScreen(facts(), aisle: 0).amount == "\u{00D7} 2")
         #expect(screen.tip == "The date furthest out is at the back")
         #expect(screen.inAisle.map(\.name) == ["Milk", "Eggs", "Butter"] && screen.inAisle.map(\.struck) == [
             false,

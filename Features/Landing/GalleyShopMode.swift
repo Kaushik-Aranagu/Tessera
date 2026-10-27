@@ -90,7 +90,8 @@ struct GalleyShopScreen: Equatable {
         aisle = current.name
         spot = GalleyCues.aisleSpot(current.name)
         thing = GalleyCookWords.capital(first.name)
-        amount = first.amount
+        // A plain count reads "x 1": a lone "1" in the number face is only a stroke.
+        amount = first.amount.map { Double($0) != nil ? "\u{00D7} \($0)" : $0 }
         why = first.why
         tip = GalleyCues.pick(first.name)
         object = GalleyCookWords.capital(first.name)

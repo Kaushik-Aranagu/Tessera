@@ -176,7 +176,8 @@ struct GalleyCookScreen: Equatable {
         number = "\(step.index + 1)"
         heat = step.heat
         instruction = step.line.isEmpty ? step.short : step.line
-        how = step.how
+        // The instruction line already says what follows its few words: never say it twice.
+        how = instruction.lowercased().contains(step.how.lowercased()) ? "" : step.how
         doneWhen = step.cue
         needs = Array(step.needs.prefix(4))
         var rows = facts.steps.compactMap { other in
