@@ -12,7 +12,9 @@ struct LandingSwitcher: View {
     /// Needs change with the word.
     var changed: () -> Void = {}
 
-    static var size: CGSize { CGSize(width: 200, height: 76) }
+    static var size: CGSize {
+        CGSize(width: 200, height: 76)
+    }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drag = CGSize.zero
@@ -21,7 +23,9 @@ struct LandingSwitcher: View {
     @State private var cue = HapticCue()
 
     private var word: String {
-        if !vertical.isEmpty, vertical.indices.contains(verticalIndex), rolling { return vertical[verticalIndex] }
+        if !vertical.isEmpty, vertical.indices.contains(verticalIndex), rolling {
+            return vertical[verticalIndex]
+        }
         return across.indices.contains(acrossIndex) ? across[acrossIndex] : ""
     }
 
@@ -37,6 +41,8 @@ struct LandingSwitcher: View {
             }
         }
         .id(word)
+        // Sheet 297: the word under his finger fades through the frame's edge (22 pt, no lean: the drag skews it).
+        .edgeFade(axis: .horizontal, shift: drag.width * 0.5, placeLength: Self.size.width, reduceMotion: reduceMotion)
         .offset(x: drag.width * 0.5, y: drag.height * 0.3)
         .frame(width: Self.size.width, height: Self.size.height, alignment: .leading)
         .contentShape(Rectangle())
@@ -62,9 +68,11 @@ struct LandingSwitcher: View {
             insertion: .modifier(active: LetterStream(dx: 40 * CGFloat(direction), skew: 0, heavy: true),
                                  identity: LetterStream(dx: 0, skew: 0, heavy: false))
                 .animation(.spring(duration: 0.72, bounce: 0.2).delay(delay)),
-            removal: .modifier(active: LetterStream(dx: -40 * CGFloat(direction), skew: 24 * Double(direction), heavy: false),
-                               identity: LetterStream(dx: 0, skew: 0, heavy: false))
-                .animation(.easeIn(duration: 0.3).delay(Double(position) * 0.014))
+            removal: .modifier(
+                active: LetterStream(dx: -40 * CGFloat(direction), skew: 24 * Double(direction), heavy: false),
+                identity: LetterStream(dx: 0, skew: 0, heavy: false)
+            )
+            .animation(.easeIn(duration: 0.3).delay(Double(position) * 0.014))
         )
     }
 

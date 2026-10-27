@@ -276,8 +276,8 @@ final class BridgeStage {
 
     /// A swipe on the space: the next thing (left) or the previous (right), wrapping; whether the page turned.
     func turnThing(_ dx: CGFloat) -> Bool {
-        guard things.count > 1, abs(dx) > 50 else { return false }
-        thingIndex = ((thingIndex + (dx < 0 ? 1 : -1)) % things.count + things.count) % things.count
+        guard let step = OneThingSwipe.step(index: thingIndex, count: things.count, dx: dx) else { return false }
+        thingIndex = step.entering
         return true
     }
 
