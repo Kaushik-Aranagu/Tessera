@@ -43,7 +43,7 @@ struct RoutineScreen: Equatable {
     var summary = ""
     /// The closing screen (sheet 335): "Tended", its cue, and "5 of 5" as the time line.
     var tendedWord = "Tended"
-    var closingCue = "Sleep well"
+    var closingCue = "Evening tended. Sleep well"
     var closingCount = ""
 
     init(_ run: RoutineModeRun, name: String, totalMinutes: Int, now: Date, bookPage: Int? = nil, streak: Int? = nil) {

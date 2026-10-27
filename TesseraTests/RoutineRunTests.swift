@@ -195,9 +195,8 @@ struct RoutineFinishTests {
     @Test func theClosingScreenNeverSplitsItsCountAndOnlyCountsUp() {
         #expect(RoutineFinish.count(5, of: 5) == "5\u{00A0}of\u{00A0}5")
         #expect(!RoutineFinish.count(5, of: 5).contains(" "))
-        #expect(RoutineFinish.cue(streak: 6) == "Six days in a row now. Sleep well")
-        #expect(RoutineFinish.cue(streak: 1) == "Sleep well" && RoutineFinish.cue(streak: nil) == "Sleep well")
-        #expect(RoutineFinish.cue(streak: 25) == "25 days in a row now. Sleep well")
+        #expect(RoutineFinish.cue(streak: 6) == "Evening tended. Sleep well")
+        #expect(RoutineFinish.cue(streak: nil) == "Evening tended. Sleep well")
         let calendar = Calendar(identifier: .gregorian)
         let today = calendar.startOfDay(for: Date(timeIntervalSinceReferenceDate: 800_000_000))
         let days = Set((0 ..< 3).compactMap { calendar.date(byAdding: .day, value: -$0, to: today) })

@@ -35,15 +35,9 @@ enum RoutineFinish {
         "\(tended)\u{00A0}of\u{00A0}\(total)"
     }
 
-    private static let words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
-                                "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen",
-                                "nineteen", "twenty"]
-
-    /// "Six days in a row now. Sleep well"; one night is only "Sleep well".
-    static func cue(streak: Int?) -> String {
-        guard let streak, streak >= 2 else { return "Sleep well" }
-        let number = streak <= words.count ? words[streak - 1].capitalized : "\(streak)"
-        return "\(number) days in a row now. Sleep well"
+    /// Nothing counts a streak (Core's rule); until Design sends a cue, the closing line is this.
+    static func cue(streak _: Int?) -> String {
+        "Evening tended. Sleep well"
     }
 
     /// Days in a row ending today, from the days the routine was tended (one per Tessera day).
