@@ -67,6 +67,18 @@ struct TessZoomToolTests {
         #expect(!ToolPicker.pick("plan my week please", frame: frame).tools.contains(TessZoomTool.name))
     }
 
+    @Test func zoomNeverCutsACallHisWordsNamed() throws {
+        // Named calls, the guide and zoom in one ask: zoom goes in after the calls that lead, so the cut to
+        // maxTools can only drop a shown call or a read, never one he named.
+        let frame = ElementLooksTests().deckFrame()
+        let pick = ToolPicker.pick("how do I start a workout from here like I did last week", frame: frame)
+        #expect(!pick.matched.isEmpty && pick.matched.allSatisfy { pick.tools.contains($0) }, "\(pick.tools)")
+        #expect(pick.tools.count <= ToolPicker.maxTools)
+        let guide = try #require(pick.tools.firstIndex(of: TessGuide.name))
+        let zoom = try #require(pick.tools.firstIndex(of: TessZoomTool.name))
+        #expect(zoom == guide + 1 && pick.tools.prefix(guide).allSatisfy { pick.matched.contains($0) })
+    }
+
     @Test func thePackSaysHowPathsLookOnlyWithZoom() throws {
         let helper = TessRunTests()
         let r = try helper.rig([:])
@@ -96,6 +108,23 @@ struct TessZoomToolTests {
         let unsure = TessZoomTool.line(for: ask, pyramid: pyramid, router: PyramidRouter(sure: 2), policy: .lab,
                                        now: world.now, calendar: EvalWorld.calendar)
         #expect(unsure == TessZoomTool.contentsLine)
+    }
+
+    @Test func aZoomRunsAtOnceEvenWhenTheReplyIsCutOff() async throws {
+        // A read (H5): it runs the moment its block closes, so a reply cut off at the token limit still gets it.
+        #expect(ToolPicker.runAtOnce.contains(TessZoomTool.name))
+        let helper = TessRunTests()
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [helper.use("t1", TessZoomTool.name, #"{"path":"/time/2026/10"}"#),
+             .done(BrainUsage(), stop: "max_tokens")],
+            [.text("Asking again.")],
+        ])
+        let r = try helper.rig([.haiku: haiku])
+        let pyramid = pyramid
+        r.run.pyramidSource = { pyramid }
+        _ = await helper.collect(r.run.ask("how many sets in october"))
+        let seen = helper.sentResults(haiku)
+        #expect(seen["t1"]?.isError == false && seen["t1"]?.text == pyramid.zoom("/time/2026/10", policy: .lab).text)
     }
 
     @Test func herRungZoomsInTheRun() async throws {

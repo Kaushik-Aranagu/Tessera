@@ -495,7 +495,7 @@ public final class TessRun {
                         sink(.words(piece))
                     case let .toolUse(id, name, input):
                         uses.append((id, name, input))
-                        guard ToolPicker.reads.contains(name) else {
+                        guard ToolPicker.runAtOnce.contains(name) else {
                             waiting.append((id, name, input))
                             break
                         }
@@ -680,7 +680,7 @@ public final class TessRun {
             }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
             result = ("Shown.", false)
-        case _ where rehearsal?.runID == runID && rehearsal?.slow == true && !ToolPicker.reads.contains(name):
+        case _ where rehearsal?.runID == runID && rehearsal?.slow == true && !ToolPicker.runAtOnce.contains(name):
             // A rehearsal that ran out of time proved nothing: she asks him instead of writing unrehearsed.
             result = (Self.slowRehearsal, true)
         default:

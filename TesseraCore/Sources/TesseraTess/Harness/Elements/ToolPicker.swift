@@ -35,6 +35,9 @@ public enum ToolPicker {
     public static let maxTools = 12
     /// The reads every ask may use.
     static let reads = ["query", "open", "recall"]
+    /// The reads that run the moment their block closes, before the reply ends (H5): every ask's reads, and `zoom`,
+    /// which is offered only on an ask about his past.
+    static let runAtOnce: Set<String> = Set(reads).union([TessZoomTool.name])
     /// A bound call is a short command; a longer ask has more in it than the frame can fill.
     static let boundWords = 6
 

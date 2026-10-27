@@ -283,7 +283,8 @@ Each has a pass line set before it runs. A failure gets written up here too.
    - Pass: fewer rounds per ask than flat recall.
    - **Wired (Swift, Oct 27), not yet scored:** `TessZoomTool` (`zoom(path)`) reads one node through
      `MemoryPyramid.zoom` under the Door's policy. The picker offers it on an ask about his past ("last week", "when
-     did I", a month name), right after the calls that lead. When it is offered, the pack carries one line on how
+     did I", a month name), right after the calls that lead, so it never cuts a call he named. Like the
+     other reads it runs the moment its block closes (H5, `ToolPicker.runAtOnce`). When it is offered, the pack carries one line on how
      paths look, plus "Start at <path>" when the router is sure of a day or a month. A path with nothing there names
      the nearest node above it. `TessRun` builds the pyramid from his store and keeps it until the store changes or
      the day turns. The walk budget is the run's round limit, and a day lists its leaves by path, so cites reach a
