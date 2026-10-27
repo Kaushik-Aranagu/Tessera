@@ -27,6 +27,7 @@ per-app page and this sheet differ, this sheet wins; tell Design.
 - Each app has exactly one allowed line kind (its signature line). No second line kind.
 - Sentences are computed on the phone from fixed templates. Walled titles, money values
   and actions, health, body and calorie facts never reach Claude, logs, backups or widgets.
+  (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; money tools are offered to Claude as they exist since his 12:28 PM Oct 27 card answer (today logSpend; the rest have no tool yet) (each change pending with 10 s Undo, "Reversed"; room agents have no money tools); the backup, log, widget and screen walls stay.)
 - Motion only through MotionPolicy; Reduce Motion is a plain crossfade or appear.
 
 ## 2. Per app (v2, Kaushik's picks Oct 22 08:56 AM PDT; record artifact P5nUSTJ2ygJUvfABSDGet2)

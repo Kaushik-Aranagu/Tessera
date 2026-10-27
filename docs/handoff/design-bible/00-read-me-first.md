@@ -52,7 +52,7 @@ Tessera is Kaushik's private iPhone app (SwiftUI, iOS 27), an "OS inside an app"
   - No money on Home. Weeks start Monday. Sample data until production.
   - Health, body, calendar, calories, location and money never reach widgets, backups or logs.
   - Private items show as "Private …" or as a count off the phone.
-  - Money actions are never offered to Claude.
+  - Money actions are never offered to Claude. (Superseded Oct 27, 12:28 PM, by Kaushik's card answer: Claude may propose money changes, each pending with a 10 s Undo worded "Reversed"; see docs/product/decisions.md. Room agents still have no money tools.)
   - Free APIs only.
 - **Motion:**
   - Everything goes through MotionPolicy (springs, haptics).

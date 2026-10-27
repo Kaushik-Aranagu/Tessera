@@ -10,7 +10,7 @@ For: Product. From: AI architecture. Read against master ae3796f (after Core #86
 - The Claude key and key-shaped text: refused in `TessRouter` and again in the Claude route.
 - Siri and Shortcuts captures: they commit at once and never send (`siriAndShortcutsNeverReachClaude`).
 - A walled phrase the grammar already answered with a question or refusal stays on the phone.
-- The count tool `answerQuery` reads an allow-list of classes only; money, body and his own classes are never counted for Claude.
+- The count tool `answerQuery` reads an allow-list of classes only; money, body and his own classes are never counted for Claude. (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 - Claude's reply is not spoken back for a walled phrase: the masked receipt shows, and the notice does not quote the phrase.
 
 **Money and body, plainly:** they can reach Claude only inside the phrase he typed or spoke. They cannot come from the pack, the tools or any stored object. Product's wording "money and body never" is true for every job except this one door.

@@ -102,6 +102,11 @@ struct RehearseFlagsTests {
         let spend = try JSONSerialization.data(withJSONObject: ["calls": [["name": "logSpend", "arguments": "{}"]]])
         let refused = r.run.rehearsed(spend, runID: UUID(), onDevice: false, offered: offered)
         #expect(refused.isError && refused.text == "Only calls offered here can be rehearsed, not logSpend")
+        // A name Tess doesn't have is the model's own words, so it is never read back.
+        let call = ["name": "locker 4-27-19", "arguments": "{}"]
+        let made = try JSONSerialization.data(withJSONObject: ["calls": [call]])
+        let unknown = r.run.rehearsed(made, runID: UUID(), onDevice: false, offered: offered)
+        #expect(unknown.isError && unknown.text == "Only calls offered here can be rehearsed")
     }
 
     @Test func aRehearsalThatRunsOutOfTimeStopsEveryWriteInTheAsk() async throws {
