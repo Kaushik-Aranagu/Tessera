@@ -24,7 +24,7 @@ struct CookReadyActivityTests {
     @Test("The ready colour is wine 9A2541 mixed 45% toward white")
     func wine() {
         let wine = CookFace.readyWine
-        #expect(wine.red == 199 && wine.green == 135 && wine.blue == 150)
+        #expect(wine.red == 199 && wine.green == 135 && wine.blue == 151)
         let none = CookFace.mix(red: 10, green: 20, blue: 30, towardWhite: 0)
         #expect(none.red == 10 && none.green == 20 && none.blue == 30)
         let all = CookFace.mix(red: 10, green: 20, blue: 30, towardWhite: 1)
