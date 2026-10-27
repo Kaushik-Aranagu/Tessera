@@ -71,9 +71,18 @@ tool `writeGist` whose cites can only name the children it was shown.
 strict never sends a walled line (and its material is identical to a pyramid built without the walled leaves), a
 night writes every gist bottom up, and one edit stales only its chain's gists.
 
-**The live score (queued, waits for his go):** on the Mac with his key, refresh the test world's pyramid with Haiku
-under strict, then ask the test-world questions at three depths through zoom and through flat recall. Record
-accuracy, input tokens and the drop counts by reason. Pass line as in P1b below.
+**The live score** (`scripts/ai/pyramid-score.sh`, Kaushik's go Oct 27; runs on the Mac with the key there):
+
+- Haiku writes the gists, bottom up, for the nodes the questions read: the test world's last six months and their
+  year. The report counts sentences kept and dropped by reason, words per level, and a few samples.
+- `PyramidScore` asks test-world questions at three depths, every answer computed from the world: a day (sets, the
+  routine), a month (workouts, the day with the most sets) and a pattern (the routine or recipe he came back to most,
+  the month that led the year). The node is given, not found, so this scores what a node holds; finding it is P2.
+- Each question is asked three ways: the leaves themselves (flat), one zoom, and one zoom with gists.
+- Spend goes through the Door and the runners' one ledger (`~/Library/Application Support/TessEval/ledger.json`),
+  with the live runner's allowance: the smaller of $50 and $100 minus the phone's month, minus what runners spent.
+- Under strict, every sent request is scanned for a walled leaf's words and for a key shape.
+- Pass line: zoom with gists at least as accurate as flat, with at most 70% of its input tokens.
 
 ## Beyond the app: memory for anything Tess lives through
 
