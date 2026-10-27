@@ -53,3 +53,14 @@ The design and its reasons are on the Tess-built rooms page (`index.html` here; 
 - Builder A: the pick is `RoomState`-level UI, not a patch (it writes nothing). Core: the job's context sends the picked place's part ids first, and the validator refuses a patch that touches other places while one is picked, with "That changes more than the keystone. Say it again without picking?"
 - Reduce Motion: the line appears without the 220 ms fade
 - Probe: `docs/design/boards/r66/ppt.js`
+
+## Sheet 361: the two ways Tess says no
+
+The board's Chart room now has six sentences. Two new ones come before "Let me mark one watered", one for each way a change can't happen as asked.
+
+- **A rule says no.** "Put a box around each plant" breaks the house rule (no cards or boxes). Nothing changes and no ghost appears. After the heard line, Tess answers in her own voice in the widget place (Newsreader italic 20 pt, ink): "No boxes in this house. Bigger numbers instead?" The receipt reads "Boxes, not here" with the button "Bigger numbers". Tapping it runs the offer as a normal change: ghost, drying line, set ("Numbers, bigger", Undo; the keystone numerals go 64 to 80 pt)
+- **The kit says not yet.** "Make the keystone a ring of pots I can spin" needs a part the kit doesn't have. Nothing changes now. Tess says "A ring that spins is a new kind of part. I'm building it on the Mac, and it comes with your next install". The receipt reads "Ring, queued for your next install" with Undo, which takes it off the queue
+- Tess never says "can't" or "error". A refusal names the rule in plain words and, where one exists, offers the nearest thing the rules allow
+- The action word's small line keeps his own capitals ("make the keystone a ring of pots I can spin")
+- Core: a validator rejection that has a nearest allowed change returns it as `offer` (a patch) with the reason line, so the receipt's button can run it with no second model call. A kit miss returns `queue: <part name>` for R5's Mac part builder; until R5, the queue is a list in the room's settings that the install notes read
+- Probe: `docs/design/boards/r66/pno.js` (no ghost on refusal, keystone unchanged, offer runs, queue set). `pch.js` now walks all six sentences
