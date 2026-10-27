@@ -1,12 +1,9 @@
 const {chromium}=require('/opt/node22/lib/node_modules/playwright');
 (async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
-await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
-await pg.evaluate(()=>go('shop'));await pg.waitForTimeout(900);
-await pg.evaluate(()=>document.querySelector('[data-a="skip"]').closest('[data-a]'));
-const r=await pg.evaluate(()=>{const n=[...document.querySelectorAll('[data-a^="it"] .tn')].map(x=>x.textContent);return n});
-await pg.evaluate(()=>{const pad=document.querySelector('.tk-pad');const t=document.querySelector('[data-a="skip"]').getBoundingClientRect();for(const ty of ['pointerdown','pointerup'])pad.dispatchEvent(new PointerEvent(ty,{clientX:t.x+5,clientY:t.y+5,bubbles:true,pointerId:1}))});
-await pg.waitForTimeout(20);const an=await pg.evaluate(()=>document.getAnimations().length);
-await pg.evaluate(()=>document.getAnimations().forEach(a=>{a.pause();a.currentTime=150}));await pg.screenshot({path:'SK1.png'});
-await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));
-const r2=await pg.evaluate(()=>[...document.querySelectorAll('[data-a^="it"] .tn')].map(x=>x.textContent));
-console.log(r,r2,'anims',an,errs);await b.close()})();
+await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(700);
+await pg.evaluate(()=>go('chart'));const t0=Date.now();const r={};
+for(const t of [250,520,800,1300]){await pg.waitForTimeout(Math.max(0,t-(Date.now()-t0)));r['t'+t]=await pg.evaluate(()=>[...document.querySelectorAll('.ch-pl')].map(p=>{const a=p.getAnimations()[0];return a?Math.round((a.effect.getComputedTiming().progress??0)*100):'done'}));await pg.screenshot({path:'SK'+t+'.png'})}
+// reduced motion: no animations at all
+const pg2=await b.newPage({viewport:{width:402,height:874},reducedMotion:'reduce'});await pg2.goto('file://'+__dirname+'/index.html');await pg2.waitForTimeout(700);await pg2.evaluate(()=>go('chart'));await pg2.waitForTimeout(100);
+r.rm=await pg2.evaluate(()=>[...document.querySelectorAll('.ch-pl')].map(p=>p.getAnimations().length).join(''));
+console.log(JSON.stringify(r),errs);await b.close()})();

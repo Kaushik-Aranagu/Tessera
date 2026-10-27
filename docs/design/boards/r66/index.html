@@ -2877,6 +2877,13 @@ function chartLabel(d,f){const R=ROOMS.chart;if(R.shown===R.n)return R.n;
 SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for. I’ll build it a piece at a time.',render(el){el.classList.add('chart');el.style.setProperty('--room','var(--slate)');
  const PL={title:[24,50,260,48,'Title'],line:[24,106,354,76,'Line'],key:[24,196,354,182,'Keystone'],cap:[24,378,354,34,'Caption'],wid:[24,412,354,200,'Widget'],doors:[24,640,354,120,'Doors']};
  const pls={};Object.entries(PL).forEach(([k,[x,y,w,hh,n]])=>{const p=h('div','ch-pl','<i>'+n+'</i>');p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px;--d:'+Math.round((y-50)/4)+'ms';el.appendChild(p);pls[k]=p});
+ /* 366: the frame sketches itself. On a blank room each place's outline unrolls from its top left corner, where its
+    name sits, one place after the next down the screen, and the name slides in once its corner is drawn, like a frame
+    pencilled in before anything is put in it. 300 ms after the room arrives, so the move in is over first.
+    Reduce Motion: the outlines are simply there */
+ if(!RM)Object.values(pls).forEach((p,i)=>{const d=300+i*70;
+  p.animate([{clipPath:'inset(0 100% 100% 0 round 12px)'},{clipPath:'inset(0 0 0 0 round 12px)'}],{duration:440,delay:d,easing:'cubic-bezier(.3,.7,.2,1)',fill:'backwards'});
+  p.querySelector('i').animate([{opacity:0,transform:'translateX(-4px)'},{opacity:.7,transform:'none'}],{duration:240,delay:d+140,easing:'ease-out',fill:'backwards'})});
  const P0=[{n:'Orchid',d:6},{n:'Monstera',d:4},{n:'Fern',d:2},{n:'Basil',d:1}];let plants=P0.map(p=>({...p})),at=0,reach=false,dry=null;
  const SAY=[
   {s:'Make this my plant room',fills:['title','line'],r:'Plants, set'},
@@ -3005,7 +3012,7 @@ MAP.length=0;MAP.push(
  {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
-MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363). Watered re-ranks the room live (364). Back on Bridge, the apps dial carries the room after Purse, renamed once he names it (365).'});
+MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363). Watered re-ranks the room live (364). Back on Bridge, the apps dial carries the room after Purse, renamed once he names it (365). The blank frame sketches itself in as the room opens (366).'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
 
 /* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.
