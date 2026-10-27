@@ -1302,90 +1302,108 @@ SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 to
  const d1=h('div','tdoor','<b>This week</b><span><span style="color:var(--training)">3</span> of 6 done. <span style="color:var(--teal)">Pull A</span> tomorrow.</span>');d1.style.top='570px';el.appendChild(d1);
  const d2=h('div','tdoor','<b>Library</b><span>28 workouts in 6 kinds. <span style="color:var(--gold)">New: hill sprints.</span></span>');d2.style.top='644px';el.appendChild(d2);
  const f=h('button','foot','Start Push A');f.style.color='var(--training)';f.onclick=()=>go('workout');el.appendChild(f);return stop}};
-/* ---------- 321 Workout mode (his 2:02 AM note: "starting a workout and doing the selected routine ... cooler and
-   accurate and useful"). The mode keeps every place of the Deck landing, so nothing moves under a sweaty thumb; each
-   place changes job. Title: the workout. Band: time in, time left. Keystone: the blackboard is the live set (the lift,
-   its sets in chalk, done ones ticked; during rest the rest is twelve chalk strokes, one wiped every ten seconds).
-   Sentence place: the set you are on, weight in the number face; drag it up or down by 5 lb. Dial: the lifts, so you
-   can do them in any order; the summary beside it is that lift's ledger. Action: Done logs the set and starts the rest;
-   swipe for Rest, Lighter, Finish (Finish asks for a hold). Undo 10 s on every log. */
 SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last time all three sets were five.',render(el){
- const LIFTS=[{k:'Warm up',name:'Row, easy',sets:[{w:8,u:'min'}],rest:30,last:'8 min, 1,610 m'},
-  {k:'Bench',name:'Bench press',sets:[{w:185,r:5},{w:185,r:5},{w:185,r:5}],rest:150,last:'185 × 5, 5, 5',best:'205, three weeks ago'},
-  {k:'Press',name:'Overhead press',sets:[{w:95,r:8},{w:95,r:8},{w:95,r:8}],rest:120,last:'95 × 8, 8, 7',best:'100, Oct 9'},
-  {k:'Cable row',name:'Cable row',sets:[{w:110,r:10},{w:110,r:10},{w:110,r:10}],rest:90,last:'110 × 10, 10, 10',best:'120, Oct 2'},
-  {k:'Triceps',name:'Triceps extension',sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}],rest:60,last:'40 × 12, 12, 12'}];
- const S={li:0,phase:'lift',rest:0,restOf:0,t0:Date.now()-60000*0,done:LIFTS.map(()=>0),log:[],end:0};window.__wo={S,LIFTS};
+ /* 325 (his 2:39 AM note: "better designed, better fonts, better information"). What a lifter needs between sets is on
+    the screen at arm's length: the weight and reps in Barlow Condensed at scoreboard size, the plates to put on each side
+    drawn on the blackboard's bar, last time's same set, the estimated max, and how the set felt (Easy, Right, Hard),
+    which sets the next weight. The band is the clock: time in, and when you will be done. */
+ const BAR=45,PL=[45,35,25,10,5,2.5];
+ const LIFTS=[{k:'Warm up',name:'Row, easy',kind:'cardio',sets:[{w:8,u:'min'}],rest:30,last:'8 min, 1,610 m',pace:'2:05 per 500 m'},
+  {k:'Bench',name:'Bench press',kind:'bar',sets:[{w:185,r:5},{w:185,r:5},{w:185,r:5}],rest:150,prev:[[185,5],[185,5],[185,5]],best:[205,1],bestWhen:'three weeks ago'},
+  {k:'Press',name:'Overhead press',kind:'bar',sets:[{w:95,r:8},{w:95,r:8},{w:95,r:8}],rest:120,prev:[[95,8],[95,8],[95,7]],best:[100,6],bestWhen:'Oct 9'},
+  {k:'Cable row',name:'Cable row',kind:'stack',sets:[{w:110,r:10},{w:110,r:10},{w:110,r:10}],rest:90,prev:[[110,10],[110,10],[110,10]],best:[120,10],bestWhen:'Oct 2'},
+  {k:'Triceps',name:'Triceps extension',kind:'stack',sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}],rest:60,prev:[[40,12],[40,12],[40,11]]}];
+ const S={li:0,phase:'lift',rest:0,restOf:0,t0:Date.now(),done:LIFTS.map(()=>0),log:[],feel:null,pending:null};window.__wo={S,LIFTS};
  const L=()=>LIFTS[S.li],next=l=>l.sets[S.done[LIFTS.indexOf(l)]],left=l=>l.sets.length-S.done[LIFTS.indexOf(l)];
  const mins=()=>Math.floor((Date.now()-S.t0)/60000),mmss=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
- const wt=st=>st.u?st.w+' '+st.u:st.w+' lb × '+st.r;
- const total=()=>S.log.reduce((a,x)=>a+(x.r?x.w*x.r:0),0);
+ const e1=(w,r)=>Math.round(w*(1+r/30)),total=()=>S.log.reduce((a,x)=>a+(x.r?x.w*x.r:0),0);
+ const perSide=w=>{let x=(w-BAR)/2,out=[];for(const p of PL)while(x>=p-1e-9){out.push(p);x-=p}return out};
+ const restLeftAll=()=>LIFTS.reduce((a,l,i)=>a+(l.sets.length-S.done[i])*(l.rest+(l.kind==='cardio'?l.sets[0].w*60:45)),0);
+ const endAt=()=>{const d=new Date(Date.now()+restLeftAll()*1000);return (d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0')};
+ const BC="font-family:'Barlow Condensed',sans-serif";
  let H={},wbox,blk,tick=0;
- // the sentence place, live
- const widget=()=>{wbox=h('div','one lw wo mode');wbox.style.zIndex=6;blk=h('div','blk');wbox.appendChild(blk);
-  let y0=null,acc=0;wbox.onpointerdown=e=>{if(S.phase!=='lift'||L().sets[0].u)return;y0=e.clientY;acc=0;wbox.setPointerCapture(e.pointerId)};
-  wbox.onpointermove=e=>{if(y0==null)return;const dy=(e.clientY-y0)/K;if(Math.abs(dy-acc)>16){const st=next(L());if(!st)return;const d=dy-acc<0?5:-5;L().sets.slice(S.done[S.li]).forEach(x=>x.w=Math.max(5,x.w+d));acc=dy;pulse();paint()}};
-  wbox.onpointerup=()=>{y0=null};wbox.onclick=()=>{if(S.phase==='rest'){S.rest=0;endRest()}};
-  return {box:wbox,start:()=>{},stop:()=>{}}};
  const pulse=()=>{if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}};
+ // the sentence place: a scoreboard
+ const widget=()=>{wbox=h('div','one lw wo mode');wbox.style.zIndex=6;blk=h('div','blk wob');wbox.appendChild(blk);
+  let y0=null,acc=0,moved=0;wbox.onpointerdown=e=>{if(e.target.closest('.feel'))return;moved=0;if(S.phase!=='lift'||L().kind==='cardio')return;y0=e.clientY;acc=0;wbox.setPointerCapture(e.pointerId)};
+  wbox.onpointermove=e=>{if(y0==null)return;const dy=(e.clientY-y0)/K;if(Math.abs(dy-acc)>16){if(!next(L()))return;const d=dy-acc<0?(L().kind==='bar'?5:5):-5;L().sets.slice(S.done[S.li]).forEach(x=>x.w=Math.max(L().kind==='bar'?BAR:5,x.w+d));acc=dy;moved=1;pulse();paint()}};
+  wbox.onpointerup=()=>{y0=null};wbox.onclick=e=>{const f=e.target.closest('[data-feel]');if(f){setFeel(f.dataset.feel);return}if(!moved&&S.phase==='rest'){S.rest=0;endRest()}};
+  return {box:wbox,start:()=>{},stop:()=>{}}};
+ function setFeel(v){S.feel=v;const last=S.log[S.log.length-1];if(last)last.feel=v;const l=LIFTS[last?last.li:S.li],i=LIFTS.indexOf(l);
+  if(last&&last.r&&S.done[i]<l.sets.length){const d=v==='Easy'?5:v==='Hard'?-5:0;if(d){l.sets.slice(S.done[i]).forEach(x=>x.w+=d);receipt(el,(d>0?'Up':'Down')+' 5 lb for the next set')}}pulse();blk._key='';paint()}
  function card(){const l=L(),st=next(l);
-  if(S.phase==='done')return {hdr:'Finished',big:String(Math.max(1,mins())),unit:'min',mid:S.log.filter(x=>x.r).length+' sets, about '+total().toLocaleString()+' lb moved',sml:'A best on press, 100 lb'};
-  if(S.phase==='rest'){const nl=LIFTS[S.li],ns=next(nl);return {hdr:'Rest',big:mmss(S.rest),mid:ns?'Next, '+nl.name.toLowerCase()+', '+wt(ns):'Next, '+(LIFTS.find(x=>left(x))||nl).name.toLowerCase(),sml:'Tap to start now',c:'var(--ink)'}}
-  if(!st)return {hdr:l.name,big:'Done',mid:'All '+l.sets.length+' sets',sml:'Turn the dial for the next lift'};
-  if(st.u)return {hdr:'Warm up',big:String(st.w),unit:'min',mid:l.name,sml:'Last time '+l.last};
-  return {hdr:'Set '+(S.done[S.li]+1)+' of '+l.sets.length,big:String(st.w),unit:'lb',reps:st.r,mid:l.name+', '+st.r+' reps',sml:'Last time '+l.last}}
- let was='';
- function paint(){const c=card();const col=c.c||'var(--training)';
-  const key=c.hdr+'|'+c.mid;const bigTxt=c.big+(c.unit||'')+(c.reps||'');
-  if(blk._key!==key||!blk.querySelector('.bn')){blk.innerHTML='<div class="hdr" style="color:'+col+'">'+c.hdr+'</div><div class="big"><span class="bn" style="color:'+col+'"><span class="o">'+c.big+'</span>'+(c.unit?'<span class="u" style="font-size:28px">'+c.unit+'</span>':'')+(c.reps?'<span class="x">×</span><span class="o r">'+c.reps+'</span>':'')+'</span></div><div class="mid">'+c.mid+'</div><div class="sml">'+c.sml+'</div>';
-   if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:360,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
-  else{const o=blk.querySelector('.bn .o');const w0=o.textContent;if(w0!==c.big){o.textContent=c.big;numRoll(o,w0)}const sm=blk.querySelector('.sml');if(sm.textContent!==c.sml)sm.textContent=c.sml}
-  if(H.band){H.band.innerHTML='<div class="ln">'+(S.phase==='done'?'Done in '+Math.max(1,mins())+' min':mins()+' min in')+'</div><div class="ln">'+(S.phase==='done'?'All '+LIFTS.length+' lifts':LIFTS.filter(x=>left(x)).length+' of '+LIFTS.length+' lifts to go')+'</div>'}
+  if(S.phase==='done'){const best=S.log.some(x=>x.li===2&&x.w>=100);return {hdr:'Finished',big:String(Math.max(1,mins())),unit:'min',l1:S.log.filter(x=>x.r).length+' sets, '+total().toLocaleString()+' lb moved',l2:(total()>=8700?(total()-8700).toLocaleString()+' lb more than last Push A':'A lighter day than last time')+(best?', a press best':'')}}
+  if(S.phase==='rest'){const nl=LIFTS[S.pending??S.li],ns=next(nl);return {hdr:'Rest',big:mmss(S.rest),tab:1,l1:ns?'Next '+nl.name.toLowerCase()+', '+(ns.u?ns.w+' min':ns.w+' × '+ns.r):'Next, '+(LIFTS.find(x=>left(x))||nl).name.toLowerCase(),feel:S.log.length&&S.log[S.log.length-1].r?1:0}}
+  if(!st)return {hdr:l.name+', done',big:String(l.sets.length),unit:'sets',l1:'Turn the dial for the next lift',l2:l.sets.map(x=>x.w+' × '+x.r).join(', ')};
+  if(l.kind==='cardio')return {hdr:'Warm up',big:String(st.w),unit:'min',l1:l.name+', '+l.pace,l2:'Last time '+l.last};
+  const j=S.done[S.li],pv=l.prev[j];const diff=st.w-pv[0];
+  return {hdr:'Set '+(j+1)+' of '+l.sets.length,big:String(st.w),unit:'lb',reps:st.r,l1:'Last time '+pv[0]+' × '+pv[1]+(diff?', now '+(diff>0?'+':'')+diff+' lb':''),l2:'Estimated max '+e1(st.w,st.r)+(l.best?', best '+e1(...l.best):'')}}
+ function paint(){const c=card(),col='var(--training)';
+  const key=c.hdr+'|'+c.l1+'|'+(c.feel?S.feel:'')+'|'+c.unit;
+  if(blk._key!==key){
+   blk.innerHTML='<div class="wh" style="'+BC+';color:'+col+'">'+c.hdr+'</div>'+
+    '<div class="wn" style="'+BC+';color:'+(c.tab?'var(--ink)':col)+'"><span class="o big1">'+c.big+'</span>'+(c.unit?'<span class="wu">'+c.unit+'</span>':'')+(c.reps?'<span class="wx">×</span><span class="o wr">'+c.reps+'</span>':'')+'</div>'+
+    '<div class="w1">'+c.l1+'</div>'+(c.feel?'<div class="w2 feel"><i>Felt</i>'+['Easy','Right','Hard'].map(v=>'<span data-feel="'+v+'" class="'+(S.feel===v?'on':'')+'">'+v+'</span>').join('')+'</div>':'<div class="w2">'+(c.l2||'')+'</div>');
+   if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:380,delay:i*45,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
+  else{const o=blk.querySelector('.big1');const w0=o.textContent;if(w0!==c.big){o.textContent=c.big;numRoll(o,w0)}const w2=blk.querySelector('.w2:not(.feel)');if(w2&&w2.textContent!==(c.l2||''))w2.textContent=c.l2||''}
+  if(H.band)H.band.innerHTML=S.phase==='done'?'<div class="wb"><span class="o">'+Math.max(1,mins())+'</span><span class="u">min</span></div><div class="ln">All '+LIFTS.length+' lifts, saved</div>':'<div class="wb"><span class="o">'+mmss(Math.floor((Date.now()-S.t0)/1000))+'</span></div><div class="ln">Done about '+endAt()+'</div>';
   const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const c=d.querySelector('i'),n=left(LIFTS[i]);if(c&&c.textContent!==String(n||''))c.textContent=n||''});
   if(H.sum)sumNow();if(H.act)H.act.retarget(objs(),0)}
  function objs(){const l=L(),st=next(l);const n=LIFTS.filter(x=>left(x)).length;
   if(S.phase==='done')return ['back to the Deck','nothing to time','nothing to drop','back to the Deck'];
-  return [S.phase==='rest'?'the next set, now':st?(st.u?'the warm up, '+st.w+' min':'set '+(S.done[S.li]+1)+', '+wt(st)):'turn to the next lift',
-   S.phase==='rest'?'add 30 s':'a '+mmss(l.rest)+' rest',st&&!st.u?'drop to '+(st.w-10)+' lb':'nothing to drop',S.phase==='done'?'saved':'Push A, '+(LIFTS.length-n)+' of '+LIFTS.length+' done']}
+  return [S.phase==='rest'?'the next set, now':st?(st.u?'the warm up, '+st.w+' min':'set '+(S.done[S.li]+1)+', '+st.w+' × '+st.r):'turn to the next lift',
+   S.phase==='rest'?'add 30 s':'a '+mmss(l.rest)+' rest',st&&!st.u?'drop to '+(st.w-10)+' lb':'nothing to drop','Push A, '+(LIFTS.length-n)+' of '+LIFTS.length+' done']}
  let sumKey='';
- function sumNow(){const i=H.dial?H.dial.focus:S.li,l=LIFTS[i];const k=i+'|'+S.done[i]+'|'+l.sets.map(x=>x.w).join();if(k===sumKey)return;sumKey=k;sumSet(H.sum,ledger(i),'training',el)}
- function ledger(i){const l=LIFTS[i],d=S.done[i];
-  const lines=l.sets.map((st,j)=>{const t=(st.u?'Row':'Set '+(j+1))+' '+o(String(st.w))+un(st.u||('lb × '+st.r));return j<d?t:j===d?'<span style="color:var(--training)">'+t+'</span>':'<span style="color:var(--slate)">'+t+'</span>'});
-  return sum(l.name+(d>=l.sets.length?', done':''),lines.slice(0,3),l.best?'Best '+l.best:'Last time '+l.last)}
- // the board, live
- function board(ck){const l=L(),d=S.done[S.li];
-  if(S.phase==='done'){chalk(ck,'Push A, done',26,250,32,.95,C);chalk(ck,Math.max(1,mins())+' min, '+S.log.filter(x=>x.r).length+' sets, about '+total().toLocaleString()+' lb',26,276,17,.75,C2);
-   LIFTS.forEach((x,i)=>{const y=314+Math.floor(i/3)*28,xx=26+(i%3)*118;const w=chalk(ck,x.k,xx,y,19,.8,C2);mark(ck,xx+w+6,y-6,.8)});chalk(ck,'Press best, 100 lb',236,342,17,.8,C);return}
-  if(S.phase==='rest'){chalk(ck,'Rest',26,250,30,.95,C);chalk(ck,'then '+(next(L())?L().name.toLowerCase():'the next lift'),26,274,17,.7,C2);
-   const n=Math.ceil(S.rest/10),N=Math.ceil(S.restOf/10);for(let k=0;k<N;k++){const x=28+k*14+(k>=5?6:0)+(k>=10?6:0);ck.strokeStyle='rgba('+(k<n?C:C2)+','+(k<n?.9:.12)+')';ck.lineWidth=2.6;ck.lineCap='round';ck.beginPath();ck.moveTo(x,346);ck.lineTo(x+3+noise(k,7)*2,312);ck.stroke()}
-   chalk(ck,mmss(S.rest),270,344,44,.95,C);return}
-  chalk(ck,l.name,26,250,30,.95,C);chalk(ck,(d<l.sets.length?'set '+(d+1)+' of '+l.sets.length:'all sets done')+(l.best?', best '+l.best.split(',')[0]:''),26,274,17,.7,C2);
-  l.sets.forEach((st,j)=>{const x=26+j*112,y=322;const t=st.u?st.w+' min':st.w+'×'+st.r;const w=chalk(ck,t,x,y,j===d?30:24,j<d?.55:j===d?1:.35,j<d?C2:C);if(j<d)mark(ck,x+w+6,y-6)});
-  let x=26;LIFTS.forEach((q,i)=>{const a=i===S.li?.95:.55;const w=chalk(ck,q.k,x,360,16,a,i===S.li?C:C2);if(!left(q))mark(ck,x+w+3,355,.7);x+=w+(left(q)?14:26)})}
+ function sumNow(){const i=H.dial?H.dial.focus:S.li,l=LIFTS[i];const k=i+'|'+S.done[i]+'|'+l.sets.map(x=>x.w).join()+'|'+S.log.map(x=>x.feel||'').join();if(k===sumKey)return;sumKey=k;sumSet(H.sum,ledger(i),'training',el)}
+ function ledger(i){const l=LIFTS[i],d=S.done[i];const logs=S.log.filter(x=>x.li===i);
+  const lines=l.sets.map((st,j)=>{const f=j<d&&logs[j]&&logs[j].feel?' <span class="u">'+logs[j].feel.toLowerCase()+'</span>':'';const t=(st.u?'Row':'Set '+(j+1))+' '+(st.u?o(String(st.w))+un(st.u):o(String(st.w))+un('lb')+o(' × '+st.r))+f;
+   return j<d?t:j===d?'<span style="color:var(--training)">'+t+'</span>':'<span style="color:var(--slate)">'+t+'</span>'});
+  return sum(l.name+(d>=l.sets.length?', done':', '+l.sets.length+' sets'),lines.slice(0,3),l.best?'Best '+l.best[0]+' × '+l.best[1]+', '+l.bestWhen:'Last time '+(l.last||l.prev.map(x=>x[1]).join(', ')+' reps'))}
+ // the board: plates on the bar
  function mark(ck,x,y,s=1){ck.strokeStyle='rgba('+C+',.9)';ck.lineWidth=2.2*s;ck.lineCap='round';ck.beginPath();ck.moveTo(x,y);ck.lineTo(x+5*s,y+7*s);ck.lineTo(x+13*s,y-8*s);ck.stroke()}
+ const line=(ck,x1,y1,x2,y2,a,wd)=>{ck.strokeStyle='rgba('+C+','+a+')';ck.lineWidth=wd;ck.lineCap='round';ck.beginPath();ck.moveTo(x1,y1+noise(x1,y1)*.8);ck.lineTo(x2,y2+noise(x2,y2)*.8);ck.stroke()};
+ const PH={45:66,35:58,25:48,10:36,5:28,2.5:22},PW={45:13,35:12,25:10,10:8,5:6,2.5:5};
+ function bar(ck,w,y){const cx=201,ps=perSide(w);line(ck,40,y,362,y,.55,3);line(ck,cx-70,y,cx+70,y,.8,4);[-1,1].forEach(sd=>{let x=cx+sd*72;line(ck,x,y-12,x,y+12,.8,3);x+=sd*4;ps.forEach(p=>{const hh=PH[p],ww=PW[p];ck.fillStyle='rgba('+C+',.22)';ck.fillRect(sd>0?x:x-ww,y-hh/2,ww,hh);ck.strokeStyle='rgba('+C+',.9)';ck.lineWidth=2.2;ck.strokeRect(sd>0?x:x-ww,y-hh/2,ww,hh);x+=sd*(ww+2)})});
+  return ps}
+ function stack(ck,w,y){const n=12,sel=Math.round(w/10);for(let k=0;k<n;k++){const yy=y-36+k*6.5;ck.strokeStyle='rgba('+(k+1===Math.min(n,sel%n||n)?C:C2)+','+(k+1===Math.min(n,sel%n||n)?.95:.4)+')';ck.lineWidth=k+1===Math.min(n,sel%n||n)?2.6:1.4;ck.strokeRect(150,yy,100,4)}
+  chalk(ck,'pin at '+w,262,y+4,20,.9,C)}
+ function board(ck){const l=L(),d=S.done[S.li],st=next(l);
+  if(S.phase==='done'){chalk(ck,'Push A, done',26,248,30,.95,C);chalk(ck,Math.max(1,mins())+' min, '+total().toLocaleString()+' lb',26,272,17,.75,C2);
+   LIFTS.forEach((x,i)=>{const y=310+Math.floor(i/3)*28,xx=26+(i%3)*118;const w=chalk(ck,x.k,xx,y,19,.8,C2);mark(ck,xx+w+6,y-6,.8)});chalk(ck,'Press best, 100',236,342,17,.8,C);return}
+  if(S.phase==='rest'){chalk(ck,'Rest',26,248,30,.95,C);const nl=LIFTS[S.pending??S.li],ns=next(nl);
+   if(ns&&!ns.u&&nl.kind==='bar'){const cur=st&&!st.u&&nl===l?null:null;chalk(ck,'then '+nl.k.toLowerCase()+' '+ns.w+', each side '+perSide(ns.w).join(' + '),26,272,17,.75,C2)}else chalk(ck,'then '+(ns?nl.name.toLowerCase():'the next lift'),26,272,17,.75,C2);
+   const n=Math.ceil(S.rest/10),N=Math.ceil(S.restOf/10);for(let k=0;k<N;k++){const x=28+k*13+Math.floor(k/5)*6;ck.strokeStyle='rgba('+(k<n?C:C2)+','+(k<n?.9:.12)+')';ck.lineWidth=2.6;ck.lineCap='round';ck.beginPath();ck.moveTo(x,348);ck.lineTo(x+3+noise(k,7)*2,312);ck.stroke()}
+   chalk(ck,mmss(S.rest),284,348,46,.95,C);return}
+  chalk(ck,l.name,26,248,28,.95,C);
+  if(!st){chalk(ck,'all '+l.sets.length+' sets',26,272,17,.7,C2)}
+  else if(l.kind==='bar'){const ps=bar(ck,st.w,316);chalk(ck,'each side '+(ps.length?ps.join(' + '):'the bar'),26,272,17,.75,C2);chalk(ck,'bar '+BAR,300,272,15,.55,C2)}
+  else if(l.kind==='stack'){stack(ck,st.w,310);chalk(ck,'set '+(d+1)+' of '+l.sets.length,26,272,17,.7,C2)}
+  else {chalk(ck,st.w+' min easy',26,272,17,.75,C2);chalk(ck,l.pace,26,318,26,.9,C)}
+  let x=26;LIFTS.forEach((q,i)=>{const a=i===S.li?.95:.5;const w=chalk(ck,q.k,x,362,15,a,i===S.li?C:C2);if(!left(q))mark(ck,x+w+3,357,.65);x+=w+(left(q)?13:24)})}
  // actions
  function log(){const l=L(),st=next(l);if(S.phase==='done')return back();if(S.phase==='rest'){S.rest=0;endRest();return}
   if(!st){const n=LIFTS.findIndex(x=>left(x));if(n>=0)turnTo(n);return}
-  S.done[S.li]++;S.log.push({li:S.li,...st});pulse();chalkDust();
-  const li=S.li;receipt(el,l.name+', '+wt(st)+', logged',()=>{S.done[li]--;S.log.pop();S.phase='lift';S.rest=0;paint()});
+  S.done[S.li]++;S.log.push({li:S.li,...st});S.feel=null;pulse();chalkDust();
+  const li=S.li;receipt(el,l.name+', '+(st.u?st.w+' min':st.w+' × '+st.r)+', logged',()=>{S.done[li]--;S.log.pop();S.phase='lift';S.rest=0;S.pending=null;paint()});
   if(!LIFTS.some(x=>left(x)))return finish();
-  S.phase='rest';S.restOf=S.rest=l.rest;if(!left(l)){const n=LIFTS.findIndex(x=>left(x));S.pending=n}paint()}
+  S.phase='rest';S.restOf=S.rest=l.rest;S.pending=left(l)?null:LIFTS.findIndex(x=>left(x));paint()}
  function endRest(){S.phase='lift';if(S.pending!=null){const n=S.pending;S.pending=null;turnTo(n)}pulse();paint()}
- function turnTo(n){if(!H.dial)return;const f=H.dial.focus;let off=n-f;const N=LIFTS.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;H.dial.turn(off)}
- function finish(){S.phase='done';S.end=Date.now();if(H.cap){H.cap.textContent='Saved to the Deck, with every set'}paint();chalkDust()}
+ function turnTo(n){if(!H.dial)return;const f=H.dial.focus;let off=n-f;const N=LIFTS.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;if(off)H.dial.turn(off);else{S.li=n;paint()}}
+ function finish(){S.phase='done';if(H.cap){H.cap.textContent='Saved to the Deck, with every set'}paint();chalkDust()}
  const chalkDust=()=>dust(el,{x:26,y:300,w:300,h:40},{x:60,y:640},{n:18,c:css('--training'),c0:'rgba(236,236,230,.9)',size:1.6,dur:560,spread:120,drop:1});
- const R=landingV3(el,{name:'Push A',color:'var(--training)',theme:'chalk',
+ return landingV3(el,{name:'Push A',color:'var(--training)',theme:'chalk',
   widget,
   keystone:k=>boardCenter(k,board),
   caption:'Drag the weight to change it',
-  doors:LIFTS.map((l,i)=>({k:l.k,get n(){return left(l)||null},sum:()=>ledger(i)})),
+  doors:LIFTS.map((l,i)=>({k:l.k,n:left(l),sum:()=>ledger(i)})),
   acts:[{v:'Done',o:'',f:log},{v:'Rest',o:'',f:()=>{if(S.phase==='rest'){S.rest+=30;S.restOf+=30}else{S.phase='rest';S.restOf=S.rest=L().rest}paint()}},
-   {v:'Lighter',o:'',f:()=>{const st=next(L());if(!st||st.u)return;L().sets.slice(S.done[S.li]).forEach(x=>x.w-=10);receipt(el,L().name+', '+st.w+' lb from here');paint()}},
+   {v:'Lighter',o:'',f:()=>{const st=next(L());if(!st||st.u)return;L().sets.slice(S.done[S.li]).forEach(x=>x.w-=10);receipt(el,L().name+', '+(st.w)+' lb from here');paint()}},
    {v:'Finish',o:'',hold:1,f:()=>{if(S.phase!=='done')finish();else back()}}],
-  ready:x=>{H=x;const od=x.dial.turn;x.dial.turn=s=>{od(s);if(S.phase!=='rest')S.li=x.dial.focus;else S.pending=x.dial.focus;paint()};paint();
-   const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'&&!S.paused){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest();else paint()}else if(++tick%15===0)paint()},1000);
-   window.__wo.tickRest=n=>{S.rest=Math.max(1,S.rest-n+1)};window.__wo.finish=()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()};return ()=>clearInterval(iv)}});
- return R}};
+  ready:x=>{H=x;H.band.classList.add('wband');const od=x.dial.turn;x.dial.turn=s=>{od(s);if(S.phase!=='rest')S.li=x.dial.focus;else S.pending=x.dial.focus;paint()};paint();
+   const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest();else paint()}else paint()},1000);
+   window.__wo.tickRest=n=>{S.rest=Math.max(1,S.rest-n+1)};window.__wo.finish=()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()};window.__wo.feel=setFeel;
+   return ()=>clearInterval(iv)}})}};
+
 
 /* ---------- Kitchen: the pass stays through the app ---------- */
 const TACOS={n:'Tacos',time:'25 min',ing:[['Tortillas','8'],['Chicken thighs','1 lb'],['Onions','2'],['Peppers','2'],['Cilantro','a bunch'],['Limes','3'],['Cumin',''],['Sour cream','']],steps:['Char the tortillas on the burner, both sides.','Brown the chicken with cumin, five minutes.','Onions and peppers in, until soft.','Squeeze the limes over, chop the cilantro.','Fill, fold, sour cream. Eat.']};
@@ -1437,10 +1455,10 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
   const s=ST[S.i],mv=s.mv[S.j];if(S.done.has(S.i))return {hdr:s.k+', tended',big:s.k,mid:'Turn the dial for what is left',sml:minsLeft()+' min to go tonight'};
   return {hdr:s.k+(s.mv.length>1?', '+(S.j+1)+' of '+s.mv.length:''),big:mv[0],mid:mv[3],sml:(S.pause?'Paused, ':'')+mm(S.left)+(s.mv[S.j+1]?', then '+s.mv[S.j+1][0].toLowerCase():', then '+(ST[S.i+1]?ST[S.i+1].k.toLowerCase():'bed'))}}
  function paint(){const c=card(),key=c.hdr+c.big;
-  if(blk._key!==key){blk.innerHTML='<div class="hdr" style="color:var(--routines)">'+c.hdr+'</div><div class="big"><span class="bw" style="font-weight:700;font-size:40px;letter-spacing:-.02em;color:var(--routines)">'+c.big+'</span></div><div class="mid">'+c.mid+'</div><div class="sml">'+smlH(c.sml)+'</div>';
+  if(blk._key!==key){blk.className='blk wob';const s=ST[S.i];blk.innerHTML='<div class="wh" style="color:var(--routines);font-weight:700">'+c.hdr+(!S.fin?'<span class="wheat">'+s.m+' min in all</span>':'')+'</div><div class="wt" style="color:var(--routines);font-family:var(--sans);font-weight:800;letter-spacing:-.02em">'+c.big+'</div><div class="w1">'+c.mid+'</div><div class="w2 rtt">'+smlH(c.sml)+'</div>';
    if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(10px) scaleY(.6)',transformOrigin:'0 100%'},{opacity:1,transform:'translateY(-1px) scaleY(1.04)',offset:.7},{opacity:1,transform:'none'}],{duration:620,delay:i*90,easing:'cubic-bezier(.2,.8,.3,1)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
-  else{const sm=blk.querySelector('.sml'),o=sm.querySelector('.o'),m=/^(Paused, )?(\d+:\d\d)/.exec(c.sml);if(o&&m&&sm.textContent.replace(o.textContent,'')===c.sml.replace(m[2],'')){const w=o.textContent;if(w!==m[2]){o.textContent=m[2];numRoll(o,w)}}else sm.innerHTML=smlH(c.sml)}
-  function smlH(t){return t.replace(/(\d+:\d\d)/,'<span class="o" style="font-family:var(--num);font-variant-numeric:tabular-nums">$1</span>')}
+  else{const sm=blk.querySelector('.rtt'),o=sm.querySelector('.o'),m=/^(Paused, )?(\d+:\d\d)/.exec(c.sml);if(o&&m&&sm.textContent.replace(o.textContent,'')===c.sml.replace(m[2],'')){const w=o.textContent;if(w!==m[2]){o.textContent=m[2];numRoll(o,w)}}else sm.innerHTML=smlH(c.sml)}
+  function smlH(t){return t.replace(/(\d+:\d\d)/,'<span class="o" style="font-family:var(--num);font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums">$1</span>')}
   if(H.band)H.band.innerHTML='<div class="ln">'+(S.fin?'Evening tended':tended()+' of '+ST.length+' tended')+'</div><div class="ln">'+(S.fin?'Lights out at 10:30':'about '+minsLeft()+' min to bed')+'</div>';
   const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const b=d.querySelector('span');if(b)b.style.color=S.done.has(i)?'var(--green)':S.skip.has(i)?'var(--slate)':'';const c=d.querySelector('i');const v=S.done.has(i)||S.skip.has(i)?'':ST[i].m+'m';if(c&&c.textContent!==v)c.textContent=v});
   if(H.act)H.act.retarget(S.fin?['back to the Watch','','','back to the Watch']:[S.done.has(S.i)?'the next step':ST[S.i].mv[S.j+1]?ST[S.i].mv[S.j+1][0].toLowerCase()+' next':ST[S.i].k.toLowerCase()+', tended',S.pause?'go on from '+mm(S.left):'this step, nothing is lost',ST[S.i].k.toLowerCase()+', the streak is kept','the evening, '+tended()+' of '+ST.length],0);
@@ -1468,29 +1486,33 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
    a few words, big enough to read from the stove; the dial is the steps; the summary is what that step needs, with
    amounts on the right. Next is one tap (a knuckle works: the whole sentence place takes it too). */
 SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. I’ll say when.',render(el){
- const ST=[{k:'Char',t:'Char the tortillas',d:'Over the flame, 30 s a side',ing:[['Tortillas','8',''],['Foil','to wrap','']]},
-  {k:'Brown',t:'Brown the chicken',d:'Cumin and salt, leave it be',ing:[['Chicken thighs','1','lb'],['Cumin','2','tsp'],['Salt','1','tsp']],tm:300,tn:'chicken'},
-  {k:'Soften',t:'Onions and peppers in',d:'Until soft, stir now and then',ing:[['Onions','2',''],['Peppers','2','']],tm:360,tn:'onions'},
-  {k:'Brighten',t:'Limes over, cilantro on',d:'Squeeze, chop, taste for salt',ing:[['Limes','3',''],['Cilantro','1','bunch']]},
-  {k:'Serve',t:'Fill, fold, eat',d:'Rice on the side, it goes out today',ing:[['Sour cream','2','tbsp'],['Rice','1','cup']]}];
+ const ST=[{k:'Char',t:'Char the tortillas',d:'Over the flame, 30 s a side',heat:'Gas on high',cue:'Done when the edges blister and puff',ing:[['Tortillas','8',''],['Foil','1','sheet']]},
+  {k:'Brown',t:'Brown the chicken',d:'Cumin and salt, leave it be',heat:'Medium high, a spoon of oil',cue:'Turn it when it lets go of the pan',ing:[['Chicken thighs','1','lb'],['Cumin','2','tsp'],['Salt','1','tsp']],tm:300,tn:'chicken'},
+  {k:'Soften',t:'Onions and peppers in',d:'Sliced thin, stir now and then',heat:'Medium',cue:'Done when the onions turn see-through',ing:[['Onions','2',''],['Peppers','2','']],tm:360,tn:'onions'},
+  {k:'Brighten',t:'Limes over, cilantro on',d:'Squeeze, chop, taste for salt',heat:'Heat off',cue:'A pinch more salt if it tastes flat',ing:[['Limes','3',''],['Cilantro','1','bunch']]},
+  {k:'Serve',t:'Fill, fold, eat',d:'Rice on the side, it goes out today',heat:'Rice, 90 s in the microwave',cue:'Two tacos each, four left for lunch',ing:[['Sour cream','2','tbsp'],['Rice','1','cup']]}];
  const S={i:0,done:new Set(),T:{},t0:Date.now(),fin:0};window.__ck={S,ST};
  const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),mins=()=>Math.max(1,Math.floor((Date.now()-S.t0)/60000));
  let H={},blk,tix;
  const stepT={id:'step',title:'Step 1',color:'clay',big:true,pages:[{lines:[]}]};
  const timers=ST.filter(x=>x.tm).map(x=>({id:'tm'+x.k,k:x.k,title:mm(x.tm),color:'kitchen',pages:[{lines:[x.tn,'']}]}));
- function tickets(){const s=ST[S.i];stepT.title=S.fin?'Eat':'Step '+(S.i+1);stepT.tally=S.done.size+' of '+ST.length;stepT.pages=[{sub:S.fin?'25 min, all done':s.t.toLowerCase(),lines:S.fin?['Rice goes out today','Five dishes for later']:[s.d,...s.ing.map(([a,b,u])=>a+', '+b+(u?' '+u:''))].slice(0,4)}];
-  timers.forEach(t=>{const T=S.T[t.k],st=ST.find(x=>x.k===t.k);t.title=T==null?mm(st.tm):T>0?mm(T):'Ready';t.color=T===0?'wine':'kitchen';t.pages=[{lines:[t.k==='Brown'?'chicken':'onions',T==null?'tap Timer to start':T>0?'running':'take it off']}]});
+ function tickets(){let n=-1;for(let k=1;k<ST.length;k++){const q=(S.i+k)%ST.length;if(!S.done.has(q)){n=q;break}}const s=ST[n<0?S.i:n];
+  /* 325: the rail no longer repeats the step; it is the next one, so you can get it ready while this one cooks */
+  stepT.title=S.fin?'Eat':n<0?'Last step':'Get ready: '+s.k;stepT.tally=S.done.size+' of '+ST.length+' done';stepT.pages=[{sub:S.fin?'25 min, all done':n<0?'nothing after this':s.t.toLowerCase(),lines:S.fin?['Rice goes out today','Five dishes for later']:n<0?['Then eat']:s.ing.map(([a,b,u])=>a+', '+b+(u?' '+u:'')).concat([s.heat]).slice(0,3)}];
+  timers.forEach(t=>{const T=S.T[t.k],st=ST.find(x=>x.k===t.k);t.title=T==null?mm(st.tm):T>0?mm(T):'Ready';t.color=T===0?'wine':'kitchen';t.pages=[{lines:[t.k==='Brown'?'Chicken':'Onions',T==null?'tap to start':T>0?'on the heat':'take it off']}]});
   if(tix)[...tix.children].forEach(e=>e._refresh&&e._refresh())}
  function card(){if(S.fin)return {hdr:'Done in '+mins()+' min',big:'Eat',mid:'Tacos for 2',sml:'Rice goes out today, five dishes for later'};
-  const s=ST[S.i],T=S.T[s.k];return {hdr:'Step '+(S.i+1)+' of '+ST.length+(T>0?', '+mm(T)+' left':T===0?', ready':''),big:s.t,mid:s.d,sml:S.done.has(S.i)?'Done, turn for the next':T>0?'The '+s.tn+' is on, Tess says when':T===0?'Take the '+s.tn+' off the heat':s.tm?mm(s.tm)+' on the pan, Timer starts it':'Then '+(ST[S.i+1]?ST[S.i+1].t.toLowerCase():'eat')}}
- function paint(){const c=card(),key=c.big+c.mid;
-  if(blk._key!==key){blk.innerHTML='<div class="hdr" style="color:var(--kitchenText)">'+c.hdr+'</div><div class="big"><span class="bw" style="font-family:\'IBM Plex Sans Condensed\',sans-serif;font-weight:700;font-size:34px;letter-spacing:.01em;color:var(--kitchenText)">'+c.big+'</span></div><div class="mid">'+c.mid+'</div><div class="sml">'+c.sml+'</div>';
+  const s=ST[S.i],T=S.T[s.k];return {key2:T>0?1:T===0?2:0,hdr:'Step '+(S.i+1)+' of '+ST.length,heat:s.heat,T,cue:s.cue,big:s.t,mid:s.d,sml:S.done.has(S.i)?'Done, turn for the next':T>0?'The '+s.tn+' is on, Tess says when':T===0?'Take the '+s.tn+' off the heat':s.tm?mm(s.tm)+' on the pan, Timer starts it':'Then '+(ST[S.i+1]?ST[S.i+1].t.toLowerCase():'eat')}}
+ function paint(){const c=card(),key=c.big+c.mid+(c.key2||0);
+  if(blk._key!==key){blk.className='blk wob';const PX="font-family:'IBM Plex Sans Condensed',sans-serif";
+   blk.innerHTML='<div class="wh" style="'+PX+';color:var(--kitchenText)">'+c.hdr+(c.heat?'<span class="wheat">'+c.heat+'</span>':'')+'</div><div class="wt" style="'+PX+';color:var(--kitchenText)">'+c.big+'</div><div class="w1">'+c.mid+'</div><div class="w2 ckt">'+ckLine(c)+'</div><div class="w2 ckc">'+(c.T>0||c.T===0?c.cue:'')+'</div>';
    if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{clipPath:'inset(0 0 100% 0)',transform:'translateY(-6px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:420,delay:i*60,easing:'steps(6)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
-  else{blk.querySelector('.hdr').textContent=c.hdr;blk.querySelector('.sml').textContent=c.sml}
+  else{const t=blk.querySelector('.ckt');const nh=ckLine(c);if(t.innerHTML!==nh){const o0=t.querySelector('.o'),w0=o0&&o0.textContent;t.innerHTML=nh;const o1=t.querySelector('.o');if(o0&&o1)numRoll(o1,w0)}}
   if(H.band)H.band.innerHTML='<div class="ln">'+(S.fin?'Ready at '+clockNow():mins()+' min in')+'</div><div class="ln">'+(S.fin?'All '+ST.length+' steps':(ST.length-S.done.size)+' steps, about '+Math.max(2,25-mins())+' min to eat')+'</div>';
   const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const c=d.querySelector('i');const v=S.T[ST[i].k]>0?mm(S.T[ST[i].k]):'';if(c&&c.textContent!==v)c.textContent=v;d.style.opacity=S.done.has(i)&&i!==S.i?'':d.style.opacity});
   if(H.act)H.act.retarget(S.fin?['back to the Galley','nothing running','for later','back to the Galley']:[ST[S.i+1]?'step '+(S.i+2)+', '+ST[S.i+1].k.toLowerCase():'eat',ST[S.i].tm?(S.T[ST[S.i].k]>0?'1 min more on the '+ST[S.i].tn:mm(ST[S.i].tm)+' for the '+ST[S.i].tn):'nothing to time here','the step out loud','Tacos, '+S.done.size+' of '+ST.length+' done'],0);
   tickets()}
+ function ckLine(c){if(c.T>0)return '<span class="o">'+mm(c.T)+'</span> left on the '+ST[S.i].tn;if(c.T===0)return '<span style="color:var(--wine)">Ready, take the '+ST[S.i].tn+' off</span>';return c.cue||c.sml}
  const clockNow=()=>{const d=new Date();return (d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0')};
  function next(){if(S.fin)return back();const was=S.i;S.done.add(S.i);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);turnTo(was);paint()});
   if(S.done.size===ST.length){S.fin=1;paint();return}let n=S.i;for(let k=1;k<=ST.length;k++){const q=(S.i+k)%ST.length;if(!S.done.has(q)){n=q;break}}turnTo(n);const s=ST[n];if(s.tm&&S.T[s.k]==null)S.T[s.k]=s.tm;paint()}
@@ -1498,7 +1520,7 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. I�
  const lg=i=>{const s=ST[i];return sum(s.k+', '+(S.done.has(i)?'done':'step '+(i+1)),s.ing.slice(0,3).map(([a,b,u])=>a+' '+o(b)+(u?un(u):'')),s.tm?mm(s.tm)+' on the pan':s.d)};
  const R=landingV3(el,{name:'Tacos',color:'var(--kitchenText)',theme:'steam',
   widget:()=>{const b=h('div','one lw mode');b.style.zIndex=6;blk=h('div','blk');b.appendChild(blk);b.onclick=()=>next();return {box:b,start:()=>{},stop:()=>{}}},
-  keystone:k=>{tix=passCenter(k,[stepT,...timers],()=>{},()=>{});[...tix.children].slice(1).forEach((e,j)=>{e.onclick=()=>{const t=timers[j];if(S.T[t.k]==null||S.T[t.k]===0)S.T[t.k]=ST.find(x=>x.k===t.k).tm;paint()}});return null},
+  keystone:k=>{k.classList.add('mrail','ck');tix=passCenter(k,[stepT,...timers],()=>{},()=>{});[...tix.children].slice(1).forEach((e,j)=>{e.onclick=()=>{const t=timers[j];if(S.T[t.k]==null||S.T[t.k]===0)S.T[t.k]=ST.find(x=>x.k===t.k).tm;paint()}});return null},
   caption:'Tap the step for the next one',
   doors:ST.map((s,i)=>({k:s.k,n:'',sum:()=>lg(i)})),
   acts:[{v:'Next',o:'',f:next},{v:'Timer',o:'',f:()=>{const s=ST[S.i];if(!s.tm)return receipt(el,'Nothing to time on this step');S.T[s.k]=S.T[s.k]>0?S.T[s.k]+60:s.tm;receipt(el,'Timer, '+mm(S.T[s.k])+' for the '+s.tn);paint()}},
@@ -1513,19 +1535,20 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. I�
    next thing to put in the basket, and the summary is the aisle's whole list. Got is one tap; Not here moves it to
    the end. At the till everything bought goes into the Pantry. */
 SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortillas are by the bread.',render(el){
- const AIS=[{k:'Produce',it:[['Limes','3','','tacos'],['Cilantro','1','bunch','tacos'],['Peppers','2','','tacos']]},{k:'Dairy',it:[['Feta','1','block','pasta'],['Milk','1','gal','low'],['Eggs','12','','low'],['Yogurt','2','','']]},
-  {k:'Bakery',it:[['Tortillas','1','pack','tacos'],['Bread','1','loaf','']]},{k:'Aisle 7',it:[['Coffee','1','bag','']]},{k:'Home',it:[['Dish soap','1','','']]}];
+ const AIS=[{k:'Produce',w:'Right by the doors',it:[['Limes','3','','tacos','Pick ones that give a little'],['Cilantro','1','bunch','tacos','Bright leaves, no yellow'],['Peppers','2','','tacos','Firm and glossy, any colour']]},{k:'Dairy',w:'The back wall',it:[['Feta','1','block','pasta','In brine keeps longer'],['Milk','1','gal','low','The date furthest out is at the back'],['Eggs','12','','low','Open the box, check for cracks'],['Yogurt','2','','','Plain, the big tubs']]},
+  {k:'Bakery',w:'Left of the tills',it:[['Tortillas','1','pack','tacos','Corn, the 30 pack is the better deal'],['Bread','1','loaf','','Sliced, for the week']]},{k:'Aisle 7',w:'Halfway down, left',it:[['Coffee','1','bag','','Whole beans, medium roast']]},{k:'Home',w:'Aisle 12',it:[['Dish soap','1','','','The refill size']]}];
  const S={a:0,got:new Set(),skip:[],fin:0};window.__sh={S,AIS};
  const key=(a,j)=>a+'.'+j,leftIn=a=>AIS[a].it.filter((_,j)=>!S.got.has(key(a,j))).length,allLeft=()=>AIS.reduce((n,_,a)=>n+leftIn(a),0),total=AIS.reduce((n,x)=>n+x.it.length,0);
  const nextJ=a=>AIS[a].it.findIndex((_,j)=>!S.got.has(key(a,j)));
- let H={},blk,tix;const aisleT={id:'aisle',title:'Produce',color:'lists',big:true,pages:[{lines:[]}]};
- function tickets(){const A=AIS[S.a];aisleT.title=S.fin?'Paid':A.k;aisleT.tally=(A.it.length-leftIn(S.a))+' of '+A.it.length;
+ let H={},blk,tix;const aisleT={id:'aisle',title:'Produce',color:'lists',big:true,pages:[{lines:[]}]};const tonT={id:'tonight',title:'Tacos',color:'clay',pages:[{lines:[]}]};
+ function tickets(){const T=[];AIS.forEach((A,a)=>A.it.forEach((x,j)=>{if(x[3]==='tacos')T.push({t:x[0],done:S.got.has(key(a,j)),idx:-1})}));tonT.pages=[{sub:'for tonight',lines:T}];
+  const A=AIS[S.a];aisleT.title=S.fin?'Paid':A.k;aisleT.tally=(A.it.length-leftIn(S.a))+' of '+A.it.length;
   aisleT.pages=[{sub:S.fin?total+' things':leftIn(S.a)?'in this aisle':'this aisle is done',lines:S.fin?['All in the Pantry','Tacos are on']:A.it.filter((_,j)=>!S.got.has(key(S.a,j))).map(([n,q,u])=>n+', '+q+(u?' '+u:'')).slice(0,4)}];if(tix)[...tix.children].forEach(e=>e._refresh&&e._refresh())}
  function card(){if(S.fin)return {hdr:'Paid',big:String(total),unit:'things',mid:'All in the Pantry now',sml:'The tacos have everything'};
   const j=nextJ(S.a),A=AIS[S.a];if(j<0){const n=AIS.findIndex((_,a)=>leftIn(a));return {hdr:A.k+', all got',big:n<0?'Till':AIS[n].k,mid:n<0?'Everything is in the basket':'Next aisle, '+leftIn(n)+' to get',sml:'Turn the dial or tap Got'}}
-  const [n,q,u,why]=A.it[j];return {hdr:A.k+', '+(A.it.length-leftIn(S.a)+1)+' of '+A.it.length,big:n,qty:q,unit:u,mid:why==='tacos'?'For the tacos tonight':why==='low'?'You are low':why==='pasta'?'For the pasta':'On the list',sml:A.it[j+1]?'Then '+A.it.slice(j+1).filter((_,k)=>!S.got.has(key(S.a,j+1+k))).map(x=>x[0].toLowerCase()).slice(0,2).join(' and '):'Last one here'}}
+  const [n,q,u,why,tip]=A.it[j];return {where:A.w,tip,hdr:A.k+', '+(A.it.length-leftIn(S.a)+1)+' of '+A.it.length,big:n,qty:q,unit:u,mid:why==='tacos'?'For the tacos tonight':why==='low'?'You are low':why==='pasta'?'For the pasta':'On the list',sml:A.it[j+1]?'Then '+A.it.slice(j+1).filter((_,k)=>!S.got.has(key(S.a,j+1+k))).map(x=>x[0].toLowerCase()).slice(0,2).join(' and '):'Last one here'}}
  function paint(){const c=card(),k=c.hdr+c.big;
-  if(blk._key!==k){blk.innerHTML='<div class="hdr" style="color:var(--kitchenText)">'+c.hdr+'</div><div class="big"><span class="bw" style="font-family:\'IBM Plex Sans Condensed\',sans-serif;font-weight:700;font-size:40px;color:var(--kitchenText)">'+c.big+'</span>'+(c.qty?'<span class="bn" style="color:var(--kitchenText);margin-left:12px"><span class="o" style="font-size:40px">'+c.qty+'</span>'+(c.unit?'<span class="u" style="font-size:20px">'+c.unit+'</span>':'')+'</span>':c.unit?'<span class="u" style="font-size:20px;margin-left:8px;color:var(--kitchenText)">'+c.unit+'</span>':'')+'</div><div class="mid">'+c.mid+'</div><div class="sml">'+c.sml+'</div>';
+  if(blk._key!==k){const PX="font-family:'IBM Plex Sans Condensed',sans-serif";blk.className='blk wob';blk.innerHTML='<div class="wh" style="'+PX+';color:var(--kitchenText)">'+c.hdr+(c.where?'<span class="wheat">'+c.where+'</span>':'')+'</div><div class="wt" style="'+PX+';color:var(--kitchenText)">'+c.big+(c.qty?'<span class="o sq">'+c.qty+'</span>'+(c.unit?'<span class="su">'+c.unit+'</span>':''):c.unit?'<span class="su">'+c.unit+'</span>':'')+'</div><div class="w1">'+c.mid+'</div><div class="w2">'+(c.tip||c.sml)+'</div>'+(c.tip?'<div class="w2" style="color:var(--slate)">'+c.sml+'</div>':'');
    if(blk._key&&!RM){const old=blk.cloneNode(true);old.style.cssText+=';position:absolute;inset:auto 0;pointer-events:none';blk.parentNode.appendChild(old);old.animate([{transform:'none',opacity:1},{transform:'translateX(-60px) rotate(-3deg)',opacity:0}],{duration:280,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'}).onfinish=()=>old.remove();[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateX(40px)'},{opacity:1,transform:'none'}],{duration:380,delay:120+i*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))}
    blk._key=k;[...blk.children].forEach(fitLine)}
   if(H.band)H.band.innerHTML='<div class="ln">'+(S.fin?'Done':allLeft()+' of '+total+' to get')+'</div><div class="ln">'+(S.fin?'Everything went to the Pantry':AIS.filter((_,a)=>leftIn(a)).length+' aisles to go')+'</div>';
@@ -1539,7 +1562,7 @@ SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortil
  function turnTo(n){if(!H.dial)return;let off=n-H.dial.focus;const N=AIS.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;if(off)H.dial.turn(off)}
  const R=landingV3(el,{name:'Groceries',color:'var(--kitchenText)',theme:'steam',
   widget:()=>{const b=h('div','one lw mode');b.style.zIndex=6;blk=h('div','blk');b.appendChild(blk);b.onclick=()=>got();return {box:b,start:()=>{},stop:()=>{}}},
-  keystone:k=>{tix=passCenter(k,[aisleT,{id:'tonight',title:'Tonight',color:'clay',pages:[{lines:['Tacos','4 of these']}]}],()=>{},()=>{});return null},
+  keystone:k=>{k.classList.add('mrail');tix=passCenter(k,[aisleT,tonT],()=>{},()=>{});return null},
   caption:'Tap the thing when it is in the basket',
   doors:AIS.map((A,a)=>({k:A.k,n:A.it.length,sum:()=>lg(a)})),
   acts:[{v:'Got',o:'',f:got},{v:'Not here',o:'',f:()=>{const j=nextJ(S.a);if(j<0)return;const it=AIS[S.a].it.splice(j,1)[0];AIS[S.a].it.push(it);receipt(el,it[0]+', at the end of the list');paint()}},
@@ -1564,7 +1587,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
    arriving in the room's own way), and the doors dial where Bridge has its apps (depth blur on the left, the room's summary on the right).
    Every section opens the Bridge way: it rises 10 pt out of a 3 pt blur at 95 percent size, 80 ms apart. */
 {const st=document.createElement('style');st.textContent=`
-.lnav .nl{display:inline-block;white-space:pre}
+.ltop .ttl .nl,.lnav .nl{display:inline-block;white-space:pre}
 .lnav{position:absolute;right:16px;top:56px;font:500 15px var(--sans);color:var(--ink2);background:none;border:0;min-height:44px;padding:0 8px;cursor:pointer;z-index:6}
 .lband{position:absolute;left:0;right:0;top:106px;height:76px;z-index:6}
 .swx{position:absolute;left:0;top:0;width:224px;height:76px;touch-action:none;cursor:grab;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 24px);mask-image:linear-gradient(to right,transparent 0,#000 24px)}
@@ -1576,6 +1599,32 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .swn .ln{font-size:15px;line-height:24px;height:24px;white-space:nowrap;overflow:hidden;color:var(--ink2)}
 .swn .ln:first-child{font-weight:600;color:var(--ink)}
 .one.wo .big .x{font-family:var(--num);font-size:28px;margin:0 4px 0 10px;opacity:.6}
+.blk.wob{top:20px!important;height:190px}
+.wob .wh{font-size:16px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;height:20px;line-height:20px}
+.wob .wn{display:flex;align-items:baseline;height:92px;line-height:92px;white-space:nowrap;overflow:hidden;margin-top:2px}
+.wob .wn .big1{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:96px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.wob .wu{font-size:30px;font-weight:500;margin-left:4px;color:var(--ink2)}
+.wob .wx{font-size:40px;font-weight:500;margin:0 2px 0 14px;color:var(--ink2)}
+.wob .wr{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:72px}
+.wob .w1{font-size:19px;line-height:28px;height:28px;margin-top:6px;white-space:nowrap;overflow:hidden;color:var(--ink)}
+.wob .w2{font-size:15px;line-height:24px;height:24px;margin-top:4px;white-space:nowrap;overflow:hidden;color:var(--ink2)}
+.wob .feel{display:flex;gap:26px;height:32px;line-height:32px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:600;letter-spacing:.02em}
+.wob .feel i{font-style:normal;font-family:var(--sans);font-size:15px;font-weight:400;color:var(--ink2);margin-right:-8px}
+.wob .feel span{cursor:pointer;color:var(--ink2)}
+.wob .feel span.on{color:var(--training)}
+.wband .wb{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:28px;line-height:30px;height:30px;color:var(--ink);font-variant-numeric:tabular-nums}
+.wband .wb .u{font-size:15px;margin-left:3px;color:var(--ink2)}
+.wband .ln{font-size:14px!important;line-height:20px!important;height:20px!important;font-weight:400!important;color:var(--ink2)!important}
+.wob .wh .wheat{float:right;letter-spacing:.02em;text-transform:none;font-weight:500;font-size:15px;color:var(--ink2)}
+.wob .wt{font-size:44px;font-weight:700;line-height:58px;height:58px;margin-top:10px;white-space:nowrap;overflow:hidden;letter-spacing:-.005em}
+.wob .ckt .o{font-family:var(--num);font-size:19px;color:var(--ink);font-variant-numeric:tabular-nums}
+.mrail .face .ttk{font-size:18px;letter-spacing:.03em;margin-bottom:6px}
+.mrail.ck .tk:not(.big) .face .ttk{font:500 30px/1.1 var(--num);letter-spacing:0;text-transform:none}
+.mrail .face .sub{font-size:12px}
+.mrail .face .li{font-size:15px;min-height:22px}
+.mrail .face .tally{font-size:11px}
+.wob .wt .sq{font-family:var(--num);font-weight:300;font-size:44px;margin-left:14px}
+.wob .wt .su{font-family:var(--sans);font-weight:400;font-size:20px;margin-left:4px;color:var(--ink2)}
 .one.wo{cursor:ns-resize}
 .one.mode .big{max-width:none}
 .swn.rise{animation:lrise .32s cubic-bezier(.3,.9,.3,1)}
@@ -2088,6 +2137,14 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
   const on=o.querySelector('.lnav'),nn=m.querySelector('.lnav');if(!on||!nn)return true;
   const was=on._word||on.textContent,to=nn._word||nn.textContent;neu.masthead=neu.masthead.filter(x=>x!==m);o.remove();
   if(was!==to){nn._word=was;nn.textContent=was;navMorph(nn,to)}return false});
+ /* 324: into a live mode and back. The mode keeps every place, so the title does not fold: its letters change in place,
+    "Deck" to "Push A", "Galley" to "Tacos", "Watch" to "Evening", and the Nav word rises in beside it. */
+ if(to.querySelector('.one.mode')||from.querySelector('.one.mode'))old.masthead=old.masthead.filter(o=>{if(!o.classList.contains('ltop'))return true;const ot=o.querySelector('.ttl');
+  const m=neu.masthead.find(n=>n.classList.contains('ltop')&&n.querySelector('.ttl'));if(!m||!ot)return true;const nt=m.querySelector('.ttl');
+  const was=ot._word||ot.textContent,tw=nt.textContent;neu.masthead=neu.masthead.filter(x=>x!==m);o.remove();
+  if(was!==tw){nt._word=was;nt.textContent=was;navMorph(nt,tw)}
+  const on=o.querySelector('.lnav'),nn=m.querySelector('.lnav');if(nn&&(!on||on.textContent!==nn.textContent))A(nn,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:320,delay:220,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
+  else if(on&&!nn){on.style.pointerEvents='none';m.appendChild(on);A(on,[{opacity:1},{opacity:0,transform:'translateY(-6px)'}],{duration:180,fill:'forwards'}).onfinish=()=>on.remove()}return false});
  const drop=(e,ms)=>setTimeout(()=>e.remove(),ms);
  // masthead: fold away and fold open, like the board's letters
  old.masthead.forEach((e,i)=>{A(e,[{transform:'perspective(500px) rotateX(0)',opacity:1},{transform:'perspective(500px) rotateX(88deg)',opacity:.2}],{duration:200,delay:i*50,easing:'cubic-bezier(.5,0,.9,.5)',fill:'both'});drop(e,200+i*50)});

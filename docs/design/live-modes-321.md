@@ -86,3 +86,53 @@ scene is locked); the mode lives in the places around it.
   move comes by itself, no full stops, no page errors.
 - For the builders: `RoutineSession` (@Observable) with step and move end dates; the Live Activity shows the move
   and its time left. Skipping never breaks a streak (the "nothing is lost" rule).
+
+## Sheet 324: into a mode and back
+
+The mode keeps every place, so the title does not fold away. Its letters change in place ("Deck" to "Push A",
+"Galley" to "Tacos", "Watch" to "Evening"; shared letters slide, the rest leave up and rise in, sheet 309) and the Nav
+word rises in beside it. Back runs the same morph the other way.
+
+## Sheet 325: the modes, better designed and more useful (his 2:39 AM note)
+
+"They don't feel as good or useful. I need them better designed and better fonts and better information."
+
+**Type.** The sentence place is a scoreboard in every mode: an uppercase line in the room's face (16 pt, tracked)
+with a quiet fact on its right edge, then the main thing at arm's-length size, then two lines of information.
+- Deck: Barlow Condensed 96 pt numerals, "185 lb × 5", unit at a third.
+- Galley: IBM Plex Sans Condensed bold 44 pt words ("Brown the chicken"), amounts in Outfit light.
+- Watch: Figtree extra bold 44 pt for the move; the countdown in Outfit 22 pt rolls digit by digit.
+
+**Workout, new information**
+- **Plates on the bar.** The blackboard draws the bar with each side's plates to scale (45, 35, 25, 10, 5, 2.5 on
+  a 45 lb bar) and writes "each side 45 + 25". Cable and machine lifts show the stack with the pin.
+- **Last time, same set** ("Last time 185 × 5, now +5 lb").
+- **Estimated max** (Epley, weight × (1 + reps / 30)) beside the best.
+- **Felt: Easy, Right, Hard**, asked during the rest. Easy adds 5 lb to the sets left and Hard takes 5 off, with a
+  receipt. The summary ledger keeps the word beside each logged set.
+- **The band is the clock:** time in (0:12) and "Done about 7:22".
+- **During the rest,** the board says what to load next ("then bench 185, each side 45 + 25").
+- **Finish** compares with the last Push A in pounds moved.
+
+**Cooking, new information**
+- **The heat** for the step on the right of the top line ("Medium high, a spoon of oil").
+- **A doneness cue** ("Turn it when it lets go of the pan").
+- **A running timer** gets its own line ("2:47 left on the chicken"); Ready turns wine.
+- **The big rail ticket is the next step** ("Get ready: Soften", with its ingredients), so you prep while this one
+  cooks.
+- **Timer tickets** print their time in Outfit 30 pt.
+
+**Shopping, new information**
+- **Where the aisle is** ("Right by the doors").
+- **How to pick it** ("Pick ones that give a little", "The date furthest out is at the back").
+- **What's next in the aisle.**
+- **The Tacos ticket** strikes off tonight's things as they go in the basket.
+
+**Routine:** the step's total minutes sit on the right of the top line. The move is big and the countdown reads at a
+glance.
+
+Checks t63, t64 and t65 are updated for the new structure and pass in paper and black.
+
+For the builders: the scoreboard is one `ModeSentence` view with `title`, `trailing`, `main` (numerals or words) and
+two info lines. Plate math is a pure function in TesseraCore (`plates(perSide:bar:inventory:)`) so the Live Activity
+and the watch can share it.
