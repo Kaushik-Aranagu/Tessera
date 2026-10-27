@@ -27,6 +27,8 @@ struct GalleyCookModeTests {
                 short: "Brown the chicken",
                 how: "Cumin and salt",
                 ingredients: ["Chicken thighs 1 lb", "Cumin 2 tsp"],
+                heat: "Medium high",
+                cue: "Turn it when it lets go of the pan",
                 panMinutes: 5,
                 timer: timer ? timerStep : nil
             ),
@@ -134,7 +136,8 @@ struct GalleyShopModeTests {
         let screen = GalleyShopContent(facts: facts()).screen(for: .landing(GalleyShopContent.room),
                                                               state: RoomState(dialFocus: 1))
         guard case let .widget(items)? = screen[.widget]?.payload else { throw Failure.none }
-        #expect(items.first?.big == "Milk" && items.first?.middle == "1 gal" && items.first?.small == "You are low")
+        #expect(items.first?.big == "Milk" && items.first?.middle == "The date furthest out is at the back")
+        #expect(items.first?.small == "You are low" && items.first?.trailing == "Along the back wall")
         #expect(items.first?.header == "Dairy, 2 of 2")
         guard case let .dial(doors)? = screen[.dial]?.payload else { throw Failure.none }
         #expect(doors.map(\.name) == ["Produce", "Dairy"] && doors.map(\.count) == ["2", "3"])
@@ -142,6 +145,10 @@ struct GalleyShopModeTests {
         #expect(door.lines == ["Milk 1 gal", "Eggs 12", "Butter"])
         guard case let .action(steps, _)? = screen[.actionWord]?.payload else { throw Failure.none }
         #expect(steps.map(\.verb) == ["Got", "Not here", "Pay"] && steps.last?.hold == true)
+        var withTonight = facts()
+        withTonight.tonightLines = ["Onions 2", "Limes"]
+        withTonight.tonightGot = [0]
+        #expect(GalleyShopContent.tickets(withTonight, aisle: 1)[1].struck == [0])
         let rail = GalleyShopContent.tickets(facts(), aisle: 1)
         #expect(rail.map(\.id) == ["shop.aisle", "shop.tonight"] && rail[0].lines == [
             "Milk 1 gal",
@@ -151,25 +158,6 @@ struct GalleyShopModeTests {
     }
 
     private enum Failure: Error { case none }
-}
-
-struct GalleyCuesTests {
-    @Test func heatAndDoneness() {
-        #expect(GalleyCues.heat("Brown the chicken over medium-high heat for 5 minutes.") == "Medium high")
-        #expect(GalleyCues.heat("Simmer until thick.") == "Low")
-        #expect(GalleyCues.heat("Chop the onion.") == nil)
-        #expect(GalleyCues.doneness("Brown the chicken.") == "Turn it when it lets go of the pan")
-        #expect(GalleyCues.doneness("Chop the onion.") == nil)
-    }
-
-    @Test func aislesAndPicks() {
-        #expect(GalleyCues.aisleSpot("Produce") == "Right by the doors")
-        #expect(GalleyCues.aisleSpot("Dairy and eggs") == "Along the back wall")
-        #expect(GalleyCues.aisleSpot("Mystery") == nil)
-        #expect(GalleyCues.pick("Avocados") == "Pick ones that give a little")
-        #expect(GalleyCues.pick("Whole milk") == "The date furthest out is at the back")
-        #expect(GalleyCues.pick("Foil") == nil)
-    }
 }
 
 struct GalleyCuesTests {
