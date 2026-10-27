@@ -2820,7 +2820,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-key div{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .ch-key b{font:300 64px/1 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
 .ch-key span{font:600 15px/1.2 var(--sans);color:var(--ink)}
-.ch-key .th b,.ch-key .th span{color:var(--wine)}
+.ch-key .th b,.ch-key .th span,.ch-key .th em{color:var(--wine)}
 .ch-key .th b{animation:chbreathe 3.6s ease-in-out infinite}
 @keyframes chbreathe{50%{opacity:.6}}
 .ch-cap{left:24px;top:384px;width:354px;font:400 15px/22px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden}
@@ -2835,7 +2835,23 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
    word names it, so "make this calmer" changes only that place */
 .chart .ch-pl.pt{opacity:1;transform:none;border-color:transparent;outline:1.5px solid var(--slate);outline-offset:6px;border-radius:16px;transition:opacity .22s,transform .22s}.ch-pl.pt i{opacity:0}
 .ch-key.calm .th b{animation-duration:7s}
-.ch-key.big b{font-size:80px}
+.ch-key.big:not(.w-one):not(.w-lad) b{font-size:80px}
+/* 363: other ways. The same parts drawn three ways: a row, one big number, a ladder. Each number is the same element
+   in every way, so it travels to its new spot instead of fading */
+.ch-key.w-one{display:block;padding:0}
+.ch-key.w-one .ch1{position:absolute;left:0;bottom:22px;gap:6px}
+.ch-key.w-one .ch1 p{margin:0;display:flex;align-items:baseline;gap:8px}
+.ch-key.w-one .ch1 b{font-size:112px}
+.ch-key.w-one .ch1 em{font:300 56px/1 var(--num);font-style:normal}
+.ch-key.w-one ol{position:absolute;right:0;bottom:22px;margin:0;padding:0;list-style:none;display:grid;gap:6px;justify-items:end}
+.ch-key.w-one li{display:flex;align-items:baseline;gap:10px}
+.ch-key.w-one li b{font-size:24px;color:var(--ink2)}
+.ch-key.w-lad{grid-template-columns:1fr;align-content:end;align-items:stretch;gap:6px}
+.ch-key.w-lad .chl{flex-direction:row;justify-content:space-between;align-items:baseline;gap:12px}
+.ch-key.w-lad .l0 b{font-size:44px}.ch-key.w-lad .l0 span{font-size:19px}
+.ch-key.w-lad .l1 b{font-size:34px}.ch-key.w-lad .l1 span{font-size:17px}
+.ch-key.w-lad .l2 b{font-size:28px}.ch-key.w-lad .l2 span{font-size:16px}
+.ch-key.w-lad .l3 b{font-size:22px}
 .ch-hist{left:24px;top:420px;width:354px;display:grid;gap:0}
 .ch-hist button{all:unset;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;padding:5px 0;font:400 14px/19px var(--sans);color:var(--ink2);cursor:pointer}
 .ch-hist button.on{color:var(--ink);font-weight:600}
@@ -2860,9 +2876,9 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  const layer=h('div');el.appendChild(layer);
  const act=h('button','ch-act');el.appendChild(act);
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
- function draw(ghost){const t=th();let s='';
+ function draw(ghost){const t=th();let s='';if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the '+t.n.toLowerCase()+' is thirsty':', all watered')+'</div>';
-  if(at>=2)s+='<div class="ch-c ch-key'+(calm?' calm':'')+(big?' big':'')+'" data-p="key">'+[...plants].sort((a,b)=>b.d-a.d).map(p=>'<div class="'+(at>=3&&p===t&&p.d>0?'th':'')+'"><b>'+p.d+'</b><span>'+p.n+'</span></div>').join('')+'</div>'+
+  if(at>=2)s+='<div class="ch-c ch-key w-'+WAYS[wv??way]+(calm?' calm':'')+(big?' big':'')+'" data-p="key">'+keyHTML(WAYS[wv??way],t)+'</div>'+
    '<div class="ch-c ch-cap" data-p="cap">Days since water'+(at>=3&&t.d>0?', the '+t.n.toLowerCase()+' first':'')+'</div>';
   if(hist){const N=realAt??at;s+='<div class="ch-c ch-hist">'+SAY.slice(0,N).map((x,i)=>({x,i})).reverse().map(({x,i})=>'<button data-v="'+i+'" class="'+(i===at-1?'on':'')+'"><span>'+x.s+'</span><b>'+tm(i)+'</b></button>').join('')+'</div>'}
   else if(at>=6&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
@@ -2872,11 +2888,30 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(ghost)ghost.forEach(k=>layer.querySelectorAll('[data-p="'+k+'"]').forEach(e=>e.classList.add('gh')));
   Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('pt',sel===k));
   const water=at>=6&&reach&&t.d>0;act.className='ch-act'+(water?' water':'');
-  act.innerHTML=realAt!=null?'<span class="av">Go back</span><span class="ao">to how it was at '+tm(at-1)+'</span>':hist?'<span class="av">Close</span><span class="ao">the history</span>':sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.replace(/^./,c=>c.toLowerCase())+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
+  act.innerHTML=realAt!=null?'<span class="av">Go back</span><span class="ao">to how it was at '+tm(at-1)+'</span>':hist?'<span class="av">Close</span><span class="ao">the history</span>':wv!=null?'<span class="av">Keep</span><span class="ao">'+WW[WAYS[wv]]+'</span>':sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.replace(/^./,c=>c.toLowerCase())+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
  /* 362: the room remembers every sentence. Hold the title for its history, newest first, each with the time it was
     said. Tap one to see the room as it was then, in ghost; Go back sets it, and the receipt's Undo returns to now */
  let hist=false,realAt=null,held=false,hT=0;const tm=i=>'1:'+String(12+i*3).padStart(2,'0')+' pm';
- let tline='',big=false,queued=false,heard='',sel=null,selT=0,calm=false;const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget'};
+ let tline='',big=false,queued=false,heard='',sel=null,selT=0,calm=false;
+ /* 363: other ways. Swipe across a set keystone (the glass lens under the finger) and Tess shows the next way she would
+    draw it, as a ghost: one big number, then a ladder, then back to the row. Every number flies to its place in the new
+    way. Keep runs the drying line and sets it; swiping back to the one that is set drops the ghost. Nothing is written
+    until Keep. Saying "show me other ways" with the keystone picked opens the same ghosts */
+ let way=0,wv=null,wx0=null,wdx=0,wlens=null,wtick=false,swiped=false,wid=0;const WAYS=['row','one','lad'],WW={row:'four numbers in a row',one:'one big number',lad:'a ladder'},
+  TL={one:'2 of 3, one big number for the one that needs you',lad:'3 of 3, a ladder with the thirstiest on top'};
+ function keyHTML(w,t){const srt=[...plants].sort((a,b)=>b.d-a.d),hot=p=>at>=3&&p===t&&p.d>0?'th':'',B=p=>'<b data-k="'+p.n+'">'+p.d+'</b>';
+  if(w==='one'){const [f,...r]=srt;return '<div class="ch1 '+hot(f)+'"><p>'+B(f)+'<em>'+(f.d===1?'day':'days')+'</em></p><span>'+f.n+'</span></div><ol>'+r.map(p=>'<li><span>'+p.n+'</span>'+B(p)+'</li>').join('')+'</ol>'}
+  if(w==='lad')return srt.map((p,i)=>'<div class="chl l'+i+' '+hot(p)+'"><span>'+p.n+'</span>'+B(p)+'</div>').join('');
+  return srt.map(p=>'<div class="'+hot(p)+'">'+B(p)+'<span>'+p.n+'</span></div>').join('')}
+ // each number keeps its identity across ways: measure, redraw, then play it from where it was (FLIP)
+ function flip(){const old={};layer.querySelectorAll('.ch-key b[data-k]').forEach(b=>old[b.dataset.k]=b.getBoundingClientRect());draw();if(RM)return;
+  layer.querySelectorAll('.ch-key b[data-k]').forEach(b=>{const o=old[b.dataset.k];if(!o)return;const n=b.getBoundingClientRect();
+   b.animate([{transformOrigin:'0 0',transform:'translate('+(o.left-n.left)/K+'px,'+(o.top-n.top)/K+'px) scale('+(o.height/n.height)+')'},{transformOrigin:'0 0',transform:'none'}],{duration:460,easing:'cubic-bezier(.22,.9,.24,1)'})});
+  layer.querySelectorAll('.ch-key span,.ch-key em').forEach(x=>x.animate([{opacity:0},{opacity:1}],{duration:220,delay:200,easing:'ease-out',fill:'backwards'}))}
+ function keep(){const was=way,nw=wv,[x,y,w,hh]=PL.key;const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
+  if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});
+  dry=setTimeout(()=>{dry=null;l.remove();way=nw;wv=null;tline='';draw();receipt(el,'Keystone, '+WW[WAYS[nw]],()=>{way=was;wv=null;flip()})},2000)}
+ const wpull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget'};
  function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;
   if(S.no){draw();dry=setTimeout(()=>{dry=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
     if(S.queue)receipt(el,S.r,()=>{queued=false;tline='';draw()});
@@ -2889,17 +2924,31 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  function grow(){heard='';big=true;draw(['key']);const [x,y,w,hh]=PL.key;const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
   if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});
   dry=setTimeout(()=>{dry=null;l.remove();heard='';draw();receipt(el,'Numbers, bigger',()=>{big=false;draw()})},2000)}
- function pointed(){const k=sel;sel=null;clearTimeout(selT);if(k!=='key'||calm){draw();return receipt(el,'Say it, and Tess changes only the '+NAME[k])}
+ function pointed(){const k=sel;sel=null;clearTimeout(selT);
+  if(k==='key'&&calm){heard='Show me other ways';draw();dry=setTimeout(()=>{dry=null;heard='';wv=(way+1)%3;tline=TL[WAYS[wv]];flip()},900);return}
+  if(k!=='key'||calm){draw();return receipt(el,'Say it, and Tess changes only the '+NAME[k])}
   heard='Make this calmer';draw(['key']);const [x,y,w,hh]=PL.key;const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
   if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});
   dry=setTimeout(()=>{dry=null;l.remove();heard='';calm=true;draw();receipt(el,'Keystone, calmer',()=>{calm=false;draw()})},2000)}
- act.onclick=()=>{if(dry)return;if(realAt!=null){const was=realAt;realAt=null;hist=false;draw();return receipt(el,'Back to '+tm(at-1),()=>{at=was;draw()})}if(hist){hist=false;return draw()}if(sel)return pointed();const t=th();if(at>=6&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
+ act.onclick=()=>{if(dry)return;if(realAt!=null){const was=realAt;realAt=null;hist=false;draw();return receipt(el,'Back to '+tm(at-1),()=>{at=was;draw()})}if(hist){hist=false;return draw()}if(wv!=null)return keep();if(sel)return pointed();const t=th();if(at>=6&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
  layer.onpointerdown=e=>{held=false;if(!e.target.closest('.ch-ttl')||dry)return;clearTimeout(hT);hT=setTimeout(()=>{held=true;hist=!hist;if(!hist&&realAt!=null){at=realAt;realAt=null}sel=null;if(navigator.vibrate)try{navigator.vibrate([6,40,6])}catch(e){}draw()},450)};
  layer.onpointerup=layer.onpointerleave=()=>clearTimeout(hT);
- layer.onclick=e=>{if(held){held=false;if(e.target.closest('.ch-ttl'))return}const v=e.target.closest('[data-v]');if(v){const n=+v.dataset.v+1;if(realAt==null)realAt=at;at=n;if(at===realAt){realAt=null}return draw()}if(hist)return;const b=e.target.closest('[data-a="allow"]');if(b){reach=true;return draw()}const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
+ layer.addEventListener('pointerdown',e=>{swiped=false;if(!e.target.closest('.ch-key')||at<2||dry||hist||realAt!=null)return;wx0=e.clientX;wdx=0;wtick=false;wid=e.pointerId});
+ layer.addEventListener('pointermove',e=>{if(wx0==null)return;wdx=(e.clientX-wx0)/K;const k=layer.querySelector('.ch-key');
+  if(Math.abs(wdx)>8&&!wlens){wlens=h('i','shlens');el.appendChild(wlens);try{layer.setPointerCapture(wid)}catch(_){}}
+  if(wlens){const [x,y]=localXY(e,el);wlens.style.left=(x-30)+'px';wlens.style.top=(y-30)+'px'}
+  // one light tick at the detent, where letting go would take the next way
+  if(Math.abs(wdx)>=40){if(!wtick){wtick=true;if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}}}else wtick=false;
+  if(k&&!RM)k.style.translate=(Math.abs(wdx)>8?wpull(wdx):0)+'px 0'});
+ const wend=e=>{if(wx0==null)return;wx0=null;const dx=wdx;wdx=0;if(wlens){const l=wlens;wlens=null;l.animate([{opacity:1},{opacity:0,transform:'scale(.8)'}],{duration:180}).onfinish=()=>l.remove()}
+  if(Math.abs(dx)>8)swiped=true;const k=layer.querySelector('.ch-key');
+  if(e.type!=='pointerup'||Math.abs(dx)<40){if(k&&k.style.translate){const t=k.style.translate;k.style.translate='';if(!RM)k.animate([{translate:t},{translate:(-.12*parseFloat(t))+'px 0',offset:.7},{translate:'0px 0'}],{duration:320,easing:'cubic-bezier(.2,.8,.3,1)'})}return}
+  const nx=((wv??way)+(dx<0?1:2))%3;wv=nx===way?null:nx;tline=wv==null?'':TL[WAYS[wv]];heard='';sel=null;flip()};
+ layer.addEventListener('pointerup',wend);layer.addEventListener('pointercancel',wend);
+ layer.onclick=e=>{if(swiped){swiped=false;return}if(held){held=false;if(e.target.closest('.ch-ttl'))return}const v=e.target.closest('[data-v]');if(v){const n=+v.dataset.v+1;if(realAt==null)realAt=at;at=n;if(at===realAt){realAt=null}return draw()}if(hist)return;const b=e.target.closest('[data-a="allow"]');if(b){reach=true;return draw()}const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
   sel=sel===c.dataset.p?null:c.dataset.p;clearTimeout(selT);if(sel)selT=setTimeout(()=>{sel=null;draw()},30000);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}draw()};
  draw();
- window.__ch={say,get at(){return at},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>{reach=true;draw()},plants:()=>plants};
+ window.__ch={say,get at(){return at},get way(){return way},get wv(){return wv},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>{reach=true;draw()},plants:()=>plants};
  return ()=>{clearTimeout(dry);clearTimeout(selT);clearTimeout(hT)}}};
 
 
@@ -2927,7 +2976,7 @@ MAP.length=0;MAP.push(
  {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
-MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered.'});
+MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363).'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
 
 /* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.

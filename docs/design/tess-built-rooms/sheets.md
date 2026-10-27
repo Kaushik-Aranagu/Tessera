@@ -75,3 +75,15 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 - Fix found on the way (amends 358): a ghost's dashed outline crossed the first letters of its words, because content starts at the place's left edge and the outline sat 2 pt inside it. The outline now comes down when the ghost lands, not when it sets. The drying line alone marks the place while it dries, and Undo still raises the outline back
 - Core: the history is the room's op log filtered to its op groups, each with the sentence as its note. "Go back to" writes one op group that is the inverse of every group after the chosen one. Builder A: preview renders the chosen version without writing
 - Probe: `docs/design/boards/r66/phi.js`
+
+## Sheet 363: other ways
+
+- Swipe across a set keystone to see the next way Tess would draw it. The glass lens sits under the finger for the swipe only. The keystone follows the finger held back (a third of the travel, never past 28 pt), and there is one light haptic tick at 40 pt, where letting go takes the next way
+- The ways, in order: four numbers in a row (what he asked for), one big number for the thirstiest (112 pt, "days" at half size beside it, the other three listed small at the right), and a ladder (names on the left, numbers right-aligned, both stepping down in size from the thirstiest). Swiping right goes the other way round
+- The way he swipes to shows as a ghost (38%) in the keystone place. Tess's line in the widget place says which one it is: "2 of 3, one big number for the one that needs you". The action word reads "Keep" with "one big number"
+- Keep runs the 2-second drying line and sets it. The receipt reads "Keystone, one big number" with Undo. Swiping back to the way that is set drops the ghost. Nothing is written before Keep, and leaving the room drops a ghost
+- The transition is the witty part: every number is the same element in every way, so it flies to its new spot and size (the orchid's 6 grows from 64 pt to 112 pt, the basil's 1 slides into the side list), while the names fade in after 200 ms. Reduce Motion: no follow, no flight; the ghost changes in place
+- By voice: pick the keystone and say "Show me other ways". The same first ghost opens
+- A short swipe (under 40 pt) springs back with a small overshoot and changes nothing. A swipe never picks the place, and a tap still does (sheet 360)
+- Builder A: a way is a `look` trait value on the part (`way: row | one | ladder`), so each way is a renderer of the same `row` part, not a new part. Number views carry `matchedGeometryEffect` keyed by the bound object id, which gives the flight for free. Core: a "show me other ways" sentence returns up to three `look` patches as variants; the room keeps them as unwritten previews, and Keep writes the chosen one as a normal op group
+- Probe: `docs/design/boards/r66/pvw.js` (three ways, nothing outside the keystone place and no overlap in any way, Keep and Undo, a short swipe changes nothing, the voice path)
