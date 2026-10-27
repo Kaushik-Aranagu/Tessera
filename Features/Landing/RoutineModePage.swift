@@ -342,8 +342,8 @@ struct RoutineModePage: View {
                 calendar: calendar
             )
             streak = RoutineFinish.streak(days: days, today: today, calendar: calendar)
-            let line = result.record.receipt ?? "\(name), done for today."
-            TessVoice.shared.say(line, undo: result.record, holds: .seconds(10))
+            // Sheet 355: "<name>, done": never a count of evenings, whatever Core's own receipt says.
+            TessVoice.shared.say("\(name), done", undo: result.record, holds: .seconds(10))
         }
     }
 

@@ -134,6 +134,13 @@ struct RootView: View {
             .task {
                 // Simulator only (LaunchFlags): `-openShop` opens the Galley's shopping mode, for stills.
                 guard LaunchFlags.has("-openShop") else { return }
+                if LaunchFlags.has("-demoKitchen") {
+                    _ = try? model.engine.perform(
+                        AddGroceries(lines: ["milk", "2 lemons", "sourdough", "kitchen roll"]),
+                        by: .user
+                    )
+                    model.touch()
+                }
                 try? await Task.sleep(for: .milliseconds(900))
                 demoShop = true
             }

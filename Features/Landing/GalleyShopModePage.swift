@@ -346,6 +346,11 @@ struct GalleyShopModePage: View {
     /// Not here: the thing moves to the end of its aisle.
     private func notHere(_ facts: GalleyShopFacts, _ index: Int) {
         guard facts.aisles.indices.contains(index), let first = facts.aisles[index].items.first else { return }
+        // Sheet 355: "Cilantro, later in this aisle" carries Undo; the line goes back to its old place.
+        let id = first.id
+        TessVoice.shared.say("\(first.name), later in this aisle", holds: .seconds(10), takeBack: {
+            pushed.removeAll { $0 == id }
+        })
         guard !reduceMotion else {
             pushed.append(first.id)
             return
