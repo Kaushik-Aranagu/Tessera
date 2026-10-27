@@ -41,10 +41,9 @@ public struct MemoryScope: Sendable, Equatable {
 
     /// The system's own bookkeeping never enters a slice: turns, sent rows, settings, the profile and the memory lines
     /// that beliefs already carry.
-    static let neverRead: Set<SystemCatalog.Key> = [
-        .tessTurn, .tessCall, .tessSent, .tessSentExact, .tessWaiting, .tessMemory, .settings, .meProfile, .heldNotice,
-        .closedDay, .tessAgent, .notebookPage, .agentEpisode,
-    ]
+    static var neverRead: Set<SystemCatalog.Key> {
+        ClassPolicy.neverReadKeys
+    }
 
     /// What strict keeps on the phone beyond the lab-only belief classes: the calendar and Health mirrors and held
     /// notices (their titles are free text the Door's scan can't read), and meal numbers. `strictRawKeys` names system

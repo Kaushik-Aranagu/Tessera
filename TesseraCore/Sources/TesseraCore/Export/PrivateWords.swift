@@ -21,23 +21,11 @@ enum PrivateWords {
     /// Claude's own bookkeeping stays on the phone: the receipts (`tessCall`: what was asked, when, what it cost) and
     /// the phrases waiting for Claude (`tessWaiting`) are in the local copy only, never in the iCloud copy or the
     /// shared export (Research, Claude-layer gap hunt).
-    static let localOnlyClassKeys: Set<String> = Set([
-        SystemCatalog.Key.tessCall.systemKey,
-        SystemCatalog.Key.tessWaiting.systemKey,
-        SystemCatalog.Key.tessSent.systemKey,
-    ]).union(mirrorClassKeys)
+    static let localOnlyClassKeys: Set<String> = Set(ClassPolicy.localOnlyKeys.map(\.systemKey))
 
-    /// The calendar and Health mirrors and held notices (M4): never in an op, a backup copy (the local one included),
-    /// the iCloud copy or an export. They are read again from EventKit and Health on the next foreground.
-    static let mirrorClassKeys: Set<String> = [
-        SystemCatalog.Key.event.systemKey, SystemCatalog.Key.sleepNight.systemKey,
-        SystemCatalog.Key.stepsDay.systemKey, SystemCatalog.Key.restingHeartRate.systemKey,
-        SystemCatalog.Key.heldNotice.systemKey, SystemCatalog.Key.tessSentExact.systemKey,
-        // Her conversation (sheet 215 rev 5) is on the phone only, in no copy at all.
-        SystemCatalog.Key.tessTurn.systemKey,
-        // Her agents' notebooks and episodes, the same (docs/ai/harness/agents.md).
-        SystemCatalog.Key.notebookPage.systemKey, SystemCatalog.Key.agentEpisode.systemKey,
-    ]
+    /// The calendar and Health mirrors, held notices, her conversation and her agents' notebooks (M4): never in an op, a
+    /// backup copy (the local one included), the iCloud copy or an export. Derived from `ClassPolicy`.
+    static let mirrorClassKeys: Set<String> = Set(ClassPolicy.mirrorKeys.map(\.systemKey))
 
     static func isMirror(_ record: ObjectRecord) -> Bool {
         var current = record.classDef
