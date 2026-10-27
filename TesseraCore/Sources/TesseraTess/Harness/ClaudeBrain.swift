@@ -14,9 +14,11 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     }
 
     public static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
-    /// The most tools the API accepts as strict in one request.
+    /// The API accepts at most 20 strict tools in one request; 10 is a deliberate half, for headroom under the grammar
+    /// limit (the API refuses a grammar it calls too large, as it did at 20 tools and 8 unions).
     static let maxStrictTools = 10
-    /// The most union-typed parameters (type arrays or anyOf) the API accepts across the strict tools of a request.
+    /// The API accepts at most 16 union-typed parameters (type arrays or anyOf) across a request's strict tools; 8 is a
+    /// deliberate half, for the same headroom.
     static let maxStrictUnions = 8
 
     static func unionCount(in schema: Any) -> Int {
@@ -136,22 +138,29 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             return ["role": message.role.rawValue, "content": content]
         }
         if !request.tools.isEmpty {
-            // The API takes at most 20 strict tools and 16 union-typed parameters across them (a 400 beyond that): the
-            // first tools that fit stay strict, the rest are plain and Tess checks their arguments itself.
+            // The first tools that fit the strict budget stay strict (writes before reads, so a write's arguments are
+            // the
+            // ones the API guarantees); the rest are plain and Tess checks their arguments itself.
             var strictLeft = Self.maxStrictTools
             var unionsLeft = Self.maxStrictUnions
+            var strictNames: Set<String> = []
+            let writesFirst = request.tools.filter { !ToolPicker.reads.contains($0.name) }
+                + request.tools.filter { ToolPicker.reads.contains($0.name) }
+            for tool in writesFirst where tool.strict && strictLeft > 0 {
+                let unions = (try? JSONSerialization.jsonObject(with: tool.schema)).map(Self.unionCount) ?? 0
+                if unions <= unionsLeft {
+                    strictNames.insert(tool.name)
+                    strictLeft -= 1
+                    unionsLeft -= unions
+                }
+            }
             body["tools"] = try request.tools.map { tool -> [String: Any] in
                 var item: [String: Any] = try [
                     "name": tool.name, "description": tool.description,
                     "input_schema": JSONSerialization.jsonObject(with: tool.schema),
                 ]
-                if tool.strict, strictLeft > 0 {
-                    let unions = Self.unionCount(in: item["input_schema"] as Any)
-                    if unions <= unionsLeft {
-                        item["strict"] = true
-                        strictLeft -= 1
-                        unionsLeft -= unions
-                    }
+                if strictNames.contains(tool.name) {
+                    item["strict"] = true
                 }
                 if stream {
                     item["eager_input_streaming"] = true

@@ -23,6 +23,8 @@ struct TessLiveEvalTests {
         var phoneSpentDollars: Double?
         var outDir: URL
         var dry: Bool
+        /// A run stops asking after this many minutes (the rest are skipped, the report still written); 0 is no limit.
+        var maxMinutes: Double
     }
 
     struct QuestionResult: Codable {
@@ -92,7 +94,8 @@ struct TessLiveEvalTests {
             kinds: Set((env["TESSERA_EVAL_KINDS"] ?? "").split(separator: ",").map(String.init)),
             phoneSpentDollars: env["TESSERA_EVAL_PHONE_SPENT"].flatMap { Double($0) },
             outDir: env["TESSERA_EVAL_OUT"].map { URL(fileURLWithPath: $0) } ?? outDefault,
-            dry: env["TESSERA_EVAL_DRY"] == "1"
+            dry: env["TESSERA_EVAL_DRY"] == "1",
+            maxMinutes: env["TESSERA_EVAL_MINUTES"].flatMap { Double($0) } ?? 45
         )
     }
 
@@ -186,7 +189,12 @@ struct TessLiveEvalTests {
         }
         // The Door's clock stays at the run's start, so a run that crosses midnight on the 1st can't start a fresh
         // month (and a fresh allowance) partway through.
-        let runStart = Date.now
+        // The world's own moment (Friday Oct 23, 2026, 6:10 PM Pacific), not the wall clock: its dates are fixed, so a
+        // run
+        // on any other day would have Tess answer "October 2025" for a question about last month. The in-store ledger
+        // and
+        // the Door share it, so a run that crosses real midnight on the 1st can't start a fresh month either.
+        let runStart = EvalWorld.now
         let before = ledger.monthTotal(now: runStart)
 
         let trace = RunTrace(url: TestStoreFiles.trace(of: storeURL))
@@ -205,20 +213,27 @@ struct TessLiveEvalTests {
         let door = Door(ledger: ledger, sentLog: TessSentLog(store: store, classes: classes), trace: trace,
                         router: router, policy: { options.policy }, asksClaude: { true })
         door.now = { runStart }
+        engine.now = { runStart }
+        engine.zone = { EvalWorld.calendar.timeZone }
         let conversation = TessConversation(store: store, classes: classes)
         let run = TessRun(door: door, engine: engine, conversation: conversation,
                           runs: TessRunStore(url: folder.appendingPathComponent("runs.json")))
+        run.now = { runStart }
 
         let key = EvalWorldKey(world)
         let questions = key.questions().filter { options.kinds.isEmpty || options.kinds.contains($0.kind.rawValue) }
         var results: [QuestionResult] = []
         var stopped = false
         let clock = ContinuousClock()
+        let runBegan = clock.now
         for question in questions {
-            if stopped {
+            let timeUp = options.maxMinutes > 0
+                && Self.milliseconds(clock.now - runBegan) > Int(options.maxMinutes * 60000)
+            if stopped || timeUp {
                 results.append(QuestionResult(id: question.id, kind: question.kind.rawValue, turns: question.turns,
                                               reply: "", toolsCalled: [], totalMs: 0, costNano: 0,
-                                              skipped: "the month's allowance was reached"))
+                                              skipped: stopped ? "the month's allowance was reached"
+                                                  : "the run's time limit was reached"))
                 continue
             }
             _ = conversation.clear()

@@ -115,3 +115,5 @@ an item's text.**
   applies, call `MemoryEvalRecord.forget(beliefs:)` with all of those ids, so no kept miss, streak or night miss
   outlives any belief in the chain. The file holds
   question ids only; a kept miss is written again from the store each night, so a deleted fact can't be re-asked.
+
+Note: the API's strict-tool grammar size is checked only by the live run (`scripts/tess-eval.sh`); no offline test can see it, so the 10 tool / 8 union budget in `ClaudeBrain` is a deliberate half of the documented 20 / 16 limits.
