@@ -12,8 +12,15 @@ struct AnswerCheckTraceTests {
         let haiku = ScriptedBrain(.haiku, rounds: [[.text(reply)]])
         let r = try helper.rig([.haiku: haiku])
         _ = await helper.collect(r.run.ask(ask))
-        let spans = await r.rig.trace.all()
-        let span = try #require(spans.first { $0.kind == .check })
+        // The span is written just after the reply is out, so nothing on the phone waits on it.
+        var found: TraceSpan?
+        for _ in 0 ..< 200 where found == nil {
+            found = await r.rig.trace.all().first { $0.kind == .check }
+            if found == nil {
+                try await Task.sleep(for: .milliseconds(5))
+            }
+        }
+        let span = try #require(found)
         let runID = try #require(TessRunStore(url: r.url).all().first?.id)
         #expect(span.name == TessRun.answerCheck && span.runID == runID)
         let json = try String(decoding: JSONEncoder().encode(span), as: UTF8.self)
@@ -34,14 +41,18 @@ struct AnswerCheckTraceTests {
     }
 
     @Test func searchResultsCountAsEvidenceAndHerOwnWordsDoNot() {
-        let found = Data(#"{"type":"web_search_tool_result","content":"About 650 kcal"}"#.utf8)
+        // Only a result's readable words count: its id, URL and page age hold digits that would "support" a guess.
+        let found = Data((#"{"type":"web_search_tool_result","tool_use_id":"srvtoolu_777","content":[{"#
+                + #""type":"web_search_result","title":"About 650 kcal","url":"https://x.test/777","#
+                + #""page_age":"777 days ago","encrypted_content":"777"}]}"#).utf8)
         let said = Data(#"{"type":"text","text":"I think 999"}"#.utf8)
         let evidence = TessRun.evidence(system: [TextBlock("voice")], fragments: [PackFragment("Today: 3 sets")],
                                         messages: [BrainMessage(.user, text: "ask"),
                                                    BrainMessage(.assistant, [.raw(found), .raw(said), .text("12")]),
                                                    BrainMessage(.user, [.toolResult(id: "t", content: "42",
                                                                                     isError: false)])])
-        #expect(evidence.contains { $0.contains("650") } && !evidence.contains { $0.contains("999") })
+        #expect(evidence.contains("About 650 kcal") && !evidence.contains { $0.contains("999") })
+        #expect(!evidence.contains { $0.contains("777") })
         #expect(evidence.contains("Today: 3 sets") && evidence.contains("42") && evidence.contains("ask"))
         #expect(!evidence.contains("12"))
     }
