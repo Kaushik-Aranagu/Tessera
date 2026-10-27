@@ -92,6 +92,8 @@ public final class TessRun {
     var rehearsalSeconds = Rehearsal.seconds
     /// What she hears when a rehearsal ran out of time, and on every write after it in the same ask.
     static let slowRehearsal = "That took too long to try. Change nothing and ask him first"
+    /// What a call that waited for its reply hears when the reply broke off or ran out of room: it never ran.
+    static let notRun = "Nothing ran: the reply broke off before it ended. Ask again, in fewer steps if it was long"
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -396,6 +398,8 @@ public final class TessRun {
         runs.save(state, now: now())
         if case let .reply(reply) = outcome, !Task.isCancelled {
             emit(.finished(reply), active)
+            // C6 in shadow, after the reply is out, so nothing on the phone waits on the check or the trace's write.
+            await recordAnswerCheck(reply: reply, ask: text, pack: pack, messages: state.messages, runID: state.id)
         } else if case let .phone(line) = outcome, !Task.isCancelled {
             emit(.failed(line), active)
         }
@@ -447,6 +451,11 @@ public final class TessRun {
             var uses: [(id: String, name: String, input: Data)] = []
             var results: [String: (text: String, isError: Bool)] = [:]
             var failure: ClaudeOutcome?
+            // H5: a read starts the moment its block closes; anything that writes or shows waits until the reply has
+            // ended whole, so a call from a reply cut off at the token limit, refused, or broken off never runs.
+            var waiting: [(id: String, name: String, input: Data)] = []
+            let offered = Set(pack.tools.map(\.name))
+            let schemas = Dictionary(pack.tools.map { ($0.name, $0.schema) }, uniquingKeysWith: { first, _ in first })
             do {
                 for try await event in door.run(job) {
                     switch event {
@@ -456,9 +465,13 @@ public final class TessRun {
                         sink(.words(piece))
                     case let .toolUse(id, name, input):
                         uses.append((id, name, input))
-                        // Started at once: the tool runs now, not when the stream ends.
+                        guard ToolPicker.reads.contains(name) else {
+                            waiting.append((id, name, input))
+                            break
+                        }
+                        // A read starts at once: the tool runs now, not when the stream ends.
                         let result = await runTool(id: id, name: name, input: input, handles: pack.handles,
-                                                   offered: Set(pack.tools.map(\.name)),
+                                                   offered: offered, schemas: schemas,
                                                    onDevice: plan.ladder == [.appleOnDevice], budget: &budget,
                                                    runID: runID, sink: sink)
                         results[id] = result
@@ -480,6 +493,20 @@ public final class TessRun {
             }
             if Task.isCancelled {
                 return .phone("")
+            }
+            let whole = failure == nil && stop != "max_tokens" && stop != "refusal"
+            for use in waiting {
+                var result: (text: String, isError: Bool) = (Self.notRun, true)
+                if whole {
+                    result = await runTool(id: use.id, name: use.name, input: use.input, handles: pack.handles,
+                                           offered: offered, schemas: schemas,
+                                           onDevice: plan.ladder == [.appleOnDevice], budget: &budget, runID: runID,
+                                           sink: sink)
+                }
+                results[use.id] = result
+                state.doneToolIDs.append(use.id)
+                state.toolResults[use.id] = result.text
+                runs.save(state, now: now())
             }
             if let failure, uses.isEmpty {
                 return .phone(Self.line(for: failure, onlyDevice: plan.ladder == [.appleOnDevice]))
@@ -542,9 +569,10 @@ public final class TessRun {
     /// Runs one tool. Reads (open, query) are read only; every other tool is a write that lands as a pending
     /// ghost,
     /// within the per-phrase budget. Never throws: a failure is the result the model reads.
+    /// `schemas`: each offered tool's input schema; a call that doesn't fit its own runs nothing (H5).
     func runTool(id _: String, name: String, input: Data, handles: [String: UUID], offered: Set<String>,
-                 onDevice: Bool, budget: inout Int, runID: UUID, sink: (TessRunEvent) -> Void) async
-        -> (text: String, isError: Bool)
+                 schemas: [String: Data] = [:], onDevice: Bool, budget: inout Int, runID: UUID,
+                 sink: (TessRunEvent) -> Void) async -> (text: String, isError: Bool)
     {
         let started = ContinuousClock.now
         var result: (text: String, isError: Bool)
@@ -553,9 +581,12 @@ public final class TessRun {
         // The rehearsal is device-only as a tool, but it writes nothing: it runs here, and a Claude rung reads
         // only what the Door lets through. A money call inside it still fails off the phone.
         let deviceOnly = name != RehearseFlags.tool && TessTools.tool(named: name)?.deviceOnly == true
+        let misfit = schemas[name].flatMap { ToolInputCheck.problem(input, schema: $0) }
         switch name {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
             result = ("That isn't a call I can make here.", true)
+        case _ where misfit != nil:
+            result = (misfit ?? "", true)
         case TessOpenTool.name:
             // A path (from recall) resolves through the agent's slice; a pack handle needs no index.
             let isPath = ((try? JSONSerialization.jsonObject(with: input)) as? [String: Any])?["handle"]
