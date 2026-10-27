@@ -260,6 +260,8 @@ private struct ShellPage: View {
                         .opacity(settled || !settle ? 1 : 0)
                         .animation(rowAnimation(index), value: settled)
                         .accessibilityLabel(row.detail.isEmpty ? row.title : "\(row.title), \(row.detail)")
+                        // Sheets 294, 295: a row crossing the top or bottom edge rolls over it.
+                        .edgeRoll(axis: .vertical, preset: .row)
                 }
             }
         }
