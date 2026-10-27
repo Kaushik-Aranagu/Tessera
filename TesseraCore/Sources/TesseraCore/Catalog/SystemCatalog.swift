@@ -18,7 +18,7 @@ public enum SystemCatalog {
         case ingredient, recipe, recipeLine, recipeStep, cook, kitchenTimer
         case cookSession, cookDish
         case process
-        case slot, plan
+        case slot, plan, routineStep
         case tessCall
         case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case pool, inflow, poolMove, rateNote
@@ -224,6 +224,20 @@ public enum SystemCatalog {
             FieldSpec(key: "until", name: "Until", kind: .date),
             FieldSpec(key: "endedAt", name: "Ended", kind: .date),
         ]),
+        // A step of a routine mode (sheets 323 and 329): "Stretch", 6 minutes, and under it the moves ("Hips", 2 minutes,
+        // "Knee over ankle, breathe out"). A step is a child of its routine; a move is a child of its step.
+        ClassSpec(key: .routineStep, name: "Routine Step", parent: .thing, symbol: "figure.cooldown",
+                  colorRole: "planning", fields: [
+                      // A step's minutes, or a move's (in `seconds`).
+                      FieldSpec(key: "minutes", name: "Minutes", kind: .number, unit: "min"),
+                      FieldSpec(key: "seconds", name: "Seconds", kind: .number, unit: "s"),
+                      // What is done, big on screen; the title when empty.
+                      FieldSpec(key: "move", name: "Move", kind: .text),
+                      // One line in Tess's voice.
+                      FieldSpec(key: "cue", name: "Cue", kind: .text),
+                      // Words only, never a pace: "in", "out" or "in/out".
+                      FieldSpec(key: "breath", name: "Breath", kind: .choice, options: ["in", "out", "in/out"]),
+                  ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
                       FieldSpec(key: "exercise", name: "Exercise", kind: .classRef, target: .exercise),
