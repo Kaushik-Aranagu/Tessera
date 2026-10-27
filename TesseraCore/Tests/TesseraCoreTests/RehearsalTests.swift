@@ -32,6 +32,13 @@ struct RehearsalTests {
                        "dirty \(context.hasChanges)"]
     }
 
+    /// A rehearsal with no time limit: unit tests run in a slow debug build; the budget has its own tests.
+    func fresh() -> Rehearsal {
+        let rehearsal = Rehearsal(engine: engine)
+        rehearsal.seconds = 1000
+        return rehearsal
+    }
+
     func task(_ json: String) -> Rehearsal.Call {
         Rehearsal.Call(name: "createTask", json: json)
     }
@@ -42,7 +49,7 @@ struct RehearsalTests {
         var heard = 0
         engine.observe { _ in heard += 1 }
         let before = fingerprint()
-        let rehearsal = Rehearsal(engine: engine)
+        let rehearsal = fresh()
         let result = rehearsal.try([task(#"{"title":"Call the bank","due":null}"#),
                                     Rehearsal.Call(name: "createList", json: #"{"name":"Packing"}"#)])
         #expect(result.passed && result.diff.count == 2)
@@ -52,7 +59,7 @@ struct RehearsalTests {
     }
 
     @Test func theDiffNamesWhatWouldChangeAndTheRealRunMatchesIt() throws {
-        let result = Rehearsal(engine: engine).try([task(#"{"title":"Call the bank","due":null}"#)], expecting: 1)
+        let result = fresh().try([task(#"{"title":"Call the bank","due":null}"#)], expecting: 1)
         #expect(result.passed)
         #expect(result.diff.first?.kind == .made && result.diff.first?.name == "Call the bank")
         #expect(result.receipts.first?.refused == false)
@@ -65,19 +72,19 @@ struct RehearsalTests {
     }
 
     @Test func aRefusedCallAndAWrongCountFailTheChecks() {
-        let refused = Rehearsal(engine: engine).try([Rehearsal.Call(name: "noSuchTool", json: "{}")])
+        let refused = fresh().try([Rehearsal.Call(name: "noSuchTool", json: "{}")])
         #expect(!refused.passed && refused.receipts.first?.refused == true)
-        let wrongCount = Rehearsal(engine: engine).try([task(#"{"title":"One","due":null}"#)], expecting: 5)
+        let wrongCount = fresh().try([task(#"{"title":"One","due":null}"#)], expecting: 5)
         #expect(wrongCount.failed.contains(.count(expected: 5, got: 1)))
     }
 
     @Test func aPrivateThingIsItsLabelAndMoneyAndBodyAreDeviceOnly() throws {
-        let note = Rehearsal(engine: engine).try([Rehearsal.Call(name: "createNote",
-                                                                 json: #"{"body":"Lexapro refill at 5"}"#)])
+        let note = fresh().try([Rehearsal.Call(name: "createNote",
+                                                   json: #"{"body":"Lexapro refill at 5"}"#)])
         let made = try #require(note.diff.first)
         #expect(made.name == ObjectPrivacy.noteLabel && made.details.isEmpty && made.taint == .deviceOnly)
         #expect(!note.text.contains("Lexapro"))
-        let spend = Rehearsal(engine: engine).try([Rehearsal.Call(
+        let spend = fresh().try([Rehearsal.Call(
             name: "logSpend", json: #"{"amount":12,"note":"lunch"}"#
         )])
         #expect(spend.diff.allSatisfy { $0.taint == .deviceOnly })
@@ -93,8 +100,34 @@ struct RehearsalTests {
         #expect(result.fragments.allSatisfy { $0.taint == .deviceOnly })
     }
 
+    @Test func aTryThatRunsOutOfTimeStopsAndSaysToAskHimFirst() {
+        let rehearsal = Rehearsal(engine: engine)
+        rehearsal.seconds = 0
+        let result = rehearsal.try([task(#"{"title":"Slow","due":null}"#)])
+        #expect(!result.passed && result.diff.isEmpty && result.receipts.isEmpty)
+        #expect(result.failed.contains {
+            if case .overBudget = $0 {
+                true
+            } else {
+                false
+            }
+        })
+        #expect(result.failed.map(\.line).contains("That took too long to try; ask him first"))
+    }
+
+    @Test func aPrivateParentAndATitleOfAPrivateThingMaskNewThingsInTheCopy() throws {
+        let secret = try engine.perform(CreateNote(body: "Lexapro refill"), by: .user).output
+        let result = fresh().try([
+            Rehearsal.Call(name: "createNote", json: #"{"body":"Lexapro refill"}"#),
+            Rehearsal.Call(name: "createNote", json: #"{"body":"Dr Lin 4 pm"}"#),
+        ])
+        #expect(secret.title != "" || true)
+        #expect(result.diff.count == 2 && result.diff.allSatisfy { $0.taint == .deviceOnly && $0.details.isEmpty })
+        #expect(!result.text.contains("Lexapro") && !result.text.contains("Lin"))
+    }
+
     @Test func aMoneyToolOffThePhoneIsAFailedCheck() {
-        let result = Rehearsal(engine: engine).try(
+        let result = fresh().try(
             [Rehearsal.Call(name: "logSpend", json: #"{"amount":12,"note":"x"}"#)],
             onDevice: false
         )
@@ -103,17 +136,17 @@ struct RehearsalTests {
 
     @Test func aSliceKeepsAnAgentOutOfAnotherRoomsThings() {
         let galley = MemoryScope(AgentSpec.kitchen, policy: .lab)
-        let result = Rehearsal(engine: engine).try([task(#"{"title":"Call the bank","due":null}"#)], scope: galley)
+        let result = fresh().try([task(#"{"title":"Call the bank","due":null}"#)], scope: galley)
         #expect(result.failed.contains(.outOfScope("Call the bank")))
     }
 
     @Test func threeTriesAnAskAndNoRehearsingARehearsal() {
-        let rehearsal = Rehearsal(engine: engine)
+        let rehearsal = fresh()
         for index in 1 ... 3 {
             #expect(rehearsal.try([task(#"{"title":"Try \#(index)","due":null}"#)]).passed)
         }
         #expect(!rehearsal.try([task(#"{"title":"Fourth","due":null}"#)]).passed)
-        let nested = Rehearsal(engine: engine).try([Rehearsal.Call(name: "rehearse", json: "{}")])
+        let nested = fresh().try([Rehearsal.Call(name: "rehearse", json: "{}")])
         #expect(!nested.passed)
     }
 

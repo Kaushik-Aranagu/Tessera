@@ -55,11 +55,14 @@ public final class Rehearsal {
         case count(expected: Int, got: Int)
         case outOfScope(String)
         case moneyOffPhone(String)
+        /// The try used up its time before it finished: nothing here says the change is safe, so Tess asks him first
+        /// instead of acting unrehearsed.
+        case overBudget(seconds: Double)
 
         /// A line that holds a name or a tool's own words may hold a private title, so it stays on the phone.
         public var taint: Taint {
             switch self {
-            case .count, .moneyOffPhone: .claudeSafe
+            case .count, .moneyOffPhone, .overBudget: .claudeSafe
             case .refused, .danglingLink, .orphan, .outOfScope: .deviceOnly
             }
         }
@@ -72,6 +75,7 @@ public final class Rehearsal {
             case let .count(expected, got): "Expected \(expected) changed, got \(got)"
             case let .outOfScope(name): "\(name) is outside what this agent may change"
             case let .moneyOffPhone(tool): "\(tool) is a money action and only the phone's own rung may run it"
+            case .overBudget: "That took too long to try; ask him first"
             }
         }
     }
@@ -101,12 +105,20 @@ public final class Rehearsal {
 
     /// At most this many tries per ask.
     public static let budget = 3
+    /// The most one try may take, in seconds. It is cooperative: a try runs on the main actor, so it checks the clock
+    /// between steps (after the copy, before each call, before the diff) and stops there; one slow step is not cut
+    /// short.
+    public static let seconds = 2.0
     /// The tools a rehearsal never runs: itself.
     static let neverTried: Set<String> = ["rehearse"]
 
     private let real: ActionEngine
+    /// The real store's private labels, read once for the run: a copy never walks its own graph for labels.
+    private lazy var labels = ObjectPrivacy.ForkLabels(real: real.store)
     private var copy: (engine: ActionEngine, store: ObjectStore)?
     public private(set) var tries = 0
+    /// The time one try may take; `Rehearsal.seconds` unless a test says otherwise.
+    public var seconds = Rehearsal.seconds
 
     public init(engine: ActionEngine) {
         real = engine
@@ -131,6 +143,13 @@ public final class Rehearsal {
                       onDevice: Bool = true) -> Result
     {
         tries += 1
+        // The real store's labels are read first and are not the try's time: the app keeps them warm.
+        _ = labels
+        let started = ContinuousClock.now
+        func spent() -> Double {
+            let elapsed = ContinuousClock.now - started
+            return Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+        }
         guard tries <= Self.budget else {
             return Result(receipts: [], diff: [],
                           failed: [.refused(
@@ -145,6 +164,9 @@ public final class Rehearsal {
         var failed: [Failure] = []
         let before = Set(engine.history(limit: .max).map(\.id))
         for call in calls {
+            if spent() > seconds {
+                return Result(receipts: receipts, diff: [], failed: failed + [.overBudget(seconds: spent())])
+            }
             if Self.neverTried.contains(call.name) {
                 receipts.append(Receipt(tool: call.name, line: "A rehearsal doesn't rehearse.", refused: true))
                 failed.append(.refused(tool: call.name, line: "A rehearsal doesn't rehearse."))
@@ -168,9 +190,12 @@ public final class Rehearsal {
                 failed.append(.refused(tool: call.name, line: line))
             }
         }
+        if spent() > seconds {
+            return Result(receipts: receipts, diff: [], failed: failed + [.overBudget(seconds: spent())])
+        }
         let made = engine.history(limit: .max).filter { !before.contains($0.id) }.sorted { $0.createdAt < $1.createdAt }
-        let diff = Self.diff(of: made, in: engine)
-        failed += Self.integrity(of: made, in: engine)
+        let diff = Self.diff(of: made, in: engine, labels: labels)
+        failed += Self.integrity(of: made, in: engine, labels: labels)
         if let expected, diff.count != expected {
             failed.append(.count(expected: expected, got: diff.count))
         }
@@ -186,7 +211,7 @@ public final class Rehearsal {
 
     // MARK: Reading what happened
 
-    static func diff(of records: [OpRecord], in engine: ActionEngine) -> [Change] {
+    static func diff(of records: [OpRecord], in engine: ActionEngine, labels: ObjectPrivacy.ForkLabels) -> [Change] {
         struct Touch {
             var made = false
             var deleted = false
@@ -221,13 +246,14 @@ public final class Rehearsal {
             }
         }
         let last = BodyWeight.lastKg(in: store)
+        let touchedIDs = Set(order)
         return order.compactMap { id -> Change? in
             guard let item = touched[id], let object = store.context.objects[id] else { return nil }
             // Made and deleted inside the one try is nothing at all.
             if item.made, item.deleted {
                 return nil
             }
-            let label = ObjectPrivacy.shownLabel(of: object, in: store, classes: engine.classes)
+            let label = labels.label(of: object, in: store, touched: touchedIDs)
             let name = label ?? object.title
             let walled = label != nil || TessAskRouter.isUnnameable(object, classes: engine.classes)
                 || ([object.title] + item.details).contains { PrivateFacts.isWalled($0, lastWeightKg: last) }
@@ -249,27 +275,32 @@ public final class Rehearsal {
     }
 
     /// An object's name as anything outside the room says it: its label when it is private.
-    static func shown(_ id: UUID, in engine: ActionEngine) -> String {
+    static func shown(_ id: UUID, in engine: ActionEngine, labels: ObjectPrivacy.ForkLabels,
+                      touched: Set<UUID>) -> String
+    {
         guard let object = engine.store.context.objects[id] else { return "An object" }
-        return ObjectPrivacy.shownLabel(of: object, in: engine.store, classes: engine.classes) ?? object.title
+        return labels.label(of: object, in: engine.store, touched: touched) ?? object.title
     }
 
     /// No link left pointing at a deleted object, and nothing made under a parent that is gone.
-    static func integrity(of records: [OpRecord], in engine: ActionEngine) -> [Failure] {
+    static func integrity(of records: [OpRecord], in engine: ActionEngine,
+                          labels: ObjectPrivacy.ForkLabels) -> [Failure]
+    {
         let store = engine.store
+        let touched = Set(records.flatMap(\.objectIDs))
         var failures: [Failure] = []
         for record in records {
             for op in record.ops {
                 switch op {
                 case let .setLinks(object, _, _, new):
-                    let name = shown(object, in: engine)
+                    let name = shown(object, in: engine, labels: labels, touched: touched)
                     for case let .object(target) in new where store.context.objects[target]?.isDeleted != false {
                         failures.append(.danglingLink(name))
                     }
                 case let .create(object, _, parent, _):
                     guard let parent else { continue }
                     if store.context.objects[parent]?.isDeleted != false {
-                        failures.append(.orphan(shown(object, in: engine)))
+                        failures.append(.orphan(shown(object, in: engine, labels: labels, touched: touched)))
                     }
                 default: break
                 }
@@ -279,7 +310,7 @@ public final class Rehearsal {
         for record in records {
             for case let .softDelete(id) in record.ops {
                 for child in store.context.objects.values where child.parent?.id == id && !child.isDeleted {
-                    failures.append(.orphan(shown(child.id, in: engine)))
+                    failures.append(.orphan(shown(child.id, in: engine, labels: labels, touched: touched)))
                 }
             }
         }
