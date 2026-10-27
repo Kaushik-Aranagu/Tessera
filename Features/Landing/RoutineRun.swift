@@ -165,7 +165,8 @@ struct RoutineRun: Equatable {
 
     /// 0 at the start to 1 once the last step is tended; a step left for tomorrow does not darken it.
     var dusk: Double {
-        RoutineSteps.dusk(tended: tended.count, of: steps.count)
+        // The same rule as Core's `RoutineSteps.dusk(tended:of:)`, which is main-actor isolated.
+        steps.isEmpty ? 0 : min(max(Double(tended.count) / Double(steps.count), 0), 1)
     }
 
     /// 1-based position of the move within its step, and how many the step has.
