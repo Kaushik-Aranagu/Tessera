@@ -23,6 +23,12 @@ struct BoardLine: Equatable {
         if let last = shown.indices.last {
             shown[last].text = ShownLine.unstopped(shown[last].text, between: ", ")
         }
+        // A time keeps its "am" or "pm" on the same line ("9:35 pm" never wraps "pm" alone).
+        for index in shown.indices {
+            shown[index].text = shown[index].text.replacingOccurrences(
+                of: #"(\d) (am|pm)\b"#, with: "$1\u{00A0}$2", options: .regularExpression
+            )
+        }
         self.segments = shown
         self.target = target
     }
