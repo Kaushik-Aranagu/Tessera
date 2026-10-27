@@ -56,11 +56,14 @@ struct LandingWidget<Glyph: View>: View {
                 card(items[index])
                     .id(items[index].id)
                     .offset(x: lockedHorizontal ? drag.width * 0.9 : 0, y: lockedHorizontal ? 0 : drag.height * 0.9)
-                    .transition(.asymmetric(insertion: .offset(y: reduceMotion ? 0 : 18), removal: .opacity))
+                    // Sheet 298: held back until it arrives (clear, then rising), never drawn and then hidden.
+                    .transition(.asymmetric(insertion: .offset(y: reduceMotion ? 0 : 18).combined(with: .opacity),
+                                            removal: .opacity))
             }
         }
         .frame(width: Self.size.width, height: Self.size.height, alignment: .topLeading)
-        .clipped()
+        // Sheet 298: the lines clip sideways only; a line rising in is never sliced by its own box or the place's.
+        .sidewaysClip()
         .contentShape(Rectangle())
         .gesture(swipe)
         .tesseraFeedback(cue)
