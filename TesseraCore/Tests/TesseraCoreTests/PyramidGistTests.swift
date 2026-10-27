@@ -74,6 +74,20 @@ struct PyramidGistTests {
         #expect(PyramidDistiller.numbers("\u{0662}\u{0660} sets") == ["20"])
         #expect(PyramidDistiller.numbers("Bench 80 kg x5") == ["80", "5"])
         #expect(PyramidDistiller.numbers("often, attend, tension") == [])
+        // The backing side reads narrow: digits only, so a word or a fraction backs nothing it doesn't spell out.
+        #expect(PyramidDistiller.held("two eggs").isEmpty)
+        #expect(PyramidDistiller.held("½ cup") == [] && PyramidDistiller.held("1½ cups") == ["1"])
+        #expect(PyramidDistiller.held("10² sets") == ["10"])
+        #expect(PyramidDistiller.held("①0 sets") == ["0"])
+        #expect(PyramidDistiller.held("２０ sets and \u{0662} more") == ["20", "2"])
+        let material = ["1,200 kg on Oct 3, then 62.5.", "Bench 80 kg x5", "two eggs, ½ cup", "9 sets on 10²",
+                        "２０ sets", "Week 43, 2026"]
+        for text in material {
+            // Never wider than the old ASCII reader plus folded digits.
+            let old = PyramidDistiller.digits(text.precomposedStringWithCompatibilityMapping)
+                .union(PyramidDistiller.digits(String(text.filter(\.isASCII))))
+            #expect(PyramidDistiller.held(text).isSubset(of: old), "\(text)")
+        }
         let vectors = ["Bench 80 kg x5", "twenty workouts", "1,200 kg lifted", "62.5 kg on Oct 3", "$40 at 6:30 pm",
                        "three meals and 2 notes", "２０ sets", "up 4 from last week", "ran 5 km in 25 minutes"]
         for vector in vectors {
