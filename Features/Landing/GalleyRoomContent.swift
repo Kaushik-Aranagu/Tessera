@@ -323,6 +323,8 @@ struct GalleyShellHost: View {
                 KeystoneHandover(kind: .galleyTicket, from: KitchenLandingPage.firstTicketCentre(facts.pass.tickets))
             }
         }
+        // A cover hides the room: its live drawing (the rail, the hand-over) waits.
+        .liveScope(link == nil && recipe == nil && cookCover == nil)
         .fullScreenCover(item: $link) { $0.destination }
         .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
         .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }

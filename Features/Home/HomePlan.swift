@@ -328,7 +328,7 @@ struct PlanRow: View {
         ))
         let time = Text(Format.clock(block.start)).font(Theme.Typography.font(Theme.concept.scale.label))
             .monospacedDigit()
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || kept)) { context in
+        LiveClock(LiveFeatures.planBlock, minimumInterval: 1 / 30, paused: reduceMotion || kept) { context in
             words(title: title, time: time,
                   breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }

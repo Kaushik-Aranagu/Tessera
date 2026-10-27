@@ -284,6 +284,8 @@ struct WatchShellHost: View {
             .onChange(of: navigator.state.widgetIndex) { _, index in
                 handOver = .init(kind: index == 0 ? .bird : .petals, at: Date())
             }
+            // The object page covers the room: the woods wait while it is up.
+            .liveScope(opened == nil)
             .sheet(item: $opened) { item in
                 NavigationStack { ObjectPage(route: .object(item.id)) }
             }

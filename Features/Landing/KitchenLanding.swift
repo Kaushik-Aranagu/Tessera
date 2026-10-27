@@ -369,6 +369,8 @@ struct KitchenLandingPage: View {
             .environment(\.doorSummaryStyle, .ticket)
             .overlay { KeystoneHandover(kind: .galleyTicket, from: Self.firstTicketCentre(pass.tickets)) }
             .toolbar(.hidden, for: .navigationBar)
+            // A cover hides the landing: its live drawing waits (sheet 286, live only when seen).
+            .liveScope(cookCover == nil && recipe == nil)
             .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
     }
@@ -438,6 +440,7 @@ struct KitchenCookCover: Identifiable {
         var body: some View {
             KitchenLandingPage()
                 .environment(\.openHomeLink) { link = $0 }
+                .liveScope(link == nil)
                 .fullScreenCover(item: $link) { $0.destination }
         }
     }
