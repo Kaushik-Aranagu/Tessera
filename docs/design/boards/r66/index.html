@@ -2047,11 +2047,16 @@ Object.keys(LV).forEach(room=>{const D=LV[room];const S=SCREENS[room];
   const cap=el.querySelector('.lcap');const fx=h('div','lfx');el.appendChild(fx);const bd=h('div','lbd');el.appendChild(bd);
   const fill=(dir)=>{const it=itemOf(rows[ri]);if(cap)cap.textContent=d.cap;
    /* 317: swiping to the next item keeps the facts' frame; only the numbers and words that changed roll (sheets 313, 315) */
-   const prev=[...fx.children].map(c=>[c.querySelector('b'),c.querySelector(':scope > span')].map(e=>e?e.textContent:''));
-   fx.innerHTML=it.facts.map(([n,u,l])=>'<div><b>'+String(n).replace(/^about /,'<small>about </small>')+(u?'<span class="u">'+u+'</span>':'')+'</b><span>'+l+'</span></div>').join('');fx.querySelectorAll('b').forEach(fitLine);
+   const prev=[...fx.children].map(c=>[c.querySelector('b'),c.querySelector(':scope > span'),c.querySelector('b .nv'),c.querySelector('b .u')].map(e=>e?e.textContent:''));
+   /* 318: a unit written into the value ("110lb", "25min") is split off and set at half the number's size (the units rule);
+      the number sits in its own .nv so it can roll alone */
+   const val=(n,u)=>{let t=String(n),about='';if(/^about /.test(t)){about='<small>about </small>';t=t.slice(6)}const m=!u&&/^([\d.,]+)\s?([a-zA-Z%]{1,4})$/.exec(t);
+    if(m){t=m[1];u=m[2]}return about+(/^[\d.,]+$/.test(t)?'<i class="nv">'+t+'</i>':t)+(u?'<span class="u">'+u+'</span>':'')};
+   fx.innerHTML=it.facts.map(([n,u,l])=>'<div><b>'+val(n,u)+'</b><span>'+l+'</span></div>').join('');fx.querySelectorAll('b').forEach(fitLine);
    lvBody(bd,it.body,D.color);if(dir){const now=[...fx.children];
     if(now.length===prev.length&&prev.length)now.forEach((c,i)=>{const b=c.querySelector('b'),l=c.querySelector(':scope > span');
-     if(b&&b.textContent!==prev[i][0]){if(b.children.length)lvSettle(c);else numRoll(b,prev[i][0])}if(l&&l.textContent!==prev[i][1])numRoll(l,prev[i][1])});
+     const nv=b&&b.querySelector('.nv'),u=b&&b.querySelector('.u');
+     if(b&&b.textContent!==prev[i][0]){if(nv&&prev[i][2]&&(u?u.textContent:'')===prev[i][3]&&b.textContent.replace(nv.textContent,'')===prev[i][0].replace(prev[i][2],''))numRoll(nv,prev[i][2]);else if(b.children.length)lvSettle(c);else numRoll(b,prev[i][0])}if(l&&l.textContent!==prev[i][1])numRoll(l,prev[i][1])});
     else lvSettle(fx);lvSettle(bd)}
    /* 316 on items too: the action's object follows the item shown, when the verbs are the same */
    const vs=it.acts.map(a=>a.v).join('|');if(el._act&&el._verbs===vs)el._act.retarget(it.acts.map(a=>a.o),dir);
@@ -2074,7 +2079,7 @@ SECT.masthead.push('.ldt');
 .lvr .ltm{position:absolute;left:0;width:52px;top:50%;transform:translateY(-62%);font-family:var(--num);font-weight:400;white-space:nowrap}
 .lvr .ls{position:absolute;left:0;right:0;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lfx{position:absolute;left:24px;top:412px;width:354px;height:64px;z-index:6;display:grid;grid-template-columns:1.2fr 1fr 1fr;align-items:center}
-.lfx div{min-width:0}.lfx b{display:block;font:300 28px/1.05 var(--num);color:var(--ink);white-space:nowrap;overflow:hidden}.lfx b .u{font-size:14px;margin-left:2px}
+.lfx div{min-width:0}.lfx b{display:block;font:300 28px/1.05 var(--num);color:var(--ink);white-space:nowrap;overflow:hidden}.lfx b .u{font-size:14px;margin-left:2px;display:inline;letter-spacing:0;text-transform:none;font-weight:inherit;color:inherit}.lfx b .nv{font-style:normal}
 .lfx div:first-child b{color:var(--room,var(--ink));font-weight:400}
 .lfx span{display:block;margin-top:3px;font:600 10.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
 .lbd{position:absolute;left:24px;top:484px;width:354px;height:292px;z-index:6;overflow:hidden}

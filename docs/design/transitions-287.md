@@ -260,3 +260,21 @@ the page is built. Its `Text` uses the letter morph keyed on its string.
 For the builders: an item page's facts are keyed by their label, so SwiftUI keeps the views that stay and runs
 `numericText` on the values that change. The action row is derived from the current item, never captured when the
 page is built.
+
+## Sheet 318: units at half size on item facts (Oct 27)
+
+- Found on the board: item pages wrote some units into the value ("110lb", "25min", "20min"), so the unit was the
+  number's full 28 pt size, against the units rule (unit at about half the numeral, never under 10 pt). Units that
+  were passed apart ("°", "%", "mph", "pm") were also set as their own block, which could drop them under the
+  number.
+- Now every fact value is split into number and unit: the number at 28 pt, the unit inline at 14 pt in the same
+  colour, 2 pt after it. "about" stays small in front of money, as before.
+- The number has its own place, so it still rolls alone when the next item changes it (sheet 317), with the unit
+  held still.
+- Checked in every room (Log, Lookout, Deck, Galley, Watch, Purse): Purse keeps "about 2,125" with no unit; Watch
+  shows "6:00 pm" with the pm at half size.
+- Measured on the board (`t61.js`, plus a fact probe in every room): `t39.js` finds no cut words and `t45.js` no
+  stops.
+
+For the builders: the fact view takes `value: Double?`, `unit: String?` and `prefix: String?` separately (never a
+preformatted string), and draws the unit with `Theme.type.unit(for: numeralSize)`.
