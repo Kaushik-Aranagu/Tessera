@@ -354,7 +354,7 @@ private struct Seeder {
         case ("trainTime", "6 am"): (.usualTime, "{\"hour\":6}", "You train at 6 am, before work.")
         case ("trainTime", _): (.usualTime, "{\"hour\":18.5}", "You train in the evening, after work.")
         case ("coffeeMilk", _): (.prefers, "{\"text\":\"\(belief.value)\"}", "You take \(belief.value) in your coffee.")
-        case ("benchGoal", _): (.goal, "{\"text\":\"\(belief.value) bench\"}", "Your goal is a \(belief.value) bench.")
+        case ("benchGoal", _): (.goal, "{\"text\":\"bench \(belief.value)\"}", "Your goal is to bench \(belief.value).")
         default: (.fact, "{\"text\":\"\(belief.value)\"}", belief.value)
         }
     }

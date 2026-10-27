@@ -23,10 +23,7 @@ struct EvalWorldSeederTests {
 
     @Test func theSmallWorldSeedsThroughActionsAndReadsBack() throws {
         let report = try EvalWorldSeeder.seed(world, into: engine)
-        // The memory wall keeps "100 kg bench" out (a kg number reads as a body fact): the goal line and its belief are
-        // the only refusals, and they are Tess's wall working, not a seeding fault.
-        #expect(report.refused.filter { $0.key != "memory" }.isEmpty, "\(report.firstRefusal)")
-        #expect((report.refused["memory"] ?? 0) <= 2, "\(report.firstRefusal)")
+        #expect(report.refused.isEmpty, "\(report.firstRefusal)")
         #expect(SettingsStore.isTestStore(in: store) && TestStore.allowsClaude(store))
         #expect(report.notSeeded == ["leftovers", "renames"])
 
