@@ -330,3 +330,13 @@ The workout's "hold to finish" (top right) now shows the hold as it happens.
 - When it completes, the workout finishes as before (Done board). No bar, ring or extra mark: the words are the progress.
 - Reduce Motion: the overwrite does not run; the hold still works.
 - Test: t67 paper and black green; phd.js (HD1.png, halfway: "hold to" in accent, "finish" still chalk grey); phd2.js holds with a real pointer and reaches Done.
+
+## Sheet 341: the Read step knows the page
+
+The routine's Read step counts in pages as well as minutes.
+
+- Under the time, instead of "then journal": "to about page 226", from where the book was left (page 212) and a reading pace of about 0.7 pages a minute (learned from past evenings; this is the sample value). "page 226" never splits across lines.
+- When Read is tended, the receipt says where you got to: "Read, tended, about page 219" (from the minutes actually read). Tomorrow's cue starts from that page.
+- Done steps in the step list are now ink2 with a 1 pt strike, not green. That keeps the dusk page to three colours and matches the shopping list's struck lines. (This also corrects the board to match note 13 sent to Builder B.)
+- The time no longer clips when the label beside it wraps: the numerals never shrink, the label wraps.
+- Test: t67 paper and black green; prd.js reads "to about page 226" and the receipt "Read, tended, about page 219".
