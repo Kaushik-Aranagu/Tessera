@@ -252,7 +252,10 @@ enum PartResolver {
             let name = props.text("symbol") ?? ""
             return .glyph(id: part.id, symbol: symbols.contains(name) ? name : symbols[0])
         case .doors:
-            return .doors(id: part.id, names: props.texts("names").map { shown($0) }.filter { !$0.isEmpty })
+            return .doors(
+                id: part.id,
+                names: (props.texts("doors") + props.texts("names")).map { shown($0) }.filter { !$0.isEmpty }
+            )
         case .actionWord:
             let does = props.text("does")
             // A write the room has no grant for is not offered; a write to money is never offered.
@@ -315,6 +318,8 @@ enum PartLayout {
     static let nameSize: CGFloat = 15
     static let nameGap: CGFloat = 6
     static let foot: CGFloat = 22
+    /// A row's cell is never narrower than this (a name and its numeral), so a narrow place shows fewer items.
+    static let minCell: CGFloat = 80
 
     /// Where a node's pieces sit when it fills `size` (the place's own size). Recursive over stacks and grids.
     static func place(_ node: PartNode, in rect: CGRect, scale: CGFloat = 1) -> [PlacedPart] {
@@ -389,12 +394,13 @@ enum PartLayout {
                                      scale: CGFloat) -> [PlacedPart]
     {
         let big = numeral * scale
-        var pieces = [PlacedPart(id: id, text: value, rect: CGRect(x: rect.minX, y: rect.minY, width: rect.width,
+        let numberWidth = min(rect.width, DoorText.width(value, size: big, bold: false))
+        var pieces = [PlacedPart(id: id, text: value, rect: CGRect(x: rect.minX, y: rect.minY, width: numberWidth,
                                                                    height: big), size: big)]
         if !unit.isEmpty {
             // The unit sits at half size beside the numeral, never under 10 pt.
             let size = max(10, big / 2)
-            let width = DoorText.width(value, size: big, bold: false)
+            let width = numberWidth
             pieces.append(PlacedPart(id: id + ".unit", text: unit,
                                      rect: CGRect(x: rect.minX + width + 6, y: rect.minY + big - size * 1.25,
                                                   width: max(0, rect.width - width - 6), height: size * 1.25),
@@ -410,7 +416,7 @@ enum PartLayout {
 
     /// A ranked row: up to four numerals over their names, bottom-aligned above the foot (sheet 357's keystone).
     static func rowCells(_ count: Int, in rect: CGRect) -> [CGRect] {
-        let columns = max(1, min(4, count))
+        let columns = max(1, min(4, count, Int(rect.width / minCell)))
         let width = rect.width / CGFloat(columns)
         return (0 ..< columns).map { CGRect(
             x: rect.minX + CGFloat($0) * width,

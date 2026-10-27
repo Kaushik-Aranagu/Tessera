@@ -22,7 +22,14 @@ extension ChartRoomModel {
             defaults.removeObject(forKey: defaultsKey)
             defaults.removeObject(forKey: cursorKey)
         }
-        return ChartRoomModel(defaults: defaults)
+        let model = ChartRoomModel(defaults: defaults)
+        // Simulator stills: `-chartSentences N` sets the first N canned sentences, `-chartFixture` loads Core's room.
+        if LaunchFlags.has("-chartFixture") {
+            model.load(ChartDoc(RoomFixture.chart))
+        } else if let count = LaunchFlags.value(after: "-chartSentences").flatMap(Int.init) {
+            model.setSentences(count)
+        }
+        return model
     }
 }
 
@@ -89,5 +96,11 @@ struct ChartShellHost: View {
             }
         }
         .overlay { ChartRoomLayer(model: chart) }
+        .task {
+            // Simulator stills: `-chartSay` plays the next sentence 3 s after launch, so a ghost can be photographed.
+            guard LaunchFlags.has("-chartSay") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            chart.saySomething()
+        }
     }
 }

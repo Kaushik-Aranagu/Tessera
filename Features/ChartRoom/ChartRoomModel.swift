@@ -296,6 +296,21 @@ final class ChartRoomModel {
         say("\(top.name), watered") { undo() }
     }
 
+    /// Simulator stills: the room as it is after the first `count` canned sentences, with every grant allowed.
+    func setSentences(_ count: Int) {
+        var doc = Self.blank
+        for step in Self.canned.prefix(count) {
+            doc = doc.applying(ChartPatch(step.patch))
+        }
+        document = doc
+        cursor = min(count, Self.canned.count)
+    }
+
+    func load(_ doc: ChartDoc) {
+        document = doc
+        cursor = Self.canned.count
+    }
+
     func reset() {
         dryTask?.cancel()
         pending = nil

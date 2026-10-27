@@ -85,7 +85,7 @@ private struct PlaceRenderer: View {
             // beside it is empty in a room built by talking).
             PartsView(tree: tree)
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .frame(width: place == .switcher ? max(size.width, 354) : size.width, height: size.height,
+                .frame(width: tree.width ?? size.width, height: size.height,
                        alignment: .topLeading)
         case let .widget(items):
             LandingWidget(items: items, index: navigator.binding(\.widgetIndex),

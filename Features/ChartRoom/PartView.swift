@@ -145,27 +145,30 @@ private struct RankedRow: View {
     let items: [RankedItem]
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            ForEach(items) { item in
-                VStack(alignment: .leading, spacing: PartLayout.nameGap) {
-                    Text(item.big)
-                        .font(.custom("Outfit", size: PartLayout.numeral, relativeTo: .largeTitle).weight(.light))
-                        .monospacedDigit()
-                        .lineLimit(1)
-                    Text(item.small)
-                        .font(.custom("Figtree", size: PartLayout.nameSize, relativeTo: .callout).weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
+        GeometryReader { proxy in
+            let shown = Array(items.prefix(max(1, Int(proxy.size.width / PartLayout.minCell))))
+            HStack(alignment: .bottom, spacing: 0) {
+                ForEach(shown) { item in
+                    VStack(alignment: .leading, spacing: PartLayout.nameGap) {
+                        Text(item.big)
+                            .font(.custom("Outfit", size: PartLayout.numeral, relativeTo: .largeTitle).weight(.light))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                        Text(item.small)
+                            .font(.custom("Figtree", size: PartLayout.nameSize, relativeTo: .callout).weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                    }
+                    .foregroundStyle(item.isTop ? Theme.Colors.Accent.wine : Theme.Colors.ink)
+                    .breathes(item.isTop)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(item.small), \(item.big)")
                 }
-                .foregroundStyle(item.isTop ? Theme.Colors.Accent.wine : Theme.Colors.ink)
-                .breathes(item.isTop)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(item.small), \(item.big)")
             }
+            .padding(.bottom, PartLayout.foot)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottomLeading)
         }
-        .padding(.bottom, PartLayout.foot)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
     }
 }
 

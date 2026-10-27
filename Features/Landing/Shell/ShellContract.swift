@@ -114,6 +114,8 @@ enum SlotPayload: Equatable {
 struct PartTree: Equatable {
     var nodes: [PartNode]
     var accent: Color
+    /// A width wider than the place's own (the Line runs 354 pt while the Needs beside it is empty).
+    var width: CGFloat?
 }
 
 struct SlotContent: Identifiable, Equatable {

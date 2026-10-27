@@ -28,9 +28,11 @@ struct DocumentRoom: RoomContent {
             return SlotContent(id: ContentID(id ?? "chart.\(place.rawValue).\(ids)"), kind: kind, payload: payload,
                                ghost: ghost.contains(place))
         }
+        let needs = needsLines
         func tree(_ place: Place) -> SlotPayload? {
             guard let list = nodes[place], !list.isEmpty else { return nil }
-            return .parts(PartTree(nodes: list, accent: accent))
+            // The Line runs the whole 354 pt unless the Needs beside it has words.
+            return .parts(PartTree(nodes: list, accent: accent, width: place == .switcher && needs.isEmpty ? 354 : nil))
         }
         let title = nodes[.title]?.compactMap { node -> String? in
             if case let .title(_, text) = node {
@@ -40,7 +42,6 @@ struct DocumentRoom: RoomContent {
             }
         }.first
         let caption = captionLines
-        let needs = nodes[.switcher] == nil ? needsLines : []
         return Screen(layout: .landing, slots: [
             .title: title.flatMap { text in
                 slot(.title, .text, .title(text, accent: accent))

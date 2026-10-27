@@ -275,7 +275,7 @@ struct ChartRoomTests {
         let gone = OutlineSetting.frame(at: 0.38, y: 0, setting: true, reduceMotion: false)
         #expect(abs(gone.offset - 6) < 0.001 && abs(gone.scale - 0.985) < 0.0001 && gone.opacity < 0.001)
         let before = OutlineSetting.frame(at: 0.2, y: 4000, setting: true, reduceMotion: false)
-        #expect(before.offset == 0, "a lower place waits its stagger")
+        #expect(abs(before.offset) < 0.001, "a lower place waits its stagger")
         let up = OutlineSetting.frame(at: 0.38, y: 0, setting: false, reduceMotion: false)
         #expect(abs(up.offset) < 0.001 && up.opacity > 0.999)
     }
@@ -285,6 +285,38 @@ struct ChartRoomTests {
         #expect(mid.offset == 0 && mid.scale == 1 && mid.opacity > 0 && mid.opacity < 1)
         #expect(OutlineSetting.frame(at: 0.2, y: 640, setting: true, reduceMotion: true).opacity < 0.001)
         #expect(OutlineSetting.duration(reduceMotion: true) == 0.2)
+    }
+
+    // MARK: Sheet 359 acceptance: the finished room, frames
+
+    /// Where each place of the finished room sits on the 402 x 874 design screen.
+    private func frame(_ place: Place, hasNeeds: Bool) -> CGRect {
+        var rect = ShellLayout.ownFrame(place)
+        if place == .switcher, !hasNeeds {
+            rect.size.width = 354
+        }
+        return rect
+    }
+
+    @Test func theFinishedRoomKeepsEveryPieceInsideItsPlaceAndOverNothing() {
+        let resolved = nodes(ChartFixture.document)
+        let hasNeeds = resolved[.needs] != nil
+        var placed: [(place: Place, piece: PlacedPart)] = []
+        for (place, list) in resolved where [.title, .switcher, .needs, .keystone, .caption, .widget].contains(place) {
+            let rect = frame(place, hasNeeds: hasNeeds)
+            for node in list {
+                for piece in PartLayout.place(node, in: rect) {
+                    #expect(rect.insetBy(dx: -0.5, dy: -0.5).contains(piece.rect), "\(place) \(piece.text) leaves its place")
+                    placed.append((place, piece))
+                }
+            }
+        }
+        #expect(placed.count > 10)
+        for (index, one) in placed.enumerated() {
+            for two in placed[(index + 1)...] where one.piece.rect.intersects(two.piece.rect) {
+                Issue.record("\(one.place) \(one.piece.text) crosses \(two.place) \(two.piece.text)")
+            }
+        }
     }
 
     // MARK: The kit is an element
