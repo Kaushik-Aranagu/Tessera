@@ -40,7 +40,7 @@ Haptics use the iOS feedback names. One haptic per move at most, and none while 
 | Digits roll (`value`) | **Odometer lag.** Each digit to the left starts 18 ms after the one on its right, so a 9 to 10 carries visibly. | none | on the board (291) |
 | Rest day on the Deck | **The plates come back.** The glyph's plates are set down for a rest day; next morning they are back on the bar, with no motion. He only notices that they are back. | none | builders |
 | Watch: a routine done | **The water drop slides.** The drop on the watered tree runs down one leaf and is gone (420 ms). | soft | builders |
-| Log: a word sets in the wall (`add`) | **The wall makes room.** The neighbouring words shuffle 1 pt aside and back as the new word presses in. | none | builders |
+| Log: a word sets in the wall (`add`) | **The wall makes room.** The neighbouring words shuffle 1 pt aside and back as the new word presses in. | none | on the board (303) |
 | Log: a list item checked | **The tick is drawn**, not shown: one stroke, 160 ms, slightly heavier at its start. The line through the words follows once the pen lifts; unchecking lets the ink fade back to the faint mark. | rigid, light | on the board (300) |
 | Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | builders |
 | Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | on the board (302) |
@@ -104,3 +104,20 @@ No full stops at the end of any of these (sheet 289).
   0.006 again past 80.
 - For the builders: map the drag translation through the same curve before it drives the pull effect, and play the
   soft haptic once as it crosses 80. Reduce Motion: no pull effect at all, so there is nothing to resist.
+
+## 8. The wall makes room, as built (sheet 303)
+
+- On the board: the demo "Log: a new note joins the wall" adds Plant care.
+- The new word joins the wall's last row, and only that row changes. Its words step aside and shrink together just
+  enough for the new word to fit (the wall's own row fit, 3 pt gaps), over 650 ms. Every other word stays exactly
+  where it was, so the wall never reshuffles under him.
+- Once there is space (380 ms in), the new word presses in: from 112% and clear, to 98.5%, to rest, in 480 ms. Its
+  nearest neighbour gives 1 pt and comes back as it lands.
+- Undo: the word lifts out (fades to 92% size in 220 ms) and the row returns to where it was.
+- Found and fixed on the way: the wall's letter scramble moment could make a word wider than itself, so it
+  touched its neighbour. A scrambling word now keeps its own width.
+- Checked (`t47.js`): no two words overlap and none leaves the wall, after the add and after Undo, in paper and
+  black.
+- For the builders: the wall view keeps its packed rows; `add` refits only the last row with
+  `withTesseraAnimation(.layout)`, then inserts the word with a scale-and-fade transition after a 380 ms delay.
+  A full repack happens only on the next visit, never under his eyes.

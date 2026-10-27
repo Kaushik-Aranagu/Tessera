@@ -187,6 +187,7 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" data-th="log-index">Log doors: Index</button>
   <button class="w" data-th="log-sentence">Log doors: Sentence</button>
   <button class="w" data-th="log-reel">Log doors: Reel</button>
+  <button class="w" data-th="log-add">Log: a new note joins the wall</button>
   <button class="w" data-th="page-even">Watch page: Even</button>
   <button class="w" data-th="page-columns">Watch page: Two columns</button>
   <button class="w" data-th="page-time">Watch page: By time</button>
@@ -847,7 +848,8 @@ function pack(words,Wd,Hh,opts={}){const G=3,M=metrics();let best=null;const rnd
  best.R2.forEach(({rw,s,hh},ri)=>{let x=0;const used=rw.reduce((a,w)=>a+aw(w.t)*s,0),gap=(Wd-used)/Math.max(1,rw.length-1);
   rw.forEach(w=>{const top=y-((s-(M.fa+M.fd)*s)/2+M.fa*s-M.cap*s);out.push({w,s,x,y:top,r:ri,hh});x+=aw(w.t)*s+gap});y+=hh+G+extra});return out}
 function wall(host,words,opts){host.innerHTML='';const look=phone.dataset.look,cols=WALL_COLORS[look];
- const els=words.map((w,i)=>{const e=h('div','wd');e.textContent=w.t;e.style.color='#'+cols[(i*5)%12];e.style.webkitTextStroke=(0)+'px';e.onclick=()=>opts.tap&&opts.tap(w);host.appendChild(e);return e});
+ const mk=(w,i)=>{const e=h('div','wd');e.textContent=w.t;e.style.color='#'+cols[(i*5)%12];e.style.webkitTextStroke=(0)+'px';e.onclick=()=>opts.tap&&opts.tap(w);host.appendChild(e);return e};
+ const els=words.map(mk);
  function lay(){host.classList.add('measuring');const P=pack(words,354,opts.h,{seed:opts.seed});P.forEach(p=>{const i=words.indexOf(p.w),e=els[i];e.style.fontSize=p.s+'px';e.style.left=p.x+'px';e.style.top=p.y+'px';e.style.webkitTextStroke=(p.s*.035).toFixed(2)+'px #'+cols[(i*5)%12]});
   // fit pass: measure what the page actually rendered, row by row, and shrink a row that overflows so nothing overlaps or clips
   const rows={};P.forEach(p=>{(rows[p.r]=rows[p.r]||[]).push(p)});
@@ -858,10 +860,32 @@ function wall(host,words,opts){host.innerHTML='';const look=phone.dataset.look,c
  lay();
  // measure only once the exact weight is loaded (the canvas measures a fallback until then), and again when any font finishes
  if(document.fonts){document.fonts.load('900 100px Figtree','TACOS PACKING').then(lay).catch(()=>{});document.fonts.ready.then(lay);document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',lay)}
- return {els,lay}}
+ /* 303: the wall makes room. A new word joins the last row; only that row changes. Its words step aside and shrink
+    just enough to fit (the same fit as the wall's own), while the new word presses in once there is space and its
+    nearest neighbours give 1 pt and come back. Nothing else on the wall moves. */
+ function lastRow(){const bl=e=>parseFloat(e.style.top)+parseFloat(e.style.fontSize)*.62,y=Math.max(...els.map(bl));return els.filter(e=>Math.abs(bl(e)-y)<4)}
+ function add(w){const row=lastRow().sort((a,b)=>parseFloat(a.style.left)-parseFloat(b.style.left));const s0=parseFloat(row[0].style.fontSize),base=parseFloat(row[0].style.top)+s0*.62;
+  const saved=row.map(e=>[e.style.left,e.style.top,e.style.fontSize,e.style.webkitTextStroke]);
+  words.push(w);const ne=mk(w,words.length-1);els.push(ne);const all=row.concat(ne);
+  host.classList.add('measuring');all.forEach(e=>e.style.fontSize=s0+'px');const G=3,ws=all.map(e=>e.offsetWidth),tot=ws.reduce((a,b)=>a+b,0)+G*(all.length-1);
+  const f=Math.min(1,(354-G*(all.length-1))/(tot-G*(all.length-1))),ns=s0*f,gap=f<1?G:(354-ws.reduce((a,b)=>a+b,0))/(all.length-1);
+  row.forEach((e,k)=>[e.style.left,e.style.top,e.style.fontSize,e.style.webkitTextStroke]=saved[k]);
+  ne.style.fontSize=ns+'px';ne.style.top=(base-ns*.62)+'px';ne.style.webkitTextStroke=(ns*.035).toFixed(2)+'px '+ne.style.color;
+  let x=0;const L=all.map((e,k)=>{const l=x;x+=ws[k]*f+gap;return l});ne.style.left=L[L.length-1]+'px';
+  void host.offsetWidth;host.classList.remove('measuring');void host.offsetWidth;
+  row.forEach((e,k)=>{e.style.left=L[k]+'px';e.style.fontSize=ns+'px';e.style.top=(base-ns*.62)+'px';e.style.webkitTextStroke=(ns*.035).toFixed(2)+'px '+e.style.color});
+  ne._undo=()=>{row.forEach((e,k)=>[e.style.left,e.style.top,e.style.fontSize,e.style.webkitTextStroke]=saved[k])};
+  if(RM)return ne;
+  ne.animate([{opacity:0,transform:'scale(1.12)'},{opacity:1,transform:'scale(.985)',offset:.7},{opacity:1,transform:'none'}],{duration:480,delay:380,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
+  const nb=row[row.length-1];if(nb)nb.animate([{translate:'0 0'},{translate:'-1px 0'},{translate:'0 0'}],{duration:360,delay:560,easing:'ease-in-out'});return ne}
+ function drop(w){const i=words.indexOf(w);if(i<0)return;const e=els[i];words.splice(i,1);els.splice(i,1);
+  const back=()=>{e._undo&&e._undo();e.remove()};if(RM){back();return}
+  e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.92)'}],{duration:220,easing:'ease-in',fill:'forwards'}).onfinish=back}
+ return {els,lay,add,drop}}
 function moments(els,timers){if(RM)return;const t=setInterval(()=>{const e=els[Math.floor(Math.random()*els.length)];if(!e)return;const k=Math.random();
   if(k<.4){e.classList.remove('flip');void e.offsetWidth;e.classList.add('flip')}
-  else if(k<.75){const txt=e.textContent,L='ABCDEFGHIJKLMNOPQRSTUVWXYZ';let n=0;const s=setInterval(()=>{n++;e.textContent=[...txt].map((c,i)=>i<n/2||c===' '?c:L[Math.floor(Math.random()*26)]).join('');if(n>=txt.length*2){clearInterval(s);e.textContent=txt}},800/(txt.length*2))}
+  /* 303: scrambled letters can be wider than the word; the word keeps its own width so it never touches a neighbour */
+  else if(k<.75){const txt=e.textContent,L='ABCDEFGHIJKLMNOPQRSTUVWXYZ',w0=e.offsetWidth;let n=0;const s=setInterval(()=>{n++;e.textContent=[...txt].map((c,i)=>i<n/2||c===' '?c:L[Math.floor(Math.random()*26)]).join('');e.style.scale=Math.min(1,w0/e.offsetWidth).toFixed(3)+' 1';if(n>=txt.length*2){clearInterval(s);e.textContent=txt;e.style.scale=''}},800/(txt.length*2))}
   else{e.classList.remove('dis');void e.offsetWidth;e.classList.add('dis')}},5000);timers.push(t)}
 
 /* ---------- Notes landing (246, approved) ---------- */
@@ -1651,7 +1675,7 @@ SCREENS.notes={title:'Notes',accent:'notes',tess:'You wrote three today. Trip pa
    {hdr:'Thursday',big:'Book club',mid:'At Sam’s, 7 pm',sml:'Chapter nine to the end',go:['note',{id:'n4'}]}],
   keystone:k=>{const wh=h('div','wall');wh.style.top='196px';wh.style.height='182px';k.appendChild(wh);
    const ws=NOTES.filter(n=>!n.priv&&!n.d.includes('archive')).sort((a,b)=>(b.pin||0)-(a.pin||0)||ORDW[a.w]-ORDW[b.w]).slice(0,11).map(n=>({t:cut(n),id:n.id}));
-   const W1=wall(wh,ws,{h:182,seed:3,tap:w=>go('note',{id:w.id})});moments(W1.els,timers);return ()=>timers.forEach(clearInterval)},
+   const W1=wall(wh,ws,{h:182,seed:3,tap:w=>go('note',{id:w.id})});wh._wall=W1;moments(W1.els,timers);return ()=>timers.forEach(clearInterval)},
   caption:'Tap a word to open its note.',
   doors:NDOORS.map(d=>({k:d.n,n:NOTES.filter(x=>inDoor(d.k,x)).length,color:'var(--'+d.c+')',go:['door',{k:d.k}],
    sum:()=>{const L=NOTES.filter(x=>inDoor(d.k,x)).sort((a,b)=>ORDW[a.w]-ORDW[b.w]);return d.k==='private'?sum('Locked',[L.length+' private notes']):sum('Newest '+(L[0]?L[0].w.toLowerCase():''),L.slice(0,3).map(cut))}})),
@@ -2473,7 +2497,7 @@ function galleyAway(){const go2=()=>{const el=current;SEEN.kitchen=railSnap(el);
  const top=stack.length?stack[stack.length-1].id:null;if(top==='kitchen')go2();else{reset('home');go('kitchen');setTimeout(go2,1500)}}
 
 Object.assign(TH_DEMOS,{'look-index':['training',()=>lookBy('training','index',false)],'look-sentence':['training',()=>lookBy('training','sentence',false)],
- 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway],'log-index':['notes',()=>lookBy('notes','index',false)],'log-sentence':['notes',()=>lookBy('notes','sentence',false)],'log-reel':['notes',()=>lookBy('notes','reel',false)],'page-even':['l1_routines',()=>pageForm('even',false)],'page-columns':['l1_routines',()=>pageForm('columns',false)],'page-time':['l1_routines',()=>pageForm('time',false)],'page-ranked':['l1_routines',()=>pageForm('ranked',false)],'page-tess':['l1_routines',()=>pageForm('time',true)]});
+ 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway],'log-add':['notes',()=>thLogAdd()],'log-index':['notes',()=>lookBy('notes','index',false)],'log-sentence':['notes',()=>lookBy('notes','sentence',false)],'log-reel':['notes',()=>lookBy('notes','reel',false)],'page-even':['l1_routines',()=>pageForm('even',false)],'page-columns':['l1_routines',()=>pageForm('columns',false)],'page-time':['l1_routines',()=>pageForm('time',false)],'page-ranked':['l1_routines',()=>pageForm('ranked',false)],'page-tess':['l1_routines',()=>pageForm('time',true)]});
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
 /* ================= 287: reshape by hand. Hold the Nav word: the screen loosens into shape mode, over the live
@@ -2559,5 +2583,10 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.da
  let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;sweep()})}).observe(document.querySelector('#phone'),{subtree:true,childList:true,characterData:true});sweep();
  /* a ticket that is still opening has not reached its width yet, so look again while things settle */
  setInterval(()=>{if(!document.hidden)sweep()},400)})();
+
+/* 303: a new note joins the Log wall. The wall makes room (sheet 290); Undo takes the word back out the same way. */
+function thLogAdd(){const el=current,wh=el&&el.querySelector('.wall');if(!wh||!wh._wall)return;const W=wh._wall;
+ const w={t:'Plant care',id:'n_new'};W.add(w);
+ thUndo(el,false,'Plant care, new note',()=>W.drop(w),null)}
 })();
 </script>
