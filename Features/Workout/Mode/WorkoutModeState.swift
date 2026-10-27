@@ -111,7 +111,14 @@ struct WorkoutModeState: Equatable {
     var lifts: [Lift]
     /// The lift on screen and the one the dial picked.
     var focus = 0
-    var phase: Phase = .set
+    var phase: Phase = .set {
+        didSet { trackRestBaseline(from: oldValue) }
+    }
+
+    /// The weights of the resting lift's sets as the rest began, so Felt is always measured from them (sheet 345):
+    /// Easy then Hard then Right gives +5, then -5, then 0 against the start of the rest, never a running total.
+    /// Cleared when the rest ends.
+    private(set) var restBaseline: [Double]?
     private(set) var finishedAt: Date?
     /// The last logged set, takeable back for ten seconds.
     private(set) var undoable: (lift: Int, set: Int, at: Date)?
@@ -233,8 +240,28 @@ struct WorkoutModeState: Equatable {
         return true
     }
 
-    /// Felt, asked during the rest: the word goes beside the set you just logged; Easy adds a step to that lift's sets
-    /// left and Hard takes one off.
+    private mutating func trackRestBaseline(from old: Phase) {
+        switch (old, phase) {
+        case (.rest, .rest):
+            break
+        case let (_, .rest(_, _, lift)):
+            restBaseline = lifts[lift].sets.map(\.weight)
+        default:
+            restBaseline = nil
+        }
+    }
+
+    /// The next weight Felt changed during this rest, old to new (the screen strikes the old number and writes the new
+    /// one after it); nil when nothing changed.
+    var restNextChange: (old: Double, new: Double)? {
+        guard case let .rest(_, _, lift) = phase, let baseline = restBaseline, let next = lifts[lift].nextIndex,
+              baseline.indices.contains(next) else { return nil }
+        let new = lifts[lift].sets[next].weight
+        return abs(new - baseline[next]) < 0.001 ? nil : (baseline[next], new)
+    }
+
+    /// Felt, asked during the rest: the word goes beside the set you just logged; Easy puts the sets left a step above
+    /// their weight at the start of the rest, Hard a step below, Right back at it. Never cumulative.
     @discardableResult
     mutating func apply(felt: Felt) -> Receipt? {
         guard case let .rest(_, _, liftIndex) = phase else { return nil }
@@ -242,10 +269,15 @@ struct WorkoutModeState: Equatable {
         lifts[liftIndex].sets[lastDone].done?.felt = felt
         let from = lifts[liftIndex].nextIndex ?? lifts[liftIndex].sets.count
         let left = lifts[liftIndex].sets.count - from
+        // Measured from the weights at the start of the rest, so a second answer replaces the first.
+        if let baseline = restBaseline {
+            for index in lifts[liftIndex].sets.indices where index >= from && baseline.indices.contains(index) {
+                lifts[liftIndex].sets[index].weight = max(baseline[index] + felt.direction * step, 0)
+            }
+        }
         guard felt.direction != 0, left > 0 else {
             return Receipt(text: "\(felt.word), weight stays", setsChanged: 0)
         }
-        shift(lift: liftIndex, from: from, by: felt.direction * step)
         let amount = PlateLoad.number(step)
         let sign = felt.direction > 0 ? "+" : "-"
         let noun = left == 1 ? "set" : "sets"
