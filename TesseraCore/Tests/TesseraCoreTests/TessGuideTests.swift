@@ -104,13 +104,13 @@ struct TessGuideTests {
         // An ask about a look that is also about the app: the look calls still lead, and the guide comes after them.
         let frame = ElementLooksTests().deckFrame()
         let ask = "how do I make the dial denser and what does an index look like"
+        // Longer than a look nudge binds, and about looks: the look calls lead and the guide is offered.
         let pick = ToolPicker.pick(ask, frame: frame)
-        if pick.bound == nil, let at = pick.tools.firstIndex(of: TessGuide.name) {
-            let lead = pick.tools.prefix(at)
-            #expect(lead.allSatisfy { pick.matched.contains($0) || LookWords.calls.contains($0) })
-            for call in LookWords.calls where pick.looks {
-                #expect(pick.tools.contains(call), "\(call) in \(pick.tools)")
-            }
+        #expect(pick.bound == nil && pick.looks)
+        let at = try #require(pick.tools.firstIndex(of: TessGuide.name), "\(pick.tools)")
+        #expect(pick.tools.prefix(at).allSatisfy { pick.matched.contains($0) || LookWords.calls.contains($0) })
+        for call in LookWords.calls {
+            #expect(pick.tools.prefix(at).contains(call), "\(call) in \(pick.tools)")
         }
         // Every call the ask named survives the cut.
         let named = ToolPicker.pick("how do I start a workout from here", frame: frame)
