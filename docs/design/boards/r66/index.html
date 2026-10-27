@@ -1302,13 +1302,90 @@ SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 to
  const d1=h('div','tdoor','<b>This week</b><span><span style="color:var(--training)">3</span> of 6 done. <span style="color:var(--teal)">Pull A</span> tomorrow.</span>');d1.style.top='570px';el.appendChild(d1);
  const d2=h('div','tdoor','<b>Library</b><span>28 workouts in 6 kinds. <span style="color:var(--gold)">New: hill sprints.</span></span>');d2.style.top='644px';el.appendChild(d2);
  const f=h('button','foot','Start Push A');f.style.color='var(--training)';f.onclick=()=>go('workout');el.appendChild(f);return stop}};
-SCREENS.workout={title:"Today's workout",accent:'training',tess:'Bench opens at 185. Last time all three sets were five.',render(el){const done=new Set();
- const rows=[['Warm up, row','8 min'],['Bench press','185 lb  5 5 5'],['Overhead press','95 lb  8 8 8'],['Cable row','110 lb  10 10 10'],['Triceps extension','40 lb  12 12 12']];
- const stop=boardCenter(el,ck=>{chalk(ck,'Push A',26,236,34,.95,C);chalk(ck,'about 45 min, 4 lifts',26,262,17,.7,C2);rows.forEach(([n,v],i)=>{const y=300+i*24;const w=chalk(ck,n,26,y,20,done.has(i)?.45:.85,done.has(i)?C2:C);if(done.has(i)){ck.strokeStyle='rgba('+C2+',.8)';ck.lineWidth=2;ck.beginPath();ck.moveTo(24,y-7);ck.lineTo(26+w+2,y-9);ck.stroke()}chalk(ck,v,230,y,18,.7,C2)})});
- const bw=h('div','backw','Training');bw.onclick=back;bw.style.zIndex=2;el.appendChild(bw);el.appendChild(h('div','ttl2','Push A')).style.cssText+='top:100px;font-size:40px;color:var(--clay);z-index:2';
- const box=h('div');box.style.cssText='position:absolute;left:24px;right:24px;top:450px;z-index:2';el.appendChild(box);
- rows.forEach(([n,v],i)=>{const r=h('div','krow','<span>'+n+'</span><span>'+v+'</span>');r.style.cursor='pointer';r.onclick=()=>{if(done.has(i))done.delete(i);else done.add(i);r.style.color=done.has(i)?'var(--ink2)':'';r.style.textDecoration=done.has(i)?'line-through':'';receipt(el,n+(done.has(i)?', done.':', back on.'))};box.appendChild(r)});
- const f=h('button','foot','Start Push A');f.style.color='var(--training)';f.onclick=()=>receipt(el,'Live workout mode (230 section 5).');el.appendChild(f);return stop}};
+/* ---------- 321 Workout mode (his 2:02 AM note: "starting a workout and doing the selected routine ... cooler and
+   accurate and useful"). The mode keeps every place of the Deck landing, so nothing moves under a sweaty thumb; each
+   place changes job. Title: the workout. Band: time in, time left. Keystone: the blackboard is the live set (the lift,
+   its sets in chalk, done ones ticked; during rest the rest is twelve chalk strokes, one wiped every ten seconds).
+   Sentence place: the set you are on, weight in the number face; drag it up or down by 5 lb. Dial: the lifts, so you
+   can do them in any order; the summary beside it is that lift's ledger. Action: Done logs the set and starts the rest;
+   swipe for Rest, Lighter, Finish (Finish asks for a hold). Undo 10 s on every log. */
+SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last time all three sets were five.',render(el){
+ const LIFTS=[{k:'Warm up',name:'Row, easy',sets:[{w:8,u:'min'}],rest:30,last:'8 min, 1,610 m'},
+  {k:'Bench',name:'Bench press',sets:[{w:185,r:5},{w:185,r:5},{w:185,r:5}],rest:150,last:'185 × 5, 5, 5',best:'205, three weeks ago'},
+  {k:'Press',name:'Overhead press',sets:[{w:95,r:8},{w:95,r:8},{w:95,r:8}],rest:120,last:'95 × 8, 8, 7',best:'100, Oct 9'},
+  {k:'Cable row',name:'Cable row',sets:[{w:110,r:10},{w:110,r:10},{w:110,r:10}],rest:90,last:'110 × 10, 10, 10',best:'120, Oct 2'},
+  {k:'Triceps',name:'Triceps extension',sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}],rest:60,last:'40 × 12, 12, 12'}];
+ const S={li:0,phase:'lift',rest:0,restOf:0,t0:Date.now()-60000*0,done:LIFTS.map(()=>0),log:[],end:0};window.__wo={S,LIFTS};
+ const L=()=>LIFTS[S.li],next=l=>l.sets[S.done[LIFTS.indexOf(l)]],left=l=>l.sets.length-S.done[LIFTS.indexOf(l)];
+ const mins=()=>Math.floor((Date.now()-S.t0)/60000),mmss=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+ const wt=st=>st.u?st.w+' '+st.u:st.w+' lb × '+st.r;
+ const total=()=>S.log.reduce((a,x)=>a+(x.r?x.w*x.r:0),0);
+ let H={},wbox,blk,tick=0;
+ // the sentence place, live
+ const widget=()=>{wbox=h('div','one lw wo mode');wbox.style.zIndex=6;blk=h('div','blk');wbox.appendChild(blk);
+  let y0=null,acc=0;wbox.onpointerdown=e=>{if(S.phase!=='lift'||L().sets[0].u)return;y0=e.clientY;acc=0;wbox.setPointerCapture(e.pointerId)};
+  wbox.onpointermove=e=>{if(y0==null)return;const dy=(e.clientY-y0)/K;if(Math.abs(dy-acc)>16){const st=next(L());if(!st)return;const d=dy-acc<0?5:-5;L().sets.slice(S.done[S.li]).forEach(x=>x.w=Math.max(5,x.w+d));acc=dy;pulse();paint()}};
+  wbox.onpointerup=()=>{y0=null};wbox.onclick=()=>{if(S.phase==='rest'){S.rest=0;endRest()}};
+  return {box:wbox,start:()=>{},stop:()=>{}}};
+ const pulse=()=>{if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}};
+ function card(){const l=L(),st=next(l);
+  if(S.phase==='done')return {hdr:'Finished',big:String(Math.max(1,mins())),unit:'min',mid:S.log.filter(x=>x.r).length+' sets, about '+total().toLocaleString()+' lb moved',sml:'A best on press, 100 lb'};
+  if(S.phase==='rest'){const nl=LIFTS[S.li],ns=next(nl);return {hdr:'Rest',big:mmss(S.rest),mid:ns?'Next, '+nl.name.toLowerCase()+', '+wt(ns):'Next, '+(LIFTS.find(x=>left(x))||nl).name.toLowerCase(),sml:'Tap to start now',c:'var(--ink)'}}
+  if(!st)return {hdr:l.name,big:'Done',mid:'All '+l.sets.length+' sets',sml:'Turn the dial for the next lift'};
+  if(st.u)return {hdr:'Warm up',big:String(st.w),unit:'min',mid:l.name,sml:'Last time '+l.last};
+  return {hdr:'Set '+(S.done[S.li]+1)+' of '+l.sets.length,big:String(st.w),unit:'lb',reps:st.r,mid:l.name+', '+st.r+' reps',sml:'Last time '+l.last}}
+ let was='';
+ function paint(){const c=card();const col=c.c||'var(--training)';
+  const key=c.hdr+'|'+c.mid;const bigTxt=c.big+(c.unit||'')+(c.reps||'');
+  if(blk._key!==key||!blk.querySelector('.bn')){blk.innerHTML='<div class="hdr" style="color:'+col+'">'+c.hdr+'</div><div class="big"><span class="bn" style="color:'+col+'"><span class="o">'+c.big+'</span>'+(c.unit?'<span class="u" style="font-size:28px">'+c.unit+'</span>':'')+(c.reps?'<span class="x">×</span><span class="o r">'+c.reps+'</span>':'')+'</span></div><div class="mid">'+c.mid+'</div><div class="sml">'+c.sml+'</div>';
+   if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:360,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
+  else{const o=blk.querySelector('.bn .o');const w0=o.textContent;if(w0!==c.big){o.textContent=c.big;numRoll(o,w0)}const sm=blk.querySelector('.sml');if(sm.textContent!==c.sml)sm.textContent=c.sml}
+  if(H.band){H.band.innerHTML='<div class="ln">'+(S.phase==='done'?'Done in '+Math.max(1,mins())+' min':mins()+' min in')+'</div><div class="ln">'+(S.phase==='done'?'All '+LIFTS.length+' lifts':LIFTS.filter(x=>left(x)).length+' of '+LIFTS.length+' lifts to go')+'</div>'}
+  const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const c=d.querySelector('i'),n=left(LIFTS[i]);if(c&&c.textContent!==String(n||''))c.textContent=n||''});
+  if(H.sum)sumNow();if(H.act)H.act.retarget(objs(),0)}
+ function objs(){const l=L(),st=next(l);const n=LIFTS.filter(x=>left(x)).length;
+  if(S.phase==='done')return ['back to the Deck','nothing to time','nothing to drop','back to the Deck'];
+  return [S.phase==='rest'?'the next set, now':st?(st.u?'the warm up, '+st.w+' min':'set '+(S.done[S.li]+1)+', '+wt(st)):'turn to the next lift',
+   S.phase==='rest'?'add 30 s':'a '+mmss(l.rest)+' rest',st&&!st.u?'drop to '+(st.w-10)+' lb':'nothing to drop',S.phase==='done'?'saved':'Push A, '+(LIFTS.length-n)+' of '+LIFTS.length+' done']}
+ let sumKey='';
+ function sumNow(){const i=H.dial?H.dial.focus:S.li,l=LIFTS[i];const k=i+'|'+S.done[i]+'|'+l.sets.map(x=>x.w).join();if(k===sumKey)return;sumKey=k;sumSet(H.sum,ledger(i),'training',el)}
+ function ledger(i){const l=LIFTS[i],d=S.done[i];
+  const lines=l.sets.map((st,j)=>{const t=(st.u?'Row':'Set '+(j+1))+' '+o(String(st.w))+un(st.u||('lb × '+st.r));return j<d?t:j===d?'<span style="color:var(--training)">'+t+'</span>':'<span style="color:var(--slate)">'+t+'</span>'});
+  return sum(l.name+(d>=l.sets.length?', done':''),lines.slice(0,3),l.best?'Best '+l.best:'Last time '+l.last)}
+ // the board, live
+ function board(ck){const l=L(),d=S.done[S.li];
+  if(S.phase==='done'){chalk(ck,'Push A, done',26,250,32,.95,C);chalk(ck,Math.max(1,mins())+' min, '+S.log.filter(x=>x.r).length+' sets, about '+total().toLocaleString()+' lb',26,276,17,.75,C2);
+   LIFTS.forEach((x,i)=>{const y=314+Math.floor(i/3)*28,xx=26+(i%3)*118;const w=chalk(ck,x.k,xx,y,19,.8,C2);mark(ck,xx+w+6,y-6,.8)});chalk(ck,'Press best, 100 lb',236,342,17,.8,C);return}
+  if(S.phase==='rest'){chalk(ck,'Rest',26,250,30,.95,C);chalk(ck,'then '+(next(L())?L().name.toLowerCase():'the next lift'),26,274,17,.7,C2);
+   const n=Math.ceil(S.rest/10),N=Math.ceil(S.restOf/10);for(let k=0;k<N;k++){const x=28+k*14+(k>=5?6:0)+(k>=10?6:0);ck.strokeStyle='rgba('+(k<n?C:C2)+','+(k<n?.9:.12)+')';ck.lineWidth=2.6;ck.lineCap='round';ck.beginPath();ck.moveTo(x,346);ck.lineTo(x+3+noise(k,7)*2,312);ck.stroke()}
+   chalk(ck,mmss(S.rest),270,344,44,.95,C);return}
+  chalk(ck,l.name,26,250,30,.95,C);chalk(ck,(d<l.sets.length?'set '+(d+1)+' of '+l.sets.length:'all sets done')+(l.best?', best '+l.best.split(',')[0]:''),26,274,17,.7,C2);
+  l.sets.forEach((st,j)=>{const x=26+j*112,y=322;const t=st.u?st.w+' min':st.w+'×'+st.r;const w=chalk(ck,t,x,y,j===d?30:24,j<d?.55:j===d?1:.35,j<d?C2:C);if(j<d)mark(ck,x+w+6,y-6)});
+  let x=26;LIFTS.forEach((q,i)=>{const a=i===S.li?.95:.55;const w=chalk(ck,q.k,x,360,16,a,i===S.li?C:C2);if(!left(q))mark(ck,x+w+3,355,.7);x+=w+(left(q)?14:26)})}
+ function mark(ck,x,y,s=1){ck.strokeStyle='rgba('+C+',.9)';ck.lineWidth=2.2*s;ck.lineCap='round';ck.beginPath();ck.moveTo(x,y);ck.lineTo(x+5*s,y+7*s);ck.lineTo(x+13*s,y-8*s);ck.stroke()}
+ // actions
+ function log(){const l=L(),st=next(l);if(S.phase==='done')return back();if(S.phase==='rest'){S.rest=0;endRest();return}
+  if(!st){const n=LIFTS.findIndex(x=>left(x));if(n>=0)turnTo(n);return}
+  S.done[S.li]++;S.log.push({li:S.li,...st});pulse();chalkDust();
+  const li=S.li;receipt(el,l.name+', '+wt(st)+', logged',()=>{S.done[li]--;S.log.pop();S.phase='lift';S.rest=0;paint()});
+  if(!LIFTS.some(x=>left(x)))return finish();
+  S.phase='rest';S.restOf=S.rest=l.rest;if(!left(l)){const n=LIFTS.findIndex(x=>left(x));S.pending=n}paint()}
+ function endRest(){S.phase='lift';if(S.pending!=null){const n=S.pending;S.pending=null;turnTo(n)}pulse();paint()}
+ function turnTo(n){if(!H.dial)return;const f=H.dial.focus;let off=n-f;const N=LIFTS.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;H.dial.turn(off)}
+ function finish(){S.phase='done';S.end=Date.now();if(H.cap){H.cap.textContent='Saved to the Deck, with every set'}paint();chalkDust()}
+ const chalkDust=()=>dust(el,{x:26,y:300,w:300,h:40},{x:60,y:640},{n:18,c:css('--training'),c0:'rgba(236,236,230,.9)',size:1.6,dur:560,spread:120,drop:1});
+ const R=landingV3(el,{name:'Push A',color:'var(--training)',theme:'chalk',
+  widget,
+  keystone:k=>boardCenter(k,board),
+  caption:'Drag the weight to change it',
+  doors:LIFTS.map((l,i)=>({k:l.k,get n(){return left(l)||null},sum:()=>ledger(i)})),
+  acts:[{v:'Done',o:'',f:log},{v:'Rest',o:'',f:()=>{if(S.phase==='rest'){S.rest+=30;S.restOf+=30}else{S.phase='rest';S.restOf=S.rest=L().rest}paint()}},
+   {v:'Lighter',o:'',f:()=>{const st=next(L());if(!st||st.u)return;L().sets.slice(S.done[S.li]).forEach(x=>x.w-=10);receipt(el,L().name+', '+st.w+' lb from here');paint()}},
+   {v:'Finish',o:'',hold:1,f:()=>{if(S.phase!=='done')finish();else back()}}],
+  ready:x=>{H=x;const od=x.dial.turn;x.dial.turn=s=>{od(s);if(S.phase!=='rest')S.li=x.dial.focus;else S.pending=x.dial.focus;paint()};paint();
+   const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'&&!S.paused){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest();else paint()}else if(++tick%15===0)paint()},1000);
+   window.__wo.tickRest=n=>{S.rest=Math.max(1,S.rest-n+1)};window.__wo.finish=()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()};return ()=>clearInterval(iv)}});
+ return R}};
 
 /* ---------- Kitchen: the pass stays through the app ---------- */
 const TACOS={n:'Tacos',time:'25 min',ing:[['Tortillas','8'],['Chicken thighs','1 lb'],['Onions','2'],['Peppers','2'],['Cilantro','a bunch'],['Limes','3'],['Cumin',''],['Sour cream','']],steps:['Char the tortillas on the burner, both sides.','Brown the chicken with cumin, five minutes.','Onions and peppers in, until soft.','Squeeze the limes over, chop the cilantro.','Fill, fold, sour cream. Eat.']};
@@ -1339,14 +1416,89 @@ SCREENS.groceries={title:'Groceries',accent:'kitchen',tess:'Four of these are fo
  GET.forEach((g,i)=>{const r=h('div','krow','<span>'+g+'</span><span>'+(i<4?'for tacos':'')+'</span>');r.style.cursor='pointer';r.onclick=()=>{GET=GET.filter(x=>x!==g);receipt(el,g+', got it.',()=>{GET.splice(i,0,g)});r.remove();const e=tix.children[0];if(e){e._refresh()}};box.appendChild(r)});kfoot(el,'Got it all',()=>{GET=GET.slice(4);back()})}};
 SCREENS.pantry={title:'Pantry',accent:'kitchen',tess:'Rice goes out today.',render(el){khead(el);kback(el);passCenter(el,PLACES.map(([n,c,s])=>({id:'pl'+n,title:n,color:'teal',pages:[{lines:[c+' things',s]}]})),()=>{});const box=lowerBox(el);const t=h('div','','Pantry');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);PLACES.forEach(([n,c,s])=>box.appendChild(h('div','krow','<span>'+n+'</span><span>'+c+', '+s+'</span>')));kfoot(el,'Add a thing',()=>receipt(el,'Say it or type it. Tess puts it in the right place.'))}};
 SCREENS.leftovers={title:'Leftovers',accent:'kitchen',tess:'The rice is from Thursday.',render(el){khead(el);kback(el);passCenter(el,LEFT.map(([n,d,s])=>({id:'lf'+n,title:n,color:d==='today'?'wine':'teal',pages:[{lines:[d,s]}]})).concat([dishT()]),openT);const box=lowerBox(el);const t=h('div','','Leftovers');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);LEFT.forEach(([n,d,s])=>box.appendChild(h('div','krow','<span'+(d==='today'?' style="color:var(--wine)"':'')+'>'+n+'</span><span>'+d+', '+s+'</span>')));kfoot(el,'Eat it',()=>receipt(el,'Rice, eaten.'))}};
-SCREENS.cook={title:'Cooking',accent:'kitchen',tess:'Chicken in, five minutes. I’ll say when.',render(el){const done=new Set();let step=0;khead(el,'<b style="color:var(--kitchen);font-weight:600">Cooking Tacos.</b> Chicken first, then the onions. Rice goes out today.');kback(el);
- const cookT=()=>{const per=3,pages=[];for(let i=0;i<TACOS.steps.length;i+=per)pages.push({sub:i?'':'25 min, step by step',lines:TACOS.steps.slice(i,i+per).map((s,k)=>({t:s,n:i+k+1,idx:i+k,done:done.has(i+k),now:i+k===step}))});return {id:'cook',title:'Tacos',color:'clay',big:true,pages,tally:done.size+' of '+TACOS.steps.length}};
- const tk=cookT();const timer={id:'timer',title:'8:00',color:'kitchen',pages:[{lines:['chicken in the pan','']}]};let tix;
- const strike=i=>{if(done.has(i))done.delete(i);else done.add(i);let nx=0;while(done.has(nx)&&nx<TACOS.steps.length)nx++;step=nx;const nt=cookT();tk.pages=nt.pages;tk.tally=nt.tally;tix.children[0]._refresh();box.querySelectorAll('.kstep').forEach(s=>s.classList.toggle('done',done.has(+s.dataset.i)));receipt(el,TACOS.steps[i].split(',')[0]+(done.has(i)?', done.':', back.'));
-  if(done.size===TACOS.steps.length){setTimeout(()=>{dishes+=5;back();},900)}};
- tix=passCenter(el,[tk,timer],()=>{},strike);const box=lowerBox(el);const t=h('div','','Tacos');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);
- TACOS.steps.forEach((s,i)=>{const st=h('div','kstep','<span class="n">'+(i+1)+'</span><span>'+s+'</span>');st.dataset.i=i;st.onclick=()=>strike(i);box.appendChild(st)});
- kfoot(el,'Next step',()=>strike(step));let left=480;const iv=setInterval(()=>{left=Math.max(0,left-1);timer.title=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');if(tix.children[1])tix.children[1]._refresh()},1000);return ()=>clearInterval(iv)}};
+/* ---------- 322 Cooking mode (Galley). Same places as the landing. The rail holds the step you are on as a big ticket
+   and one ticket per pan timer; timers run side by side and print their time left. The sentence place is the step in
+   a few words, big enough to read from the stove; the dial is the steps; the summary is what that step needs, with
+   amounts on the right. Next is one tap (a knuckle works: the whole sentence place takes it too). */
+SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. I’ll say when.',render(el){
+ const ST=[{k:'Char',t:'Char the tortillas',d:'Over the flame, 30 s a side',ing:[['Tortillas','8',''],['Foil','to wrap','']]},
+  {k:'Brown',t:'Brown the chicken',d:'Cumin and salt, leave it be',ing:[['Chicken thighs','1','lb'],['Cumin','2','tsp'],['Salt','1','tsp']],tm:300,tn:'chicken'},
+  {k:'Soften',t:'Onions and peppers in',d:'Until soft, stir now and then',ing:[['Onions','2',''],['Peppers','2','']],tm:360,tn:'onions'},
+  {k:'Brighten',t:'Limes over, cilantro on',d:'Squeeze, chop, taste for salt',ing:[['Limes','3',''],['Cilantro','1','bunch']]},
+  {k:'Serve',t:'Fill, fold, eat',d:'Rice on the side, it goes out today',ing:[['Sour cream','2','tbsp'],['Rice','1','cup']]}];
+ const S={i:0,done:new Set(),T:{},t0:Date.now(),fin:0};window.__ck={S,ST};
+ const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),mins=()=>Math.max(1,Math.floor((Date.now()-S.t0)/60000));
+ let H={},blk,tix;
+ const stepT={id:'step',title:'Step 1',color:'clay',big:true,pages:[{lines:[]}]};
+ const timers=ST.filter(x=>x.tm).map(x=>({id:'tm'+x.k,k:x.k,title:mm(x.tm),color:'kitchen',pages:[{lines:[x.tn,'']}]}));
+ function tickets(){const s=ST[S.i];stepT.title=S.fin?'Eat':'Step '+(S.i+1);stepT.tally=S.done.size+' of '+ST.length;stepT.pages=[{sub:S.fin?'25 min, all done':s.t.toLowerCase(),lines:S.fin?['Rice goes out today','Five dishes for later']:[s.d,...s.ing.map(([a,b,u])=>a+', '+b+(u?' '+u:''))].slice(0,4)}];
+  timers.forEach(t=>{const T=S.T[t.k],st=ST.find(x=>x.k===t.k);t.title=T==null?mm(st.tm):T>0?mm(T):'Ready';t.color=T===0?'wine':'kitchen';t.pages=[{lines:[t.k==='Brown'?'chicken':'onions',T==null?'tap Timer to start':T>0?'running':'take it off']}]});
+  if(tix)[...tix.children].forEach(e=>e._refresh&&e._refresh())}
+ function card(){if(S.fin)return {hdr:'Done in '+mins()+' min',big:'Eat',mid:'Tacos for 2',sml:'Rice goes out today, five dishes for later'};
+  const s=ST[S.i],T=S.T[s.k];return {hdr:'Step '+(S.i+1)+' of '+ST.length+(T>0?', '+mm(T)+' left':T===0?', ready':''),big:s.t,mid:s.d,sml:S.done.has(S.i)?'Done, turn for the next':T>0?'The '+s.tn+' is on, Tess says when':T===0?'Take the '+s.tn+' off the heat':s.tm?mm(s.tm)+' on the pan, Timer starts it':'Then '+(ST[S.i+1]?ST[S.i+1].t.toLowerCase():'eat')}}
+ function paint(){const c=card(),key=c.big+c.mid;
+  if(blk._key!==key){blk.innerHTML='<div class="hdr" style="color:var(--kitchenText)">'+c.hdr+'</div><div class="big"><span class="bw" style="font-family:\'IBM Plex Sans Condensed\',sans-serif;font-weight:700;font-size:34px;letter-spacing:.01em;color:var(--kitchenText)">'+c.big+'</span></div><div class="mid">'+c.mid+'</div><div class="sml">'+c.sml+'</div>';
+   if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{clipPath:'inset(0 0 100% 0)',transform:'translateY(-6px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:420,delay:i*60,easing:'steps(6)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
+  else{blk.querySelector('.hdr').textContent=c.hdr;blk.querySelector('.sml').textContent=c.sml}
+  if(H.band)H.band.innerHTML='<div class="ln">'+(S.fin?'Ready at '+clockNow():mins()+' min in')+'</div><div class="ln">'+(S.fin?'All '+ST.length+' steps':(ST.length-S.done.size)+' steps, about '+Math.max(2,25-mins())+' min to eat')+'</div>';
+  const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const c=d.querySelector('i');const v=S.T[ST[i].k]>0?mm(S.T[ST[i].k]):'';if(c&&c.textContent!==v)c.textContent=v;d.style.opacity=S.done.has(i)&&i!==S.i?'':d.style.opacity});
+  if(H.act)H.act.retarget(S.fin?['back to the Galley','nothing running','for later','back to the Galley']:[ST[S.i+1]?'step '+(S.i+2)+', '+ST[S.i+1].k.toLowerCase():'eat',ST[S.i].tm?(S.T[ST[S.i].k]>0?'1 min more on the '+ST[S.i].tn:mm(ST[S.i].tm)+' for the '+ST[S.i].tn):'nothing to time here','the step out loud','Tacos, '+S.done.size+' of '+ST.length+' done'],0);
+  tickets()}
+ const clockNow=()=>{const d=new Date();return (d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0')};
+ function next(){if(S.fin)return back();const was=S.i;S.done.add(S.i);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);turnTo(was);paint()});
+  if(S.done.size===ST.length){S.fin=1;paint();return}let n=S.i;for(let k=1;k<=ST.length;k++){const q=(S.i+k)%ST.length;if(!S.done.has(q)){n=q;break}}turnTo(n);const s=ST[n];if(s.tm&&S.T[s.k]==null)S.T[s.k]=s.tm;paint()}
+ function turnTo(n){if(!H.dial)return;let off=n-H.dial.focus;const N=ST.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;if(off)H.dial.turn(off);else{S.i=n}}
+ const lg=i=>{const s=ST[i];return sum(s.k+', '+(S.done.has(i)?'done':'step '+(i+1)),s.ing.slice(0,3).map(([a,b,u])=>a+' '+o(b)+(u?un(u):'')),s.tm?mm(s.tm)+' on the pan':s.d)};
+ const R=landingV3(el,{name:'Tacos',color:'var(--kitchenText)',theme:'steam',
+  widget:()=>{const b=h('div','one lw mode');b.style.zIndex=6;blk=h('div','blk');b.appendChild(blk);b.onclick=()=>next();return {box:b,start:()=>{},stop:()=>{}}},
+  keystone:k=>{tix=passCenter(k,[stepT,...timers],()=>{},()=>{});[...tix.children].slice(1).forEach((e,j)=>{e.onclick=()=>{const t=timers[j];if(S.T[t.k]==null||S.T[t.k]===0)S.T[t.k]=ST.find(x=>x.k===t.k).tm;paint()}});return null},
+  caption:'Tap the step for the next one',
+  doors:ST.map((s,i)=>({k:s.k,n:'',sum:()=>lg(i)})),
+  acts:[{v:'Next',o:'',f:next},{v:'Timer',o:'',f:()=>{const s=ST[S.i];if(!s.tm)return receipt(el,'Nothing to time on this step');S.T[s.k]=S.T[s.k]>0?S.T[s.k]+60:s.tm;receipt(el,'Timer, '+mm(S.T[s.k])+' for the '+s.tn);paint()}},
+   {v:'Read',o:'',f:()=>receipt(el,'Tess: '+ST[S.i].t+'. '+ST[S.i].d)},{v:'Finish',o:'',hold:1,f:()=>{if(!S.fin){S.fin=1;paint()}else back()}}],
+  ready:x=>{H=x;const od=x.dial.turn;x.dial.turn=s=>{od(s);S.i=x.dial.focus;paint()};paint();
+   const iv=setInterval(()=>{if(!document.contains(el))return;let ch=0;for(const k in S.T){if(S.T[k]>0){S.T[k]--;ch=1;if(!S.T[k])receipt(el,(k==='Brown'?'Chicken':'Onions')+', ready')}}if(ch)paint()},1000);
+   window.__ck.fast=n=>{for(const k in S.T)if(S.T[k]>0)S.T[k]=Math.max(1,S.T[k]-n)};return ()=>clearInterval(iv)}});
+ return R}};
+
+/* ---------- 322 Shopping mode (Galley, from Shop). The list walks the store: the dial is the aisles in the order you
+   meet them, the rail is the aisle you are in as a long receipt with the got ones torn off, the sentence place is the
+   next thing to put in the basket, and the summary is the aisle's whole list. Got is one tap; Not here moves it to
+   the end. At the till everything bought goes into the Pantry. */
+SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortillas are by the bread.',render(el){
+ const AIS=[{k:'Produce',it:[['Limes','3','','tacos'],['Cilantro','1','bunch','tacos'],['Peppers','2','','tacos']]},{k:'Dairy',it:[['Feta','1','block','pasta'],['Milk','1','gal','low'],['Eggs','12','','low'],['Yogurt','2','','']]},
+  {k:'Bakery',it:[['Tortillas','1','pack','tacos'],['Bread','1','loaf','']]},{k:'Aisle 7',it:[['Coffee','1','bag','']]},{k:'Home',it:[['Dish soap','1','','']]}];
+ const S={a:0,got:new Set(),skip:[],fin:0};window.__sh={S,AIS};
+ const key=(a,j)=>a+'.'+j,leftIn=a=>AIS[a].it.filter((_,j)=>!S.got.has(key(a,j))).length,allLeft=()=>AIS.reduce((n,_,a)=>n+leftIn(a),0),total=AIS.reduce((n,x)=>n+x.it.length,0);
+ const nextJ=a=>AIS[a].it.findIndex((_,j)=>!S.got.has(key(a,j)));
+ let H={},blk,tix;const aisleT={id:'aisle',title:'Produce',color:'lists',big:true,pages:[{lines:[]}]};
+ function tickets(){const A=AIS[S.a];aisleT.title=S.fin?'Paid':A.k;aisleT.tally=(A.it.length-leftIn(S.a))+' of '+A.it.length;
+  aisleT.pages=[{sub:S.fin?total+' things':leftIn(S.a)?'in this aisle':'this aisle is done',lines:S.fin?['All in the Pantry','Tacos are on']:A.it.filter((_,j)=>!S.got.has(key(S.a,j))).map(([n,q,u])=>n+', '+q+(u?' '+u:'')).slice(0,4)}];if(tix)[...tix.children].forEach(e=>e._refresh&&e._refresh())}
+ function card(){if(S.fin)return {hdr:'Paid',big:String(total),unit:'things',mid:'All in the Pantry now',sml:'The tacos have everything'};
+  const j=nextJ(S.a),A=AIS[S.a];if(j<0){const n=AIS.findIndex((_,a)=>leftIn(a));return {hdr:A.k+', all got',big:n<0?'Till':AIS[n].k,mid:n<0?'Everything is in the basket':'Next aisle, '+leftIn(n)+' to get',sml:'Turn the dial or tap Got'}}
+  const [n,q,u,why]=A.it[j];return {hdr:A.k+', '+(A.it.length-leftIn(S.a)+1)+' of '+A.it.length,big:n,qty:q,unit:u,mid:why==='tacos'?'For the tacos tonight':why==='low'?'You are low':why==='pasta'?'For the pasta':'On the list',sml:A.it[j+1]?'Then '+A.it.slice(j+1).filter((_,k)=>!S.got.has(key(S.a,j+1+k))).map(x=>x[0].toLowerCase()).slice(0,2).join(' and '):'Last one here'}}
+ function paint(){const c=card(),k=c.hdr+c.big;
+  if(blk._key!==k){blk.innerHTML='<div class="hdr" style="color:var(--kitchenText)">'+c.hdr+'</div><div class="big"><span class="bw" style="font-family:\'IBM Plex Sans Condensed\',sans-serif;font-weight:700;font-size:40px;color:var(--kitchenText)">'+c.big+'</span>'+(c.qty?'<span class="bn" style="color:var(--kitchenText);margin-left:12px"><span class="o" style="font-size:40px">'+c.qty+'</span>'+(c.unit?'<span class="u" style="font-size:20px">'+c.unit+'</span>':'')+'</span>':c.unit?'<span class="u" style="font-size:20px;margin-left:8px;color:var(--kitchenText)">'+c.unit+'</span>':'')+'</div><div class="mid">'+c.mid+'</div><div class="sml">'+c.sml+'</div>';
+   if(blk._key&&!RM){const old=blk.cloneNode(true);old.style.cssText+=';position:absolute;inset:auto 0;pointer-events:none';blk.parentNode.appendChild(old);old.animate([{transform:'none',opacity:1},{transform:'translateX(-60px) rotate(-3deg)',opacity:0}],{duration:280,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'}).onfinish=()=>old.remove();[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateX(40px)'},{opacity:1,transform:'none'}],{duration:380,delay:120+i*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))}
+   blk._key=k;[...blk.children].forEach(fitLine)}
+  if(H.band)H.band.innerHTML='<div class="ln">'+(S.fin?'Done':allLeft()+' of '+total+' to get')+'</div><div class="ln">'+(S.fin?'Everything went to the Pantry':AIS.filter((_,a)=>leftIn(a)).length+' aisles to go')+'</div>';
+  const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const c=d.querySelector('i');const v=String(leftIn(i)||'');if(c&&c.textContent!==v)c.textContent=v});
+  const j=nextJ(S.a);if(H.act)H.act.retarget(S.fin?['back to the Galley','','','back to the Galley']:[j>=0?AIS[S.a].it[j][0].toLowerCase():'the next aisle',j>=0?'move it to the end':'nothing here','for something close','pay, '+(total-allLeft())+' in the basket'],0);
+  if(H.sum){const kk=S.a+'|'+leftIn(S.a);if(H.sum._k!==kk){H.sum._k=kk;sumSet(H.sum,lg(S.a),'kitchen',el)}}tickets()}
+ const lg=a=>{const A=AIS[a];return sum(A.k+', '+(leftIn(a)?leftIn(a)+' to get':'all got'),A.it.slice(0,3).map(([n,q,u],j)=>S.got.has(key(a,j))?'<span style="color:var(--ink2);opacity:.55">'+n+' '+o(q)+(u?un(u):'')+'</span>':n+' '+o(q)+(u?un(u):'')),A.it.length>3?'And '+A.it.slice(3).map(x=>x[0].toLowerCase()).join(', '):A.it.some(x=>x[3]==='tacos')?'Most of it is for tonight':'Nothing else here')};
+ function got(){if(S.fin)return back();const j=nextJ(S.a);if(j<0){const n=AIS.findIndex((_,a)=>leftIn(a));if(n<0)return pay();return turnTo(n)}
+  const kk=key(S.a,j),nm=AIS[S.a].it[j][0];S.got.add(kk);GET=GET.filter(x=>x!==nm);receipt(el,nm+', in the basket',()=>{S.got.delete(kk);GET.push(nm);paint()});paint()}
+ function pay(){S.fin=1;GET=[];paint()}
+ function turnTo(n){if(!H.dial)return;let off=n-H.dial.focus;const N=AIS.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;if(off)H.dial.turn(off)}
+ const R=landingV3(el,{name:'Groceries',color:'var(--kitchenText)',theme:'steam',
+  widget:()=>{const b=h('div','one lw mode');b.style.zIndex=6;blk=h('div','blk');b.appendChild(blk);b.onclick=()=>got();return {box:b,start:()=>{},stop:()=>{}}},
+  keystone:k=>{tix=passCenter(k,[aisleT,{id:'tonight',title:'Tonight',color:'clay',pages:[{lines:['Tacos','4 of these']}]}],()=>{},()=>{});return null},
+  caption:'Tap the thing when it is in the basket',
+  doors:AIS.map((A,a)=>({k:A.k,n:A.it.length,sum:()=>lg(a)})),
+  acts:[{v:'Got',o:'',f:got},{v:'Not here',o:'',f:()=>{const j=nextJ(S.a);if(j<0)return;const it=AIS[S.a].it.splice(j,1)[0];AIS[S.a].it.push(it);receipt(el,it[0]+', at the end of the list');paint()}},
+   {v:'Swap',o:'',f:()=>receipt(el,'Tess: corn tortillas work the same')},{v:'Pay',o:'',hold:1,f:()=>S.fin?back():pay()}],
+  ready:x=>{H=x;const od=x.dial.turn;x.dial.turn=s=>{od(s);S.a=x.dial.focus;paint()};paint();return null}});
+ return R}};
 
 /* ---------- locked rooms drawn from their own boards (Oct 25) ----------
    Watch (Routines) = routines-garden-268 v4, Purse (Money) = money-indices-278 v3. The prototype loads each board's
@@ -1376,6 +1528,9 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .swn{position:absolute;left:228px;right:24px;top:18px;height:52px;overflow:hidden}
 .swn .ln{font-size:15px;line-height:24px;height:24px;white-space:nowrap;overflow:hidden;color:var(--ink2)}
 .swn .ln:first-child{font-weight:600;color:var(--ink)}
+.one.wo .big .x{font-family:var(--num);font-size:28px;margin:0 4px 0 10px;opacity:.6}
+.one.wo{cursor:ns-resize}
+.one.mode .big{max-width:none}
 .swn.rise{animation:lrise .32s cubic-bezier(.3,.9,.3,1)}
 .lcap{position:absolute;left:24px;right:24px;top:388px;height:22px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;z-index:6}
 .lmid{position:absolute;left:24px;right:24px;top:420px;height:192px;z-index:6}
@@ -1384,9 +1539,14 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .lmid .rows{position:absolute;left:0;right:0;top:84px;height:100px;overflow:hidden;touch-action:pan-y}
 .lmid .rw{position:absolute;left:0;right:0;height:44px;line-height:44px;font:300 18px/44px var(--sans);white-space:nowrap;overflow:hidden;cursor:pointer;touch-action:none;transition:top .36s cubic-bezier(.3,.9,.3,1)}
 .lmid .rw b{font-weight:600}
-.lsum{position:absolute;left:24px;right:186px;top:652px;height:96px;z-index:6}
-.lsum .lb{font-size:13px;color:var(--ink2);height:20px;white-space:nowrap;overflow:hidden}
-.lsum .ln{font-size:16px;line-height:24px;height:24px;white-space:nowrap;overflow:hidden}
+.lsum{position:absolute;left:24px;right:186px;top:644px;height:116px;z-index:6}
+.lsum .lb{font-size:13px;line-height:20px;color:var(--ink2);height:22px;white-space:nowrap;overflow-x:clip}
+.lsum .ln{font-size:16px;line-height:26px;height:26px;white-space:nowrap;overflow-x:clip;display:flex;align-items:baseline;gap:10px}
+.lsum .ln .nm{flex:1 1 auto;min-width:0;overflow-x:clip;text-overflow:clip}
+.lsum .ln .vl{flex:0 0 auto;margin-left:auto;font-family:var(--num);font-size:18px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.lsum .ln .vl .u{font-size:.55em!important;margin-left:2px;color:var(--ink2)}
+.lsum .ab{font-family:var(--sans);font-size:.6em;color:var(--ink2);margin-right:1px}
+.lsum .lm{font-size:12px;line-height:16px;margin-top:4px;color:var(--slate);white-space:nowrap;overflow-x:clip}
 .lsum .ln:first-of-type{font-weight:700}
 .lsum.rise{animation:lrise .3s cubic-bezier(.3,.9,.3,1)}
 @keyframes lrise{from{transform:translateY(6px);clip-path:inset(0 0 100% 0)}to{transform:none;clip-path:inset(0 0 -10% 0)}}
@@ -1678,18 +1838,25 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
  if(R.sw){const sx=h('div','swx');band.appendChild(sx);stops.push(switcherX(sx,R.sw,(v)=>{swn.innerHTML=v.lines.map(l=>'<div class="ln">'+l+'</div>').join('');swn.querySelectorAll('.ln').forEach(fitLine);if(swn._on){swn.classList.remove('rise');void swn.offsetWidth;if(!RM)swn.classList.add('rise')}swn._on=1}))}
  const key=h('div','lkey');el.appendChild(key);stops.push(R.keystone(key,el));
  const cap=h('div','lcap',R.caption||'');el.appendChild(cap);
- const WG=widgetV3(el,R,id),mid=WG.box;el.appendChild(mid);stops.push(WG.stop);
+ const WG=R.widget?R.widget(el):widgetV3(el,R,id),mid=WG.box;el.appendChild(mid);stops.push(WG.stop);
  const dh=h('div','dial');dh.style.cssText+='left:218px;top:640px;width:160px;z-index:6';el.appendChild(dh);
  const sum=h('div','lsum');el.appendChild(sum);
- dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
+ const DL=dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
   open:d=>{const L=typeof LV!=='undefined'&&LV[id];const di=L?L.doors.findIndex(x=>x.k===d.k):-1;if(di>=0)return go('l1_'+id,{door:di});d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.')},
   change:d=>sumSet(sum,d.sum(),id,el)});
- const f=actionX(el,R);
+ const f=actionX(el,R);R.ready&&stops.push(R.ready({dial:DL,sum,act:f,band:swn,key,cap}));
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
  if(!el._flip&&!window.__morphing)opening([top,band,key,cap,mid,dh,sum,f],0);
  setTimeout(WG.start,el._flip?420:260);
  return ()=>stops.forEach(s=>s&&s())}
-const sum=(lb,lines)=>'<div class="lb">'+lb+'</div>'+lines.map(l=>'<div class="ln">'+l+'</div>').join('');
+/* 320 (his 2:02 AM note: more room for the door's details, better in every room): the door summary is a small
+   ledger. The label says what the door holds; each line puts its name on the left and its number on the right edge,
+   in the number face with the unit at half size, so the numbers line up and read at a glance. A quiet last line can
+   say what opening the door adds. It fills the place's whole 192 by 120. */
+const sum=(lb,lines,more)=>'<div class="lb">'+lb+'</div>'+lines.map(l=>{let pre='',post='';const w=/^(<span style="[^"]*">)([\s\S]*)<\/span>$/.exec(l);if(w&&!/<\/span>[\s\S]*<span/.test(w[2].replace(/<span class="(o|u|ab)"[^>]*>[^<]*<\/span>/g,''))){pre=w[1];post='</span>';l=w[2]}
+  const m=/<span class="(o|ab)"/.exec(l);if(!m)return '<div class="ln"><span class="nm">'+pre+l+post+'</span></div>';
+  const nm=l.slice(0,m.index).replace(/[\s,]+$/,''),v=l.slice(m.index);return '<div class="ln lv"><span class="nm">'+pre+nm+post+'</span><span class="vl">'+pre+v+post+'</span></div>'}).join('')+(more?'<div class="lm">'+more+'</div>':'');
+const ab='<span class="ab">about </span>';
 const o=n=>'<span class="o">'+n+'</span>';
 const un=u=>'<span class="u" style="font-size:.6em">'+u+'</span>';
 
@@ -1721,11 +1888,11 @@ SCREENS.weather={title:'Weather',accent:'weather',tess:'Rain from 7 until about 
   keystone:(k)=>{const s=weatherCenter(k,W_HOUR,wcond,glassInner(wcond));
    iv=setInterval(()=>{const c=k.style.color;if(!c)return;el.style.color=c;el.style.setProperty('--ink',c);el.style.setProperty('--ink2','color-mix(in srgb,'+c+' 78%,transparent)')},120);return s},
   caption:'Rain gathers on the glass from 7.',
-  doors:[{k:'Hours',go:['weatherhour',{h:'7 PM',t:60,w:'Rain'}],sum:()=>sum('Next three hours',['7 PM '+o('60°')+' rain','8 PM '+o('58°')+' rain','9 PM '+o('57°')+' rain'])},
-   {k:'Tonight',sum:()=>sum('From 7',['Rain until midnight','Low '+o('54°'),'Clear by 1 AM'])},
-   {k:'This week',sum:()=>sum('Driest day',['Thursday, '+o('68°'),'Rain again Saturday','Cooler next week'])},
-   {k:'Air',sum:()=>sum('Now',['Wind '+o('9')+un('mph')+', gusting','Humidity '+o('58')+un('%'),'Air is clean'])},
-   {k:'Sky',sum:()=>sum('Today',['Sunset '+o('6:08')+un('pm'),'Moon waxing, half','Sun '+o('12°')+' high'])}],
+  doors:[{k:'Hours',go:['weatherhour',{h:'7 PM',t:60,w:'Rain'}],sum:()=>sum('Next three hours',['7 PM, rain '+o('60°'),'8 PM, rain '+o('58°'),'9 PM, rain '+o('57°')],'Rain eases after 10')},
+   {k:'Tonight',sum:()=>sum('From 7',['Low '+o('54°'),'Rain until midnight','Clear by 1 AM'],'An umbrella for the walk')},
+   {k:'This week',sum:()=>sum('The next seven days',['Thursday, driest '+o('68°'),'Saturday, rain '+o('61°'),'Next week '+o('59°')],'Cooler from Monday')},
+   {k:'Air',sum:()=>sum('Now',['Wind '+o('9')+un('mph'),'Gusts '+o('18')+un('mph'),'Humidity '+o('58')+un('%')],'Air is clean')},
+   {k:'Sky',sum:()=>sum('Today',['Sunset '+o('6:08')+un('pm'),'Sunrise '+o('7:21')+un('am'),'Sun at noon '+o('38°')],'Moon waxing, half')}],
   acts:[{v:'Alert',o:'30 min before rain',f:e=>receipt(e,'You’ll hear 30 minutes before rain.')},{v:'Hours',o:'the next twelve',f:()=>go('weatherhour',{h:'7 PM',t:60,w:'Rain'})},{v:'Walk',o:'find a dry hour',f:e=>receipt(e,'Dry from 1 to 4 tomorrow.')}]});
  return ()=>{clearInterval(iv);r&&r()}}};
 
@@ -1739,11 +1906,11 @@ SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 to
    {hdr:'Yesterday',big:'Walk',c:'var(--teal)',mid:'32 min, not logged yet',sml:'Hold to log it'}],
   keystone:k=>boardCenter(k,ck=>{chalk(ck,'Push A at 6:30, bench first',26,244,28,.95,C);chalk(ck,'about 45 min, 4 lifts, start on the rower',26,266,16,.7,C2);ticks(ck,290);chalk(ck,'5 weeks on plan',230,302,18,.8,C2);chalk(ck,'+10 on bench since Oct 1',230,324,17,.8,C2);let x=26;[['Bench',205],['Squat',275],['Deadlift',315],['Row',130]].forEach(([l,v])=>{x+=chalk(ck,l+' '+v,x,356,19,.65,C2)+16})}),
   caption:'Drag to write. Swipe fast left to wipe.',
-  doors:[{k:'Today',go:['workout'],sum:()=>sum('Push A, 4 lifts',['Bench '+o('185')+un('lb'),'Overhead press '+o('95'),'Cable row '+o('110')])},
-   {k:'This week',sum:()=>sum('Monday to Saturday',['Push, Pull, Legs done','Push A tonight','Pull A tomorrow'])},
-   {k:'Library',n:28,sum:()=>sum('28 workouts in 6 kinds',['<span style="color:var(--gold)">New: hill sprints</span>','Push, Pull, Legs','Runs and rows'])},
-   {k:'Bests',sum:()=>sum('Since Oct 1',['Bench '+o('205')+un('lb'),'Squat '+o('275'),'Deadlift '+o('315')])},
-   {k:'Plan',sum:()=>sum('Week 5 of the block',['Bench '+o('+10')+' since Oct 1','Deload next week','Then the new block'])}],
+  doors:[{k:'Today',go:['workout'],sum:()=>sum('Push A, 4 lifts',['Bench '+o('185')+un('lb'),'Overhead press '+o('95')+un('lb'),'Cable row '+o('110')+un('lb')],'Then triceps, about 45 min in all')},
+   {k:'This week',sum:()=>sum('Monday to Saturday',['Done so far '+o('3')+un('of 6'),'Push A tonight','Pull A tomorrow'],'Legs on Thursday')},
+   {k:'Library',n:28,sum:()=>sum('Everything you can do',['Workouts '+o('28'),'Kinds '+o('6'),'<span style="color:var(--gold)">New: hill sprints</span>'],'Push, Pull, Legs, runs and rows')},
+   {k:'Bests',sum:()=>sum('Since Oct 1',['Bench '+o('205')+un('lb'),'Squat '+o('275')+un('lb'),'Deadlift '+o('315')+un('lb')],'Bench best three weeks ago')},
+   {k:'Plan',sum:()=>sum('Week 5 of the block',['Bench since Oct 1 '+o('+10')+un('lb'),'Weeks to go '+o('1'),'Deload next week'],'Then the new block')}],
   acts:[{v:'Start',o:'Push A, about 45 min',hold:1,f:()=>go('workout')},{v:'Log',o:'yesterday’s walk, 32 min',f:e=>receipt(e,'Walk, 32 min, logged.')},{v:'Rest',o:'a 2 min timer',f:e=>receipt(e,'Rest, 2:00.')}]})}};
 
 /* ---------- Galley (Kitchen) ---------- */
@@ -1756,12 +1923,12 @@ SCREENS.kitchen={title:'Kitchen',accent:'kitchen',tess:'Tacos tonight works. You
    {hdr:'Since lunch',big:'7',unit:' dishes',num:1,mid:'Waiting in the sink',sml:'About 10 minutes'}],
   keystone:k=>{passCenter(k,[tacosT(false),getT(false),riceT(),dishT()],openT);return null},
   caption:'Swipe a ticket up for its next page.',
-  doors:[{k:'Tonight',go:['tonight'],sum:()=>sum('Tacos, 25 min',['You have all 8 things','Char the tortillas first','Chicken, 5 minutes'])},
-   {k:'Pantry',n:31,go:['pantry'],sum:()=>sum('31 things',PLACES.map(([n,c,s])=>n+', '+s).slice(0,3))},
-   {k:'Recipes',go:['recipes'],sum:()=>sum('4 you can make',['Tacos, 25 min','Dal, 40 min','Shakshuka, 30 min'])},
-   {k:'Groceries',n:GET.length,go:['groceries'],sum:()=>sum(GET.length+' to get',GET.slice(0,3))},
-   {k:'Leftovers',go:['leftovers'],sum:()=>sum('Eat first',['<span style="color:var(--wine)">Rice, today</span>','Dal, by Friday'])}],
-  acts:[{v:'Cook',o:'Tacos, 25 min',f:()=>go('cook')},{v:'Get',o:'3 things on the way',f:()=>go('groceries')},{v:'Wash',o:'7 dishes',f:e=>receipt(e,'Dishes, done.')}]})}};
+  doors:[{k:'Tonight',go:['tonight'],sum:()=>sum('Tacos for 2',['You have '+o('8')+un('of 8'),'Time '+o('25')+un('min'),'Char the tortillas first'],'Chicken 5 min, then the onions')},
+   {k:'Pantry',n:31,go:['pantry'],sum:()=>sum('31 things in four places',PLACES.map(([n,c])=>n+' '+o(c)).slice(0,3),'Milk and eggs low')},
+   {k:'Recipes',go:['recipes'],sum:()=>sum('4 you can make',['Tacos '+o('25')+un('min'),'Dal '+o('40')+un('min'),'Shakshuka '+o('30')+un('min')],'Pasta needs feta')},
+   {k:'Groceries',n:GET.length,go:['groceries'],sum:()=>sum(GET.length+' to get',GET.slice(0,3),'Four of them are for tonight')},
+   {k:'Leftovers',go:['leftovers'],sum:()=>sum('Eat first',['<span style="color:var(--wine)">Rice, today</span>','Dal, by Friday'],'Rice was cooked Thursday')}],
+  acts:[{v:'Cook',o:'Tacos, 25 min',f:()=>go('cook')},{v:'Shop',o:GET.length+' things, aisle by aisle',f:()=>go('shop')},{v:'Wash',o:'7 dishes',f:e=>receipt(e,'Dishes, done.')}]})}};
 
 /* ---------- Watch (Routines) ---------- */
 SCREENS.routines={title:'Routines',accent:'routines',tess:'Journal has been dry since Saturday. One line tonight brings it back.',render(el){
@@ -1773,7 +1940,7 @@ SCREENS.routines={title:'Routines',accent:'routines',tess:'Journal has been dry 
    {hdr:'Today',big:'3',unit:' of 7',num:1,mid:'Tended, four to go',sml:'Stretch at 8 pm, nine minutes'}],
   keystone:k=>{const c=h('div','lclip');c.style.cssText+='left:0;width:402px';c.innerHTML='<iframe title="Woodland" scrolling="no" src="watch.html?embed=1&look='+(phone.dataset.look==='black'?'black':'paper')+'"></iframe>';c.firstChild.style.left='0';k.appendChild(c);return null},
   caption:'Hold a tree to water it. Tap to see it.',
-  doors:[{k:'Today',go:['sheaf',{mode:1,open:'To tend'}],sum:()=>sum('Three tended, four to go',['Walk around 6','Stretch at 8 pm',wine('Journal is thirsty')])},
+  doors:[{k:'Today',go:['sheaf',{mode:1,open:'To tend'}],sum:()=>sum('Three tended, four to go',['Walk around 6','Stretch at 8 pm',wine('Journal is thirsty')],'Stretch takes 9 min')},
    {k:'Body',go:['sheaf',{mode:0,open:'Body'}],sum:()=>sum('Walk, Stretch, Swim, Badminton',['Walk is next',grn('Stretch, tended today'),'Swim on Thursday'])},
    {k:'Mind',go:['sheaf',{mode:0,open:'Mind'}],sum:()=>sum('Journal, Read',[wine('Journal, dry since Saturday'),grn('Read, in fruit'),'Read tonight at 9'])},
    {k:'Home',go:['sheaf',{mode:0,open:'Home'}],sum:()=>sum('Water, Lunch, Tidy, Backup',[grn('Water, done today'),'Tidy tonight',slt('Backup ran at 4 am')])},
@@ -1789,11 +1956,11 @@ SCREENS.money={title:'Money',accent:'purse',tess:'2,125 still yours. Closing at 
    {hdr:'Today',big:'86',num:1,mid:'Groceries',sml:'Food 412 so far this month'}],
   keystone:k=>{const c=h('div','lclip');c.style.cssText+='left:24px;width:354px';c.innerHTML='<iframe title="Indices" scrolling="no" src="purse.html?embed=1&look='+(phone.dataset.look==='black'?'black':'paper')+'"></iframe>';c.firstChild.style.left='-24px';k.appendChild(c);return null},
   caption:'Across for a category, up and down for an index.',
-  doors:[{k:'This month',sum:()=>sum('You are the stock',['Still yours '+o('2,125'),'Closes at '+o('179'),'Pace '+o('74')+', calm'])},
-   {k:'Kinds',sum:()=>sum('October so far',['<span style="color:var(--kitchenText)">Food '+o('412')+'</span>','<span style="color:var(--clay)">Home '+o('1,450')+'</span>','<span style="color:var(--slate)">Going out '+o('96')+'</span>'])},
-   {k:'Saving',sum:()=>sum('On plan',['<span style="color:var(--gold)">Japan '+o('3,400')+'</span>','Rainy day '+o('2,000'),'Next in '+o('6')+' days'])},
+  doors:[{k:'This month',sum:()=>sum('You are the stock',['Still yours '+ab+o('2,125'),'Closing at '+ab+o('179'),'Spend a day '+ab+o('74')],'Calm, on plan')},
+   {k:'Kinds',sum:()=>sum('October so far',['<span style="color:var(--kitchenText)">Food '+ab+o('412')+'</span>','<span style="color:var(--clay)">Home '+ab+o('1,450')+'</span>','<span style="color:var(--slate)">Going out '+ab+o('96')+'</span>'],'Home is mostly rent')},
+   {k:'Saving',sum:()=>sum('On plan',['<span style="color:var(--gold)">Japan '+ab+o('3,400')+'</span>','Rainy day '+ab+o('2,000'),'Next in '+o('6')+un('days')],'Japan is two thirds there')},
    {k:'Investing',sum:()=>sum('Portfolio',['Index '+o('102.4'),'Above cost since Oct 3','Quiet this week'])},
-   {k:'Debts',sum:()=>sum('Car loan',['Left '+o('6,200'),'Paid off by May 2028','Ahead of schedule'])},
+   {k:'Debts',sum:()=>sum('Car loan',['Left '+ab+o('6,200'),'Paid off by May 2028'],'Ahead of schedule')},
    {k:'Mine',sum:()=>sum('Your own indices',['INDIA, 12 months','DEBTS, 4 children','Make one with Tess'])}],
   acts:[{v:'Log',o:'what you spent',f:e=>receipt(e,'Say what you spent. Tess files it.')},{v:'Look',o:'this month’s pace',f:e=>receipt(e,'Pace 74, calm.')},{v:'Plan',o:'next month',f:e=>receipt(e,'November opens here.')}]})}};
 {const ph=document.getElementById('phone');const setP=()=>ph.style.setProperty('--purse',ph.dataset.look==='black'?'#8DBFA7':'#3F7A62');setP();new MutationObserver(setP).observe(ph,{attributes:true,attributeFilter:['data-look']})}

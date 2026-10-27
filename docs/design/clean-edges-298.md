@@ -67,3 +67,20 @@ He said different moves are fine as long as each is clean. So each kind of place
   are not counted).
 - For the builders: the door summary is one view keyed by the door (`.id(door)`) with a transition, never a stack of
   views appended on each change.
+
+## 6. Sheet 320: the door summary is a ledger (his 2:02 AM note)
+
+- He circled the Purse door summary and the dial: "keep these sections like this, so we have more space to display
+  details about that door ... made better for all the rooms".
+- The summary place grows to the whole space beside the dial: 192 by 116 pt from y 644, still ending above the
+  action word (t62 keeps checking that).
+- Its label (13 pt, ink2) says what the door holds: "Push A, 4 lifts", "Tacos for 2", "Next three hours".
+- Each line is a ledger row: the name on the left in the room's text face (16/26), the number on the right edge in the
+  number face (Outfit 18, tabular) with its unit at 0.55 em in ink2. "about" before money sits at 0.6 em in ink2, so the
+  amounts line up on the right in every row. Lines without a number stay plain sentences.
+- A quiet last line (12/16, slate) says what opening the door adds: "Then triceps, about 45 min in all",
+  "Milk and eggs low", "Ahead of schedule".
+- New content in every room: Lookout hours, tonight, week, air, sky; Deck today, week, library, bests, plan; Galley
+  tonight, pantry, recipes, groceries, leftovers; Watch today; Purse month, kinds, saving, debts.
+- For the builders: `DoorSummary(label:rows:more:)` with `Row(name:value:unit:)`; value column `.monospacedDigit()`,
+  trailing aligned; the row view never truncates a word (shrink the name to 0.9 first, then drop the row).
