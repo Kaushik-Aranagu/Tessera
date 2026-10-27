@@ -1,4 +1,5 @@
 import Foundation
+import GRDB
 @testable import TesseraCore
 import Testing
 
@@ -10,12 +11,42 @@ struct TestStoreTests {
         let classes = try store.prepareCatalog()
         let engine = ActionEngine(store: store, classes: classes)
         let settings = SettingsStore(engine: engine)
-        #expect(!settings.read().isTestStore && !SettingsStore.isTestStore(in: store))
+        #expect(!SettingsStore.isTestStore(in: store) && !TestStore.allowsClaude(store))
         try settings.stampAsTestStore()
-        #expect(settings.read().isTestStore && SettingsStore.isTestStore(in: store))
-        try settings.update { $0.restWeekday = 3 }
-        try settings.update(by: .user) { $0.rainAlert = true }
-        #expect(settings.read().storeKind == "test" && SettingsStore.isTestStore(in: store))
+        #expect(SettingsStore.isTestStore(in: store) && TestStore.allowsClaude(store))
+        // The stamp is outside the object graph: settings writes, a reset and a deleted settings row leave it alone.
+        try settings.update(by: .system) { $0.restWeekday = 3 }
+        try settings.update(by: .system) { $0.rainAlert = true }
+        if let row = store.object(id: SettingsStore.objectID) {
+            store.softDelete(row)
+        }
+        #expect(SettingsStore.isTestStore(in: store))
+        // A copy made for a rehearsal is a test store too (`TestStore.carry`).
+        let copy = try DatabaseQueue()
+        try TestStore.carry(from: store.context, to: copy)
+        #expect(try copy.read { try Int32.fetchOne($0, sql: "PRAGMA application_id") } == TestStore.applicationID)
+    }
+
+    @Test func hisStoreAndHisHistoryRefuseTheStamp() throws {
+        // A store with something of his in it.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(CreateTask(title: "His task"), by: .user)
+        #expect(throws: TestStore.Refusal.hasHisHistory) { try SettingsStore(engine: engine).stampAsTestStore() }
+        #expect(!SettingsStore.isTestStore(in: store))
+        // Tess's own writes count as his too.
+        let other = ObjectStore.open(inMemory: true)
+        let otherEngine = try ActionEngine(store: other, classes: other.prepareCatalog())
+        try otherEngine.perform(CreateTask(title: "Tess task"), by: .tess)
+        #expect(throws: TestStore.Refusal.hasHisHistory) { try SettingsStore(engine: otherEngine).stampAsTestStore() }
+    }
+
+    @Test func onlyAFileUnderTheTemporaryFolderOrMemoryIsNotHis() {
+        #expect(TestStore.isHisStore(url: TesseraSchema.defaultURL))
+        #expect(TestStore.isHisStore(url: URL(fileURLWithPath: "/Users/someone/Documents/tessera.sqlite")))
+        #expect(!TestStore.isHisStore(url: FileManager.default.temporaryDirectory.appendingPathComponent("a.sqlite")))
+        #expect(!TestStore.isHisStore(url: nil))
     }
 
     @Test func aTestStoreIsNeverBackedUp() throws {
@@ -28,6 +59,7 @@ struct TestStoreTests {
         let classes = try store.prepareCatalog()
         let engine = ActionEngine(store: store, classes: classes)
         let settings = SettingsStore(engine: engine)
+        // The temporary folder is not his, so the stamp may land here.
         // A plain store still backs up.
         let plain = folder.appendingPathComponent("plain.tessera")
         try TesseraBackup.write(from: context, to: plain)

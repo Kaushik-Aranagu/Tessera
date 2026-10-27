@@ -465,8 +465,6 @@ public enum SystemCatalog {
             FieldSpec(key: "rainAlert", name: "Rain alert", kind: .bool),
             FieldSpec(key: "rainAlertLead", name: "Rain alert lead", kind: .number, unit: "min"),
             FieldSpec(key: "placeLooks", name: "Looks", kind: .text),
-            // "test" on a store the test world made: Claude rungs may run on it, and it is never backed up.
-            FieldSpec(key: "storeKind", name: "Store kind", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
