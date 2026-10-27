@@ -340,3 +340,12 @@ The routine's Read step counts in pages as well as minutes.
 - Done steps in the step list are now ink2 with a 1 pt strike, not green. That keeps the dusk page to three colours and matches the shopping list's struck lines. (This also corrects the board to match note 13 sent to Builder B.)
 - The time no longer clips when the label beside it wraps: the numerals never shrink, the label wraps.
 - Test: t67 paper and black green; prd.js reads "to about page 226" and the receipt "Read, tended, about page 219".
+
+## Sheet 342: the top line notices when a dish is covered
+
+In shopping mode, the moment the last thing for a planned dish goes in the basket, the ticket's top-right line says so.
+
+- "11 of 11 to get, tacos 3 of 4" becomes "Everything for the tacos" in the ticket colour, bold, for 2.2 s, then goes back to the count ("3 of 11 to get, tacos 4 of 4").
+- Only on the change from not covered to covered; Undo and re-getting does not repeat it unless it was uncovered again.
+- No buzz beyond the normal Got it tick: the words are the reward.
+- Test: t67 paper and black green; ptf.js reads the count, then "Everything for the tacos" on the tortillas, then the count again.
