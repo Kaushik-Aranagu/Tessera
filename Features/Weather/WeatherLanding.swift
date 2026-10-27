@@ -324,6 +324,7 @@ struct LookoutDropHandover: View {
 struct WeatherDoorPage: View {
     let door: WeatherDoor
     @Environment(\.dismiss) private var dismiss
+    @State private var detail: LookoutDetail?
 
     var body: some View {
         let snapshot = WeatherSample.snapshot(now: AppClock.now)
@@ -337,12 +338,17 @@ struct WeatherDoorPage: View {
                 .font(.custom("Figtree", size: 34, relativeTo: .largeTitle).weight(.bold))
                 .foregroundStyle(WeatherAccent.room)
                 .accessibilityAddTraits(.isHeader)
-            ForEach(Array(lines(snapshot).enumerated()), id: \.offset) { _, line in
-                Text(line)
-                    .font(.custom("Figtree", size: 17, relativeTo: .body))
-                    .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+            ForEach(Array(lines(snapshot).enumerated()), id: \.offset) { index, line in
+                // A row opens what it names: the hour, the day or the air (the same detail as the shell's rows).
+                Button {
+                    detail = LookoutRoomContent.Facts(snapshot: snapshot).detail(forRow: "\(door.rawValue).\(index)")
+                } label: {
+                    FitLine(forms: FitLine.cuts(line), size: 17, color: Theme.Colors.ink)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens it")
             }
             Spacer(minLength: 0)
         }
@@ -350,6 +356,7 @@ struct WeatherDoorPage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background { ThemedBackground() }
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(item: $detail) { LookoutDetailPage(detail: $0) }
     }
 
     private func lines(_ snapshot: WeatherSnapshot) -> [String] {

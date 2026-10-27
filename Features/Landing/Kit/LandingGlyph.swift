@@ -42,6 +42,9 @@ enum GlyphKind: String, CaseIterable {
             (.book, has("club", "book", "read")),
             (.checklist, has("packing", "list", "plan")),
             (.spark, has("tess")),
+            // Lookout's quiet sky (283 library: rain, moon, sun): a steady or dry spell is the sun, never the cover;
+            // "No rain" must not draw rain.
+            (.sun, has("steady", "no rain", "coming dry", "staying dry")),
             (.rain, has("rain", "storm", "shower")),
             (.moon, has("low", "night", "tonight")),
             (.sun, has("driest", "clear", "sunny")),
