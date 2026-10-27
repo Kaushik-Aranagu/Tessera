@@ -290,7 +290,7 @@ struct PlanRows: View {
                     .frame(height: QueueWindow.rowHeight, alignment: .leading)
             }
             if model.showsPrivacy {
-                Text("Titles and counts only. Never notes, places, health or money")
+                Text("Everything but your key")
                     .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
