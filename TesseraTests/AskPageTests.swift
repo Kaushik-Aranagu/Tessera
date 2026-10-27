@@ -10,13 +10,13 @@ struct AskPageTests {
     @Test func aClassWithNoSentenceStaysOnThePhone() {
         // Money, body and health classes get no sentence from Describe.
         #expect(AskAnswer.make(sentence: nil, isPrivate: false, story: [], changes: 0) == .stays)
-        #expect(AskAnswer.staysWords == "That stays on this phone.")
+        #expect(AskAnswer.staysWords == "That stays on this phone")
     }
 
     @Test func aPlainObjectAnswersWithItsStory() {
-        let answer = AskAnswer.make(sentence: "Pay rent, due Friday.", isPrivate: false,
+        let answer = AskAnswer.make(sentence: "Pay rent, due Friday", isPrivate: false,
                                     story: ["Moved to Friday"], changes: 2)
-        #expect(answer == .answer(sentence: "Pay rent, due Friday.", story: ["Moved to Friday"], changes: 2))
+        #expect(answer == .answer(sentence: "Pay rent, due Friday", story: ["Moved to Friday"], changes: 2))
         #expect(AskAnswer.changesWords(1) == "1 change")
         #expect(AskAnswer.changesWords(3) == "3 changes")
     }

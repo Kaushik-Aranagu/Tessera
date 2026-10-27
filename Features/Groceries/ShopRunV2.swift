@@ -42,7 +42,7 @@ struct ShopRunV2: View {
             } else if let current = aisles.first {
                 aisle(current)
             } else {
-                Text("All in the basket.")
+                Text("All in the basket")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)

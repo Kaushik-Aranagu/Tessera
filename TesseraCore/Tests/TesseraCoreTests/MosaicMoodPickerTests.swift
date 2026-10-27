@@ -104,7 +104,7 @@ struct MosaicMoodPickerTests {
         #expect(input.running && input.runningLabel == "Private workout")
         let pick = MosaicMoodPicker.pick(input)
         #expect(pick.mood == .running && pick.lines.count == 3)
-        #expect(pick.lines[1] == "Private workout is running.")
+        #expect(pick.lines[1] == "Private workout is running")
         #expect(!pick.lines.joined().lowercased().contains("knee"))
     }
 
@@ -119,7 +119,7 @@ struct MosaicMoodPickerTests {
         try engine.perform(SetTaskDone(task: hidden.id), by: .user)
         input = MosaicMoodInputs.make(engine: engine, facts: facts(now))
         let pick = MosaicMoodPicker.pick(input)
-        #expect(pick.mood == .done && pick.lines[1] == "Everything due today is done.")
+        #expect(pick.mood == .done && pick.lines[1] == "Everything due today is done")
         #expect(!pick.lines.joined().lowercased().contains("lexapro"))
     }
 
@@ -143,7 +143,7 @@ struct MosaicMoodPickerTests {
         let facts = MosaicFacts.make(engine: engine, now: at(14), calendar: calendar, place: (37.8, -122.4),
                                      events: [cook])
         let pick = MosaicMoodPicker.pick(MosaicMoodInputs(facts: facts))
-        #expect(pick.mood == .day && pick.lines[1] == "Free 23 min, then Tacos.")
+        #expect(pick.mood == .day && pick.lines[1] == "Free 23 min, then Tacos")
         #expect(pick.clauses[0].keyWord == nil && pick.clauses[0].app == nil)
         #expect(pick.clauses[1].app == .kitchen && pick.clauses[1].keyWord == 18 ..< 23)
         // A masked running thing is plain; Tess's words never carry an app word.
@@ -152,7 +152,7 @@ struct MosaicMoodPickerTests {
             running: true,
             runningLabel: "Private workout"
         ))
-        #expect(plain.clauses[1].text == "Private workout is running." && plain.clauses[1].keyWord == nil)
+        #expect(plain.clauses[1].text == "Private workout is running" && plain.clauses[1].keyWord == nil)
         let shown = MosaicMoodPicker.pick(MosaicMoodInputs(facts: facts, running: true, runningLabel: "Push A",
                                                            runningApp: .training))
         #expect(shown.clauses[1].app == .training && shown.clauses[1].keyWord == 0 ..< 6)

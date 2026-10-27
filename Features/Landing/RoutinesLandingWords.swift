@@ -16,14 +16,14 @@ enum RoutinesLandingWords {
 
     /// "Nothing set up yet." / "1 routine." / "3 routines." / "3 routines, 1 done today." / "All done today."
     static func subtitle(total: Int, doneToday: Int) -> String {
-        guard total > 0 else { return "Nothing set up yet." }
+        guard total > 0 else { return "Nothing set up yet" }
         if doneToday >= total {
-            return "All done today."
+            return "All done today"
         }
         if doneToday > 0 {
-            return "\(total) \(total == 1 ? "routine" : "routines"), \(doneToday) done today."
+            return "\(total) \(total == 1 ? "routine" : "routines"), \(doneToday) done today"
         }
-        return "\(total) \(total == 1 ? "routine" : "routines")."
+        return "\(total) \(total == 1 ? "routine" : "routines")"
     }
 
     // MARK: The top
@@ -71,12 +71,12 @@ enum RoutinesLandingWords {
     /// Read aloud: "Morning. Ran 14 of the last 30 days. Usually starts 6:40. Usually 22 minutes."
     static func spokenLine(name: String, days: Int, startMinuteOfDay: Int, lengthMinutes: Int) -> String {
         "\(name). Ran \(days) of the last 30 days. Usually starts \(clock(startMinuteOfDay)). "
-            + "Usually \(lengthMinutes == 1 ? "1 minute" : "\(lengthMinutes) minutes")."
+            + "Usually \(lengthMinutes == 1 ? "1 minute" : "\(lengthMinutes) minutes")"
     }
 
     /// "Morning is running. Step: Shoes on. 4 minutes on this step."
     static func spokenTop(name: String, step: String, onStep: String) -> String {
-        "\(name) is running. Step: \(step). \(onStep)."
+        "\(name) is running. Step: \(step). \(onStep)"
     }
 
     // MARK: Time
@@ -103,12 +103,12 @@ enum RoutinesLandingWords {
     /// What an empty place says when it is focused (no button; writing is the foot word).
     static func nothingIn(_ place: RoutinePlace) -> String {
         switch place {
-        case .today: "Nothing left today."
-        case .morning: "Nothing in the morning yet."
-        case .midday: "Nothing at midday yet."
-        case .evening: "Nothing in the evening yet."
-        case .night: "Nothing at night yet."
-        case .anyTime: "Nothing here yet."
+        case .today: "Nothing left today"
+        case .morning: "Nothing in the morning yet"
+        case .midday: "Nothing at midday yet"
+        case .evening: "Nothing in the evening yet"
+        case .night: "Nothing at night yet"
+        case .anyTime: "Nothing here yet"
         }
     }
 }

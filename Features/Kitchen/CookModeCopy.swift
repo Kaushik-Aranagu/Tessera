@@ -26,28 +26,28 @@ enum CookModeCopy {
 
     /// A timer reaching zero, announced once: "Simmer is done." (K84.22).
     static func timerDone(_ label: String) -> String {
-        "\(label) is done."
+        "\(label) is done"
     }
 
     /// The finished timer's own line, with its Stop action beside it: "Simmer, done." (K84.22).
     static func timerDoneLine(_ label: String) -> String {
-        "\(label), done."
+        "\(label), done"
     }
 
     /// Stopping a timer: "Simmer stopped." with UNDO (K84.7, K84.15).
     static func timerStopped(_ label: String) -> String {
-        "\(label) stopped."
+        "\(label) stopped"
     }
 
     /// UNDO of a stop: "Simmer, back." (K84.24).
     static func timerBack(_ label: String) -> String {
-        "\(label), back."
+        "\(label), back"
     }
 
     /// A running timer read aloud, durations in words: "Simmer, 8 minutes left." (K84.20, K41.12).
     /// At zero it is the done line, never "0 minutes left" (G233).
     static func timeLeft(_ label: String, seconds: TimeInterval) -> String {
-        seconds > 0 ? "\(label), \(duration(seconds)) left." : timerDoneLine(label)
+        seconds > 0 ? "\(label), \(duration(seconds)) left" : timerDoneLine(label)
     }
 
     /// "8 minutes", "1 minute", "1 hour 5 minutes", "under a minute".

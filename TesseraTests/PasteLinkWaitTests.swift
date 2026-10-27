@@ -10,10 +10,10 @@ import Testing
 struct PasteLinkWaitTests {
     @Test func theStartLineNamesOnlyTheHost() throws {
         let link = try #require(URL(string: "https://www.seriouseats.com/the-best-dal-recipe?utm_source=x"))
-        #expect(PasteLinkWait.startLine(link) == "Reading the recipe from seriouseats.com.")
+        #expect(PasteLinkWait.startLine(link) == "Reading the recipe from seriouseats.com")
         #expect(!PasteLinkWait.startLine(link).contains("dal"))
         #expect(PasteLinkWait.startLine(link) != RecipeLinkLine.askingClaude)
-        #expect(PasteLinkWait.askingLine == "Asking Claude to read the recipe.")
+        #expect(PasteLinkWait.askingLine == "Asking Claude to read the recipe")
     }
 
     /// The lines a read shows, in order: the start line, then whatever the reader's hook hands over.
@@ -44,7 +44,7 @@ struct PasteLinkWaitTests {
     }
 
     @Test func claudesLineShowsOnlyAtTheHandoff() async throws {
-        let start = "Reading the recipe from blog.example.com."
+        let start = "Reading the recipe from blog.example.com"
         // A page only Claude could read, with Claude on: the start line, then Claude's line once.
         #expect(try await lines(for: "story", asksClaude: true) == [start, RecipeLinkLine.askingClaude])
         // Claude off: the start line alone.
@@ -58,7 +58,7 @@ struct PasteLinkWaitTests {
     /// QA on #1153: with the month's cap reached nothing goes to Claude, so his line never shows.
     @Test func overTheCapOnlyTheStartLineShows() async throws {
         #expect(try await lines(for: "story", asksClaude: true, overCap: true)
-            == ["Reading the recipe from blog.example.com."])
+            == ["Reading the recipe from blog.example.com"])
     }
 }
 
@@ -79,8 +79,8 @@ private final class WaitStubPage: URLProtocol {
         let body = if url.path().hasSuffix("/recipe") {
             #"<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"Recipe","#
                 + #""name":"Dal","recipeIngredient":["1 cup red lentils","2 cups water","1 tsp salt"],"#
-                + #""recipeInstructions":[{"@type":"HowToStep","text":"Rinse the lentils."},"#
-                + #"{"@type":"HowToStep","text":"Simmer for 20 minutes."}]}</script></head><body></body></html>"#
+                + #""recipeInstructions":[{"@type":"HowToStep","text":"Rinse the lentils"},"#
+                + #"{"@type":"HowToStep","text":"Simmer for 20 minutes"}]}</script></head><body></body></html>"#
         } else {
             "<html><body><p>A short story about a walk by the river.</p></body></html>"
         }

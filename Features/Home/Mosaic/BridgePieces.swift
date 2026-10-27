@@ -32,6 +32,8 @@ struct BridgeBoard: View {
             .mosaicShield()
             .frame(width: BridgePlace.board.width, alignment: .topTrailing)
             .frame(maxHeight: BridgePlace.board.height + 18, alignment: .top)
+            // Nothing draws past the board's place (Kaushik, Oct 26: every element keeps inside its boundary).
+            .clipped()
             .offset(y: -8)
             // The board's rows are fixed 30 pt flaps: its type stops at xLarge so rows never overlap at AX5.
             .dynamicTypeSize(...DynamicTypeSize.xLarge)
@@ -82,7 +84,8 @@ struct BridgeApps: View {
     var body: some View {
         if HomeMosaic.appsListIsOn {
             AppsListSlot(onHold: { stage.wheelHeld = $0 }, onGlance: { stage.playGlance($0) })
-                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                // The dial's names fit their 40 pt places: its type stops at xLarge (bounds check, Oct 26).
+                .dynamicTypeSize(...DynamicTypeSize.xLarge)
                 .frame(width: BridgePlace.doors.width, height: BridgePlace.doors.height, alignment: .top)
                 .mosaicShield()
         }
@@ -130,7 +133,7 @@ struct BridgeTess: View {
         if stage.layerOn, HomeMosaic.appsListIsOn {
             ZStack {
                 if stage.roomOpen {
-                    TessRoom(entries: stage.roomEntries, watching: "Watching today.", undo: { entry in
+                    TessRoom(entries: stage.roomEntries, watching: "Watching today", undo: { entry in
                         switch TessRoomLog.undo(entry, engine: model.engine) {
                         case let .putBack(line): line
                         default: nil

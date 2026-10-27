@@ -63,7 +63,7 @@ struct TrainingStatsTests {
         let best = try #require(stats.bestInRange(.threeMonths, now: now, calendar: calendar))
         #expect(best.exercise == "Bench Press" && abs(best.e1RM - 93.33) < 0.01)
         #expect(TrainingSentences.best(best, unit: .kilograms, calendar: calendar)
-            == "Your best Bench Press is about 93 kg for 1, on Oct 6.")
+            == "Your best Bench Press is about 93 kg for 1, on Oct 6")
         #expect(!TrainingSentences.best(best, unit: .kilograms, calendar: calendar).lowercased().contains("record"))
     }
 
@@ -76,12 +76,12 @@ struct TrainingStatsTests {
         let bench = try #require(lines.first)
         #expect(bench.change == .up(steps: 2) && bench.sessions == 3)
         #expect(TrainingSentences.strength(bench, range: .threeMonths, unit: .kilograms)
-            == "Bench Press is up 5 kg in 3 months.")
+            == "Bench Press is up 5 kg in 3 months")
         #expect(TrainingSentences.strengthOpening(lines, range: .threeMonths, unit: .kilograms)
-            == "Bench Press is up 5 kg in 3 months.")
-        #expect(TrainingSentences.strength(bench, range: .year, unit: .kilograms)?.hasSuffix("in the year.") == true)
+            == "Bench Press is up 5 kg in 3 months")
+        #expect(TrainingSentences.strength(bench, range: .year, unit: .kilograms)?.hasSuffix("in the year") == true)
         #expect(TrainingSentences
-            .strength(bench, range: .threeMonths, unit: .pounds) == "Bench Press is up 10 lb in 3 months.")
+            .strength(bench, range: .threeMonths, unit: .pounds) == "Bench Press is up 10 lb in 3 months")
     }
 
     /// 4
@@ -91,7 +91,7 @@ struct TrainingStatsTests {
         try session(daysAgo: 6, sets: [(95, 5)])
         let bench = try #require(stats.strengthLines(.threeMonths, now: now, calendar: calendar).first)
         let text = try #require(TrainingSentences.strength(bench, range: .threeMonths, unit: .kilograms))
-        #expect(text == "Bench Press is holding near its best.")
+        #expect(text == "Bench Press is holding near its best")
         for word in ["down", "lost", "broke", "streak", "record"] {
             #expect(!text.lowercased().contains(word))
         }
@@ -107,7 +107,7 @@ struct TrainingStatsTests {
         let first = try #require(lines.first)
         #expect(first.change == .first)
         #expect(TrainingSentences.strength(first, range: .threeMonths, unit: .kilograms)
-            == "First number for Bench Press: about 93 kg for 1.")
+            == "First number for Bench Press: about 93 kg for 1")
     }
 
     /// 6
@@ -144,10 +144,10 @@ struct TrainingStatsTests {
         let chest = try #require(volume.rows.first { $0.name == "Chest" })
         #expect(chest.sets == 4)
         #expect(volume.rows.first { $0.name == "Triceps" }?.sets == 2)
-        #expect(TrainingSentences.volume(chest) == "Chest 4 sets this week, toward a usual 10.")
+        #expect(TrainingSentences.volume(chest) == "Chest 4 sets this week, toward a usual 10")
         #expect(TrainingSentences.volume(.init(name: "Lats", sets: 14, band: .within))
-            == "Lats 14 sets this week, in its usual 10 to 20.")
-        #expect(TrainingSentences.volume(.init(name: "Lats", sets: 24, band: .above)) == "Lats 24 sets this week.")
+            == "Lats 14 sets this week, in its usual 10 to 20")
+        #expect(TrainingSentences.volume(.init(name: "Lats", sets: 24, band: .above)) == "Lats 24 sets this week")
         #expect(volume.totalSets >= 6)
     }
 
@@ -171,15 +171,15 @@ struct TrainingStatsTests {
         let counts = last5.map(\.sessions)
         #expect(counts == [3, 3, 0, 4, 3])
         #expect(last5[2].isEmpty)
-        #expect(TrainingSentences.sessions(3, usual: 3) == "3 sessions this week. Usual 3.")
-        #expect(TrainingSentences.sessions(1, usual: 3) == "1 session this week. Usual 3.")
+        #expect(TrainingSentences.sessions(3, usual: 3) == "3 sessions this week. Usual 3")
+        #expect(TrainingSentences.sessions(1, usual: 3) == "1 session this week. Usual 3")
     }
 
     /// 10
     @Test func aFinishedRunOfNineShowsAndARunOfTwoAloneDoesNot() throws {
         try weekly(Array(repeating: 1, count: 9) + [0, 0, 1, 1, 1], endingWeeksAgo: 0)
         let nine = stats.habit(.year, now: now, calendar: calendar)
-        #expect(nine.bestRun == 9 && TrainingSentences.bestRun(nine.bestRun) == "Best run: 9 weeks in a row.")
+        #expect(nine.bestRun == 9 && TrainingSentences.bestRun(nine.bestRun) == "Best run: 9 weeks in a row")
     }
 
     @Test func aRunOfTwoAloneIsNeverTold() throws {
@@ -205,7 +205,7 @@ struct TrainingStatsTests {
         try session(daysAgo: 2, sets: Array(repeating: (60, 5), count: 12))
         #expect(stats.habit(.threeMonths, now: now, lightWeeks: true, calendar: calendar).current?.isLight == true)
         #expect(stats.habit(.threeMonths, now: now, lightWeeks: false, calendar: calendar).current?.isLight == false)
-        #expect(TrainingSentences.lighterWeek == "A lighter week.")
+        #expect(TrainingSentences.lighterWeek == "A lighter week")
     }
 
     @Test func withOnlyThreePriorWeeksNothingIsLight() throws {
@@ -224,11 +224,11 @@ struct TrainingStatsTests {
         func lines(_ push: Double, _ pull: Double, _ lower: Double) -> [String] {
             TrainingSentences.balance(.init(push: push, pull: pull, lower: lower))
         }
-        #expect(lines(10, 10, 20) == ["Push and pull are even.", "Upper and lower are even."])
-        #expect(lines(8, 12, 20) == ["Pull is a little ahead of push.", "Upper and lower are even."])
-        #expect(lines(12, 8, 8) == ["Push is a little ahead of pull.", "Upper gets more of your sets."])
-        #expect(lines(10, 10, 5) == ["Push and pull are even.", "Upper gets more of your sets."])
-        #expect(lines(5, 5, 20) == ["Push and pull are even.", "Lower gets more of your sets."])
+        #expect(lines(10, 10, 20) == ["Push and pull are even", "Upper and lower are even"])
+        #expect(lines(8, 12, 20) == ["Pull is a little ahead of push", "Upper and lower are even"])
+        #expect(lines(12, 8, 8) == ["Push is a little ahead of pull", "Upper gets more of your sets"])
+        #expect(lines(10, 10, 5) == ["Push and pull are even", "Upper gets more of your sets"])
+        #expect(lines(5, 5, 20) == ["Push and pull are even", "Lower gets more of your sets"])
     }
 
     @Test func balanceCountsOnlyTheNamedGroups() throws {
@@ -269,12 +269,12 @@ struct TrainingStatsTests {
     /// 15
     @Test func theLandingSentenceReusesTheLandingWords() {
         #expect(TrainingSentences.today(routine: "Push A", minutes: 45, opener: ("Bench", "82.5")).text
-            == "Push A today, about 45 min. Bench opens at 82.5.")
-        #expect(TrainingSentences.today(routine: "Push A", minutes: nil, opener: nil).text == "Push A today.")
-        #expect(TrainingSentences.running(routine: "Push A", done: 6, total: 20) == "Push A is running. 6 of 20 sets.")
-        #expect(TrainingSentences.finished(routine: "Push A", minutes: 95) == "Push A done, 1 hr 35 min.")
-        #expect(TrainingSentences.restDay == "Rest day." && TrainingSentences.noPlan == "No plan yet.")
-        #expect(TrainingSentences.privateToday == "A private workout today.")
+            == "Push A today, about 45 min. Bench opens at 82.5")
+        #expect(TrainingSentences.today(routine: "Push A", minutes: nil, opener: nil).text == "Push A today")
+        #expect(TrainingSentences.running(routine: "Push A", done: 6, total: 20) == "Push A is running. 6 of 20 sets")
+        #expect(TrainingSentences.finished(routine: "Push A", minutes: 95) == "Push A done, 1 hr 35 min")
+        #expect(TrainingSentences.restDay == "Rest day" && TrainingSentences.noPlan == "No plan yet")
+        #expect(TrainingSentences.privateToday == "A private workout today")
     }
 
     /// 16

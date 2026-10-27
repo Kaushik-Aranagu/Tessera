@@ -171,7 +171,7 @@ public struct PoolReport {
             let balance = book.balance(of: pool)
             guard balance < 0 else { return nil }
             let amount = PoolFormat.amount(-balance, currency: book.currency(of: pool), lakh: lakh, text: true)
-            return "\(name(of: pool)) is below zero by \(amount)."
+            return "\(name(of: pool)) is below zero by \(amount)"
         }
     }
 
@@ -183,14 +183,14 @@ public struct PoolReport {
         if let dollars = total.dollars {
             lines.append("In dollars, about \(PoolFormat.wholeDollars(Decimal(dollars), lakh: lakh))")
             if let from = total.ratesFrom {
-                lines.append("Rates from \(Self.day(from, calendar)).")
+                lines.append("Rates from \(Self.day(from, calendar))")
             }
             if total.isStale {
-                lines.append("These rates are old.")
+                lines.append("These rates are old")
             }
         }
         for code in total.leftOut {
-            lines.append("\(Self.word(code)) \(Self.word(code) == code ? "is" : "are") not in the total.")
+            lines.append("\(Self.word(code)) \(Self.word(code) == code ? "is" : "are") not in the total")
         }
         return lines
     }
@@ -214,7 +214,7 @@ public struct PoolReport {
             lakh: lakh,
             text: true
         ) }
-        return "Fees this month: \(parts.joined(separator: " and "))."
+        return "Fees this month: \(parts.joined(separator: " and "))"
     }
 
     /// "Archived pools are still counted." when an archived pool holds money that the totals include; nil otherwise.
@@ -222,7 +222,7 @@ public struct PoolReport {
         let counted = book.pools().contains {
             store.value("archivedAt", of: $0)?.dateValue != nil && book.balance(of: $0) != 0
         }
-        return counted ? "Archived pools are still counted." : nil
+        return counted ? "Archived pools are still counted" : nil
     }
 
     /// The Money landing's pool sentence: "US checking has $1,345.00." / "$1,345.00 in US checking, INR 82,650.00 in
@@ -240,11 +240,11 @@ public struct PoolReport {
         }
         let lead = nothingLate ? "Nothing is late. " : ""
         switch shown.count {
-        case 0: return LandingSentence(text: nothingLate ? "Nothing is late." : "No pools yet.", key: nil)
-        case 1: return LandingSentence(text: "\(lead)\(shown[0].name) has \(shown[0].amount).", key: shown[0].name)
+        case 0: return LandingSentence(text: nothingLate ? "Nothing is late" : "No pools yet", key: nil)
+        case 1: return LandingSentence(text: "\(lead)\(shown[0].name) has \(shown[0].amount)", key: shown[0].name)
         default:
             return LandingSentence(
-                text: "\(shown[0].amount) in \(shown[0].name), \(shown[1].amount) in \(shown[1].name).",
+                text: "\(shown[0].amount) in \(shown[0].name), \(shown[1].amount) in \(shown[1].name)",
                 key: shown[0].name
             )
         }
@@ -258,13 +258,13 @@ public struct PoolReport {
             guard let pool = store.linkedObjects("pool", of: row).first else { return nil }
             let amount = PoolFormat.amount(PoolBook.decimal(store.value("amountTyped", of: row)?.stringValue),
                                            currency: book.currency(of: pool), lakh: lakh, text: true)
-            return "\(name(of: pool)) got \(amount), \(store.value("source", of: row)?.stringValue ?? "paycheck")."
+            return "\(name(of: pool)) got \(amount), \(store.value("source", of: row)?.stringValue ?? "paycheck")"
         case classes[.poolMove]?.id:
             let figures = book.figures(of: row)
             let from = store.linkedObjects("fromPool", of: row).first,
                 into = store.linkedObjects("toPool", of: row).first
             return "Moved \(PoolFormat.amount(figures.sent, currency: from.map(book.currency(of:)) ?? "USD", lakh: lakh, text: true)), got "
-                + "\(PoolFormat.amount(figures.arrived, currency: into.map(book.currency(of:)) ?? "USD", lakh: lakh, text: true))."
+                + "\(PoolFormat.amount(figures.arrived, currency: into.map(book.currency(of:)) ?? "USD", lakh: lakh, text: true))"
         case classes[.spend]?.id:
             guard let pool = store.linkedObjects("pool", of: row).first else { return nil }
             let note = (store.value("note", of: row)?.stringValue ?? "").trimmingCharacters(in: .whitespaces)
@@ -274,7 +274,7 @@ public struct PoolReport {
             // Word by word, as the past sentence does: "ozempic pharmacy run" never shows its first word.
             let hidden = ObjectPrivacy.containsPrivateWord(note, in: store)
             let shownWord = hidden ? "Private spend" : word
-            return "\(shownWord) \(amount), \(name(of: pool))."
+            return "\(shownWord) \(amount), \(name(of: pool))"
         default: return nil
         }
     }
@@ -289,10 +289,10 @@ public struct PoolReport {
             PoolFormat.amount(value, currency: code, lakh: lakh, text: true)
         }
         var text = "You sent \(shown(figures.sent, from))"
-        text += figures.fee > 0 ? " and paid \(shown(figures.fee, from)) in fees." : "."
-        text += " You got \(shown(figures.arrived, into))."
+        text += figures.fee > 0 ? " and paid \(shown(figures.fee, from)) in fees" : ""
+        text += ". You got \(shown(figures.arrived, into))"
         if from != into, let rate = figures.effectiveRate {
-            text += " Your rate was \(PoolFormat.rate(rate)) for \(from == "USD" ? "a dollar" : "one \(from)") after fees."
+            text += ". Your rate was \(PoolFormat.rate(rate)) for \(from == "USD" ? "a dollar" : "one \(from)") after fees"
         }
         return text
     }

@@ -28,7 +28,7 @@ final class SpeakSmokeUITests: SimulatorOnlyTestCase {
         sleep(3)
         snap(app, "speak")
         XCTAssertEqual(app.state, .runningForeground, "Speak crashed the app")
-        XCTAssertFalse(app.staticTexts["The mic is busy with a call."].exists, "The audio session refused its category")
+        XCTAssertFalse(app.staticTexts["The mic is busy with a call"].exists, "The audio session refused its category")
     }
 
     private func snap(_ app: XCUIApplication, _ name: String) {

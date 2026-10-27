@@ -14,7 +14,7 @@ struct PasteKeyTests {
         let kept = PasteCopy.withoutKeys(paste)
         #expect(!looksLikeClaudeKey(kept) && !kept.contains("xxxxxxxx"))
         #expect(kept.contains("Weeknight dal") && kept.contains("2 cups lentils") && kept
-            .contains("Simmer 20 minutes."))
+            .contains("Simmer 20 minutes"))
     }
 
     @Test func aKeyAloneLeavesNothing() {
@@ -43,6 +43,6 @@ struct PasteKeyTests {
         let wrapped = "Dal\n" + "sk-" + "ant-" + "x1x1x1x1x1x1x1x1\nx2x2x2x2x2x2x2x2\nSimmer."
         let kept = PasteCopy.withoutKeys(wrapped)
         #expect(!looksLikeClaudeKey(kept) && !kept.contains("x1x1") && !kept.contains("x2x2"))
-        #expect(kept.contains("Dal") && kept.contains("Simmer."))
+        #expect(kept.contains("Dal") && kept.contains("Simmer"))
     }
 }

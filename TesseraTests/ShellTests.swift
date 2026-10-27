@@ -160,7 +160,7 @@ struct ShellDiffTests {
             DialDoor(id: "all", name: "All notes", count: "2", color: .black, label: "Newest now", lines: ["Sleep"]),
             DialDoor(id: "loose", name: "Loose", color: .orange, label: "Not about a thing"),
         ]
-        facts.sentence = "Your notes are on their own."
+        facts.sentence = "Your notes are on their own"
         facts.widget = [
             WidgetItem(id: "1", header: "Newest", big: "SLEEP"),
             WidgetItem(id: "2", header: "Newest", big: "IDEAS"),

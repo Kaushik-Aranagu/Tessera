@@ -24,7 +24,7 @@ public enum CaloriesBurned {
 
     public static let aboutLine = "Energy costs from the 2024 Adult Compendium of Physical Activities "
         + "(pacompendium.com). Herrmann SD, Willis EA, Ainsworth BE, et al. Journal of Sport and Health Science, "
-        + "2024;13(1):6-12."
+        + "2024;13(1):6-12"
 
     /// kcal for a MET at a body mass for some minutes, rounded to the nearest 10. Nil with no weight or no time.
     public static func estimate(met: Double, weightKg: Double, minutes: Double) -> Int? {

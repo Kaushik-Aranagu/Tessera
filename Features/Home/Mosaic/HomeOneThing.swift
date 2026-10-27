@@ -172,8 +172,12 @@ struct HomeOneThing: View {
                     .tracking(13 * 0.12)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    // The header ends where the Big line starts (429 + 15 = 444): fixed size, never over it.
+                    .dynamicTypeSize(...DynamicTypeSize.large)
+                    .frame(height: 15, alignment: .top)
             }
-            .offset(y: 17)
+            // 428: its 15.7 pt line ends before the Big line at 444 (no overlap, bounds check).
+            .offset(y: 16)
             tier(thing, delay: 0.2, height: Self.bigSlot, inset: 32) { big(thing) }
                 .frame(height: Self.bigSlot, alignment: .leading)
                 .offset(y: 32)
@@ -298,7 +302,8 @@ struct HomeOneThing: View {
     static func bigSize(_ typeSize: DynamicTypeSize) -> CGFloat {
         let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
         let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: 38, compatibleWith: traits)
-        var size = scaled
+        // Never under the sheet's 38 pt, at the small text sizes too.
+        var size = max(scaled, 38)
         while size > 38, bigFont(size).lineHeight > bigSlot {
             size -= 1
         }

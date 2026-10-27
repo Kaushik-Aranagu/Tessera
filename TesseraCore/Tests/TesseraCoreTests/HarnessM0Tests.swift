@@ -13,7 +13,7 @@ struct HarnessM0Tests {
     static let events: [String] = [
         #"{"type":"message_start","message":{"usage":{"input_tokens":100,"output_tokens":1}}}"#,
         #"{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}"#,
-        #"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Let me search."}}"#,
+        #"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Let me search"}}"#,
         #"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig+/abc=="}}"#,
         #"{"type":"content_block_stop","index":0}"#,
         #"{"type":"content_block_start","index":1,"content_block":{"type":"server_tool_use","id":"srvtoolu_1","name":"web_search","input":{}}}"#,
@@ -22,7 +22,7 @@ struct HarnessM0Tests {
         #"{"type":"content_block_start","index":2,"content_block":\#(searchResult)}"#,
         #"{"type":"content_block_stop","index":2}"#,
         #"{"type":"content_block_start","index":3,"content_block":{"type":"text","text":""}}"#,
-        #"{"type":"content_block_delta","index":3,"delta":{"type":"text_delta","text":"Done."}}"#,
+        #"{"type":"content_block_delta","index":3,"delta":{"type":"text_delta","text":"Done"}}"#,
         #"{"type":"content_block_stop","index":3}"#,
         #"{"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":40,"server_tool_use":{"web_search_requests":1}}}"#,
         #"{"type":"message_stop"}"#,
@@ -55,7 +55,7 @@ struct HarnessM0Tests {
         #expect(String(decoding: blocks[2], as: UTF8.self) == Self.searchResult)
         // Thinking keeps its text and its signature.
         let thinking = try #require(try JSONSerialization.jsonObject(with: blocks[0]) as? [String: Any])
-        #expect(thinking["thinking"] as? String == "Let me search." && thinking["signature"] as? String == "sig+/abc==")
+        #expect(thinking["thinking"] as? String == "Let me search" && thinking["signature"] as? String == "sig+/abc==")
         // The message ends with its assistant event before done.
         let tail = events.suffix(2)
         #expect(tail.first.map {
@@ -144,7 +144,7 @@ extension ClaudeBrainTests {
             keys: InMemoryKeychain("sk-" + "ant-" + "COUNT-key-" + UUID().uuidString),
             session: BrainStub.session()
         )
-        let request = BrainRequest(system: [TextBlock("Be brief.")], messages: [BrainMessage(.user, text: "Hello")],
+        let request = BrainRequest(system: [TextBlock("Be brief")], messages: [BrainMessage(.user, text: "Hello")],
                                    effort: .low)
         let counted = await brain.countTokens(request)
         #expect(counted == 1234)

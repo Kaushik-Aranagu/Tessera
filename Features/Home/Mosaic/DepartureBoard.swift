@@ -148,8 +148,8 @@ struct DepartureBoard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(finalText)
+        // One element for the whole board (its flap letters never surface one by one), with each door an action.
+        .accessibilityRepresentation { Text(finalText) }
         .accessibilityActions {
             // Each door is a button: "Push day, opens Training".
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
@@ -196,8 +196,10 @@ struct DepartureBoard: View {
         let plain = TrailingWrap(spacing: 6, lineSpacing: 2.4) {
             ForEach(Array(line.enumerated()), id: \.offset) { _, seg in
                 plainSegment(seg, li: li)
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityHidden(true)
         if reduceMotion {
             // Reduce Motion: a plain swap, no letters.
             plain
@@ -207,25 +209,19 @@ struct DepartureBoard: View {
         } else {
             // The letters always click forward (sheet 200), on one line in its own row: the words are chosen to fit,
             // never shrunk, wrapped or crossfaded.
-            HStack(spacing: 6) {
-                ForEach(units(of: line, starts: starts)) { unit in
-                    unitView(unit, cells: lineCells, li: li)
-                        .fixedSize()
-                }
-                // Letters the new line no longer has flip to spaces and collapse once the pass is over.
-                let kept = DepartureSteps.flat(line).count
-                if lineCells.count > kept {
-                    HStack(spacing: 0) {
-                        ForEach(kept ..< lineCells.count, id: \.self) { k in
-                            Text(String(lineCells[k].shown))
-                                .font(font(for: lineCells[k].kind ?? .plain))
-                                .foregroundStyle(droppedStyle(lineCells[k].kind ?? .plain))
-                                .fixedSize()
-                                .frame(width: lineCells[k].width)
-                                .scaleEffect(x: 1, y: lineCells[k].squash ? 0.08 : 1, anchor: .center)
-                        }
+            HStack(spacing: 0) {
+                // The words, 6 pt apart; the letters going away sit after them with no gap, so the row's right edge
+                // is the last word's (x 378 on Bridge).
+                HStack(spacing: 6) {
+                    ForEach(units(of: line, starts: starts)) { unit in
+                        unitView(unit, cells: lineCells, li: li)
+                            .fixedSize()
+                            .accessibilityHidden(true)
                     }
                 }
+                .accessibilityHidden(true)
+                // Letters the new line no longer has go at once: the row's right edge stays at the last word (x 378),
+                // and nothing draws past it (Kaushik, Oct 26).
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
@@ -275,6 +271,8 @@ struct DepartureBoard: View {
     @ViewBuilder
     private func unitView(_ unit: Unit, cells: [Cell], li: Int) -> some View {
         let seg = unit.seg
+        // The flap letters are drawing only: the board is one accessibility element with the whole text and its doors
+        // as actions, so no letter cell reads (or measures) over its neighbours.
         let content = HStack(spacing: 6) {
             ForEach(Array(unit.words.enumerated()), id: \.offset) { _, word in
                 HStack(spacing: 0) {

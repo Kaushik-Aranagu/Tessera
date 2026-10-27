@@ -154,7 +154,7 @@ final class HomePlanModel {
         kept[id] = record
         model.touch()
         TessVoice.shared.say(
-            "\(PlanWords.shownTitle(block, model: model)), \(Self.spoken(block.start)).",
+            "\(PlanWords.shownTitle(block, model: model)), \(Self.spoken(block.start))",
             undo: record
         ) { [weak self] in
             self?.kept[id] = nil
@@ -189,7 +189,7 @@ final class HomePlanModel {
         spend()
         model.touch()
         TessVoice.shared.say(
-            "Plan kept. \(PlanWords.shownTitle(first, model: model)) is up.",
+            "Plan kept. \(PlanWords.shownTitle(first, model: model)) is up",
             takeBack: { [weak self] in
                 for record in records.values {
                     _ = model.engine.undo(record)
@@ -290,7 +290,7 @@ struct PlanRows: View {
                     .frame(height: QueueWindow.rowHeight, alignment: .leading)
             }
             if model.showsPrivacy {
-                Text("Titles and counts only. Never notes, places, health or money.")
+                Text("Titles and counts only. Never notes, places, health or money")
                     .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)

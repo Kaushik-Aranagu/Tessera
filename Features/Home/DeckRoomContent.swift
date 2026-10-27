@@ -11,7 +11,7 @@ struct DeckRoomContent: RoomContent {
     static let title = "Deck"
     static let boardKey = "deck.board"
     static let boardLabel = "The board"
-    static let caption = ["Tap a number to open the lift. Swipe left to wipe."]
+    static let caption = ["Tap a number to open the lift. Swipe left to wipe"]
     static let firstDoor = "today"
 
     struct Facts: Equatable {
@@ -64,7 +64,7 @@ struct DeckRoomContent: RoomContent {
     private func door(_ id: String) -> Screen {
         let door = facts.wall.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
-        let line = door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet." : "")
+        let line = door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet" : "")
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "deck.nav.deck", kind: .text, payload: .navWord(Self.title)),
@@ -154,6 +154,10 @@ extension TrainingWallFacts {
 struct DeckActions {
     let model: AppModel
     var reduceMotion = false
+    /// Called once a step has started or picked up the workout (the model has set `isWorkoutPresented`). The shell
+    /// host passes the environment's `shellOpenWorkout`, so whoever owns the root cover can raise the live workout
+    /// over the shell; nil (the scaffold) leaves it to the app root, as before.
+    var openWorkout: (@MainActor () -> Void)?
     let goTo: (TrainingGo) -> Void
 
     private var logOrPage: TrainingGo {
@@ -192,16 +196,26 @@ struct DeckActions {
         }
     }
 
+    /// The foot's steps that bring up the live workout.
+    static func opensWorkout(_ id: String) -> Bool {
+        ["start", "pickUp", "startNext"].contains(id)
+    }
+
     /// One of the foot's steps, by id.
     func step(_ id: String) {
+        defer {
+            if Self.opensWorkout(id), model.isWorkoutPresented {
+                openWorkout?()
+            }
+        }
         switch id {
         case "start": start()
         case "pickUp": model.isWorkoutPresented = true
         case "log": goTo(logOrPage)
         case "rest":
             // Nothing is written: the plan keeps its day; Tess only says so.
-            TessVoice.shared.say("Rest it is. Nothing logged, the plan keeps its day.")
-        case "walk": TessVoice.shared.say("Walks come in from Health.")
+            TessVoice.shared.say("Rest it is. Nothing logged, the plan keeps its day")
+        case "walk": TessVoice.shared.say("Walks come in from Health")
         case "startNext": startNext()
         case "library": goTo(.library)
         default: break
@@ -256,12 +270,20 @@ extension DeckRoomContent.Facts {
     static func rows(wall: TrainingWallFacts, deck: TrainingDeckFacts) -> [String: [ShellRow]] {
         var rows: [String: [ShellRow]] = [:]
         let today = wall.doors.first { $0.id == "today" }
+        // A Today row opens its own lift where the line names one; else the Training page.
         rows["today"] = (today?.lines ?? []).enumerated().map { index, line in
-            ShellRow(id: "page#\(index)", title: line)
+            let lift = wall.todayLiftIDs.indices.contains(index) ? wall.todayLiftIDs[index] : nil
+            return ShellRow(id: lift.map { "\(TrainingWallTarget.exercise($0).id)#t\(index)" } ?? "page#\(index)",
+                            title: line)
         }
+        // A trained day opens the first lift it did; other days open the week (the log).
         rows["week"] = deck.board.week.map { day in
-            ShellRow(id: "week#\(day.id)", title: day.letter,
-                     detail: day.isToday ? "Today" : (day.done ? "Trained" : ""))
+            let detail = day.isToday ? "Today" : (day.done ? (day.liftName.map { "Trained, \($0)" } ?? "Trained") : "")
+            return ShellRow(
+                id: day.liftID.map { "\(TrainingWallTarget.exercise($0).id)#w\(day.id)" } ?? "week#\(day.id)",
+                title: day.letter,
+                detail: detail
+            )
         }
         rows["library"] = wall.words.filter {
             if case .exercise = TrainingWallTarget(id: $0.id) {
@@ -290,6 +312,7 @@ struct DeckShellHost: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.shellOpenWorkout) private var openWorkout
     @State private var navigator = ShellNavigator(root: .landing(DeckRoomContent.room))
     @State private var stop: TrainingStop?
     @State private var libraryOpen = false
@@ -331,7 +354,7 @@ struct DeckShellHost: View {
     }
 
     private var actions: DeckActions {
-        DeckActions(model: model, reduceMotion: reduceMotion) { place in
+        DeckActions(model: model, reduceMotion: reduceMotion, openWorkout: openWorkout) { place in
             switch place {
             case .page: stop = .page
             case let .route(route): stop = .route(route)
@@ -366,4 +389,11 @@ extension TrainingStop: Identifiable {
         case let .route(route): "\(route)"
         }
     }
+}
+
+extension EnvironmentValues {
+    /// For lane S's root (Home's shell): raise the live workout over the shell. Deck's shell host calls it after Start,
+    /// Pick up or Start next has begun or resumed a workout (`AppModel.isWorkoutPresented` is already true). Nil by
+    /// default: the app root's own cover on `isWorkoutPresented` shows it, as on the scaffold.
+    @Entry var shellOpenWorkout: (@MainActor () -> Void)?
 }

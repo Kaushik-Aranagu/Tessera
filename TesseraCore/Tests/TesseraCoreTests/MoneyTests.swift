@@ -48,7 +48,7 @@ struct MoneyTests {
         )
         let spend = made.output
         #expect(spend.title == "12.40 lunch with sam" && made.record.summary == "12.40 lunch with sam")
-        #expect(made.record.receipt == "Lunch with sam, 12.40.")
+        #expect(made.record.receipt == "Lunch with sam, 12.40")
         #expect(store.value("category", of: spend)?.stringValue == "lunch")
         #expect(store.value("currency", of: spend)?.stringValue == "")
         engine.undo(made.record)
@@ -66,7 +66,7 @@ struct MoneyTests {
         let spend = try engine.perform(LogSpend(amount: 12.40, typed: "12.40", note: "lunch"), by: .user).output
         let edited = try engine.perform(EditSpend(spend: spend.id, amount: 13, typed: "13.00", note: "lunch with sam"),
                                         by: .user)
-        #expect(spend.title == "13.00 lunch with sam" && edited.record.receipt == "13.00 lunch with sam, changed.")
+        #expect(spend.title == "13.00 lunch with sam" && edited.record.receipt == "13.00 lunch with sam, changed")
     }
 
     @Test func aSpendIsPrivateEverywhereButItsOwnPageAndTheExportMasksIt() throws {
@@ -157,7 +157,7 @@ struct MoneyTests {
             LogShopTotal(amount: 38.20, typed: "38.20", time: finish.addingTimeInterval(300)),
             by: .user
         )
-        #expect(logged.output.title == "38.20 Groceries" && logged.record.receipt == "Groceries, 38.20.")
+        #expect(logged.output.title == "38.20 Groceries" && logged.record.receipt == "Groceries, 38.20")
         #expect(store.value("category", of: logged.output)?.stringValue == "groceries")
         let receipt = ShopReceipt(store: store, classes: engine.classes)
         #expect(receipt.awaiting(at: finish.addingTimeInterval(400)) == nil)
@@ -172,7 +172,7 @@ struct MoneyTests {
         let finish = at(15, 17)
         try finishedShop(engine, at: finish)
         let skipped = try engine.perform(SkipShopTotal(time: finish.addingTimeInterval(300)), by: .user)
-        #expect(skipped.record.receipt == "Groceries total, skipped.")
+        #expect(skipped.record.receipt == "Groceries total, skipped")
         let receipt = ShopReceipt(store: store, classes: engine.classes)
         #expect(receipt.awaiting(at: finish.addingTimeInterval(400)) == nil)
         engine.undo(skipped.record)

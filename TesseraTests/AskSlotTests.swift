@@ -29,7 +29,7 @@ struct AskSlotTests {
 
     /// Design on #995: a capture's UNDO says what it took back, from that reply's own words.
     @Test func aCapturesUndoSaysTakenBack() {
-        #expect(UndoCopy.takenBack(after: "Call Mum, Thursday 7 pm.") == "Call Mum, taken back.")
-        #expect(UndoCopy.takenBack(after: "Milk, on Groceries.") == "Milk, taken back.")
+        #expect(UndoCopy.takenBack(after: "Call Mum, Thursday 7 pm") == "Call Mum, taken back")
+        #expect(UndoCopy.takenBack(after: "Milk, on Groceries") == "Milk, taken back")
     }
 }

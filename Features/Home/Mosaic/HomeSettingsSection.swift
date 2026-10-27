@@ -13,7 +13,7 @@ struct HomeSettingsSection: View {
             .compactMap { id in ReviewChoices.all.first { $0.id == id } }
         frame {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                Text("What Home shows.")
+                Text("What Home shows")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -21,7 +21,7 @@ struct HomeSettingsSection: View {
                     row(choice)
                 }
                 if HomeMosaic.moodsIsOn {
-                    Text("Mosaic faces.")
+                    Text("Mosaic faces")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .padding(.top, Theme.Spacing.s)

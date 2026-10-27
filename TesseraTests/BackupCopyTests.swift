@@ -20,10 +20,10 @@ struct BackupCopyTests {
     @Test func theLocalLineSaysTheRealCount() {
         let now = Date(timeIntervalSince1970: 1_791_000_000)
         #expect(BackupCopy
-            .local(now, kept: 3, now: now) == "A copy is made every day, the last one today, and 3 are kept.")
+            .local(now, kept: 3, now: now) == "A copy is made every day, the last one today, and 3 are kept")
         #expect(BackupCopy
-            .local(now, kept: 1, now: now) == "A copy is made every day, the last one today, and 1 is kept.")
-        #expect(BackupCopy.local(now, kept: 7, now: now).hasSuffix("and 7 are kept."))
-        #expect(BackupCopy.local(nil, kept: 0, now: now) == "The first copy is made when you leave the app today.")
+            .local(now, kept: 1, now: now) == "A copy is made every day, the last one today, and 1 is kept")
+        #expect(BackupCopy.local(now, kept: 7, now: now).hasSuffix("and 7 are kept"))
+        #expect(BackupCopy.local(nil, kept: 0, now: now) == "The first copy is made when you leave the app today")
     }
 }

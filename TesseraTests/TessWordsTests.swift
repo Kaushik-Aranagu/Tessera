@@ -4,12 +4,12 @@ import Testing
 
 struct TessWordsTests {
     @Test func wordsArriveSixtyTwoMillisecondsApartAndFortyMoreAfterPunctuation() {
-        let arrivals = TessWords.arrivals("Done, Stretch is at 9 pm.")
-        #expect(arrivals.map(\.word) == ["Done,", "Stretch", "is", "at", "9", "pm."])
+        let arrivals = TessWords.arrivals("Done, Stretch is at 9 pm")
+        #expect(arrivals.map(\.word) == ["Done,", "Stretch", "is", "at", "9", "pm"])
         #expect(arrivals[0].delay == 0)
         #expect(abs(arrivals[1].delay - (0.062 + 0.040)) < 1e-9)
         #expect(abs(arrivals[2].delay - (0.062 + 0.040 + 0.062)) < 1e-9)
-        #expect(abs(TessWords.total("Hi there.") - (0.062 + 0.180)) < 1e-9)
+        #expect(abs(TessWords.total("Hi there") - (0.062 + 0.180)) < 1e-9)
     }
 
     @Test func eachWordRisesThreePointsOverOneEightyAndNeverFades() {
@@ -54,7 +54,7 @@ struct TessWordsTests {
     }
 
     @Test func theEchoFindsTheLatestEarlierMentionByShownLabel() {
-        let earlier = ["Tonight is Push day at 6, then Stretch at 8.", "Added limes to Groceries.", "Push day moved."]
+        let earlier = ["Tonight is Push day at 6, then Stretch at 8", "Added limes to Groceries", "Push day moved"]
         let found = TessEcho.earlierMention(of: ["Stretch", "Push day"], in: earlier)
         #expect(found?.line == 2 && found?.name == "Push day")
         #expect(TessEcho.earlierMention(of: ["Tacos"], in: earlier) == nil)

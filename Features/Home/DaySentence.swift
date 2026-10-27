@@ -42,7 +42,7 @@ struct DaySentence: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel([clauses.isEmpty && doneToday != nil ? nil : HomeSentence.text(clauses), doneToday]
-            .compactMap(\.self).joined(separator: " "))
+            .compactMap(\.self).joined(separator: ". "))
         .accessibilityActions {
             ForEach(Array(clauses.enumerated()), id: \.offset) { _, clause in
                 if let range = clause.keyWord {

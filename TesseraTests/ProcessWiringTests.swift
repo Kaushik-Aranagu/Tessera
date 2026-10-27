@@ -59,7 +59,7 @@ struct ProcessWiringTests {
         model.isWorkoutPresented = false
         model.tidyProcesses(now: AppClock.now.addingTimeInterval(3600))
         model.tidyProcesses(now: AppClock.now.addingTimeInterval(8 * 3600))
-        #expect(model.processNotes.contains { $0.hasSuffix("no sets, not saved.") })
+        #expect(model.processNotes.contains { $0.hasSuffix("no sets, not saved") })
         let undo = try #require(model.processUndo)
         #expect(model.object(workout.id)?.isDeleted ?? true)
         _ = model.engine.undo(undo)

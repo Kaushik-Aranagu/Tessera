@@ -25,8 +25,8 @@ struct SettingsPageTests {
         var live = try choice("pageTurn")
         live.readiness = .live
         #expect(ReviewSwitchCopy.mark(live) == nil)
-        #expect(ReviewSwitchCopy.hint(live, value: "Today") == "Pages change as they do now.")
-        #expect(try ReviewSwitchCopy.hint(choice("calendar"), value: "Off") == "Later: this needs a build with access.")
+        #expect(ReviewSwitchCopy.hint(live, value: "Today") == "Pages change as they do now")
+        #expect(try ReviewSwitchCopy.hint(choice("calendar"), value: "Off") == "Later: this needs a build with access")
         #expect(ReviewSwitchCopy.pageOf(2, 3) == "2 of 3")
         #expect(ReviewSwitchCopy.facetPage("Workout", 2, 5) == "Workout, 2 of 5")
     }
@@ -41,8 +41,8 @@ struct SettingsPageTests {
     }
 
     @Test func theMemoryDoorCountsInThirdPerson() {
-        #expect(TessKnowsCopy.door("Nothing yet") == "Tess remembers nothing yet.")
-        #expect(TessKnowsCopy.door("12 things") == "Tess remembers 12 things.")
+        #expect(TessKnowsCopy.door("Nothing yet") == "Tess remembers nothing yet")
+        #expect(TessKnowsCopy.door("12 things") == "Tess remembers 12 things")
         #expect(TessKnowsCopy.doorCount("12 things") == "12 things")
         #expect(TessKnowsCopy.doorCount("Nothing yet") == "nothing yet")
     }
@@ -55,8 +55,8 @@ struct SettingsPageTests {
         let forgotten = try model.engine.perform(ForgetMemory(memory: kept.output.id), by: .user)
         #expect(!store.grouped().flatMap(\.lines).contains { $0.id == kept.output.id })
         let receipt = forgotten.record.receipt ?? forgotten.record.summary
-        #expect(receipt.hasSuffix("forgotten."))
-        #expect(store.countLine() == "Nothing kept yet.")
+        #expect(receipt.hasSuffix("forgotten"))
+        #expect(store.countLine() == "Nothing kept yet")
     }
 
     /// Sheet 108: VoiceOver hears "Workout, tab 2 of 5"; at accessibility sizes the next tab reads "next: Kitchen".

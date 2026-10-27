@@ -15,6 +15,23 @@ enum BoardTarget: Equatable {
 struct BoardLine: Equatable {
     var segments: [DepartureSegment]
     var target: BoardTarget
+
+    /// Every board row is shown with no closing full stop (Kaushik, Oct 26), a stop between sentences as a comma:
+    /// the same rule as Tess's lines (`ShownLine`), on the row's last segment.
+    init(segments: [DepartureSegment], target: BoardTarget) {
+        var shown = segments
+        if let last = shown.indices.last {
+            shown[last].text = ShownLine.unstopped(shown[last].text, between: ", ")
+        }
+        // A time keeps its "am" or "pm" on the same line ("9:35 pm" never wraps "pm" alone).
+        for index in shown.indices {
+            shown[index].text = shown[index].text.replacingOccurrences(
+                of: #"(\d) (am|pm)\b"#, with: "$1\u{00A0}$2", options: .regularExpression
+            )
+        }
+        self.segments = shown
+        self.target = target
+    }
 }
 
 /// The three lines of Home (sheet 212): the date, then two notices from a ranked list that rolls every 6 seconds.

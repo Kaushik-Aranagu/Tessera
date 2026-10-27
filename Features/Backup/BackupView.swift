@@ -65,7 +65,7 @@ struct BackupView: View {
                     .entrance(0)
                 if shown.isSample {
                     // While Sample data is on, Backups still works on his own things (QA on #1199).
-                    Text("Sample data is on. Backups keep your own things, never the sample.")
+                    Text("Sample data is on. Backups keep your own things, never the sample")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -97,7 +97,7 @@ struct BackupView: View {
                     // Settings writes (a look, a switch) don't count either (QA C4).
                     $0.actor != .system && $0.action != WriteSettings.descriptor.name
                 }) {
-                    Text("Reinstalled? Restore brings back your copy from iCloud Drive.")
+                    Text("Reinstalled? Restore brings back your copy from iCloud Drive")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)
                         .fixedSize(horizontal: false, vertical: true)
@@ -143,8 +143,8 @@ struct BackupView: View {
                 }
 
                 Text(folder == nil
-                    ? "Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them."
-                    : "These survive deleting the app.")
+                    ? "Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them"
+                    : "These survive deleting the app")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -213,9 +213,9 @@ struct BackupView: View {
             guard case let .success(url) = result else { return }
             do {
                 try BackupKeeper.pick(url, context: model.context, engine: model.engine)
-                say("Saved a copy there. One a day from now on.")
+                say("Saved a copy there. One a day from now on")
             } catch {
-                say("Couldn't use that folder. Try another one.")
+                say("Couldn't use that folder. Try another one")
             }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.tesseraBackup, .data]) { result in
@@ -229,7 +229,7 @@ struct BackupView: View {
         }),
         document: saving, contentType: .tesseraBackup, defaultFilename: saving?.name) { result in
             if case .success = result {
-                say("Copy saved.")
+                say("Copy saved")
             }
         }
     }
@@ -266,7 +266,7 @@ struct BackupView: View {
                     .wordFit("A restore is waiting")
                     .foregroundStyle(Theme.Colors.ink)
                 Text("The copy from \(BackupCopy.fileDay(staged.createdAt)) replaces everything the next time "
-                    + "Tessera opens. Close Tessera from the app switcher to restore now.")
+                    + "Tessera opens. Close Tessera from the app switcher to restore now")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -276,7 +276,7 @@ struct BackupView: View {
                     pending = nil
                     stagedAt = nil
                     undoTimer?.cancel()
-                    say("Cancelled. Nothing will be replaced.")
+                    say("Cancelled. Nothing will be replaced")
                 }
                 .buttonStyle(.labelWord)
             }
@@ -301,7 +301,7 @@ struct BackupView: View {
                 saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
             }
         } catch {
-            say("Couldn't make a copy just now.")
+            say("Couldn't make a copy just now")
         }
     }
 
@@ -328,12 +328,12 @@ struct BackupView: View {
                                                                                        replacing: model.context))
             }
         } catch TesseraBackup.BackupError.newerSchema {
-            say("That copy is from a newer Tessera. Update first.")
+            say("That copy is from a newer Tessera. Update first")
         } catch TesseraBackup.BackupError.damaged {
             // A real copy that didn't survive (restore-walk 8): a different answer from "not a backup".
-            say("That copy is damaged. Try the day before.")
+            say("That copy is damaged. Try the day before")
         } catch {
-            say("That file isn't a Tessera backup.")
+            say("That file isn't a Tessera backup")
         }
     }
 
@@ -347,10 +347,10 @@ struct BackupView: View {
                 stageUndo()
             }
             dropPicked()
-            say("What's here now is kept in Backups, so this can be undone.")
+            say("What's here now is kept in Backups, so this can be undone")
         } catch {
             dropPicked()
-            say("That copy couldn't be staged. Nothing was replaced.")
+            say("That copy couldn't be staged. Nothing was replaced")
         }
     }
 
@@ -375,7 +375,7 @@ struct BackupView: View {
     private func forgetFolder() {
         forgotten = BackupKeeper.bookmark
         BackupKeeper.forget()
-        say("Copies stay on this iPhone only now.")
+        say("Copies stay on this iPhone only now")
         forgetTimer?.cancel()
         forgetTimer = Task { @MainActor in
             try? await Task.sleep(for: .seconds(10))
@@ -390,7 +390,7 @@ struct BackupView: View {
             BackupKeeper.bookmark = forgotten
         }
         forgotten = nil
-        say("The folder is back.")
+        say("The folder is back")
     }
 
     private func say(_ text: String) {
@@ -435,7 +435,7 @@ struct BackupFile: FileDocument {
 enum BackupCopy {
     /// "A copy is made every day. The last one was today." / "The first copy is made when you leave the app today."
     static func local(_ latest: Date?, kept: Int, now: Date) -> String {
-        guard let latest else { return "The first copy is made when you leave the app today." }
+        guard let latest else { return "The first copy is made when you leave the app today" }
         let calendar = Calendar.current
         // His day (04:00 to 04:00): a 23:55 copy read at 01:15 is today's.
         let tesseraDay = TesseraDay(calendar: calendar)
@@ -444,7 +444,7 @@ enum BackupCopy {
             : latest.formatted(.dateTime.weekday(.wide))
         // The real count, in digits (copy sweep): "and 3 are kept." / "and 1 is kept." Never more than the 7 it keeps.
         let count = max(kept, 1)
-        return "A copy is made every day, the last one \(when), and \(count) \(count == 1 ? "is" : "are") kept."
+        return "A copy is made every day, the last one \(when), and \(count) \(count == 1 ? "is" : "are") kept"
     }
 
     /// "Also keep them in a folder you choose." with the folder as a tappable value word in 600.
@@ -475,11 +475,11 @@ enum BackupCopy {
     static func failure(_ failure: BackupKeeper.Failure, folder: URL?, now: Date) -> String {
         let day = TesseraDay().isSameDay(failure.at, now) ? "Today's" : "The last"
         if failure.place == .folder, folder == nil {
-            return "The folder you chose can't be reached, so copies are only on this iPhone. Choose it again."
+            return "The folder you chose can't be reached, so copies are only on this iPhone. Choose it again"
         }
         let place = failure.place == .folder ? folder.map { " to \(folderName($0))" } ?? " to your folder"
             : " on this iPhone"
-        return "\(day) copy\(place) didn't save. It tries again when you leave the app."
+        return "\(day) copy\(place) didn't save. It tries again when you leave the app"
     }
 
     /// "Tuesday 14 October"

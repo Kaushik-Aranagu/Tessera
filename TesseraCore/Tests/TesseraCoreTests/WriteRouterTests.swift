@@ -113,11 +113,11 @@ struct WriteRouterTests {
     @Test func aWalledSpendWithAHealthWordSaysOnlySpendLogged() throws {
         for line in ["paid ozempic 80", "spent 80 on insulin", "paid 40 for lexapro", "paid dr lin 120"] {
             let candidate = try #require(one(line))
-            #expect(candidate.receipt == "Spend, logged.")
+            #expect(candidate.receipt == "Spend, logged")
             #expect(candidate.isWalled && !candidate.receipt.lowercased().contains("ozempic"))
         }
         // A plain word keeps its name.
-        #expect(one("spent 12.40 lunch")?.receipt == "Lunch, logged.")
+        #expect(one("spent 12.40 lunch")?.receipt == "Lunch, logged")
     }
 
     @Test func aWalledLineWithNoReadingGoesToAPrivateNoteNeverNothing() {
@@ -133,7 +133,7 @@ struct WriteRouterTests {
                 continue
             }
             #expect(candidate.isWalled && (candidate.app == .notes || candidate.app == .money))
-            #expect(candidate.receipt == "Private note, kept." || candidate.receipt.hasSuffix("logged."))
+            #expect(candidate.receipt == "Private note, kept" || candidate.receipt.hasSuffix("logged"))
         }
         if case .nothing = router.route("my blood pressure 120 over 80", context: context) {
             Issue.record("a walled line is never nothing")
@@ -144,7 +144,7 @@ struct WriteRouterTests {
         let capture = TessCaptureEngine(engine: engine)
         let candidate = try #require(one("spent 12.40 lunch"))
         let done = router.perform(candidate, with: capture, context: context)
-        #expect(done.records.count == 1 && done.line == "Lunch, logged.")
+        #expect(done.records.count == 1 && done.line == "Lunch, logged")
         // The amount is in Money, where it was logged.
         let spendClass = try #require(engine.classes[.spend])
         let spend = try #require(engine.store.objects(of: spendClass).first)
@@ -157,7 +157,7 @@ struct WriteRouterTests {
         let capture = TessCaptureEngine(engine: engine)
         let candidate = try #require(one("buy milk"))
         let done = router.perform(candidate, with: capture, context: context)
-        #expect(done.records.count == 1 && done.records[0].state == .pending && done.line == "On Groceries.")
+        #expect(done.records.count == 1 && done.records[0].state == .pending && done.line == "On Groceries")
         #expect(done.source == .grammar)
     }
 
@@ -202,7 +202,7 @@ struct WriteRouterTests {
             return
         }
         #expect(candidate.app == .money && candidate.action == "logInflow" && candidate.isWalled)
-        #expect(candidate.receipt == "Money in, logged." && candidate.receipt.allSatisfy { !$0.isNumber })
+        #expect(candidate.receipt == "Money in, logged" && candidate.receipt.allSatisfy { !$0.isNumber })
         // Off, the same words are only a private note: nothing logs money.
         let readOff = one("got 3200 paycheck")
         #expect(readOff?.action == "createNote")

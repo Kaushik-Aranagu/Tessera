@@ -127,7 +127,7 @@ struct RoutineEditor: View {
     private func worksSentence(slots: [ObjectRecord]) -> String {
         guard !isPrivateRoutine else { return "" }
         let primary = unionMuscles(slots).filter { $0.role == .primary }.map(\.name)
-        return primary.isEmpty ? "" : " \(MuscleWords.works(primary))."
+        return primary.isEmpty ? "" : " \(MuscleWords.works(primary))"
     }
 
     private var isPrivateRoutine: Bool {
@@ -183,7 +183,7 @@ struct RoutineEditor: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
                 .entrance(2, hero: true)
-            Text("\(slots.count) \(slots.count == 1 ? "exercise" : "exercises"), \(sets) sets. Tap one to change it."
+            Text("\(slots.count) \(slots.count == 1 ? "exercise" : "exercises"), \(sets) sets. Tap one to change it"
                 + worksSentence(slots: slots))
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
@@ -439,10 +439,10 @@ struct ExerciseLibraryList: View {
     static func groups(_ model: AppModel) -> [(pattern: ClassDef, exercises: [ClassDef])] {
         guard let root = model.classDef(.exercise) else { return [] }
         return ClassResolver.descendants(of: root)
-            .filter { $0.systemKey?.hasPrefix("library.pattern.") == true }
+            .filter { $0.systemKey?.hasPrefix("library.pattern") == true }
             .map { pattern in
                 let leaves = ClassResolver.descendants(of: pattern).dropFirst()
-                    .filter { ($0.subclasses ?? []).isEmpty && $0.systemKey?.hasPrefix("library.group.") != true }
+                    .filter { ($0.subclasses ?? []).isEmpty && $0.systemKey?.hasPrefix("library.group") != true }
                 return (pattern, leaves.sorted { $0.name < $1.name })
             }
             .filter { !$0.1.isEmpty }
@@ -565,9 +565,9 @@ private struct DaysLine: View {
     static func receipt(_ title: String, _ days: Set<Int>) -> String {
         let words = Weekdays.ordered(days).map { Weekdays.name($0) + "s" }
         switch words.count {
-        case 0: return "\(title) has no fixed day."
-        case 1: return "\(title) on \(words[0])."
-        default: return "\(title) on \(words.dropLast().joined(separator: ", ")) and \(words[words.count - 1])."
+        case 0: return "\(title) has no fixed day"
+        case 1: return "\(title) on \(words[0])"
+        default: return "\(title) on \(words.dropLast().joined(separator: ", ")) and \(words[words.count - 1])"
         }
     }
 }

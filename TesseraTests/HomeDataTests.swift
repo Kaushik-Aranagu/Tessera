@@ -167,7 +167,7 @@ struct HomeDataTests {
         let sets = Dictionary(uniqueKeysWithValues: trained.map { ($0.muscle.title, $0.sets) })
         #expect(sets == ["Chest": 4, "Front Delts": 3])
         #expect(volume.first?.sets == 4)
-        #expect(WeekReview.tessLine(trained) == "Front delts: 3 sets this week, toward a usual 10.")
+        #expect(WeekReview.tessLine(trained) == "Front delts: 3 sets this week, toward a usual 10")
         #expect(WeekReview.tessLine([]) == nil)
 
         // A subclass without its own profile inherits its parent's muscles.

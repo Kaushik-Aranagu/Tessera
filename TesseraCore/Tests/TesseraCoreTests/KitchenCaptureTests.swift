@@ -24,7 +24,7 @@ struct KitchenCaptureTests {
         try engine.perform(StartWorkout(workout: workout.id), by: .user)
         let ops = engine.history(from: .distantPast, to: .distantFuture).count
         let cooking = await tess.capture("cook carbonara", context: TessContext())
-        #expect(cooking.line == "Workout running." && cooking.records.isEmpty, "\(cooking.line)")
+        #expect(cooking.line == "Workout running" && cooking.records.isEmpty, "\(cooking.line)")
         #expect(engine.history(from: .distantPast, to: .distantFuture).count == ops)
         #expect(ProcessTable(engine: engine).running()?.subject?.id == workout.id)
     }
@@ -42,38 +42,38 @@ struct KitchenCaptureTests {
 
         // Pasted text with an Ingredients heading becomes a recipe ghost.
         let pasted = await tess.capture(RecipeParserTests.carbonara, context: context)
-        #expect(pasted.line == "5 ingredients, 4 steps, 2 timers.")
+        #expect(pasted.line == "5 ingredients, 4 steps, 2 timers")
         let recipe = try #require(RecipeBook(store: store, classes: classes).recipes().first)
 
         let milk = await tess.capture("buy milk", context: context)
-        #expect(milk.line == "Milk, on Groceries.")
+        #expect(milk.line == "Milk, on Groceries")
         let list = await tess.capture("eggs, bread and 2 lemons", context: context)
-        #expect(list.line == "3 things on Groceries.")
+        #expect(list.line == "3 things on Groceries")
         #expect(groceries.shoppingOrder().map(\.text) == ["lemons", "bread", "milk", "eggs"])
 
         let planned = await tess.capture("cook carbonara thu", context: context)
-        #expect(planned.line == "Spaghetti carbonara, tomorrow 9 am.")
+        #expect(planned.line == "Spaghetti carbonara, tomorrow 9 am")
         let task = try #require(TaskList(store: store, classes: classes).all().first)
         #expect(store.linkedObjects("about", of: task.task).map(\.id) == [recipe.id])
         let bare = await tess.capture("carbonara friday 7pm", context: context)
-        #expect(bare.line == "Spaghetti carbonara, Friday 7 pm.")
+        #expect(bare.line == "Spaghetti carbonara, Friday 7 pm")
 
         let cooking = await tess.capture("cook carbonara", context: context)
-        #expect(cooking.line == "Cooking spaghetti carbonara.")
+        #expect(cooking.line == "Cooking spaghetti carbonara")
         let timer = await tess.capture("timer pasta 10", context: context)
-        #expect(timer.line == "Pasta, 10 min.")
+        #expect(timer.line == "Pasta, 10 min")
         let other = await tess.capture("5 min timer", context: context)
-        #expect(other.line == "Timer, 5 min.")
+        #expect(other.line == "Timer, 5 min")
         let timers = CookLog(store: store, classes: classes).timers()
         #expect(timers.map(\.label) == ["Timer", "Pasta"])
         #expect(timers.allSatisfy { $0.cook != nil }) // they belong to the cook in progress
 
         let packing = await tess.capture("list: packing", context: context)
-        #expect(packing.line == "Packing, new list.")
+        #expect(packing.line == "Packing, new list")
 
         // Ordinary phrases still go where they did.
         let call = await tess.capture("call mum thu", context: context)
-        #expect(call.line == "Call mum, tomorrow 9 am.")
+        #expect(call.line == "Call mum, tomorrow 9 am")
 
         let all = [pasted, milk, list, planned, bare, cooking, timer, other, packing, call]
         #expect(all.allSatisfy { $0.records.count == 1 && $0.source == .grammar })

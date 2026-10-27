@@ -102,7 +102,7 @@ struct ListPutAwayTests {
         let before = fixture.engine.history(limit: 500).count
         #expect(throws: ActionError.invalidArguments(
             action: "putAwayListRun",
-            reason: "Packing, Lisbon isn't running."
+            reason: "Packing, Lisbon isn't running"
         )) {
             try fixture.engine.perform(PutAwayListRun(list: fixture.trip.id), by: .user)
         }
@@ -217,7 +217,7 @@ struct ListPutAwayTests {
         try check(fixture, 3)
         _ = fixture.table.suspendIfIdle(now: start + 3 + ProcessTable.Limits.idleShop + 60, idleLimit: 60)
         let notes = fixture.table.tidyNotes(now: start + 3 + ProcessTable.Limits.putAway + 60)
-        #expect(notes.map(\.line) == ["Packing, Lisbon moved to Later. 3 in the basket."])
+        #expect(notes.map(\.line) == ["Packing, Lisbon moved to Later. 3 in the basket"])
         #expect(notes.first?.undo == nil)
         #expect(fixture.lists.putAway().map(\.id) == [fixture.trip.id])
         let rows = fixture.lists.items(of: fixture.trip)
@@ -229,7 +229,7 @@ struct ListPutAwayTests {
         try fixture.engine.perform(StartListRun(list: fixture.trip.id, time: start), by: .user)
         _ = fixture.table.suspendIfIdle(now: start + ProcessTable.Limits.idleShop + 60, idleLimit: 60)
         let notes = fixture.table.tidyNotes(now: start + ProcessTable.Limits.putAway + 60)
-        #expect(notes.map(\.line) == ["One thing moved to Later."])
+        #expect(notes.map(\.line) == ["One thing moved to Later"])
     }
 
     @Test func aShopAndARunPutAwayTogetherGetTheirOwnLines() throws {
@@ -244,8 +244,8 @@ struct ListPutAwayTests {
         _ = fixture.table.suspendIfIdle(now: start + 110 + ProcessTable.Limits.idleShop + 60, idleLimit: 60)
         let lines = fixture.table.tidyNotes(now: start + 110 + ProcessTable.Limits.putAway + 60).map(\.line)
         #expect(Set(lines) == [
-            "Packing, Lisbon moved to Later. 2 in the basket.",
-            "Shopping moved to Later. 2 in the basket.",
+            "Packing, Lisbon moved to Later. 2 in the basket",
+            "Shopping moved to Later. 2 in the basket",
         ])
     }
 
@@ -271,7 +271,7 @@ struct ListPutAwayTests {
         try check(fixture, 1)
         _ = fixture.table.suspendIfIdle(now: start + ProcessTable.Limits.idleShop + 60, idleLimit: 60)
         let notes = fixture.table.tidyNotes(now: start + ProcessTable.Limits.putAway + 60)
-        #expect(notes.map(\.line) == ["Private list moved to Later. 1 in the basket."])
+        #expect(notes.map(\.line) == ["Private list moved to Later. 1 in the basket"])
     }
 
     @Test func everyReceiptIsThingFirstAndNeverSaysAt() throws {

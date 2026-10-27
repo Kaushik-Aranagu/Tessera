@@ -460,7 +460,7 @@ private struct KitchenPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-            Text("What we eat, and what we need.")
+            Text("What we eat, and what we need")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.inkSecondary)
             // Groceries, then Lists under it (lists-9-12.md, the door), then Pantry (what we have) and Recipes.

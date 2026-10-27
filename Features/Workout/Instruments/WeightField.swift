@@ -44,7 +44,7 @@ struct WeightField: View {
                     .buttonStyle(.labelWord(Paint.cobalt))
                     .fixedSize()
             }
-            Text("Goes to the nearest weight the gym can load.")
+            Text("Goes to the nearest weight the gym can load")
                 .font(Theme.voice)
                 .foregroundStyle(Paint.tess)
         }

@@ -324,7 +324,7 @@ public enum PlanProposalValidator {
             if pack.otherNames.contains(where: { padded.contains(" \($0) ") })
                 || !pack.hasWorkout && tokens
                 .contains(where: { training.contains($0) && !pack.titleWords.contains($0) })
-                || !pack.hasWorkout && padded.contains(" rest day ") && !(pack.isRestDay && line == "Rest day.")
+                || !pack.hasWorkout && padded.contains(" rest day ") && !(pack.isRestDay && line == "Rest day")
             {
                 codes.append("V13")
             }
@@ -477,7 +477,7 @@ public final class ClaudePlanWording {
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
-            return .rules(line: "Claude paused until \(reset). Here's your usual plan.")
+            return .rules(line: "Claude paused until \(reset). Here's your usual plan")
         }
         defer { ledger.settle(reservation) }
         let started = Date()
@@ -506,9 +506,9 @@ public final class ClaudePlanWording {
             outcome = failure.outcome
             // Product 10:24 PM PT: one line, then the usual plan; a rejected or late reply stays silent.
             let line: String? = switch failure.outcome {
-            case "timeout": "Claude didn't answer in time. Here's your usual plan."
-            case "badKey": "That key didn't work. Paste it again? Here's your usual plan."
-            case "offline", "busy": "Here's your usual plan."
+            case "timeout": "Claude didn't answer in time. Here's your usual plan"
+            case "badKey": "That key didn't work. Paste it again? Here's your usual plan"
+            case "offline", "busy": "Here's your usual plan"
             default: nil
             }
             return done(.rules(line: line))
@@ -603,7 +603,7 @@ public final class ClaudePlanWording {
                   "model": Self.model, "max_tokens": Self.maxTokens, "system": Self.instructions,
                   "tools": [[
                       "name": "proposePlan",
-                      "description": "Tess's wording and light reorder of today's rules plan.",
+                      "description": "Tess's wording and light reorder of today's rules plan",
                       "strict": true,
                       "input_schema": schema,
                   ]],
@@ -674,7 +674,7 @@ public final class ClaudePlanWording {
     - Numbers: write times as 7:30 am or 5 pm, only times from the input or your blocks. Durations as the given \
     minutes. No counts of anything.
     - cal false means the calendar is unknown. Never call the day clear, open or free.
-    - rest true means a planned rest day. The note may be exactly "Rest day."; say nothing else about rest or training.
+    - rest true means a planned rest day. The note may be exactly "Rest day"; say nothing else about rest or training.
     - A workout with running true is under way. It is startWith; word it as under way, never as something to start.
     - Never mention why the plan is short, the night, or anything not in the input.
     - Never mention sleep, energy, tiredness or health. When "light" is true, keep the wording gentle, leave the \
@@ -686,17 +686,17 @@ public final class ClaudePlanWording {
     static let schemaText = #"""
     {"type":"object","additionalProperties":false,"required":["blocks","startWith","ghostLines","note"],
     "properties":{
-    "blocks":{"type":"array","description":"Every input block once, same id, in time order.","items":{"type":"object",
+    "blocks":{"type":"array","description":"Every input block once, same id, in time order","items":{"type":"object",
     "additionalProperties":false,"required":["id","start","end","lineText"],"properties":{
-    "id":{"type":"string","description":"An input id, copied exactly."},
-    "start":{"type":"string","description":"HH:mm, 24-hour."},
-    "end":{"type":["string","null"],"description":"HH:mm, or null for start plus min."},
-    "lineText":{"type":"string","description":"11 words or fewer. \"\" for run blocks."}}}},
+    "id":{"type":"string","description":"An input id, copied exactly"},
+    "start":{"type":"string","description":"HH:mm, 24-hour"},
+    "end":{"type":["string","null"],"description":"HH:mm, or null for start plus min"},
+    "lineText":{"type":"string","description":"11 words or fewer. \"\" for run blocks"}}}},
     "startWith":{"anyOf":[{"type":"object","additionalProperties":false,"required":["id","line"],
     "properties":{"id":{"type":"string"},"line":{"type":"string"}}},{"type":"null"}]},
-    "ghostLines":{"type":"array","description":"One accept-or-skip line per run block. At most 3.","items":{
+    "ghostLines":{"type":"array","description":"One accept-or-skip line per run block. At most 3","items":{
     "type":"object","additionalProperties":false,"required":["id","line"],
     "properties":{"id":{"type":"string"},"line":{"type":"string"}}}},
-    "note":{"type":["string","null"],"description":"One line about the day, usually null."}}}
+    "note":{"type":["string","null"],"description":"One line about the day, usually null"}}}
     """#
 }

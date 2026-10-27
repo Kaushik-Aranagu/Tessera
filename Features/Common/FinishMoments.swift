@@ -16,7 +16,7 @@ enum FinishMoments {
 
     /// The line under a finished list's name: "All packed." for a packing list, else "All done.".
     static func listLine(name: String) -> String {
-        name.localizedCaseInsensitiveContains("pack") ? "All packed." : "All done."
+        name.localizedCaseInsensitiveContains("pack") ? "All packed" : "All done"
     }
 
     /// The word a reusable finished list offers beside the line.
@@ -29,7 +29,7 @@ enum FinishMoments {
 
     /// The day sentence's tasks clause: "3 done today.", only once something is done.
     static func tasksClause(done: Int) -> String? {
-        done > 0 ? "\(done) done today." : nil
+        done > 0 ? "\(done) done today" : nil
     }
 }
 

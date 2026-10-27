@@ -9,9 +9,9 @@ struct UnitsPageTests {
         let rows = UnitsPage.rows(DisplayUnits())
         #expect(rows.map(\.text) == ["Weight, kg", "Distance, km", "Food, grams"])
         #expect(rows.map(\.other) == ["lb", "mi", "oz"])
-        #expect(rows[0].sample == "Bench 82.5 kg is 181.9 lb.")
-        #expect(rows[1].sample == "A run of 5 km is 3.11 mi.")
-        #expect(rows[2].sample == "Rice 500 g is 17⅝ oz.")
+        #expect(rows[0].sample == "Bench 82.5 kg is 181.9 lb")
+        #expect(rows[1].sample == "A run of 5 km is 3.11 mi")
+        #expect(rows[2].sample == "Rice 500 g is 17⅝ oz")
     }
 
     @Test func pickingTheOtherChoiceChangesTheRowAndNothingStored() throws {
@@ -79,7 +79,7 @@ struct UnitAwareLinesTests {
         #expect(MassUnit.pounds.text(kilograms: 82.5) == "181.9")
         let sample = Measure(82.5, "kg").converted(to: "lb")?.formatted
         #expect(SideFacts.describe(.mass(82.5), unit: .pounds) == sample)
-        #expect(UnitsPage.rows(DisplayUnits())[0].sample == "Bench 82.5 kg is \(sample ?? "").")
+        #expect(UnitsPage.rows(DisplayUnits())[0].sample == "Bench 82.5 kg is \(sample ?? "")")
         #expect(MassUnit.kilograms.text(kilograms: 82.5) == "82.5")
     }
 }

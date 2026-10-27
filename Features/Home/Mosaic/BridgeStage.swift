@@ -261,7 +261,7 @@ final class BridgeStage {
         else { return false }
         MomentMemory.handDoneAt = AppClock.now
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        TessVoice.shared.say(thing.undoLine ?? "Done.", undo: record, holds: .seconds(5))
+        TessVoice.shared.say(thing.undoLine ?? "Done", undo: record, holds: .seconds(5))
         return true
     }
 
@@ -442,8 +442,8 @@ final class BridgeStage {
     /// What she says to a reply he picked (the phone's own answers; nothing leaves the phone here).
     func tessAnswer(_ reply: String) -> String? {
         switch reply {
-        case "Show me": "Here it is."
-        default: "Okay."
+        case "Show me": "Here it is"
+        default: "Okay"
         }
     }
 
@@ -452,7 +452,7 @@ final class BridgeStage {
         guard let model else { return }
         Task {
             let line = await model.ask(text)
-            tessModel.say(line.isEmpty ? "Got it." : line, names: [],
+            tessModel.say(line.isEmpty ? "Got it" : line, names: [],
                           answeredBy: TessLayerModel.AnswerSource(model.lastAnswerSource))
             tessModel.offer(["That's all"])
         }

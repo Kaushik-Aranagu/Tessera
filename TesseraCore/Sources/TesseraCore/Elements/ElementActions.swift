@@ -113,7 +113,7 @@ public struct SetPinned: EngineAction {
 
     public func receipt(in store: ObjectStore, output on: Bool) -> String? {
         guard let target = store.object(id: object) else { return nil }
-        return "\(ElementActionLine.shown(target, in: store)), \(on ? "pinned" : "unpinned")."
+        return "\(ElementActionLine.shown(target, in: store)), \(on ? "pinned" : "unpinned")"
     }
 
     public func receipt(in _: ObjectStore) -> String? {
@@ -161,10 +161,10 @@ public struct SetRainAlert: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output: (on: Bool, lead: Int)) -> String? {
-        guard output.on else { return "Rain alert off." }
+        guard output.on else { return "Rain alert off" }
         let minutes = output.lead
         let words = minutes == 60 ? "an hour" : minutes % 60 == 0 && minutes > 60 ? "\(minutes / 60) hours" : "\(minutes) minutes"
-        return "You'll hear \(words) before rain."
+        return "You'll hear \(words) before rain"
     }
 
     public func receipt(in _: ObjectStore) -> String? {
@@ -254,8 +254,8 @@ public struct TakeRest: EngineAction {
         scope == .training ? "Rest today" : "Paused a routine"
     }
 
-    public static let workoutGoingLine = "A workout is already going."
-    public static let sessionPlannedLine = "There's a session planned today."
+    public static let workoutGoingLine = "A workout is already going"
+    public static let sessionPlannedLine = "There's a session planned today"
 
     public static func refusalLine(_ error: any Error) -> String? {
         guard case let ActionError.invalidArguments(_, reason) = error else { return nil }
@@ -276,14 +276,14 @@ public struct TakeRest: EngineAction {
             if let planClass = classes[.plan], let plan = store.objects(of: planClass).first(where: { !$0.isDeleted }),
                let next = ledger.nextRoutine(in: plan, now: day)
             {
-                return "Rest today. Next is \(ElementActionLine.shown(next, in: store))."
+                return "Rest today. Next is \(ElementActionLine.shown(next, in: store))"
             }
-            return "Rest today."
+            return "Rest today"
         case .routine:
             guard let routine = store.linkedObjects("routine", of: rest).first else { return nil }
             let shown = ElementActionLine.shown(routine, in: store)
-            guard let until = store.value("until", of: rest)?.dateValue else { return "\(shown), resting." }
-            return "\(shown), resting until \(TesseraDay.weekdayName(of: until, calendar: .current))."
+            guard let until = store.value("until", of: rest)?.dateValue else { return "\(shown), resting" }
+            return "\(shown), resting until \(TesseraDay.weekdayName(of: until, calendar: .current))"
         }
     }
 
@@ -321,7 +321,7 @@ public struct ResumeRoutine: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        store.object(id: routine).map { "\(ElementActionLine.shown($0, in: store)), back." }
+        store.object(id: routine).map { "\(ElementActionLine.shown($0, in: store)), back" }
     }
 }
 
@@ -373,7 +373,7 @@ public struct TendRoutine: EngineAction {
     public func receipt(in store: ObjectStore, output wrote: Bool) -> String? {
         guard let target = store.object(id: routine) else { return nil }
         let shown = ElementActionLine.shown(target, in: store)
-        return wrote ? "\(shown), done for today." : "\(shown) is done for today."
+        return wrote ? "\(shown), done for today" : "\(shown) is done for today"
     }
 
     public func receipt(in _: ObjectStore) -> String? {
@@ -447,9 +447,10 @@ public struct PlantRoutine: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output routine: ObjectRecord) -> String? {
-        // The stored name is the real one; the receipt says the private label when either privacy rule calls it private.
+        // The stored name is the real one; the receipt says the private label when either privacy rule calls it
+        // private.
         let hidden = ObjectPrivacy.isPrivateTitle(routine.title, lastWeightKg: BodyWeight.lastKg(in: store))
-        return "\(hidden ? Self.privateName : ElementActionLine.shown(routine, in: store)), planted."
+        return "\(hidden ? Self.privateName : ElementActionLine.shown(routine, in: store)), planted"
     }
 
     public func receipt(in _: ObjectStore) -> String? {

@@ -75,7 +75,7 @@ struct PlaybookTests {
         var book = playbook()
         book.reaction[.firstOpenAfterFour] = PlaybookEntry(
             PlaybookReaction(kind: .nightFalls, seconds: 2),
-            why: "Night falls away."
+            why: "Night falls away"
         )
         let director = PlaybookDirector(playbook: book)
         let playing = TessDirection.decide(director, .reaction(.opened(away: 30, firstOpenAfterFour: true,
@@ -90,10 +90,10 @@ struct PlaybookTests {
 
     @Test func anOutOfRangeEntryComesBackClampedEverywhere() {
         var book = DirectorPlaybook(day: "d")
-        book.burst[.done] = PlaybookEntry(PlaybookBurst(shape: .spray, count: 99, seconds: 9), why: "A wild one.")
+        book.burst[.done] = PlaybookEntry(PlaybookBurst(shape: .spray, count: 99, seconds: 9), why: "A wild one")
         book.reaction[.overEightHours] = PlaybookEntry(
             PlaybookReaction(kind: .gatherBack, seconds: 40),
-            why: "A wild one."
+            why: "A wild one"
         )
         let clamped = book.clamped()
         #expect(clamped.burst[.done]?.choice.count == TessDirection.maxBurstCount)
@@ -120,10 +120,10 @@ struct PlaybookTests {
         book.burst[.best] = PlaybookEntry(PlaybookBurst(shape: .rise, count: 5, seconds: 1), why: "")
         book.tessPalette["kitchen,training"] = PlaybookEntry(
             PlaybookPalette(accent: .training),
-            why: "Two accents here."
+            why: "Two accents here"
         )
-        book.tessPalette["kitchen"] = PlaybookEntry(PlaybookPalette(accent: .training), why: "Wrong app.")
-        book.tessPalette["nonsense"] = PlaybookEntry(PlaybookPalette(accent: nil), why: "Unknown page.")
+        book.tessPalette["kitchen"] = PlaybookEntry(PlaybookPalette(accent: .training), why: "Wrong app")
+        book.tessPalette["nonsense"] = PlaybookEntry(PlaybookPalette(accent: nil), why: "Unknown page")
         let clamped = book.clamped()
         #expect(clamped.burst[.best] == nil && clamped.burst[.done] != nil)
         #expect(clamped.tessPalette.keys.sorted() == ["training"])
@@ -173,12 +173,12 @@ struct PlaybookTests {
 
     func toolInput() -> Data {
         let burst: (String, Int) -> [String: Any] = { shape, count in
-            ["shape": shape, "count": count, "seconds": 1.2, "why": "It fits the day."]
+            ["shape": shape, "count": count, "seconds": 1.2, "why": "It fits the day"]
         }
-        let reaction: (String) -> [String: Any] = { ["kind": $0, "seconds": 1.0, "why": "It fits the day."] }
+        let reaction: (String) -> [String: Any] = { ["kind": $0, "seconds": 1.0, "why": "It fits the day"] }
         let body: [String: Any] = [
-            "palette": [["app": "training", "accent": "training", "why": "The page is red."],
-                        ["app": "kitchen", "accent": "ember", "why": "Keep her ember."]],
+            "palette": [["app": "training", "accent": "training", "why": "The page is red"],
+                        ["app": "kitchen", "accent": "ember", "why": "Keep her ember"]],
             "burst": ["done": burst("rise", 99), "best": burst("ring", 10), "finished": burst("spray", 8),
                       "arrived": burst("scatter", 6)],
             "reaction": ["underOneHour": reaction("ripple"), "oneToEightHours": reaction("flipRows"),
@@ -320,12 +320,12 @@ struct PlaybookTests {
 
     @Test func aWhyThatFailsTheLineCheckOrTheWallsIsReplacedAndTheChoiceStands() {
         let bad = [
-            "Weight is 82.4 kg today so go calm.", // body fact
-            "Rent 1450 is due so keep it calm.", // money
-            "Lunch 650 kcal means a big burst.", // calories
+            "Weight is 82.4 kg today so go calm", // body fact
+            "Rent 1450 is due so keep it calm", // money
+            "Lunch 650 kcal means a big burst", // calories
             "sk-" + "ant-" + "api03-" + String(repeating: "Ab3x", count: 8) + ".", // key-shaped
             "Two sentences. Too many", // not one sentence
-            "This sentence runs on far too long for the small space it has to fit into today.", // too long
+            "This sentence runs on far too long for the small space it has to fit into today", // too long
         ]
         for why in bad {
             var book = DirectorPlaybook(day: "d")
@@ -336,7 +336,7 @@ struct PlaybookTests {
         var good = DirectorPlaybook(day: "d")
         good.burst[.done] = PlaybookEntry(
             PlaybookBurst(shape: .ring, count: 10, seconds: 1),
-            why: "A calm ring suits the morning."
+            why: "A calm ring suits the morning"
         )
         // Shown with no closing stop (Kaushik, Oct 26), and a why with none passes.
         #expect(good.clamped().burst[.done]?.why == "A calm ring suits the morning")

@@ -8,9 +8,9 @@ struct FinishedWorkoutTests {
     @Test func theSentenceNamesDateLengthSetsAndTheBest() {
         let date = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 21))
         #expect(FinishedWorkoutWords.sentence(date: date, minutes: 52, sets: 18, best: "Bench")
-            == "Oct 21, 52 min, 18 sets. Bench was your best.")
+            == "Oct 21, 52 min, 18 sets. Bench was your best")
         #expect(FinishedWorkoutWords
-            .sentence(date: date, minutes: 95, sets: 1, best: nil) == "Oct 21, 1 hr 35 min, 1 set.")
+            .sentence(date: date, minutes: 95, sets: 1, best: nil) == "Oct 21, 1 hr 35 min, 1 set")
     }
 
     @Test func theNumbersLineSaysWeightForReps() {

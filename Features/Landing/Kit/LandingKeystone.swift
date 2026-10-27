@@ -25,12 +25,13 @@ struct LandingKeystone<Content: View>: View {
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.keystoneBleeds) private var bleeds
     @State private var arrived = false
 
     var body: some View {
         content
             .frame(width: Self.size.width, height: Self.size.height)
-            .clipShape(Rectangle())
+            .clipShape(Rectangle().inset(by: bleeds ? -(402 - Self.size.width) / 2 : 0))
             .scaleEffect(y: arrived || reduceMotion ? 1 : 0.94, anchor: .bottom)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(label)
@@ -38,4 +39,11 @@ struct LandingKeystone<Content: View>: View {
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { arrived = true }
             }
     }
+}
+
+extension EnvironmentValues {
+    /// A keystone drawn wider than the slot (Watch's woods span the phone's 402 pt, 268 v4): the slot keeps its 354 pt
+    /// frame and touches, but its clip widens to the phone's width so the drawing's dissolving edges show. Off by
+    /// default.
+    @Entry var keystoneBleeds = false
 }

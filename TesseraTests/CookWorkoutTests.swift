@@ -20,7 +20,7 @@ struct CookWorkoutTests {
         let table = ProcessTable(engine: model.engine)
 
         let line = RecipeCopy.startCook { try model.engine.perform(StartCooking(recipe: recipe.id), by: .user) }
-        #expect(line == "Workout running.")
+        #expect(line == "Workout running")
         #expect(try model.store.objects(of: #require(model.classes[.cook])).isEmpty)
         #expect(table.running()?.subject?.id == workout.id && table.running()?.state == .running)
     }
@@ -35,7 +35,7 @@ struct CookWorkoutTests {
         let line = RecipeCopy.startCook { () throws -> Int in
             throw ActionError.invalidArguments(action: "startCooking", reason: "no such recipe")
         }
-        #expect(line == "Didn't save that. Try again.")
+        #expect(line == "Didn't save that. Try again")
     }
 
     @Test func resumingASetAsideCookDuringAWorkoutSaysWorkoutRunning() throws {
@@ -49,7 +49,7 @@ struct CookWorkoutTests {
         try model.engine.perform(StartWorkout(workout: workout.id), by: .user)
 
         let setAside = try #require(table.all().first { $0.id == cook.id })
-        #expect(model.resume(setAside) == "Workout running.")
+        #expect(model.resume(setAside) == "Workout running")
         #expect(table.running()?.subject?.id == workout.id && table.running()?.state == .running)
     }
 }

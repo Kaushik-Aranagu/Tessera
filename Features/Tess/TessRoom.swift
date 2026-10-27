@@ -45,7 +45,7 @@ struct TessRoom: View {
                 .font(TessFont.inLayer)
                 .foregroundStyle(Theme.Colors.inkSecondary)
             if entries.isEmpty {
-                Text("Nothing yet today.")
+                Text("Nothing yet today")
                     .font(TessFont.inLayer)
                     .foregroundStyle(Theme.Colors.inkTertiary)
             }

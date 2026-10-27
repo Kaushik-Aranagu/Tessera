@@ -66,7 +66,7 @@ public enum UnitsPage {
         }
         let start = Measure(value, from, kind: kind)
         guard let end = start.converted(to: to) else { return "" }
-        return "\(name) \(start.formatted) is \(end.formatted)."
+        return "\(name) \(start.formatted) is \(end.formatted)"
     }
 
     /// Picks a unit for a row. Anything the page does not offer for that kind is refused (false) and nothing changes.

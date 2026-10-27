@@ -34,8 +34,8 @@ public struct WorkoutSummary: Identifiable {
 
     /// "Push Day A done, 1 of 1 exercise." and, when nothing was planned, just "Push Day A done." (never "0 of 0").
     private static func doneLine(title: String, done: Int, planned: Int) -> String {
-        guard planned > 0 else { return "\(title) done." }
-        return "\(title) done, \(done) of \(planned) \(planned == 1 ? "exercise" : "exercises")."
+        guard planned > 0 else { return "\(title) done" }
+        return "\(title) done, \(done) of \(planned) \(planned == 1 ? "exercise" : "exercises")"
     }
 
     /// The done line with a private routine title masked (QA on #781): "Private workout done, 1 of 5 exercises."
@@ -53,7 +53,7 @@ public struct WorkoutSummary: Identifiable {
         if !records.isEmpty {
             parts.append("\(records.count) \(records.count == 1 ? "best" : "bests")")
         }
-        return parts.joined(separator: ", ") + "."
+        return parts.joined(separator: ", ")
     }
 }
 

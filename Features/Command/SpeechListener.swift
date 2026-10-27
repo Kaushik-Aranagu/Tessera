@@ -21,10 +21,10 @@ final class SpeechListener {
 
         var line: String {
             switch self {
-            case .micOff: "Mic is off for Tessera."
-            case .speechOff: "Speech is off for Tessera."
-            case .noLanguage: "Voice isn't available in this language yet."
-            case .busy: "The mic is busy with a call."
+            case .micOff: "Mic is off for Tessera"
+            case .speechOff: "Speech is off for Tessera"
+            case .noLanguage: "Voice isn't available in this language yet"
+            case .busy: "The mic is busy with a call"
             }
         }
 

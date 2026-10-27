@@ -36,7 +36,7 @@ struct PantryFrontTests {
         let front = PantryFront(ledger: ledger, now: saturday)
         #expect(front.hero == "1 out, 1 low")
         #expect(front.out.map(\.label) == ["Limes"] && front.low.map(\.label) == ["Ground beef"])
-        #expect(front.tess == "Tacos took the limes and ground beef.")
+        #expect(front.tess == "Tacos took the limes and ground beef")
     }
 
     @Test func aThingAlreadyOnGroceriesIsNotAddedTwice() throws {
@@ -46,10 +46,10 @@ struct PantryFrontTests {
         let limes = try #require(ledger.entries().first { $0.label == "Limes" })
         let groceries = Groceries(store: model.store, classes: model.classes)
         #expect(PantryFront
-            .swipe(limes, groceries: groceries, store: model.store) == .add(receipt: "Limes, on Groceries."))
+            .swipe(limes, groceries: groceries, store: model.store) == .add(receipt: "Limes, on Groceries"))
         try model.engine.perform(AddGroceries(lines: ["limes"]), by: .user)
         #expect(PantryFront.swipe(limes, groceries: groceries, store: model.store)
-            == .already(receipt: "Limes, already on Groceries."))
+            == .already(receipt: "Limes, already on Groceries"))
     }
 
     @Test func aCheckedRowInTheBasketCoversTheAdd() throws {
@@ -62,7 +62,7 @@ struct PantryFrontTests {
         let row = try #require(groceries.list?.orderedChildren.first)
         try model.engine.perform(CheckListItem(item: row.id, time: saturday), by: .user)
         #expect(PantryFront.swipe(limes, groceries: groceries, store: model.store)
-            == .already(receipt: "Limes, in the basket."))
+            == .already(receipt: "Limes, in the basket"))
     }
 
     @Test func aWalledThingAlreadyListedStaysPrivateItemOnBothLines() throws {
@@ -74,10 +74,10 @@ struct PantryFrontTests {
         let groceries = Groceries(store: model.store, classes: model.classes)
         try model.engine.perform(AddGroceries(lines: [model.store.displayTitle(of: advil.ingredient)]), by: .user)
         #expect(PantryFront.swipe(advil, groceries: groceries, store: model.store)
-            == .already(receipt: "Private item, already on Groceries."))
+            == .already(receipt: "Private item, already on Groceries"))
         let row = try #require(groceries.list?.orderedChildren.first)
         try model.engine.perform(CheckListItem(item: row.id, time: saturday), by: .user)
         #expect(PantryFront.swipe(advil, groceries: groceries, store: model.store)
-            == .already(receipt: "Private item, in the basket."))
+            == .already(receipt: "Private item, in the basket"))
     }
 }

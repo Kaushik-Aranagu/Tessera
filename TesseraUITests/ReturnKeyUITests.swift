@@ -36,7 +36,7 @@ final class ReturnKeyUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Return writes this"))
             .firstMatch.waitForExistence(timeout: 5), "Return didn't write the note")
         // An empty line shows its prompt as the value.
-        XCTAssertEqual(line.value as? String ?? "", "Write something. @ links a thing.", "The line didn't clear")
+        XCTAssertEqual(line.value as? String ?? "", "Write something. @ links a thing", "The line didn't clear")
         sleep(2)
     }
 }

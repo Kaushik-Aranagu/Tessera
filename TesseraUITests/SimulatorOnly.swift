@@ -6,7 +6,7 @@ class SimulatorOnlyTestCase: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         #if !targetEnvironment(simulator)
-            throw XCTSkip("UI tests run on the simulator only, never on a phone with real data.")
+            throw XCTSkip("UI tests run on the simulator only, never on a phone with real data")
         #endif
     }
 

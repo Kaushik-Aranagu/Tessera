@@ -4,15 +4,15 @@ import Testing
 
 struct FinishMomentsTests {
     @Test func packingListsSayAllPacked() {
-        #expect(FinishMoments.listLine(name: "Packing") == "All packed.")
-        #expect(FinishMoments.listLine(name: "Weekend PACK list") == "All packed.")
-        #expect(FinishMoments.listLine(name: "Films") == "All done.")
+        #expect(FinishMoments.listLine(name: "Packing") == "All packed")
+        #expect(FinishMoments.listLine(name: "Weekend PACK list") == "All packed")
+        #expect(FinishMoments.listLine(name: "Films") == "All done")
     }
 
     @Test func tasksClauseNeedsSomethingDone() {
         #expect(FinishMoments.tasksClause(done: 0) == nil)
-        #expect(FinishMoments.tasksClause(done: 1) == "1 done today.")
-        #expect(FinishMoments.tasksClause(done: 4) == "4 done today.")
+        #expect(FinishMoments.tasksClause(done: 1) == "1 done today")
+        #expect(FinishMoments.tasksClause(done: 4) == "4 done today")
     }
 
     @Test func pickOneAndEmptyListsHaveNoMoment() {

@@ -142,7 +142,7 @@ struct SettingsHub: View {
             SettingsLine(sentence: sentence, options: [.init(id: "On", name: "On"), .init(id: "Off", name: "Off")],
                          selected: choices.value(of: row), why: why)
             { option in
-                set(row, to: option.id, said: "\(sentence), \(option.id.lowercased()).")
+                set(row, to: option.id, said: "\(sentence), \(option.id.lowercased())")
             }
         }
     }
@@ -155,7 +155,7 @@ struct SettingsHub: View {
                          options: row.values.map { .init(id: $0, name: names[$0] ?? $0) },
                          selected: choices.value(of: row))
             { option in
-                set(row, to: option.id, said: "\(sentence), \((names[option.id] ?? option.id).lowercased()).")
+                set(row, to: option.id, said: "\(sentence), \((names[option.id] ?? option.id).lowercased())")
             }
         }
     }
@@ -170,7 +170,7 @@ struct SettingsHub: View {
             { option in
                 let undo = HubChoices.choose(option.id, in: id)
                 model.touch()
-                TessVoice.shared.say("\(conflict.sentence) \(option.name.lowercased()).", takeBack: {
+                TessVoice.shared.say("\(conflict.sentence) \(option.name.lowercased())", takeBack: {
                     HubChoices.restore(undo)
                     model.touch()
                 })
@@ -186,7 +186,7 @@ struct SettingsHub: View {
         { option in
             let previous = current
             model.chooseUnit(option.id, for: kind)
-            TessVoice.shared.say("Weights in \(option.name).", takeBack: {
+            TessVoice.shared.say("Weights in \(option.name)", takeBack: {
                 model.chooseUnit(previous, for: kind)
             })
         }
@@ -230,7 +230,7 @@ struct SettingsHub: View {
     /// "Tessera, build N. Hold for Developer mode." Holding it 700 ms opens Developer mode; Enter does with
     /// VoiceOver or a keyboard.
     private var buildLine: some View {
-        Text("Tessera, build \(BuildStamp.short). Hold for Developer mode.")
+        Text("Tessera, build \(BuildStamp.short). Hold for Developer mode")
             .textRole(.data)
             .foregroundStyle(Theme.Colors.inkSecondary)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -295,7 +295,7 @@ struct DeveloperMode: View {
         let _ = model.revision
         HubPage(title: "Developer mode") {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Only for turning things off. A flag that is Off comes back with one more tap.")
+                Text("Only for turning things off. A flag that is Off comes back with one more tap")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -336,7 +336,7 @@ struct DeveloperMode: View {
             let next = isOn ? "Off" : "On"
             choices.set(row, to: next)
             model.touch()
-            TessVoice.shared.say("\(flag.name), \(next.lowercased()).", takeBack: {
+            TessVoice.shared.say("\(flag.name), \(next.lowercased())", takeBack: {
                 choices.set(row, to: isOn ? "On" : "Off")
                 model.touch()
             })

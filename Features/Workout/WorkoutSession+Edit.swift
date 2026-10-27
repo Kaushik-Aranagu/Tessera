@@ -39,7 +39,7 @@ extension WorkoutSession {
             EditSet(set: row.id, weight: weight, reps: reps, rpe: rpe), by: .user
         ) {
             lastEdit = (result.record, row.number)
-            editNote = "Set \(row.number) is \(Format.kilograms(weight)) × \(Int(reps)) now."
+            editNote = "Set \(row.number) is \(Format.kilograms(weight)) × \(Int(reps)) now"
             refreshAfterExternalWrite()
             model.touch()
         }
@@ -51,7 +51,7 @@ extension WorkoutSession {
         guard let row = editingRow else { return endEditing() }
         if let result = try? model.engine.perform(DeleteObject(object: row.id), by: .user) {
             lastEdit = (result.record, row.number)
-            editNote = "Set \(row.number) removed."
+            editNote = "Set \(row.number) removed"
             // The rest that is running belongs to the latest set; removing that set ends it, as Undo does.
             if undoable?.setID == row.id || lastSeated?.setID == row.id {
                 endRest()
@@ -94,7 +94,7 @@ extension WorkoutSession {
         if let edit = lastEdit, edit.record.state != .undone {
             model.engine.undo(edit.record)
             lastEdit = nil
-            editNote = "Set \(edit.number) is back as it was."
+            editNote = "Set \(edit.number) is back as it was"
             refreshAfterExternalWrite()
             model.touch()
         } else {

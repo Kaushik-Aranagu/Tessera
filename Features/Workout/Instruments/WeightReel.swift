@@ -86,7 +86,7 @@ struct WeightReel: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Weight")
         .accessibilityValue(spokenValue ?? "\(Format.kilograms(weight)) kilograms")
-        .accessibilityHint("Swipe up or down to change by one load. Double tap to type.")
+        .accessibilityHint("Swipe up or down to change by one load. Double tap to type")
         .accessibilityAdjustableAction { change in
             guard !isLocked else { return }
             let step = change == .increment ? 1 : -1

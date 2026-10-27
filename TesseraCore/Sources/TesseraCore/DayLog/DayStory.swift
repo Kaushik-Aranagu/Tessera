@@ -120,7 +120,9 @@ public enum DayStory {
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
         "endProcess", "writeSettings", "createClass", "setRoutineKind", "applyDayName", "syncCalendar", "syncHealth",
-        "closeDay", "createPlace", "renamePlace", "setPlaceSections", "movePlace", "removePlace", "setItemPlace", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
+        "closeDay", "createPlace", "renamePlace", "setPlaceSections", "movePlace", "removePlace", "setItemPlace",
+        "setMeProfile",
+        "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
         "releaseHeldNotices",
         "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
         // Multi-dish Cook: the session has no Day log line yet (the dishes' cooks are stamped as ever).
@@ -265,7 +267,7 @@ public enum DayStory {
                       workout.sets > 0 // a 0-set workout is no session
                 else { continue }
                 let top = lookup.topSet(inWorkout: root)
-                let topText = top.map { ". \($0.text)\($0.isPR ? ", best" : "")." } ?? "."
+                let topText = top.map { ". \($0.text)\($0.isPR ? ", best" : "")" } ?? "."
                 if let ended = workout.endedAt {
                     let minutes = Int((ended.timeIntervalSince(started) / 60).rounded())
                     lines.append((DayLine(time: started, text: "\(workout.title), \(minutes) min\(topText)",
@@ -463,7 +465,7 @@ public enum DayStory {
             let rest = (fixed.dropFirst(keptFixed).map { Loose(line: $0.line, size: 1, tail: $0.line.text) }
                 + ranked.dropFirst(room))
                 .sorted { ($0.line.time ?? .distantFuture) < ($1.line.time ?? .distantFuture) }
-            drawn.append(DayLine(time: nil, text: "Also: \(rest.map(\.tail).joined(separator: ", ")).",
+            drawn.append(DayLine(time: nil, text: "Also: \(rest.map(\.tail).joined(separator: ", "))",
                                  objectIDs: rest.flatMap(\.line.objectIDs), kind: .tail))
         } else {
             drawn = lines.map(\.line) + loose.map(\.line)

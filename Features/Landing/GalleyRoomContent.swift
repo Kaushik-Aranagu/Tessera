@@ -67,7 +67,7 @@ struct GalleyRoomContent: RoomContent {
     private func door(_ id: String) -> Screen {
         let door = facts.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
-        let line = rows.isEmpty ? (door?.label ?? "Nothing here yet.") : Self.countLine(id, rows.count)
+        let line = rows.isEmpty ? (door?.label ?? "Nothing here yet") : Self.countLine(id, rows.count)
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "galley.nav.galley", kind: .text, payload: .navWord("Galley")),
@@ -84,11 +84,11 @@ struct GalleyRoomContent: RoomContent {
 
     static func countLine(_ door: String, _ count: Int) -> String {
         switch door {
-        case "tonight": count == 1 ? "1 dinner planned." : "\(count) dinners planned."
-        case "pantry": "\(count) running low."
-        case "recipes": "You can make \(count) now."
-        case "groceries": "\(count) to get."
-        default: "\(count) kept."
+        case "tonight": count == 1 ? "1 dinner planned" : "\(count) dinners planned"
+        case "pantry": "\(count) running low"
+        case "recipes": "You can make \(count) now"
+        case "groceries": "\(count) to get"
+        default: "\(count) kept"
         }
     }
 
@@ -191,9 +191,9 @@ extension GalleyRoomContent.Facts {
 
     static func caption(_ pass: GalleyPass) -> String? {
         if pass.tickets.contains(where: { $0.pages.count > 1 }) {
-            return "Swipe a ticket up for its next page."
+            return "Swipe a ticket up for its next page"
         }
-        return pass.hidden > 0 ? "\(pass.hidden) private kept off the pass." : nil
+        return pass.hidden > 0 ? "\(pass.hidden) private kept off the pass" : nil
     }
 
     /// Tonight, Pantry, Recipes, Groceries, Leftovers (contract v2 §12). Leftovers has no model yet and opens Pantry.
@@ -384,7 +384,7 @@ struct GalleyShellHost: View {
         }
         guard let cook = try? model.engine.perform(StartCooking(recipe: id, time: AppClock.now), by: .user).output
         else {
-            TessVoice.shared.say("Didn't start that. Try again.")
+            TessVoice.shared.say("Didn't start that. Try again")
             return
         }
         model.touch()

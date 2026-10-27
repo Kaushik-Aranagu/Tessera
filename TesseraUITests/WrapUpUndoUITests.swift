@@ -16,7 +16,7 @@ final class WrapUpUndoUITests: SimulatorOnlyTestCase {
         // Eight hours on, nothing logged: Core wraps it up on launch and says so beside the soul.
         app.launchArguments = ["-demo", "-demoTime", "18:10"]
         app.launch()
-        let line = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "no sets, not saved.")).firstMatch
+        let line = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "no sets, not saved")).firstMatch
         XCTAssertTrue(line.waitForExistence(timeout: 15))
         let undo = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Undo")).firstMatch
         XCTAssertTrue(undo.waitForExistence(timeout: 2))

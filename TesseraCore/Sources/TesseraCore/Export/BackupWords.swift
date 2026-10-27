@@ -42,10 +42,10 @@ public enum BackupWords {
     /// "Last backup tonight, 9:14 pm. 4,210 things." Or "No backup yet." The count is the whole store, money included
     /// and unlisted.
     public static func lastLine(createdAt: Date?, things: Int?, now: Date, calendar: Calendar = .current) -> String {
-        guard let createdAt else { return "No backup yet." }
-        let base = "Last backup \(when(createdAt, now: now, calendar: calendar))."
+        guard let createdAt else { return "No backup yet" }
+        let base = "Last backup \(when(createdAt, now: now, calendar: calendar))"
         guard let things else { return base }
-        return base + " \(number(things)) \(things == 1 ? "thing" : "things")."
+        return base + ". \(number(things)) \(things == 1 ? "thing" : "things")"
     }
 
     /// The last 7 backups as dates for the Restore list, newest first: "Thursday, Oct 22".
@@ -67,15 +67,15 @@ public enum BackupWords {
         let verb = copyThings == nowThings ? "the same" : copyThings < nowThings ? "fewer" : "more"
         let compare = verb == "the same" ? "as" : "than"
         return "That copy has \(things(copyThings)), \(verb) \(compare) the \(number(nowThings)) you have now. "
-            + "Today's copy stays in Backups, and you can undo this for 10 minutes."
+            + "Today's copy stays in Backups, and you can undo this for 10 minutes"
     }
 
     /// What a copy leaves out, said only for what it really leaves out. The calendar and Health mirrors are in no copy.
     /// Private notes, recipes, items and secret-word lines (which is where a weigh-in lives) are left out only of the
     /// copy for the iCloud Drive folder; the copy on the phone keeps every word behind Face ID.
     public static func notIncluded(leavingOutPrivate: Bool) -> String {
-        leavingOutPrivate ? "Not included: health, calendar, body, private things, Tess's conversation and what lab mode sent."
-            : "Not included: health, calendar, Tess's conversation and what lab mode sent."
+        leavingOutPrivate ? "Not included: health, calendar, body, private things, Tess's conversation and what lab mode sent"
+            : "Not included: health, calendar, Tess's conversation and what lab mode sent"
     }
 
     // MARK: Counts

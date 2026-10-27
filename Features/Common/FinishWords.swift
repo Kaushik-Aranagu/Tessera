@@ -33,22 +33,22 @@ enum FinishWords {
 
     /// Training: "Push Day A, all sets in. 1 hr 35 min."
     nonisolated static func trainingLine(name: String, privateLabel: String? = nil, minutes: Int) -> String {
-        "\(shownName(name, privateLabel: privateLabel)), all sets in. \(HouseTime.minutes(minutes))."
+        "\(shownName(name, privateLabel: privateLabel)), all sets in. \(HouseTime.minutes(minutes))"
     }
 
     /// Kitchen: "Served at 7:02 pm."
     nonisolated static func servedLine(at date: Date, calendar: Calendar = .current) -> String {
-        "Served at \(HouseTime.clock(date, calendar: calendar))."
+        "Served at \(HouseTime.clock(date, calendar: calendar))"
     }
 
     /// Routines, first line: "Morning, 22 min."
     nonisolated static func routineLine(name: String, privateLabel: String? = nil, minutes: Int) -> String {
-        "\(shownName(name, privateLabel: privateLabel)), \(HouseTime.minutes(minutes))."
+        "\(shownName(name, privateLabel: privateLabel)), \(HouseTime.minutes(minutes))"
     }
 
     /// Routines, second line: "Tomorrow, usually 6:40 am." Nil before seven runs (no usual start yet).
     nonisolated static func tomorrowLine(usualStartMinuteOfDay: Int?) -> String? {
         guard let usualStartMinuteOfDay else { return nil }
-        return "Tomorrow, usually \(HouseTime.clock(minuteOfDay: usualStartMinuteOfDay))."
+        return "Tomorrow, usually \(HouseTime.clock(minuteOfDay: usualStartMinuteOfDay))"
     }
 }

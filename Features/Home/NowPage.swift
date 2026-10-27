@@ -387,9 +387,9 @@ struct NowPage: View {
             }
         } else {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
-                Text("Nothing else is planned today.")
+                Text("Nothing else is planned today")
                     .textRole(.title)
-                    .wordFit("Nothing else is planned today.")
+                    .wordFit("Nothing else is planned today")
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Button {
@@ -446,7 +446,7 @@ struct NowPage: View {
             model.touch()
         }
         let hasNext = model.currentTask(around: AppClock.now) != nil
-        TessVoice.shared.say(hasNext ? "Done. Next one is up." : "\(task.title), done.", undo: record)
+        TessVoice.shared.say(hasNext ? "Done. Next one is up" : "\(task.title), done", undo: record)
     }
 }
 
@@ -618,7 +618,7 @@ private struct GhostRow: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Proposed: \(item.title), \(Format.clock(item.start))")
-        .accessibilityHint("Saves in two seconds. Double-tap to keep it now.")
+        .accessibilityHint("Saves in two seconds. Double-tap to keep it now")
         .accessibilityAction(named: "Drop it") { model.discardCapture() }
     }
 }

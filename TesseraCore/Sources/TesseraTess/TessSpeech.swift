@@ -19,9 +19,9 @@ public enum TessListenGap: Equatable, Sendable {
     /// One plain line for the Ask field's placeholder.
     public var line: String {
         switch self {
-        case .modelNotDownloaded: "Listening needs the on-device speech model. Type it for now."
-        case .unsupported: "This phone can't listen on its own. Type it for now."
-        case .failed: "Couldn't listen. Type it for now."
+        case .modelNotDownloaded: "Listening needs the on-device speech model. Type it for now"
+        case .unsupported: "This phone can't listen on its own. Type it for now"
+        case .failed: "Couldn't listen. Type it for now"
         }
     }
 }

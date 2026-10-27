@@ -243,7 +243,7 @@ struct ReviewSection: View {
         let choices = ReviewChoices.shared
         return reviewFrame(SettingsV2.isOn) {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                Text("Try a new way; today's stays one tap away.")
+                Text("Try a new way; today's stays one tap away")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -401,7 +401,7 @@ struct ReviewSection: View {
 /// Review's words.
 enum ReviewSwitchCopy {
     static let everythingAsBefore = "Everything as before"
-    static let reset = "Everything is as before."
+    static let reset = "Everything is as before"
     static let needsClaude = "Needs Claude"
 
     /// The value VoiceOver hears, with the row's mark when it has one: "On, Needs Claude".
@@ -438,8 +438,8 @@ enum ReviewSwitchCopy {
     static func hint(_ choice: ReviewChoices.Choice, value: String) -> String {
         switch choice.readiness {
         case .live: choice.says[value] ?? value
-        case .later: "Later: this needs a build with access."
-        case let .arrivesWith(feature): "Arrives with \(feature)."
+        case .later: "Later: this needs a build with access"
+        case let .arrivesWith(feature): "Arrives with \(feature)"
         }
     }
 }

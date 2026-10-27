@@ -9,18 +9,18 @@ struct TrainingLandingTests {
             minutes: 45,
             opener: (exercise: "Bench", weight: "82.5 kg")
         )
-        #expect(sentence.text == "Push A today, about 45 min. Bench opens at 82.5 kg.")
+        #expect(sentence.text == "Push A today, about 45 min. Bench opens at 82.5 kg")
         #expect(sentence.key == "Push A")
     }
 
     @Test func anHourOrMoreReadsTheHouseWay() {
         let sentence = TrainingPage.sentence(session: "Legs", minutes: 90, opener: nil)
-        #expect(sentence.text == "Legs today, about 1 hr 30 min.")
+        #expect(sentence.text == "Legs today, about 1 hr 30 min")
     }
 
     @Test func nothingPlannedSaysSoWithNoKeyWord() {
         let sentence = TrainingPage.sentence(session: nil, minutes: nil, opener: nil)
-        #expect(sentence.text == "Nothing planned today.")
+        #expect(sentence.text == "Nothing planned today")
         #expect(sentence.key == nil)
     }
 
