@@ -40,7 +40,12 @@ public struct SetWarmUp: EngineAction {
             .init("routine", .object, "The routine"),
             .init("name", .string, "What it is, e.g. Rower; empty clears the warm-up", required: false),
             .init("minutes", .integer, "1 to 30", required: false),
-            .init("note", .string, "A line for the warm-up screen", required: false),
+            .init(
+                "note",
+                .string,
+                "A line for the warm-up screen; left out keeps the one set, empty takes it off",
+                required: false
+            ),
         ], isOfferedToModel: false
     )
 
@@ -80,7 +85,10 @@ public struct SetWarmUp: EngineAction {
         }
         try transaction.set("warmupName", to: .text(trimmed), on: object)
         try transaction.set("warmupMinutes", to: .number(Double(minutes)), on: object)
-        try transaction.set("warmupNote", to: line.isEmpty ? nil : .text(line), on: object)
+        // No note given: the one already set stays; an empty note takes it off.
+        if note != nil {
+            try transaction.set("warmupNote", to: line.isEmpty ? nil : .text(line), on: object)
+        }
     }
 
     public func summary(in store: ObjectStore) -> String {

@@ -138,6 +138,10 @@ struct TrainingLanding230Tests {
         // A new name with no minutes keeps the minutes.
         try engine.perform(SetWarmUp(routine: routine.id, name: "Bike"), by: .user)
         #expect(stats.warmUp(of: routine)?.minutes == 8 && stats.warmUp(of: routine)?.name == "Bike")
+        // The note stays when none is given, and goes when it is empty.
+        #expect(stats.warmUp(of: routine)?.note == "Keep it easy, about 22 strokes a minute.")
+        try engine.perform(SetWarmUp(routine: routine.id, name: "Bike", note: ""), by: .user)
+        #expect(stats.warmUp(of: routine)?.note == nil)
         let off = try engine.perform(SetWarmUp(routine: routine.id, name: nil), by: .user)
         #expect(off.record.receipt == "Warm-up taken off" && stats.warmUp(of: routine) == nil)
         #expect(TrainingSentences.warmUpLine(nil) == nil)
