@@ -18,7 +18,7 @@ the ones that fail. The full design, with prior art and the diagram, is the "Tes
   - later, a gist in words with a cite for every sentence (P1b, from a model, checked against its children).
 - **Reading.** `zoom(path)` returns the title, the totals, then the children ranked by how much they stand out,
   within 1,200 characters. A day lists its leaves word for word.
-- **Walls.** A leaf's path is a short fingerprint of its id (`leaf-3fa2c1`). It never names its kind, and it is
+- **Walls.** A leaf's path is a short fingerprint of its id (`leaf-3fa2c1d0`). It never names its kind, and it is
   not a count, so a missing number can't give away a walled leaf or when it happened. Under strict, a money, body
   or calendar leaf is not there at all: no line, no path, no count, no effect on a residual. A day that holds only
   walled leaves is "Nothing there". A private workout adds nothing to any total.

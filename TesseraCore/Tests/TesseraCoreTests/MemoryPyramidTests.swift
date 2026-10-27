@@ -163,7 +163,7 @@ struct MemoryPyramidTests {
         // A leaf's name is a fingerprint, never a count.
         for node in full.nodes.values where node.level == .leaf {
             let name = node.path.split(separator: "/").last.map(String.init) ?? ""
-            #expect(name.count == 11 && UInt64(name.dropFirst(5), radix: 16) != nil, "\(name)")
+            #expect(name.count == 13 && UInt64(name.dropFirst(5), radix: 16) != nil, "\(name)")
         }
     }
 

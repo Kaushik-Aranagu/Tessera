@@ -170,11 +170,18 @@ public struct MemoryPyramid: Sendable {
         var monthDays: [String: [String]] = [:], weekDays: [String: [String]] = [:]
         for (dayPath, day) in days {
             let sorted = day.leaves.sorted { ($0.at, $0.id) < ($1.at, $1.id) }
+            // An opaque path: a kind would say there is a spend or a weigh-in even where its words are walled, and a
+            // number counted over every leaf would leave a gap where a walled one sits. Safe leaves take theirs first,
+            // so a walled leaf can never shift one.
+            var named = [String?](repeating: nil, count: sorted.count)
+            let safeFirst = sorted.indices.filter { sorted[$0].taint == .claudeSafe }
+                + sorted.indices.filter { sorted[$0].taint != .claudeSafe }
+            for index in safeFirst {
+                named[index] = Self.leafPath(dayPath, sorted[index].id, taken: named.compactMap { $0 })
+            }
             var paths: [String] = []
-            for leaf in sorted {
-                // An opaque path: a kind would say there is a spend or a weigh-in even where its words are walled,
-                // and a number counted over every leaf would leave a gap where a walled one sits.
-                let path = Self.leafPath(dayPath, leaf.id, taken: paths)
+            for (index, leaf) in sorted.enumerated() {
+                let path = named[index] ?? Self.leafPath(dayPath, leaf.id, taken: paths)
                 paths.append(path)
                 let print = ([leaf.kind, String(leaf.at.timeIntervalSince1970), leaf.text]
                     + leaf.stats.keys.sorted().map { "\($0)=\(leaf.stats[$0] ?? 0)" }).joined(separator: "|")
@@ -339,8 +346,8 @@ public struct MemoryPyramid: Sendable {
     static func leafPath(_ day: String, _ id: String, taken: [String]) -> String {
         var salt = 0
         while true {
-            let print = String(fnv("leaf|\(id)|\(salt)") & 0xFF_FFFF, radix: 16)
-            let path = "\(day)/leaf-\(String(repeating: "0", count: max(0, 6 - print.count)))\(print)"
+            let print = String(fnv("leaf|\(id)|\(salt)") & 0xFFFF_FFFF, radix: 16)
+            let path = "\(day)/leaf-\(String(repeating: "0", count: max(0, 8 - print.count)))\(print)"
             if !taken.contains(path) {
                 return path
             }
