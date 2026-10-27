@@ -16,8 +16,10 @@ them by, so the tree has to grow its own shape:
 - At most --cap structural changes a night, logged so that any one can be undone. A split whose halves merge back
   within 10 nights counts as a flip.
 
-- **Settle.** Each night up to --settle leaves move to the holder whose key they share clearly more words with: one
-  k-means reassignment step across the tree, so a subtopic that a split cut in two gathers again.
+- **Settle.** Each night up to --settle leaves move to the holder they fit clearly better: one k-means reassignment
+  step across the tree, so a subtopic that a split cut in two gathers again. --fit key compares shared key words
+  (a gain of 2); --fit affinity sums, for each of the leaf's words, the share of the holder's other leaves that hold
+  it (a gain of 1).
 
 A reader answers each ask ("what did I say about <topic> <subtopic>") from the root down and reads the leaves of a node
 that holds leaves; a leaf counts as found when it shares two words with the ask, the same rule flat uses. It counts
@@ -35,7 +37,7 @@ Arms, the same leaves and asks:
 
 Usage: python3 scripts/ai/pyramid_topic_sim.py [--nights 60] [--leaves 12] [--asks 8] [--split 24] [--merge 12]
                                                [--cap 3] [--beam 2] [--key 6] [--reader key|index] [--settle 20]
-                                               [--seed 1]
+                                               [--fit key|affinity] [--seed 1]
 """
 import argparse
 import collections
@@ -266,13 +268,29 @@ class Tree:
         A move changes no fact, only where a leaf sits, and is logged like any other change."""
         holders = [h for h in self.holders() if h.leaves]
         candidates = []
+        if self.args.fit == "affinity":
+            counts = {h.id: collections.Counter(w for leaf in h.leaves for w in set(leaf["words"])) for h in holders}
+
+            def fit(words, h, leaf):
+                # How much of each word the holder's other leaves hold, on average: a word every one of them has
+                # counts 1.
+                own = leaf in h.leaves
+                n = len(h.leaves) - own
+                return sum((counts[h.id][w] - own) / n for w in words) if n > 0 else 0.0
         for holder in holders:
             for leaf in holder.leaves:
                 words = set(leaf["words"]) - set(FILLER)
-                here = len(words & set(holder.key))
-                best = max(holders, key=lambda h: (len(words & set(h.key)), -h.id))
-                gain = len(words & set(best.key)) - here
-                if best is not holder and gain >= 2:
+                if self.args.fit == "affinity":
+                    here = fit(words, holder, leaf)
+                    best = max(holders, key=lambda h: (fit(words, h, leaf), -h.id))
+                    gain = fit(words, best, leaf) - here
+                    enough = gain >= 1
+                else:
+                    here = len(words & set(holder.key))
+                    best = max(holders, key=lambda h: (len(words & set(h.key)), -h.id))
+                    gain = len(words & set(best.key)) - here
+                    enough = gain >= 2
+                if best is not holder and enough:
                     candidates.append((-gain, leaf["id"], leaf, holder, best))
         for _, _, leaf, source, target in sorted(candidates, key=lambda c: c[:2])[:self.settle]:
             if leaf in source.leaves and len(source.leaves) > 1:
@@ -372,6 +390,7 @@ def main():
     parser.add_argument("--beam", type=int, default=2)
     parser.add_argument("--key", type=int, default=6)
     parser.add_argument("--settle", type=int, default=20)
+    parser.add_argument("--fit", choices=["key", "affinity"], default="key")
     parser.add_argument("--reader", choices=["key", "index"], default="key")
     parser.add_argument("--seed", type=int, default=1)
     args = parser.parse_args()

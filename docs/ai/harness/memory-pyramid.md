@@ -241,7 +241,9 @@ What it shows:
   opens or tokens; on the phone it is a local search that never goes in a pack.
 - **Scatter is the cost.** Opens grow to 5-6 a night because a split cuts a subtopic across holders and new leaves
   land on either side. Settling leaves back is the fix that works: 9-20% fewer tokens than split-only on every seed (QA reproduced
-  10-16% on seeds 1-3).
+  10-16% on seeds 1-3). Judging fit by affinity (`--fit affinity`: how many of a holder's other leaves hold each of
+  the leaf's words) instead of shared key words does a little better on 4 seeds of 5 (1075-1152 tokens) and moves a
+  misfiled leaf even when a small holder's key happens to list its words; the Swift `TopicTree` uses it.
   Merge alone does little here, because hysteresis blocks merging two big halves, which is its job.
 - **No flips in this world**, even with no hysteresis and no cap (churn makes 3-4 times as many merges, and no split
   was undone within 10 nights). Changes stay near one a night. Hysteresis and the cap are kept as guards; this world
