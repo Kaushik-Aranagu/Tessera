@@ -36,7 +36,7 @@ struct ToolInputCheckTests {
         (#"{"title":"t","count":2,"kind":"a","tags":[],"done":1}"#, "\"done\" should be true or false"),
         (#"{"title":"t","count":true,"kind":"a","tags":[],"done":true}"#, "\"count\" should be a whole number"),
         (#"{"title":"t","count":2,"kind":"a","tags":[],"done":true,"depth":3}"#, "\"depth\" should be one of 1, 2"),
-        (#"{"title":"t","count":2,"kind":"a","tags":[],"done":true,"extra":1}"#, "no field \"extra\""),
+        (#"{"title":"t","count":2,"kind":"a","tags":[],"done":true,"extra":1}"#, "a field the call doesn't take"),
         (#"["title"]"#, "should be an object"),
     ])
     func aCallThatDoesNotFitSaysWhichField(json: String, says: String) throws {
@@ -48,6 +48,10 @@ struct ToolInputCheckTests {
         let json = #"{"title":"my secret words","count":"locker 4-27-19","kind":"a","tags":[],"done":true}"#
         let line = try #require(problem(json))
         #expect(!line.contains("secret") && !line.contains("4-27-19"))
+        // A field the model made up is its own words too.
+        let made = #"{"title":"t","count":2,"kind":"a","tags":[],"done":true,"locker 4-27-19":1}"#
+        let extra = try #require(problem(made))
+        #expect(!extra.contains("4-27-19"))
     }
 
     @Test func unreadableArgumentsAreAProblemAndAnUnreadableSchemaChecksNothing() {

@@ -168,12 +168,13 @@ struct TessRunTests {
         #expect(result.isError && result.text.hasPrefix("Error: ") && result.text.contains("\"title\""))
     }
 
-    @Test func aReplyCutOffAtTheTokenLimitRunsItsReadsButNoWrite() async throws {
+    @Test(arguments: ["max_tokens", "refusal"])
+    func aReplyCutOffOrRefusedRunsItsReadsButNoWrite(stop: String) async throws {
         let read = #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"#
             + #""sort":null,"limit":null}"#
         let haiku = ScriptedBrain(.haiku, rounds: [
             [use("t1", "query", read), use("t2", "createTask", #"{"title":"Call mom","startsAt":null,"about":[]}"#),
-             .done(BrainUsage(), stop: "max_tokens")],
+             .done(BrainUsage(), stop: stop)],
             [.text("Asking again.")],
         ])
         let r = try rig([.haiku: haiku])

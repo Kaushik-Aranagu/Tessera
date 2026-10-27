@@ -45,10 +45,11 @@ enum ToolInputCheck {
             for key in schema["required"] as? [String] ?? [] where object[key] == nil {
                 guard let property = properties[key], allowsNull(property) else { return "\(path) need \"\(key)\"" }
             }
+            // The extra field's name is the model's own words, so it is never read back.
             if schema["additionalProperties"] as? Bool == false,
-               let extra = object.keys.sorted().first(where: { properties[$0] == nil })
+               object.keys.contains(where: { properties[$0] == nil })
             {
-                return "\(path) have no field \"\(extra.prefix(40))\""
+                return "\(path) have a field the call doesn't take"
             }
             for key in object.keys.sorted() {
                 guard let property = properties[key], let field = object[key] else { continue }

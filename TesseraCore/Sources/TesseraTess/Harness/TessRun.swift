@@ -446,7 +446,7 @@ public final class TessRun {
             var results: [String: (text: String, isError: Bool)] = [:]
             var failure: ClaudeOutcome?
             // H5: a read starts the moment its block closes; anything that writes or shows waits until the reply has
-            // ended whole, so a call from a reply cut off at the token limit, or one that broke off, never runs.
+            // ended whole, so a call from a reply cut off at the token limit, refused, or broken off never runs.
             var waiting: [(id: String, name: String, input: Data)] = []
             let offered = Set(pack.tools.map(\.name))
             let schemas = Dictionary(pack.tools.map { ($0.name, $0.schema) }, uniquingKeysWith: { first, _ in first })
@@ -488,7 +488,7 @@ public final class TessRun {
             if Task.isCancelled {
                 return .phone("")
             }
-            let whole = failure == nil && stop != "max_tokens"
+            let whole = failure == nil && stop != "max_tokens" && stop != "refusal"
             for use in waiting {
                 var result: (text: String, isError: Bool) = (Self.notRun, true)
                 if whole {
