@@ -89,6 +89,9 @@ Each has a pass line set before it runs. A failure gets written up here too.
      and sure trains nothing. Each node keeps right and wrong counts for confidence. At night year pairs fade, nodes
      that are gone lose their counts, and the pairs are pruned to the ones that moved most. Under strict a walled node
      is never an option and a cite through one trains nothing. Weights rank; they never hide a node from a search.
+     Ask words become weight keys, so `learn` takes only `PyramidTerms.walled`: an ask holding a key, a secret, a
+     private title or a private word teaches nothing, key-shaped pieces are dropped, and a word walled later is
+     dropped at night. The router's file is excluded from backups and its keys are never logged.
 4. **P4: more axes and more sources.**
    - Add class, entity and room, plus lateral links. Then conversation turns and told lines as free-text leaves,
      with topic and entity learned from their words.

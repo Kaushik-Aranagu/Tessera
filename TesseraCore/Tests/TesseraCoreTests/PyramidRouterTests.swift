@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 @testable import TesseraTess
 import Testing
 
@@ -24,6 +25,17 @@ struct PyramidRouterTests {
 
     func ask(_ text: String) -> [String] {
         PyramidAsk.terms(text, now: now, calendar: calendar)
+    }
+
+    /// A test wall: "lexapro" and "rehab" are private.
+    static func isWalled(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        return lower.contains("lexapro") || lower.contains("rehab")
+    }
+
+    /// An ask's terms through the wall, as `learn` takes them.
+    func taught(_ text: String) throws -> PyramidTerms {
+        try #require(PyramidTerms.walled(text, now: now, calendar: calendar, isWalled: Self.isWalled))
     }
 
     /// One workout leaf on each of these days, and one walled leaf alone on Sep 12.
@@ -69,7 +81,9 @@ struct PyramidRouterTests {
         #expect(PyramidAsk.words("Fri, Oct 23, 2026") == ["fri", "oct", "23", "2026"])
         // The router reads the terms: the date resolved, the words that say nothing about where to look gone.
         #expect(ask("how was the trip") == ["trip"])
-        #expect(ask("what did I do yesterday") == ["yesterday", "thu", "oct", "22", "2026", "october"])
+        #expect(ask("what did I do yesterday") == ["thu", "oct", "22", "2026", "october"])
+        // A date word stays when nothing was resolved from it.
+        #expect(ask("the last set") == ["last", "set"])
     }
 
     // MARK: Firing
@@ -109,14 +123,15 @@ struct PyramidRouterTests {
         #expect(PyramidRouter.truePath(to: "/summaries/day/2026-10-22").isEmpty)
     }
 
-    @Test func aPersonalPhraseIsLearnedFromCitedAnswers() {
+    @Test func aPersonalPhraseIsLearnedFromCitedAnswers() throws {
         let pyramid = makePyramid()
         var router = PyramidRouter()
         let trip = ask("how was the trip")
         let before = router.guess(trip, to: .month, in: pyramid, policy: .lab)
         #expect(before.last?.path == "/time/2026/10")
+        let terms = try taught("how was the trip")
         for _ in 0 ..< 60 {
-            router.learn(trip, cited: "/time/2026/08", in: pyramid, policy: .lab)
+            router.learn(terms, cited: "/time/2026/08", in: pyramid, policy: .lab)
         }
         let after = router.guess(trip, to: .month, in: pyramid, policy: .lab)
         #expect(after.map(\.path) == ["/time/2026", "/time/2026/08"])
@@ -130,7 +145,7 @@ struct PyramidRouterTests {
         let pyramid = makePyramid()
         var router = PyramidRouter(sure: 0.5)
         let cited = try leaf(on: "/time/2026/10/22", in: pyramid)
-        let trained = router.learn(ask("what did I do yesterday"), cited: cited, in: pyramid, policy: .lab)
+        let trained = try router.learn(taught("what did I do yesterday"), cited: cited, in: pyramid, policy: .lab)
         #expect(trained == 0)
         #expect(router.weights.isEmpty)
     }
@@ -138,23 +153,27 @@ struct PyramidRouterTests {
     @Test func anUnsureRightStepStillTrainsTowardSure() throws {
         let pyramid = makePyramid()
         var router = PyramidRouter()
-        let yesterday = ask("what did I do yesterday")
+        let yesterday = try taught("what did I do yesterday")
         let cited = try leaf(on: "/time/2026/10/22", in: pyramid)
-        #expect(router.learn(yesterday, cited: cited, in: pyramid, policy: .lab) > 0)
+        let first = router.learn(yesterday, cited: cited, in: pyramid, policy: .lab)
+        #expect(first > 0)
         for _ in 0 ..< 40 {
             router.learn(yesterday, cited: cited, in: pyramid, policy: .lab)
         }
-        let steps = router.guess(yesterday, to: .day, in: pyramid, policy: .lab)
+        let steps = router.guess(yesterday.words, to: .day, in: pyramid, policy: .lab)
         #expect(steps.last?.path == "/time/2026/10/22")
         #expect(router.isSure(steps))
         // Once sure, the same answer trains nothing more.
-        #expect(router.learn(yesterday, cited: cited, in: pyramid, policy: .lab) == 0)
+        let again = router.learn(yesterday, cited: cited, in: pyramid, policy: .lab)
+        #expect(again == 0)
     }
 
-    @Test func aCiteOffTheTreeTrainsNothing() {
+    @Test func aCiteOffTheTreeTrainsNothing() throws {
         var router = PyramidRouter()
-        #expect(router.learn(["trip"], cited: "/time/2031/01", in: makePyramid(), policy: .lab) == 0)
-        #expect(router.learn(["trip"], cited: "/summaries/day/2026-10-22", in: makePyramid(), policy: .lab) == 0)
+        let trip = try taught("trip")
+        let missing = router.learn(trip, cited: "/time/2031/01", in: makePyramid(), policy: .lab)
+        let offTree = router.learn(trip, cited: "/summaries/day/2026-10-22", in: makePyramid(), policy: .lab)
+        #expect(missing == 0 && offTree == 0)
         #expect(router.weights.isEmpty)
     }
 
@@ -168,11 +187,56 @@ struct PyramidRouterTests {
         let labDays = PyramidRouter.options(of: "/time/2026/09", in: pyramid, policy: .lab).map(\.path)
         #expect(labDays.contains("/time/2026/09/12"))
 
+        let scale = try taught("scale")
         var strict = PyramidRouter()
-        #expect(strict.learn(["scale"], cited: walled, in: pyramid, policy: .strict) == 0)
+        let strictTrained = strict.learn(scale, cited: walled, in: pyramid, policy: .strict)
+        #expect(strictTrained == 0)
         #expect(strict.weights.isEmpty)
         var lab = PyramidRouter()
-        #expect(lab.learn(["scale"], cited: walled, in: pyramid, policy: .lab) > 0)
+        let labTrained = lab.learn(scale, cited: walled, in: pyramid, policy: .lab)
+        #expect(labTrained > 0)
+    }
+
+    @Test func aWalledAskTeachesNothing() {
+        func terms(_ text: String) -> [String]? {
+            PyramidTerms.walled(text, now: now, calendar: calendar, isWalled: Self.isWalled)?.words
+        }
+        #expect(terms("how was my Lexapro week") == nil)
+        #expect(terms("knee rehab last month") == nil)
+        // A key is walled whatever the wall says; a key-shaped piece is dropped from an ask that is otherwise plain.
+        #expect(terms("my " + "sk" + "-" + "ant" + "-api03-AbCdEf123") == nil)
+        #expect(terms("the trip a1b2c3d4e5f6") == ["trip"])
+        #expect(terms("the trip") == ["trip"])
+    }
+
+    @Test func theStoreWallsHisPrivateWords() {
+        let store = ObjectStore.open(inMemory: true)
+        func terms(_ text: String) -> [String]? {
+            PyramidTerms.walled(text, now: now, calendar: calendar, store: store)?.words
+        }
+        #expect(terms("how was my lexapro week") == nil)
+        #expect(terms("therapy ideas last month") == nil)
+        #expect(terms("how was the trip") == ["trip"])
+        #expect(terms("Weeknight dal") == ["weeknight", "dal"])
+    }
+
+    @Test func aWordWalledLaterIsForgottenAtNight() throws {
+        let pyramid = makePyramid()
+        var router = PyramidRouter()
+        try router.learn(taught("the trip"), cited: "/time/2026/08", in: pyramid, policy: .lab)
+        #expect(router.weights.keys.contains { $0.hasPrefix("trip|") })
+        router.night(in: pyramid) { $0 == "trip" }
+        #expect(!router.weights.keys.contains { $0.hasPrefix("trip|") })
+    }
+
+    // MARK: Residual
+
+    @Test func aTieIsNotRight() throws {
+        // Two years tie on words alone at 0.5 each; with sure at 0.5 a tie-break would call the newest right and
+        // sure and train nothing (QA on #1478). A tie is not right, so it trains.
+        var router = PyramidRouter(sure: 0.5)
+        let trained = try router.learn(taught("hello"), cited: "/time/2026", in: makePyramid(), policy: .lab)
+        #expect(trained == 1)
     }
 
     // MARK: Confidence
@@ -191,21 +255,23 @@ struct PyramidRouterTests {
 
     @Test func aYearPairIsOneWhoseFeatureIsAYear() {
         #expect(PyramidRouter.isYearPair("nov|2025"))
-        #expect(!PyramidRouter.isYearPair("nov|rank0"))
+        #expect(!PyramidRouter.isYearPair("nov|rank0@month"))
         #expect(!PyramidRouter.isYearPair("same"))
         #expect(!PyramidRouter.isYearPair("2025"))
+        // Four digits that are no year don't fade.
+        #expect(!PyramidRouter.isYearPair("pin|1234") && !PyramidRouter.isYearPair("pin|9999"))
     }
 
-    @Test func theNightFadesYearPairsAndDropsGoneNodes() {
+    @Test func theNightFadesYearPairsAndDropsGoneNodes() throws {
         let pyramid = makePyramid()
         var router = PyramidRouter()
-        router.learn(ask("what about Nov"), cited: "/time/2025/11", in: pyramid, policy: .lab)
+        try router.learn(taught("what about Nov"), cited: "/time/2025/11", in: pyramid, policy: .lab)
         router.record("/time/1999/01", right: true)
         router.record("/time/2026/10", right: true)
         let before = router.weights
         let yearPairs = before.keys.filter { PyramidRouter.isYearPair($0) }
         #expect(!yearPairs.isEmpty)
-        router.night(in: pyramid)
+        router.night(in: pyramid) { _ in false }
         for (pair, weight) in before {
             let expected = PyramidRouter.isYearPair(pair) ? weight * 0.98 : weight
             #expect(abs((router.weights[pair] ?? .nan) - expected) < 1e-12, "\(pair)")
@@ -214,15 +280,16 @@ struct PyramidRouterTests {
         #expect(router.counts["/time/2026/10"] != nil)
     }
 
-    @Test func pruningKeepsThePairsThatMovedFurthest() {
+    @Test func pruningKeepsThePairsThatMovedFurthest() throws {
         let pyramid = makePyramid()
         var router = PyramidRouter()
+        let trip = try taught("how was the trip")
         for _ in 0 ..< 5 {
-            router.learn(ask("how was the trip"), cited: "/time/2026/08", in: pyramid, policy: .lab)
+            router.learn(trip, cited: "/time/2026/08", in: pyramid, policy: .lab)
         }
         let before = router.weights
         #expect(before.count > 5)
-        router.night(in: pyramid, yearDecay: 1, cap: 5)
+        router.night(in: pyramid, yearDecay: 1, cap: 5) { _ in false }
         #expect(router.weights.count == 5)
         let moved = { (pair: String, weight: Double) in abs(weight - PyramidRouter.start(pair)) }
         let keptLeast = router.weights.map { moved($0.key, $0.value) }.min() ?? 0
@@ -230,11 +297,20 @@ struct PyramidRouterTests {
         #expect(keptLeast >= droppedMost)
     }
 
-    @Test func theRouterSurvivesTheFile() throws {
+    // MARK: File
+
+    @Test func theRouterSurvivesTheFileOutOfBackups() throws {
         var router = PyramidRouter(rate: 0.2, sure: 0.8)
-        router.learn(ask("how was the trip"), cited: "/time/2026/08", in: makePyramid(), policy: .lab)
+        try router.learn(taught("how was the trip"), cited: "/time/2026/08", in: makePyramid(), policy: .lab)
         router.record("/time/2026/08", right: true)
-        let saved = try JSONDecoder().decode(PyramidRouter.self, from: JSONEncoder().encode(router))
-        #expect(saved == router)
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "router-\(UUID().uuidString)/\(PyramidRouter.fileName)")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        router.save(to: url)
+        #expect(PyramidRouter.load(from: url) == router)
+        let excluded = try url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup
+        #expect(excluded == true)
+        // No file reads as a new router.
+        #expect(PyramidRouter.load(from: url.appending(path: "missing")) == PyramidRouter())
     }
 }

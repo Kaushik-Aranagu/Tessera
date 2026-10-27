@@ -14,7 +14,9 @@ import Foundation
 ///
 /// Walls: under strict only nodes with a claude-safe leaf are options, and a cite through a node strict can't see
 /// trains nothing, so no weight is learned from a walled read. The router never hides a node from a plain search:
-/// weights rank, they don't remove. It lives on the phone and never goes in a pack.
+/// weights rank, they don't remove. An ask teaches only through `PyramidTerms.walled`, so no private word or key
+/// piece becomes a weight key, and a word walled later is dropped at night. It lives on the phone, in a file excluded
+/// from backups, and never goes in a pack or a log.
 public struct PyramidRouter: Codable, Sendable, Equatable {
     /// Ranks past this read as this: "6 or more back".
     public static let maxRank = 6
@@ -124,8 +126,12 @@ public struct PyramidRouter: Codable, Sendable, Equatable {
     /// The backward pass for one answer that cited `cited`: one cross-entropy step at each node along the true path
     /// where the words-only route was wrong or the router wasn't sure. Returns the steps trained. A cite strict can't
     /// see, or one off the tree, trains nothing.
+    /// It takes walled terms only: an ask's words become weight keys, so nothing private may reach one.
     @discardableResult
-    public mutating func learn(_ ask: [String], cited: String, in pyramid: MemoryPyramid, policy: DoorPolicy) -> Int {
+    public mutating func learn(_ terms: PyramidTerms, cited: String, in pyramid: MemoryPyramid,
+                               policy: DoorPolicy) -> Int
+    {
+        let ask = terms.words
         let path = Self.truePath(to: cited)
         var node = MemoryPyramid.root
         var steps: [(options: [Option], target: Int)] = []
@@ -140,7 +146,8 @@ public struct PyramidRouter: Codable, Sendable, Equatable {
         for (options, target) in steps where options.count > 1 {
             let prior = wordsOnly.probabilities(ask, options)
             let now = probabilities(ask, options)
-            let priorRight = prior.indices.max { prior[$0] < prior[$1] } == target
+            // Right only when the target alone fires most: a tie is not right (QA on #1478).
+            let priorRight = prior.indices.allSatisfy { $0 == target || prior[$0] < prior[target] }
             guard !priorRight || now[target] < sure else { continue }
             for (index, option) in options.enumerated() {
                 let gradient = now[index] - (index == target ? 1 : 0)
@@ -171,11 +178,49 @@ public struct PyramidRouter: Codable, Sendable, Equatable {
         return Double(count.right + 1) / Double(count.right + count.wrong + 2)
     }
 
+    // MARK: File
+
+    public static let fileName = "tess-router.json"
+
+    public static var defaultURL: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appending(path: "Tessera/\(fileName)")
+    }
+
+    /// The stored router, or a new one when there is no file or it can't be read.
+    public static func load(from url: URL? = defaultURL) -> PyramidRouter {
+        guard let url, let data = try? Data(contentsOf: url),
+              let router = try? JSONDecoder().decode(PyramidRouter.self, from: data) else { return PyramidRouter() }
+        return router
+    }
+
+    /// Writes the router, excluded from backups and, on the phone, locked with the device.
+    public func save(to url: URL? = PyramidRouter.defaultURL) {
+        guard let url, let data = try? JSONEncoder().encode(self) else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        #if os(iOS)
+            try? data.write(to: url, options: [.atomic, .completeFileProtection])
+        #else
+            try? data.write(to: url, options: [.atomic])
+        #endif
+        var excluded = url
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? excluded.setResourceValues(values)
+    }
+
     // MARK: Night
 
-    /// The night's upkeep: a weight tied to a year ("nov|2025") fades a little, because what "Nov" means moves every
-    /// January; counts of nodes no longer in the pyramid go; and the pairs are kept under the cap.
-    public mutating func night(in pyramid: MemoryPyramid, yearDecay: Double = 0.98, cap: Int = PyramidRouter.maxPairs) {
+    /// The night's upkeep: a pair whose ask word is walled now goes, so a word he made private since is forgotten;
+    /// a weight tied to a year ("nov|2025") fades a little, because what "Nov" means moves every January; counts of
+    /// nodes no longer in the pyramid go; and the pairs are kept under the cap.
+    public mutating func night(in pyramid: MemoryPyramid, yearDecay: Double = 0.98, cap: Int = PyramidRouter.maxPairs,
+                               isWalled: (String) -> Bool)
+    {
+        weights = weights.filter { pair, _ in
+            guard let bar = pair.firstIndex(of: "|") else { return true }
+            return !isWalled(String(pair[..<bar]))
+        }
         for (pair, weight) in weights where Self.isYearPair(pair) {
             weights[pair] = weight * yearDecay
         }
@@ -185,10 +230,11 @@ public struct PyramidRouter: Codable, Sendable, Equatable {
         }
     }
 
-    /// A pair whose feature is a year ("nov|2025").
+    /// A pair whose feature is a year ("nov|2025"), 1900 to 2100.
     static func isYearPair(_ pair: String) -> Bool {
-        guard let feature = pair.split(separator: "|").last, pair.contains("|") else { return false }
-        return feature.count == 4 && Int(feature) != nil
+        guard pair.contains("|"), let feature = pair.split(separator: "|").last, feature.count == 4,
+              let year = Int(feature) else { return false }
+        return (1900 ... 2100).contains(year)
     }
 
     /// Keeps the `cap` pairs that moved furthest from where they started.

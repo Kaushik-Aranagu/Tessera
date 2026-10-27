@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 /// An ask as the pyramid router reads it (input-hygiene H7, docs/ai/harness/memory-pyramid.md "P3b with dates
 /// normalized first"): its date words resolved at the moment it was asked and written the way node titles are, so
@@ -19,9 +20,20 @@ public enum PyramidAsk {
         "what", "when", "you",
     ]
 
-    /// What the router reads of an ask: its words with the date resolved, less the stop words.
+    /// The words that only pointed at a date: once the date is written out they say nothing more (QA on #1478).
+    static let dateWords: Set<String> = ["ago", "day", "days", "last", "month", "months", "this", "today", "yesterday"]
+
+    /// What the router reads of an ask: its words with the date resolved, less the stop words, and less the date
+    /// words when a date was resolved.
     public static func terms(_ text: String, now: Date, calendar: Calendar) -> [String] {
-        words(normalize(text, now: now, calendar: calendar)).filter { !stopWords.contains($0) }
+        let normalized = normalize(text, now: now, calendar: calendar)
+        let resolved = normalized != text
+        return words(normalized).filter { !stopWords.contains($0) && !(resolved && dateWords.contains($0)) }
+    }
+
+    /// A word shaped like part of a key or a token rather than a word: long, or letters and digits mixed at length.
+    static func isKeyShaped(_ word: String) -> Bool {
+        word.count > 20 || word.count >= 10 && word.contains(where: \.isLetter) && word.contains(where: \.isNumber)
     }
 
     static let monthNames: [String: Int] = {
@@ -122,5 +134,40 @@ public enum PyramidAsk {
             return "\(text) \(formatter.string(from: month))"
         }
         return text
+    }
+}
+
+/// An ask's terms after the wall (QA on #1478): the only form `PyramidRouter.learn` takes, so a word that names
+/// something private, or a piece of a key, never becomes a stored weight.
+public struct PyramidTerms: Sendable, Equatable {
+    public let words: [String]
+
+    fileprivate init(words: [String]) {
+        self.words = words
+    }
+
+    /// The terms of an ask, or nil when anything in it is walled: an ask that holds a key, a secret, a private title
+    /// or a private word teaches nothing. `isWalled` is judged on the whole ask and again on each term, and a term
+    /// shaped like a key fragment is dropped whatever it says.
+    public static func walled(_ text: String, now: Date, calendar: Calendar,
+                              isWalled: (String) -> Bool) -> PyramidTerms?
+    {
+        guard !looksLikeClaudeKey(text), !isWalled(text) else { return nil }
+        let words = PyramidAsk.terms(text, now: now, calendar: calendar)
+            .filter { !PyramidAsk.isKeyShaped($0) && !isWalled($0) }
+        return PyramidTerms(words: words)
+    }
+
+    /// The same, walled by the store: a key, a secret, a private title and his private words, the reasons
+    /// `Wall.judge(_:in:)` names `.key`, `.secret`, `.privateTitle` and `.privateWord` (one call once the hygiene
+    /// stack and this one meet on master).
+    @MainActor
+    public static func walled(_ text: String, now: Date, calendar: Calendar, store: ObjectStore) -> PyramidTerms? {
+        let lastKg = BodyWeight.lastKg(in: store)
+        return walled(text, now: now, calendar: calendar) { piece in
+            looksLikeClaudeKey(piece) || SecretWords.mentions(piece)
+                || ObjectPrivacy.isPrivateTitle(piece, lastWeightKg: lastKg)
+                || ObjectPrivacy.containsPrivateWord(piece, in: store)
+        }
     }
 }
