@@ -13,7 +13,7 @@ struct RoutineModePage: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var run: RoutineRun?
+    @State private var run: RoutineModeRun?
     @State private var name = ""
     @State private var total = 0
     @State private var wrote = false
@@ -250,13 +250,13 @@ struct RoutineModePage: View {
         mutate { $0.finish() }
     }
 
-    private func mutate(_ change: (inout RoutineRun) -> Void) {
+    private func mutate(_ change: (inout RoutineModeRun) -> Void) {
         guard var current = run else { return }
         change(&current)
         self.change(current)
     }
 
-    private func change(_ new: RoutineRun) {
+    private func change(_ new: RoutineModeRun) {
         let wasDone = run?.finished ?? false
         let stepped = new.tended.count != (run?.tended.count ?? 0)
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { run = new }
@@ -269,7 +269,7 @@ struct RoutineModePage: View {
     }
 
     /// The evening ends: if any step was tended the routine is tended for today (once a day), with one Undo.
-    private func write(_ run: RoutineRun) {
+    private func write(_ run: RoutineModeRun) {
         guard run.kept, !wrote else { return }
         wrote = true
         if let result = try? model.engine.perform(TendRoutine(routine: routineID, at: AppClock.now), by: .user) {
@@ -287,7 +287,7 @@ struct RoutineModePage: View {
             return
         }
         let book = RoutineSteps(store: model.store, classes: model.classes)
-        var made = RoutineRun(book.steps(of: routine))
+        var made = RoutineModeRun(book.steps(of: routine))
         guard !made.isEmpty else {
             dismiss()
             return

@@ -4,7 +4,7 @@ import TesseraCore
 /// Routine mode (sheets 323 and 329), as a value: which move of which step the evening is on, when it ends, what is
 /// tended and what is left for tomorrow. Time is always an end date (never a ticking counter), so it survives the lock
 /// screen; "Not tonight" skips a step without breaking a streak. Pure, so every transition tests without a view.
-struct RoutineRun: Equatable {
+struct RoutineModeRun: Equatable {
     /// One thing to do for a stretch of time: a step's move, or a step with no moves as a whole.
     struct Beat: Equatable {
         let step: Int

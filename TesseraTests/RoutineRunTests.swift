@@ -8,14 +8,14 @@ struct RoutineRunTests {
     private let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
 
     /// Tidy 5, Stretch 6 (Hips, Shoulders, Neck, two minutes each), Read 15, Journal 5, Lights 1.
-    private func run() -> RoutineRun {
+    private func run() -> RoutineModeRun {
         func beat(_ step: Int, _ title: String, _ seconds: Int, move: Bool = false, breath: String? = nil)
-            -> RoutineRun.Beat
+            -> RoutineModeRun.Beat
         {
-            RoutineRun.Beat(step: step, title: title, cue: move ? "Slow" : nil, breath: breath, seconds: seconds,
-                            isMove: move)
+            RoutineModeRun.Beat(step: step, title: title, cue: move ? "Slow" : nil, breath: breath, seconds: seconds,
+                                isMove: move)
         }
-        var run = RoutineRun(
+        var run = RoutineModeRun(
             beats: [beat(0, "Tidy", 300), beat(1, "Hips", 120, move: true, breath: "in/out"),
                     beat(1, "Shoulders", 120, move: true), beat(1, "Neck", 120, move: true), beat(2, "Read", 900),
                     beat(3, "Journal", 300), beat(4, "Lights", 60)],

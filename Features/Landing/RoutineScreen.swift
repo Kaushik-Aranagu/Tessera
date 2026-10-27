@@ -38,7 +38,7 @@ struct RoutineScreen: Equatable {
     /// The end: "Tended, 4 of 5 steps".
     var summary = ""
 
-    init(_ run: RoutineRun, name: String, totalMinutes: Int, now: Date) {
+    init(_ run: RoutineModeRun, name: String, totalMinutes: Int, now: Date) {
         title = name
         dusk = run.dusk
         finished = run.finished
