@@ -32,6 +32,10 @@ struct WorkoutModeScreen: View {
     @State private var wipeImage: Image?
     @State private var wipeTime = 0.0
     @State private var middleSize = CGSize.zero
+    /// Sheet 348: the set just logged waits for its tick until the rest ends, then it is drawn on.
+    @State private var tickLift: String?
+    @State private var tickSet = 0
+    @State private var tickValue = 1.0
     @Environment(\.displayScale) private var displayScale
     @Environment(\.dynamicTypeSize) private var typeSize
     /// Slot heights follow the type they hold (the lines themselves stay one line, shrunk to fit).
@@ -270,7 +274,8 @@ struct WorkoutModeScreen: View {
             ForEach(Array(zip(model.chips, rows)), id: \.0.id) { chip, row in
                 HStack(spacing: 4) {
                     if chip.state == .done {
-                        Image(systemName: "checkmark").font(.system(size: 14, weight: .bold))
+                        // The set you just did gets its tick drawn on as the rest ends; the slot is always there.
+                        DrawnTick(progress: tickProgress(forSet: chip.id))
                     }
                     Text(chip.text + (row.felt.isEmpty ? "" : " \(row.felt.lowercased())"))
                 }
@@ -507,6 +512,7 @@ struct WorkoutModeScreen: View {
         }
         if case .rest = state.phase {
             wipeRestBoard(now)
+            drawTick()
             withTesseraAnimation(reduceMotion: reduceMotion) { state.endRest(at: now) }
             actions.changed(state)
             return
@@ -515,6 +521,12 @@ struct WorkoutModeScreen: View {
         guard let index = state.current.nextIndex else { return }
         let planned = state.current.sets[index]
         withTesseraAnimation(reduceMotion: reduceMotion) { _ = state.logSet(at: now) }
+        tickLift = liftID
+        tickSet = index
+        tickValue = 0
+        if state.isDone {
+            drawTick()
+        }
         cue.play(state.isDone ? .done : .setLogged)
         dust += 1
         actions.logged(liftID, planned.weight, planned.reps)
@@ -559,9 +571,29 @@ struct WorkoutModeScreen: View {
         }
     }
 
+    /// The drawn fraction of the tick on a done set: 1 for any set but the one waiting for its tick.
+    private func tickProgress(forSet index: Int) -> Double {
+        tickLift == state.current.id && tickSet == index ? tickValue : 1
+    }
+
+    /// The rest ended: 380 ms on, the waiting tick is drawn over 260 ms (the eraser passes as it lands). Reduce Motion:
+    /// it appears without being drawn.
+    private func drawTick() {
+        guard tickLift != nil, tickValue < 1 else { return }
+        guard !reduceMotion else {
+            tickValue = 1
+            return
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(TickDraw.delay))
+            withAnimation(.linear(duration: TickDraw.duration)) { tickValue = 1 }
+        }
+    }
+
     private func tick(_ now: Date) {
         if case let .rest(endsAt, _, _) = state.phase, endsAt <= now {
             wipeRestBoard(now)
+            drawTick()
         }
         let before = state.phase
         state.tick(at: now)
