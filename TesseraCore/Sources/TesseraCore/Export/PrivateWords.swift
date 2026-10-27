@@ -215,23 +215,8 @@ enum PrivateWords {
         func genericLabel(_ object: ObjectRecord) -> String {
             Self.genericLabel(object, classes: classes)
         }
-        let processClass = classes[.process]
         func words(_ object: ObjectRecord) -> [String] {
-            // A process keeps its resume point as JSON ({"weight":20,"reps":5}): not words, and it must not make a
-            // plain running workout, or the routine it came from, private. Every other text it holds (`nextStep`,
-            // `waitingOn`) is words and counts.
-            if let processClass, let classDef = object.classDef, classDef.id == processClass.id {
-                let texts = ClassResolver.effectiveFields(of: classDef).filter { $0.key != "resumePoint" }.compactMap {
-                    store.value($0.key, of: object)?.stringValue
-                }
-                return [object.title] + texts
-            }
-            return [object.title] + object.values.storage.values.compactMap { value in
-                switch value {
-                case let .text(text), let .richText(text): text
-                default: nil
-                }
-            }
+            Self.words(of: object, store: store, classes: classes)
         }
 
         var result: [UUID: String] = [:]
@@ -269,6 +254,79 @@ enum PrivateWords {
             }
         }
         return result
+    }
+
+    /// The texts of an object that a private word may hide in. A process keeps its resume point as JSON
+    /// ({"weight":20,"reps":5}): not words, and it must not make a plain running workout, or the routine it came
+    /// from, private. Every other text it holds (`nextStep`, `waitingOn`) is words and counts.
+    static func words(of object: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> [String] {
+        if let processClass = classes[.process], let classDef = object.classDef, classDef.id == processClass.id {
+            let texts = ClassResolver.effectiveFields(of: classDef).filter { $0.key != "resumePoint" }.compactMap {
+                store.value($0.key, of: object)?.stringValue
+            }
+            return [object.title] + texts
+        }
+        return [object.title] + object.values.storage.values.compactMap { value in
+            switch value {
+            case let .text(text), let .richText(text): text
+            default: nil
+            }
+        }
+    }
+
+    /// What a rehearsal's copy reads private labels from: the real store's labels (warm: the app reads them all the
+    /// time) and the titles of its private things. The copy never walks its own whole graph for labels.
+    struct ForkBase {
+        let labels: [UUID: String]
+        let titles: Set<String>
+    }
+
+    static func forkBase(of store: ObjectStore) -> ForkBase {
+        let real = labels(in: store.context)
+        var titles = Set(real.keys.compactMap { store.context.objects[$0]?.title.lowercased() })
+        titles.subtract(Self.labels.map { $0.lowercased() })
+        titles.remove("")
+        return ForkBase(labels: real, titles: titles)
+    }
+
+    /// The label one object shows in a rehearsal's copy, worked out for that object alone from the same rules as
+    /// `computeLabels`: its own rules, then its words, then its parent and the titles that are private in the real
+    /// store. An object the copy did not touch keeps the real store's label.
+    static func forkLabel(of object: ObjectRecord, in store: ObjectStore, base: ForkBase, touched: Set<UUID>,
+                          depth: Int = 0) -> String?
+    {
+        let classes = systemClasses(in: store.context)
+        if !touched.contains(object.id), let known = base.labels[object.id] {
+            return known
+        }
+        if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
+            return label
+        }
+        let last = BodyWeight.lastKg(in: store)
+        if store.value("isPrivate", of: object) == .bool(true) || isPrivateTitle(object.title, lastWeightKg: last)
+            || words(of: object, store: store, classes: classes)
+            .contains(where: { !isNumberList($0) && isPrivateText($0, lastWeightKg: last) })
+        {
+            return genericLabel(object, classes: classes)
+        }
+        if let parent = object.parent, depth < 12,
+           let label = forkLabel(of: parent, in: store, base: base, touched: touched, depth: depth + 1)
+        {
+            return label
+        }
+        if base.titles.contains(object.title.lowercased()) {
+            return genericLabel(object, classes: classes)
+        }
+        // An ingredient only private things use gives their words away: in a copy, all-private users decide it.
+        if let ingredientClass = classes[.ingredient], object.classDef?.id == ingredientClass.id {
+            let users = (object.incomingLinks ?? []).compactMap(\.from)
+            if !users.isEmpty, users.allSatisfy({
+                forkLabel(of: $0, in: store, base: base, touched: touched, depth: depth + 1) != nil
+            }) {
+                return genericLabel(object, classes: classes)
+            }
+        }
+        return nil
     }
 
     /// Whether something links to the ingredient and every object that does is private (deleted ones count).
