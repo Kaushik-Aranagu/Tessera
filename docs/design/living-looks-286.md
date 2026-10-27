@@ -181,3 +181,21 @@ subsequence of the two words), with `.matchedGeometryEffect` for the kept letter
 For the builders: the foot line is a `Text` keyed by the picked place with `.id(place)` and a
 `.transition(.asymmetric(insertion: .offset(y: 4).combined(with: .opacity), removal: .offset(y: -3).combined(with:
 .opacity)))`, through `MotionPolicy`. Strip a trailing full stop at the source, as sheet 301 says.
+
+## Sheet 311: shape mode spreads from the finger (Oct 26)
+
+- Holding the Nav word used to bring in the panes of glass in a fixed order, 30 ms apart. Now they appear in order of
+  their distance from the held word, 0.4 ms a point, like a ripple from where he pressed: Needs first, then the
+  switcher and keystone, the widget, and the dial and summary last (about 270 ms across the screen).
+- Each pane grows from the side that faces the Nav word (its scale origin points at it), with the same small
+  overshoot as before.
+- On Done they gather back toward it: the farthest go first, 0.25 ms a point, each shrinking to 97% as it fades
+  over 200 ms. A pane stops taking taps the moment it starts to go.
+- Reduce Motion: they appear and go at once, as before.
+- Measured on the board (`t55b.js`, animations paused and sought, so every frame is exact): Deck in paper and
+  Galley in black; at 160 ms Needs is fully there and the summary not started; on Done the summary is gone by
+  200 ms while Needs is still at 91%.
+
+For the builders: give each pane `.transition(.scale(0.96, anchor: anchorFacing(navWord)).combined(with: .opacity))`
+with `.animation(MotionPolicy.shapeIn.delay(distance * 0.0004))`, the distance in points from the Nav word's centre
+to the pane's centre. The exit uses the same anchor with `(farthest - distance) * 0.00025`.
