@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 // The Chart room in the standing shell (R1 spec section 6), behind the `chartRoom` feature flag (Everywhere, ships
 // On). The room is experimental: everything stays behind the flag, and Builder B's pages are untouched.
@@ -42,7 +43,7 @@ final class ChartRoomDriver: ShellRoomDriver {
 
     func content(model: AppModel, scheme _: ColorScheme) -> any RoomContent {
         chart.attach(model.engine)
-        DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent)
+        return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent)
     }
 
     func handle(_ intent: ShellIntent, navigator _: ShellNavigator) -> Bool {

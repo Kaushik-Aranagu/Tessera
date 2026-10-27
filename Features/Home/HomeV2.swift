@@ -180,6 +180,7 @@ struct HomeV2DoorPage: View {
                 // Routines' landing is Builder A's (sheet 131 L4); until then its plans.
                 ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
             case .lookout: WeatherLandingView()
+            case .chart: ChartShellHost()
             case .settings: NavigationStack { SettingsPage(cameFrom: "Bridge") }
             }
         }
