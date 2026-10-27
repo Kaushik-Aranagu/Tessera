@@ -90,10 +90,37 @@ struct TessLineView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var start = Date()
 
-    /// The units of the line: each door's name whole, the rest word by word.
+    /// The units of the line: each door's name whole, the rest word by word. The line is shown with no closing stop
+    /// (Kaushik, Oct 26; `ShownLine`), a time keeps its "am" or "pm", and the last two words travel together so a
+    /// wrap never strands one word on its own line.
     private var units: [(text: String, isDoor: Bool)] {
+        Self.keepTogether(rawUnits)
+    }
+
+    /// "9:35" + "pm" is one unit; the last two plain words are one unit when the line has more than three.
+    static func keepTogether(_ units: [(text: String, isDoor: Bool)]) -> [(text: String, isDoor: Bool)] {
+        var out: [(text: String, isDoor: Bool)] = []
+        for unit in units {
+            let bare = unit.text.lowercased().trimmingCharacters(in: .punctuationCharacters)
+            if !unit.isDoor, ["am", "pm"].contains(bare), let last = out.last, !last.isDoor,
+               last.text.contains(where: \.isNumber)
+            {
+                out[out.count - 1].text = last.text + "\u{00A0}" + unit.text
+            } else {
+                out.append(unit)
+            }
+        }
+        if out.count > 3, let last = out.last, !last.isDoor, !out[out.count - 2].isDoor {
+            let pair = out[out.count - 2].text + "\u{00A0}" + last.text
+            out.removeLast(2)
+            out.append((pair, false))
+        }
+        return out
+    }
+
+    private var rawUnits: [(text: String, isDoor: Bool)] {
         var result: [(String, Bool)] = []
-        var rest = Substring(line.text)
+        var rest = Substring(ShownLine.unstopped(line.text, between: ", "))
         while !rest.isEmpty {
             let hit = line.names.compactMap { name in rest.range(of: name).map { (name, $0) } }
                 .min { $0.1.lowerBound < $1.1.lowerBound }
@@ -162,6 +189,8 @@ struct TessConversationLayer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @FocusState private var typing: Bool
+    /// Set for one change when Shift-Return asks for a new line, so return on its own sends.
+    @State private var newlineAllowed = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -175,6 +204,11 @@ struct TessConversationLayer: View {
                     .frame(minHeight: 22, alignment: .leading)
                     .accessibilityHidden(model.stateLine.isEmpty)
                 conversation
+                    // The conversation keeps inside its own room: when the keyboard is up it gives way at its top
+                    // (older lines go first) instead of running over the state line.
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .clipped()
+                    .layoutPriority(-1)
                 if !model.liveSpeech.isEmpty {
                     Text(model.liveSpeech)
                         .font(Theme.voice(size: 28).weight(.light))
@@ -185,7 +219,9 @@ struct TessConversationLayer: View {
             }
             .padding(.horizontal, 28)
             .padding(.top, 76)
-            .padding(.bottom, 206)
+            // Her corner needs the 206 pt below; while he types the keyboard takes that room, and the sheet rides
+            // just above it (the keyboard's safe area is kept), so her line, the field and Send stay in sight.
+            .padding(.bottom, typing ? 16 : 206)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .pullGesture { down in
                 if down {
@@ -197,7 +233,8 @@ struct TessConversationLayer: View {
                 Theme.Colors.paper.ignoresSafeArea().accessibilityHidden(true)
             }
         }
-        .ignoresSafeArea()
+        // The container's edges only: the keyboard's safe area still lifts the sheet above the keyboard.
+        .ignoresSafeArea(.container)
         .focusable()
         .onKeyPress(.escape) {
             close()
@@ -259,38 +296,49 @@ struct TessConversationLayer: View {
         }
     }
 
-    /// The field is multi-line (rev 19 F6): Enter sends and Shift-Enter adds a line on a hardware keyboard; on the
-    /// phone
-    /// keyboard return adds a line and the arrow sends. It is transient: it exists only while her layer is open.
+    /// The field is multi-line (rev 19 F6) and return sends (Kaushik, Oct 26: "no way to send"): the keyboard shows
+    /// Send, return sends, Shift-Return on a hardware keyboard adds a line. "Send" is the one action word beside it,
+    /// in Tess's colour, a plain word with no shape around it. It is transient: it exists only while her layer is open.
     private var field: some View {
-        HStack(alignment: .bottom, spacing: 10) {
+        let empty = model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return HStack(alignment: .lastTextBaseline, spacing: 12) {
             TextField("", text: $model.draft, prompt: Text("Type to Tess").foregroundStyle(Theme.Colors.inkTertiary),
                       axis: .vertical)
                 .font(Theme.voice(size: 18))
                 .foregroundStyle(Theme.Colors.ink)
                 .tint(Theme.Colors.tess)
                 .lineLimit(1 ... 4)
+                .submitLabel(.send)
                 .focused($typing)
                 .onKeyPress(.return, phases: .down) { press in
                     if press.modifiers.contains(.shift) {
+                        newlineAllowed = true
                         model.draft += "\n"
                         return .handled
                     }
                     submit()
                     return .handled
                 }
-                .accessibilityLabel("Type to Tess")
-            if !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Button { submit() } label: {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 17, weight: .regular))
-                        .foregroundStyle(Theme.Colors.ink)
-                        .frame(width: 32, height: 32)
-                        .contentShape(Rectangle())
+                // The on-screen keyboard's return types a new line into a vertical field: it sends instead.
+                .onChange(of: model.draft) { _, new in
+                    guard new.hasSuffix("\n") else { return }
+                    if newlineAllowed {
+                        newlineAllowed = false
+                        return
+                    }
+                    model.draft = String(new.dropLast())
+                    submit()
                 }
+                .accessibilityLabel("Type to Tess")
+            Button("Send") { submit() }
                 .buttonStyle(.plain)
+                .font(Theme.voice(size: 18).weight(.semibold))
+                .foregroundStyle(empty ? Theme.Colors.inkTertiary : Theme.Colors.tess)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+                .disabled(empty)
                 .accessibilityLabel("Send")
-            }
+                .accessibilityIdentifier("tess.send")
         }
         .padding(.bottom, 8)
         .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.hairline).frame(height: 1) }
