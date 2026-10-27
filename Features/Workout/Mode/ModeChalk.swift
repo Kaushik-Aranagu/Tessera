@@ -9,6 +9,13 @@ enum Chalk {
     static let quiet = white.opacity(0.58)
     static let faint = white.opacity(0.32)
 
+    /// The display numerals (170 pt weight, 178 pt rest, 150 pt Done): never scaled by Dynamic Type; the lines shrink
+    /// to
+    /// fit the width instead.
+    static func numerals(_ size: CGFloat) -> Font {
+        .custom("BarlowCondensed-SemiBold", fixedSize: size)
+    }
+
     /// Barlow Condensed 600. `relativeTo` lets the small lines follow Dynamic Type; the numerals use a fixed slot and
     /// shrink to fit instead.
     static func font(_ size: CGFloat, relativeTo style: Font.TextStyle = .body) -> Font {

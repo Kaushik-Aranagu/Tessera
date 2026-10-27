@@ -8,7 +8,7 @@ import XCTest
 final class LiveLargeTextUITests: SimulatorOnlyTestCase {
     private func launch() -> (app: XCUIApplication, weight: XCUIElement) {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openWorkout",
+        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openWorkout", "-workoutChalkOff",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
         let weight = app.descendants(matching: .any)["Weight"]

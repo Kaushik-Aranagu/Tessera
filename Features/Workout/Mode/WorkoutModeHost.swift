@@ -10,7 +10,15 @@ struct WorkoutCover: View {
     var from: CGRect = ModeOpenFrames.keystone
 
     static var isChalkOn: Bool {
-        LaunchFlags.has("-workoutChalk") || UserDefaults.standard.bool(forKey: "workoutMode.chalk")
+        // On by default; the old screen only when it is explicitly turned off (the `workoutMode.chalk` default set to
+        // false, or `-workoutChalkOff` on the simulator, for tests of the old screen).
+        if LaunchFlags.has("-workoutChalkOff") {
+            return false
+        }
+        if LaunchFlags.has("-workoutChalk") {
+            return true
+        }
+        return UserDefaults.standard.object(forKey: "workoutMode.chalk") as? Bool ?? true
     }
 
     var body: some View {
