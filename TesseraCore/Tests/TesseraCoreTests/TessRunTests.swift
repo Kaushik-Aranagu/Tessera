@@ -143,6 +143,62 @@ struct TessRunTests {
         #expect(events.last == .finished("Added both"))
     }
 
+    /// The tool results the second request carried, by call id.
+    func sentResults(_ brain: ScriptedBrain) -> [String: (text: String, isError: Bool)] {
+        var out: [String: (text: String, isError: Bool)] = [:]
+        for piece in brain.requestsSeen.last?.messages.last?.content ?? [] {
+            if case let .toolResult(id, content, isError) = piece {
+                out[id] = (content, isError)
+            }
+        }
+        return out
+    }
+
+    @Test func aWriteThatDoesNotFitItsSchemaRunsNothingAndSaysWhichField() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [use("t1", "createTask", #"{"title":5,"startsAt":null,"about":[]}"#)],
+            [.text("Fixed it.")],
+        ])
+        let r = try rig([.haiku: haiku])
+        let before = r.engine.history(limit: 50).count
+        let events = await collect(r.run.ask("add two tasks"))
+        #expect(!events.contains { if case .ghost = $0 { true } else { false } })
+        #expect(r.engine.history(limit: 50).count == before)
+        let result = try #require(sentResults(haiku)["t1"])
+        #expect(result.isError && result.text.hasPrefix("Error: ") && result.text.contains("\"title\""))
+    }
+
+    @Test func aReplyCutOffAtTheTokenLimitRunsItsReadsButNoWrite() async throws {
+        let read = #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"#
+            + #""sort":null,"limit":null}"#
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [use("t1", "query", read), use("t2", "createTask", #"{"title":"Call mom","startsAt":null,"about":[]}"#),
+             .done(BrainUsage(), stop: "max_tokens")],
+            [.text("Asking again.")],
+        ])
+        let r = try rig([.haiku: haiku])
+        let before = r.engine.history(limit: 50).count
+        let events = await collect(r.run.ask("how many tasks"))
+        #expect(!events.contains { if case .ghost = $0 { true } else { false } })
+        #expect(r.engine.history(limit: 50).count == before)
+        let seen = sentResults(haiku)
+        #expect(seen["t1"]?.isError == false)
+        #expect(seen["t2"]?.isError == true && seen["t2"]?.text == TessRun.notRun)
+    }
+
+    @Test func aWriteWaitsForTheReplyToEndAndThenRuns() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [use("t1", "createTask", #"{"title":"Call mom","startsAt":null,"about":[]}"#), .text("Adding it")],
+            [.text("Added.")],
+        ])
+        let r = try rig([.haiku: haiku])
+        let events = await collect(r.run.ask("add two tasks"))
+        let ghost = try #require(events.firstIndex { if case .ghost = $0 { true } else { false } })
+        // The ghost lands after the words that followed the call in the same reply.
+        let words = try #require(events.firstIndex { if case .words = $0 { true } else { false } })
+        #expect(ghost > words && sentResults(haiku)["t1"]?.isError == false)
+    }
+
     @Test func anEleventhRoundIsNeverSentAndThePhoneLineComesBack() async throws {
         let call = [use("t", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)]
         let haiku = ScriptedBrain(.haiku, rounds: Array(repeating: call, count: 12) + [[.text("never")]])
