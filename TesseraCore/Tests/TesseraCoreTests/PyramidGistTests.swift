@@ -55,7 +55,8 @@ struct PyramidGistTests {
             (long, [day(1)]),
         ])
         let checked = PyramidDistiller.check(input, material: material, level: .month)
-        #expect(checked.sentences.map(\.text) == ["The busiest day held 9 sets."])
+        let kept = checked.sentences.map { $0.text }
+        #expect(kept == ["The busiest day held 9 sets."])
         #expect(checked.dropped == [.unsupportedNumber, .unsupportedNumber, .noCite, .unknownCite, .empty,
                                     .overBudget])
         // Under lab the month's own totals hold money, so what rests on them is walled.

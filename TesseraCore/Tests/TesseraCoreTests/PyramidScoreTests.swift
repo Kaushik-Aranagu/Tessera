@@ -16,8 +16,9 @@ struct PyramidScoreTests {
     @Test func everyQuestionHasOneExactAnswerOnAReadableNode() throws {
         let pyramid = pyramid
         let questions = PyramidScore.questions(world)
-        #expect(Set(questions.map(\.depth)) == [.detail, .trend, .pattern])
-        #expect(Set(questions.map(\.id)).count == questions.count)
+        let depths = Set(questions.map { $0.depth }), ids = Set(questions.map { $0.id })
+        #expect(depths == [.detail, .trend, .pattern])
+        #expect(ids.count == questions.count)
         #expect(questions.count >= 20, "\(questions.count)")
         for question in questions {
             let node = try #require(pyramid.nodes[question.path], "\(question.id)")

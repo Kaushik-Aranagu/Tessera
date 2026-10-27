@@ -12,7 +12,7 @@ import Testing
 ///
 /// Walls, the same as the live runner's: a test store in memory, never his; the key is read from the Mac keychain by
 /// the Claude brain and never printed or written; the month's allowance is the smaller of $50 and $100 minus what the
-/// phone spent, minus what the runners spent this month in the one shared ledger file. The test store's ledger starts
+/// phone spent, minus what the runners spent this month in `TessEvalLedger`. The test store's ledger starts
 /// with everything above the allowance already spent, so the Door refuses a call past it before it is sent.
 @MainActor
 struct PyramidLiveScoreTests {
@@ -65,26 +65,6 @@ struct PyramidLiveScoreTests {
         var questions: [Question]
     }
 
-    /// The runners' one ledger, shared with the live runner: not in the repo, not in the app's data.
-    static var ledgerURL: URL {
-        let folder = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/TessEval", isDirectory: true)
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return folder.appendingPathComponent("ledger.json")
-    }
-
-    static func readLedger() -> [String: Int64] {
-        (try? JSONDecoder().decode([String: Int64].self, from: Data(contentsOf: ledgerURL))) ?? [:]
-    }
-
-    /// Adds this run's new spend to the month as the file stands now, so another runner's rows are kept.
-    static func addToLedger(_ nano: Int64, month: String) throws {
-        guard nano > 0 else { return }
-        var months = readLedger()
-        months[month, default: 0] += nano
-        try JSONEncoder().encode(months).write(to: ledgerURL, options: .atomic)
-    }
-
     @Test func liveScore() async throws {
         let env = ProcessInfo.processInfo.environment
         guard env["TESSERA_PYRAMID_SCORE"] == "1" else { return }
@@ -101,7 +81,7 @@ struct PyramidLiveScoreTests {
         if !dry {
             try #require(phone != nil, "a live run needs --phone-spent (what the phone spent this month)")
         }
-        let runnersSpent = dry ? 0 : Self.readLedger()[monthKey] ?? 0
+        let runnersSpent = dry ? 0 : TessEvalLedger.read()[monthKey] ?? 0
         let ceiling = min(50.0, 100.0 - (phone ?? 0))
         let allowance = max(0, Int64(ceiling * 1_000_000_000) - runnersSpent)
         if !dry {
@@ -122,8 +102,7 @@ struct PyramidLiveScoreTests {
         func settle() throws {
             guard !dry else { return }
             let spent = max(0, ledger.monthTotal(now: runStart) - before)
-            try Self.addToLedger(spent - recorded, month: monthKey)
-            recorded = spent
+            recorded = try TessEvalLedger.add(month: monthKey, spent: spent, recorded: recorded)
         }
         let router = BrainRouter { id in
             guard id == .haiku else { return nil }
