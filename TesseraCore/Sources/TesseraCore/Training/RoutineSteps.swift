@@ -237,8 +237,9 @@ public enum RoutineSample {
     @discardableResult
     public static func evening(in engine: ActionEngine, by actor: Actor = .system) throws -> ObjectRecord {
         let routine = try engine.perform(CreateRoutine(title: "Evening"), by: actor).output
-        func step(_ title: String, _ minutes: Int, cue: String? = nil) throws -> ObjectRecord {
-            try engine.perform(AddRoutineStep(parent: routine.id, title: title, minutes: minutes, cue: cue),
+        func step(_ title: String, _ minutes: Int, cue: String? = nil, breath: String? = nil) throws -> ObjectRecord {
+            try engine.perform(AddRoutineStep(parent: routine.id, title: title, minutes: minutes, cue: cue,
+                                              breath: breath),
                                by: actor).output
         }
         try step("Tidy", 5, cue: "Only what is in your way")
@@ -252,7 +253,7 @@ public enum RoutineSample {
         }
         try step("Read", 15, cue: "A few pages, nothing for work")
         try step("Journal", 5, cue: "Three lines is plenty")
-        try step("Lights", 1, cue: "Phone across the room")
+        try step("Lights", 1, cue: "Phone across the room", breath: "out")
         return routine
     }
 }
