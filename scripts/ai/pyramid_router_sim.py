@@ -13,8 +13,14 @@ Arms, the same asks:
   learned   the router trained online after every ask, walking level by level
   jump      learned, plus confidence: open the guessed node directly when every step's probability is over --sure
 
+With --normalize, a date normalizer (stage 5 of docs/ai/harness/input-hygiene.md) rewrites each ask before routing:
+relative and short date words become the absolute date in the titles' own words ("last month" said on Oct 23 becomes
+"September 2026"; "2 Oct" becomes "Fri, Oct 2, 2026 October"). The router then has only what is personal left to learn.
+
 Usage: python3 scripts/ai/pyramid_router_sim.py [--nights 30] [--asks 20] [--rate 0.5] [--sure 0.9] [--seed 1]
+                                                [--normalize]
 """
+import re
 import argparse
 import datetime as dt
 import math
@@ -30,6 +36,52 @@ WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", 
 
 def words(text):
     return [w for w in "".join(c.lower() if c.isalnum() else " " for c in text).split() if w]
+
+
+MONTHS = {dt.date(2026, m, 1).strftime(f).lower(): m for m in range(1, 13) for f in ("%B", "%b")}
+
+
+def latest(month, day=1):
+    """The most recent date on or before NOW with this month and day."""
+    year = NOW.year if (month, day) <= (NOW.month, NOW.day) else NOW.year - 1
+    return dt.date(year, month, day)
+
+
+def normalize(text):
+    """Resolves the ask's date words to an absolute day or month, written the way the titles are."""
+    lower = text.lower()
+    day = month = None
+    if "yesterday" in lower:
+        day = NOW - dt.timedelta(days=1)
+    elif "today" in lower:
+        day = NOW
+    elif match := re.search(r"last (" + "|".join(w.lower() for w in WEEKDAYS) + ")", lower):
+        back = (NOW.weekday() - [w.lower() for w in WEEKDAYS].index(match.group(1))) % 7 or 7
+        day = NOW - dt.timedelta(days=back)
+    elif "this month" in lower:
+        month = NOW.replace(day=1)
+    elif "last month" in lower:
+        month = (NOW.replace(day=1) - dt.timedelta(days=1)).replace(day=1)
+    elif match := re.search(r"(\d+) months ago", lower):
+        first = NOW.replace(day=1)
+        for _ in range(int(match.group(1))):
+            first = (first - dt.timedelta(days=1)).replace(day=1)
+        month = first
+    else:
+        words_ = re.findall(r"[a-z]+|\d+", lower)
+        named = [MONTHS[w] for w in words_ if w in MONTHS]
+        numbers = [int(w) for w in words_ if w.isdigit()]
+        years = [n for n in numbers if n > 1900]
+        days = [n for n in numbers if 1 <= n <= 31]
+        if named and days:
+            day = latest(named[0], days[0])
+        elif named:
+            month = dt.date(years[0], named[0], 1) if years else latest(named[0])
+    if day:
+        return f"{text} {day.strftime('%a, %b %-d, %Y %B')}"
+    if month:
+        return f"{text} {month.strftime('%B %Y')}"
+    return text
 
 
 def child_features(node, rank):
@@ -161,6 +213,7 @@ def main():
     parser.add_argument("--rate", type=float, default=0.5)
     parser.add_argument("--sure", type=float, default=0.9)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--normalize", action="store_true")
     args = parser.parse_args()
     rng = random.Random(args.seed)
     nodes = build(make_world(random.Random(args.seed)))
@@ -173,7 +226,7 @@ def main():
         for name, router in arms.items():
             opens, clean, found = [], 0, 0
             for text, target in asks:
-                ask_words = words(text)
+                ask_words = words(normalize(text) if args.normalize else text)
                 o, c, f = walk(ask_words, target, nodes, router, args.sure, jump=name == "jump")
                 opens.append(o)
                 clean += c
@@ -193,7 +246,8 @@ def main():
             found = statistics.mean(w[2] for w in window)
             cells.append(f"{opens:4.1f} op {clean:4.0%} right {found:4.0%} found")
         print(f"{first:>3}-{last:<5}" + "".join(f"{c:>28}" for c in cells))
-    print("weights learned:", len(arms["learned"].weights),
+    strong = sum(abs(w) > 0.5 for pair, w in arms["learned"].weights.items() if pair != "same")
+    print("weights learned:", len(arms["learned"].weights), "| over 0.5:", strong,
           "| strongest:", sorted(arms["learned"].weights.items(), key=lambda kv: -kv[1])[:6])
 
 

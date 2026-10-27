@@ -175,6 +175,30 @@ Drawbacks it exposes, with the fix for each:
 - **Cold start.** Nights 1-5 are no better than words. The shared per-level prior from P3 and a seed set of date
   phrasings fix this.
 
+### P3b with dates normalized first (`--normalize`)
+
+The input-hygiene plan (docs/ai/harness/input-hygiene.md, stage 5) resolves date words before anything reads them:
+"last month" said on Oct 23 becomes "September 2026", "2 Oct" becomes "Fri, Oct 2, 2026". The same run with that
+normalizer in front of the router:
+
+| Seed | Night 1, words | Nights 21-30, words | Nights 2-5, jump | Nights 21-30, jump | Weights over 0.5 |
+|---|---|---|---|---|---|
+| 1 raw | 65% right, 90% found | 48%, 88% | 3.5 opens | 2.1 opens | 200 |
+| 1 normalized | 95%, 100% | 99%, 100% | 1.2 opens | 1.1 opens | 36 |
+| 2 raw | 35%, 80% | 57%, 90% | 3.5 | 1.7 | 212 |
+| 2 normalized | 100%, 100% | 100%, 100% | 1.1 | 1.0 | 22 |
+| 3 raw | 75%, 85% | 52%, 88% | 3.5 | 1.8 | 194 |
+| 3 normalized | 100%, 100% | 100%, 100% | 1.4 | 1.0 | 39 |
+
+What it shows:
+- **Normalizing beats learning for anything that isn't personal.** Words alone, after the normalizer, are right on
+  95-100% of asks from the first night. Without it, 30 nights of learning reach 91-96%.
+- **Learning on top of clean features can hurt a little at first.** On night 1 the learned router is 80-100% right
+  where words alone are 95-100%: early updates move weights that didn't need moving. The fix is to learn only the
+  residual: train when the words-only route was wrong or unsure, and start the rate low.
+- **What is left to learn is small.** Strong weights drop from about 200 to 22-39. The real work for the router is
+  his own words ("leg day", "the chili one"), not the calendar. The next simulation adds those asks.
+
 ## Beyond the app: memory for anything Tess lives through
 
 Kaushik's follow-up (Oct 27): the goal is the general memory problem for a personal assistant, not only his app
