@@ -196,6 +196,7 @@ struct DepartureBoard: View {
         let plain = TrailingWrap(spacing: 6, lineSpacing: 2.4) {
             ForEach(Array(line.enumerated()), id: \.offset) { _, seg in
                 plainSegment(seg, li: li)
+                    .accessibilityHidden(true)
             }
         }
         .accessibilityHidden(true)
@@ -215,6 +216,7 @@ struct DepartureBoard: View {
                     ForEach(units(of: line, starts: starts)) { unit in
                         unitView(unit, cells: lineCells, li: li)
                             .fixedSize()
+                            .accessibilityHidden(true)
                     }
                 }
                 .accessibilityHidden(true)

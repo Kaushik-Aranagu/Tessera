@@ -308,6 +308,8 @@ struct AppsListSlot: View {
         .buttonStyle(.plain)
         .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.name), \(row.summary)" : row.name)
         .accessibilityHint(isMiddle ? "Opens \(row.name)" : "Brings it to the middle")
+        // Only the three rows in the dial's places are there for VoiceOver; the ones waiting outside are clipped.
+        .accessibilityHidden(abs(offset) > 1)
     }
 
     /// A tap on the middle row: the object its line names, else the app.

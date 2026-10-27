@@ -133,7 +133,7 @@ struct BridgeTess: View {
         if stage.layerOn, HomeMosaic.appsListIsOn {
             ZStack {
                 if stage.roomOpen {
-                    TessRoom(entries: stage.roomEntries, watching: "Watching today.", undo: { entry in
+                    TessRoom(entries: stage.roomEntries, watching: "Watching today", undo: { entry in
                         switch TessRoomLog.undo(entry, engine: model.engine) {
                         case let .putBack(line): line
                         default: nil

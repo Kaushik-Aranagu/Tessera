@@ -176,7 +176,8 @@ struct HomeOneThing: View {
                     .dynamicTypeSize(...DynamicTypeSize.large)
                     .frame(height: 15, alignment: .top)
             }
-            .offset(y: 17)
+            // 428: its 15.7 pt line ends before the Big line at 444 (no overlap, bounds check).
+            .offset(y: 16)
             tier(thing, delay: 0.2, height: 64, inset: 32) { big(thing) }
                 .frame(height: 64, alignment: .leading)
                 .offset(y: 32)
