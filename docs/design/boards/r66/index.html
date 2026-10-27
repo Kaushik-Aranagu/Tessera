@@ -721,7 +721,7 @@ const DETAIL={
   tess:'Nearly every morning, within a few minutes of seven. Sundays are the gap.',split:'Sundays are the only day it slips.'},
  plants:{len:6,daysOn:'Mon, Wed, Fri',from:'Made here',planted:'Sep 27',cap:'Shrub',who:'Everyone in Tess',
   steps:[['Check the soil',1,'A finger deep. Dry means water, damp means skip.'],['Water the ferns',3,'Slowly, until it runs from the bottom.'],['Mist the orchid',2,'Three sprays on the leaves, never the flower.']],
-  tess:'Steady until last week. Three watering days in a row went by, so it needs a little care.',split:'The orchid gets skipped more than the ferns.'}};
+  tess:'Steady until last week. Last watered Thursday, so it needs a little care.',split:'The orchid gets skipped more than the ferns.'}};
 function detailOf(r){if(DETAIL[r.id])return DETAIL[r.id];const m=/^(\d+) steps, about (\d+) min/.exec(r.k);
  if(m){const n=+m[1],L=+m[2];return {len:L,daysOn:'Every day',from:r.g==='Across the lake'?r.k.replace('from ','From '):'Made here',planted:'Oct 1',cap:'Small tree',who:'On the phone only',steps:Array.from({length:n},(_,i)=>['Step '+(i+1),Math.max(1,Math.round(L/n)),'What to do in this step.']),tess:'Kept most days this month.',split:'No step stands out yet.'}}
  return {len:+(/(\d+) min/.exec(r.k)||[0,1])[1],daysOn:'Every day',from:r.g==='Across the lake'?r.k.replace('from ','From '):'Made here',planted:'Oct 1',cap:'Small tree',who:'On the phone only',one:[r.n+'.','One thing, once a day.'],tess:'Kept most days this month.',split:'No day stands out yet.'}}
@@ -763,10 +763,10 @@ SCREENS.routine={title:'A routine',accent:'routines',tess:'Hip opener drops firs
   const wasH=pane.firstElementChild&&pane.firstElementChild.dataset.h&&pane.firstElementChild.textContent;pane.innerHTML=html;const hd=pane.firstElementChild;if(hd){hd.dataset.h=1;numRoll(hd,wasH)}pane.querySelectorAll('.step').forEach(e=>swipeStep(e,+e.dataset.i));
   f.textContent=!dn.length?'Start':open.length?'Next step':'Do it again';f.onclick=()=>{if(open.length)check(open[0]);else{doneSteps=new Set();draw()}}}
  function check(i){if(doneSteps.has(i)){doneSteps.delete(i);draw();return}const e=$('.step[data-i="'+i+'"]',pane);e&&e.classList.add('done');
-  setTimeout(()=>{doneSteps.add(i);draw();if(doneSteps.size===D.steps.length){petals(el,120,300);r.st='done';receipt(el,r.n+', done. Sixth evening running.',()=>{doneSteps.delete(i);draw()})}else receipt(el,D.steps[i][0]+', done.',()=>{doneSteps.delete(i);draw()})},RM?0:600)}
+  setTimeout(()=>{doneSteps.add(i);draw();if(doneSteps.size===D.steps.length){petals(el,120,300);r.st='done';receipt(el,r.n+', done.',()=>{doneSteps.delete(i);draw()})}else receipt(el,D.steps[i][0]+', done.',()=>{doneSteps.delete(i);draw()})},RM?0:600)}
  function swipeStep(e,i){let x0=null,dx=0;e.onpointerdown=ev=>{x0=ev.clientX;dx=0;e.setPointerCapture(ev.pointerId)};e.onpointermove=ev=>{if(x0==null)return;dx=(ev.clientX-x0)/K;e.style.transform='translateX('+Math.max(-70,Math.min(70,dx))+'px)'};
   e.onpointerup=()=>{if(x0==null)return;x0=null;e.style.transform='';if(D.one){if((dx>56||Math.abs(dx)<6)&&!doneSteps.has(0)){doneSteps.add(0);r.st='done';petals(el,140,300);draw();receipt(el,r.n+', done.',()=>{doneSteps.delete(0);draw()})}return}
-   if(dx<-56&&!doneSteps.has(i)){const s=D.steps.splice(i,1)[0];D.steps.push(s);doneSteps=new Set([...doneSteps].map(j=>j>i?j-1:j));draw();receipt(el,s[0]+', not now.');return}
+   if(dx<-56&&!doneSteps.has(i)){const s=D.steps.splice(i,1)[0];D.steps.push(s);doneSteps=new Set([...doneSteps].map(j=>j>i?j-1:j));draw();receipt(el,s[0]+', not now.',()=>{D.steps.splice(D.steps.indexOf(s),1);D.steps.splice(i,0,s);doneSteps=new Set([...doneSteps].map(j=>j>=i?j+1:j));draw()});return}
    if(dx>56||Math.abs(dx)<6)check(i)}}
  function ribbon(days,o){const Wd=354,H=o.h,y0=o.top||0,x=i=>4+i*(Wd-8)/27,y=t=>y0+(t-o.from)/(o.to-o.from)*H;let g='<line x1="0" x2="'+Wd+'" y1="'+(y0+H+6)+'" y2="'+(y0+H+6)+'" stroke="var(--hair)"/>';
   if(o.usual!=null)g+='<line x1="0" x2="'+Wd+'" y1="'+y(o.usual)+'" y2="'+y(o.usual)+'" stroke="var(--hair)" stroke-dasharray="2 4"/>';
@@ -1505,7 +1505,7 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
  el.innerHTML='<div class="dk-sky"></div><div class="dk-paper"></div><div class="dk-pad"></div>';const P=el.querySelector('.dk-paper'),sky=el.querySelector('.dk-sky'),pad=el.querySelector('.dk-pad');growFromKey([sky,P]);
  let x0=null,y0;pad.onpointerdown=e=>{const [x,y]=localXY(e,pad);x0=x;y0=y;pad.setPointerCapture(e.pointerId)};
  pad.onpointerup=e=>{if(x0==null)return;const [x,y]=localXY(e,pad);const dy=y-y0;x0=null;if(dy<-60)return next();pad.style.pointerEvents='none';const t=document.elementFromPoint(e.clientX,e.clientY);pad.style.pointerEvents='';const a=t&&t.closest('[data-a]');if(!a)return;const v=a.dataset.a;
-  if(v==='back')return back();if(v==='next')return next();if(v==='pause'){S.pause=!S.pause;return paint(1)}if(v==='skip'){S.skip.add(S.i);receipt(el,ST[S.i].k+', tomorrow');return step()}if(v.startsWith('st')){go2(+v.slice(2))}};
+  if(v==='back')return back();if(v==='next')return next();if(v==='pause'){S.pause=!S.pause;return paint(1)}if(v==='skip'){const was=S.i;S.skip.add(was);receipt(el,ST[was].k+', tomorrow',()=>{S.skip.delete(was);S.fin=0;go2(was)});return step()}if(v.startsWith('st')){go2(+v.slice(2))}};
  function go2(i){S.i=i;S.j=0;S.left=ST[i].mv[0][1];paint()}
  let lastKey='';
  function paint(force){const s=ST[S.i],mv=s.mv[S.j];const night=(S.done.size+S.skip.size)/ST.length;sky.style.setProperty('--n',night);const dim=S.fin?1:S.i===ST.length-1?1-S.left/mv[1]:0;el.style.setProperty('--dim',dim.toFixed(3));
@@ -1614,7 +1614,7 @@ SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortil
  /* 339: "not here" moves the item to the end of the aisle, and you see it go: the rows of In this aisle slide to their new
     places (FLIP, 340 ms) and the skipped row lifts out and settles in at the end once the others have moved up, so rows never cross. */
  function skip(){const j=nextJ(S.a);if(j<0)return;const rows=()=>[...P.querySelectorAll('[data-a^="it"]')].map(r=>[r.querySelector('.tn').textContent,r]);const was=new Map(rows().map(([n,r])=>[n,r.getBoundingClientRect().top]));
-  const q=AIS[S.a].it.splice(j,1)[0];AIS[S.a].it.push(q);receipt(el,q[0]+', later in this aisle');paint();if(RM)return;
+  const q=AIS[S.a].it.splice(j,1)[0],qa=S.a;AIS[qa].it.push(q);receipt(el,q[0]+', later in this aisle',()=>{const A=AIS[qa].it,at=A.indexOf(q);if(at<0)return;A.splice(at,1);A.splice(j,0,q);S.a=qa;paint()});paint();if(RM)return;
   rows().forEach(([n,r])=>{const t=was.get(n);if(t==null)return;const dy=(t-r.getBoundingClientRect().top)/K;if(Math.abs(dy)<1)return;if(n===q[0])return r.animate([{opacity:0,transform:'translateY(-6px)'},{opacity:0,transform:'translateY(-6px)',offset:.5},{opacity:1,transform:'none'}],{duration:440,easing:'cubic-bezier(.2,.8,.2,1)'});r.animate([{transform:'translateY('+dy+'px)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)'})})}
  paint();window.__sh.got=got;return null}};
 

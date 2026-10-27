@@ -1,0 +1,16 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
+const undo=async()=>{const u=await pg.evaluate(()=>{const b=[...document.querySelectorAll('.receipt button')].find(x=>x.offsetParent);if(!b)return null;const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]});if(!u)return 'no undo';await pg.mouse.click(u[0],u[1]);await pg.waitForTimeout(500);return 'undone'};
+await pg.evaluate(()=>go('tend'));await pg.waitForTimeout(900);
+const t=await pg.evaluate(()=>{const e=document.querySelector('[data-a="skip"]');if(!e)return null;const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]});
+let r0=await pg.evaluate(()=>__rt.S.i);
+if(t){await pg.mouse.click(t[0],t[1])}else await pg.evaluate(()=>{const S=__rt.S;S.skip.add(S.i)});await pg.waitForTimeout(500);
+const r1=await pg.evaluate(()=>[__rt.S.i,[...__rt.S.skip]]);const u1=await undo();const r2=await pg.evaluate(()=>[__rt.S.i,[...__rt.S.skip]]);
+console.log('routine skip at',r0,'->',JSON.stringify(r1),u1,'->',JSON.stringify(r2),'skip control?',!!t);
+await pg.evaluate(()=>go('shop'));await pg.waitForTimeout(900);
+const o0=await pg.evaluate(()=>__sh.AIS[__sh.S.a].it.map(x=>x[0]).join());
+await pg.evaluate(()=>{document.querySelector('[data-a="skip"]')?document.querySelector('[data-a="skip"]').click():null});
+const k=await pg.evaluate(()=>{const e=document.querySelector('[data-a="skip"]');if(!e)return null;const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]});if(k)await pg.mouse.click(k[0],k[1]);await pg.waitForTimeout(600);
+const o1=await pg.evaluate(()=>__sh.AIS[__sh.S.a].it.map(x=>x[0]).join());const u2=await undo();const o2=await pg.evaluate(()=>__sh.AIS[__sh.S.a].it.map(x=>x[0]).join());
+console.log('shop',o0,'|',o1,'|',u2,'|',o2,'same:',o0===o2,errs);await b.close()})();

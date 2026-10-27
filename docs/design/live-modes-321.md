@@ -459,3 +459,13 @@ In cooking mode, the Needs lines are now a mise en place checklist. Tap a line (
 - Reduce Motion: the line comes back at once
 - Fix found on the way: in all three whole-screen modes that have a touch pad (Deck board, Galley ticket, Watch dusk) the pad sat above the receipt, so Undo could not be tapped. The receipt now sits above the pad (z-index 6 over 5). Builders: check the same layering on the phone, Undo must take a tap in every mode
 - Probes: boards/r66/pun.js (strike pulls back, then clears) and pun2.js (Undo is the top element in workout, cook and shop)
+
+## Sheet 355: Undo everywhere, no streak left behind
+
+A basics sweep against the standing rule "Undo 10 s everywhere"
+- Watch dusk: "Stretch, tomorrow" (skip a step) now has Undo. It takes the step off tomorrow and goes back to it
+- Galley shop: "Cilantro, later in this aisle" now has Undo. The line goes back to its old place in the aisle
+- Watch landing: swiping a step "not now" now has Undo. The step goes back to where it was
+- Streak lines removed: the routine done receipt no longer says "Sixth evening running", it reads "<name>, done"; the plant line "Three watering days in a row went by" now reads "Last watered Thursday, so it needs a little care"
+- Builders: every receipt in every mode carries Undo, except plain information lines (hints, "opens here")
+- Probe: boards/r66/pud.js (skip then Undo in routine and shop, order restored)
