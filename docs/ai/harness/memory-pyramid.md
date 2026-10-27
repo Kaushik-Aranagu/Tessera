@@ -16,8 +16,13 @@ the ones that fail. The full design, with prior art and the diagram, is the "Tes
   - a hash of everything under it, so an edit marks only its own chain of ancestors stale;
   - later, a gist in words with a cite for every sentence (P1b, from a model, checked against its children).
 - **Reading.** `zoom(path)` returns the title, the totals, then the children ranked by how much they stand out,
-  within 1,200 characters. A day lists its leaves word for word. Under strict, a money, body or calendar line reads
-  as kept on the phone.
+  within 1,200 characters. A day lists its leaves word for word.
+- **Walls.** A leaf's path is neutral (`leaf-3`) and never names its kind. Under strict, a money, body or calendar
+  leaf is not there at all: no line, no path, no count. A day that holds only walled leaves is "Nothing there". A
+  private workout adds nothing to any total.
+- **The store slice must also:**
+  - build leaf text from his titles through `ObjectPrivacy.shownLabel` and the PrivateWords taint;
+  - taint a told line by `isPrivateText`.
 - **Forward pass.** The night pass rebuilds only the nodes whose hash changed.
 - **Backward pass** (P3). A read ledger records which nodes were read, which lines were cited, where Tess had to go
   deeper, and how the checks came out. It stores paths only. Each night:
@@ -37,7 +42,8 @@ a deleted workout, a reversed spend or a forgotten line.
 - every residual is true, meaning its child holds the unique most or fewest of that total among its siblings;
 - a month's zoom fits in one answer and costs under a third of its leaves' text;
 - one edited leaf makes exactly six paths stale: the leaf, its day, week, month and year, and the root;
-- strict keeps money, sleep and the calendar off the totals and the leaves.
+- strict keeps money, sleep and the calendar out of the totals, the leaves, the paths and the counts;
+- a day holding only walled leaves is not there under strict.
 
 ## Next prototypes
 

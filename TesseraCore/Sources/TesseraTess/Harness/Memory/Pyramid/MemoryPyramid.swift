@@ -62,6 +62,9 @@ public struct PyramidNode: Sendable, Equatable {
     public var hash: UInt64
     /// A leaf's own words.
     public var text: PyramidLine?
+    /// How many claude-safe leaves are under it: under strict, a node with none is not there at all, so a day that
+    /// holds only a spend or a night's sleep is never named, listed or counted.
+    public var safeLeaves: Int
 }
 
 /// The totals a node keeps, how each reads, and what it may do.
@@ -153,17 +156,17 @@ public struct MemoryPyramid: Sendable {
         var monthDays: [String: [String]] = [:], weekDays: [String: [String]] = [:]
         for (dayPath, day) in days {
             let sorted = day.leaves.sorted { ($0.at, $0.id) < ($1.at, $1.id) }
-            var counts: [String: Int] = [:]
             var paths: [String] = []
             for leaf in sorted {
-                counts[leaf.kind, default: 0] += 1
-                let path = "\(dayPath)/\(leaf.kind)-\(counts[leaf.kind] ?? 1)"
+                // A neutral path: the kind would say there is a spend or a weigh-in even where its words are walled.
+                let path = "\(dayPath)/leaf-\(paths.count + 1)"
                 paths.append(path)
                 let print = ([leaf.kind, String(leaf.at.timeIntervalSince1970), leaf.text]
                     + leaf.stats.keys.sorted().map { "\($0)=\(leaf.stats[$0] ?? 0)" }).joined(separator: "|")
                 nodes[path] = PyramidNode(path: path, level: .leaf, title: leaf.kind, children: [], also: [],
                                           stats: leaf.stats, residuals: [:], ranked: [], hash: Self.fnv(print),
-                                          text: PyramidLine(text: leaf.text, taint: leaf.taint))
+                                          text: PyramidLine(text: leaf.text, taint: leaf.taint),
+                                          safeLeaves: leaf.taint == .claudeSafe ? 1 : 0)
             }
             guard let parents = dayParents[dayPath] else { continue }
             add(dayPath, .day, day.title, children: paths, also: [parents.week])
@@ -206,7 +209,7 @@ public struct MemoryPyramid: Sendable {
                                       let left = residuals[a]?.score ?? 0, right = residuals[b]?.score ?? 0
                                       return left == right ? a < b : left > right
                                   },
-                                  hash: hash, text: nil)
+                                  hash: hash, text: nil, safeLeaves: kids.reduce(0) { $0 + $1.safeLeaves })
     }
 
     // MARK: Residuals
@@ -245,18 +248,18 @@ public struct MemoryPyramid: Sendable {
     // MARK: Reading
 
     /// One node as Tess reads it: its title, its totals, then each child with what sets it apart, best first. Under
-    /// strict, a money, body or calendar line reads as kept on the phone.
+    /// strict, money, body and calendar things are not there at all: no total, no residual, no leaf, no path, no count.
     public func zoom(_ path: String, policy: DoorPolicy) -> (text: String, isError: Bool) {
         let key = path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
-        guard let node = nodes[key] else { return ("Nothing there.", true) }
-        var withheld = false
+        func visible(_ path: String) -> Bool {
+            policy == .lab || (nodes[path]?.safeLeaves ?? 0) > 0
+        }
+        guard let node = nodes[key], visible(key) else { return ("Nothing there.", true) }
         func allowed(_ line: PyramidLine) -> Bool {
-            let ok = policy == .lab || line.taint == .claudeSafe
-            withheld = withheld || !ok
-            return ok
+            policy == .lab || line.taint == .claudeSafe
         }
         if let text = node.text {
-            return (allowed(text) ? text.text : "On this phone only", false)
+            return (text.text, false)
         }
         var lines = ["\(node.title) (\(node.path))"]
         let totals = PyramidStats.shown.compactMap { shown -> String? in
@@ -271,27 +274,25 @@ public struct MemoryPyramid: Sendable {
         if node.level == .day {
             // A day lists its leaves word for word.
             for child in node.children {
-                guard let leaf = nodes[child]?.text else { continue }
-                lines.append("\(child): \(allowed(leaf) ? leaf.text : "on this phone only")")
+                guard let leaf = nodes[child]?.text, allowed(leaf) else { continue }
+                lines.append("\(child): \(leaf.text)")
             }
         } else {
             var listed = 0
-            for child in node.ranked {
+            for child in node.ranked where visible(child) {
                 let shown = (node.residuals[child] ?? []).filter(allowed).map(\.text)
                 guard !shown.isEmpty, listed < Self.maxListed else { continue }
                 lines.append("\(child): \(shown.joined(separator: "; "))")
                 listed += 1
             }
-            let rest = node.children.count - listed
-            if rest > 0 {
-                lines.append("\(rest) more under it: zoom one by its path, like \(node.children[0])")
+            let children = node.children.filter(visible)
+            if let first = children.first, children.count > listed {
+                lines.append("\(children.count - listed) more under it: zoom one by its path, like \(first)")
             }
         }
-        if !node.also.isEmpty {
-            lines.append("Also: \(node.also.prefix(3).joined(separator: ", "))\(node.also.count > 3 ? "…" : "")")
-        }
-        if withheld {
-            lines.append("Some of it stays on this phone")
+        let also = node.also.filter(visible)
+        if !also.isEmpty {
+            lines.append("Also: \(also.prefix(3).joined(separator: ", "))\(also.count > 3 ? "…" : "")")
         }
         var text = lines.joined(separator: "\n")
         if text.count > Self.maxCharacters {

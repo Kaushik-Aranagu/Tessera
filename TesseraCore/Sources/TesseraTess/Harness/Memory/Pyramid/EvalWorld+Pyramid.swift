@@ -18,8 +18,9 @@ public extension EvalWorld {
             // A private workout is its label: never its routine or its lifts.
             let lifts = workout.sets.map { "\($0.exercise) \(PyramidStats.format($0.weight)) kg x\($0.reps)" }
             let text = workout.isPrivate ? "Private workout" : "\(workout.routine): \(lifts.joined(separator: ", "))"
+            // Nor its numbers: private workouts never reach Claude, so they add nothing to a claude-safe total.
             add("workout", index, workout.start, text,
-                ["workouts": 1, "sets": Double(workout.sets.count), "volumeKg": volume])
+                workout.isPrivate ? [:] : ["workouts": 1, "sets": Double(workout.sets.count), "volumeKg": volume])
         }
         for (index, cook) in cooks.enumerated() {
             add("cook", index, cook.day, "Cooked \(cook.recipe)", ["cooks": 1])

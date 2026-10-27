@@ -22,7 +22,8 @@ struct MemoryPyramidTests {
 
     @Test func totalsAreExactAtEveryLevel() throws {
         let pyramid = build()
-        let october = world.workouts.filter { !$0.isDeleted && inOctober($0.start) }
+        // Private workouts add nothing: they never reach Claude, so they can't sit in a claude-safe total.
+        let october = world.workouts.filter { !$0.isDeleted && !$0.isPrivate && inOctober($0.start) }
         let node = try #require(pyramid.nodes["/time/2026/10"])
         #expect(node.stats["sets"] == Double(october.reduce(0) { $0 + $1.sets.count }))
         // Every level is the sum of its children, all the way up.
@@ -31,7 +32,7 @@ struct MemoryPyramidTests {
             #expect(sum == (node.stats["sets"] ?? 0), "\(node.path)")
         }
         #expect(pyramid.nodes[MemoryPyramid.root]?.stats["sets"]
-            == Double(world.workouts.filter { !$0.isDeleted }.reduce(0) { $0 + $1.sets.count }))
+            == Double(world.workouts.filter { !$0.isDeleted && !$0.isPrivate }.reduce(0) { $0 + $1.sets.count }))
     }
 
     @Test func whatMustNeverCountNeverBecomesALeaf() throws {
@@ -43,6 +44,12 @@ struct MemoryPyramidTests {
         #expect(!leaves.contains { $0.text.contains("locker") })
         #expect(!leaves.contains { $0.text.contains("Shoulder rehab") || $0.text.contains("Session notes") })
         #expect(leaves.contains { $0.text == "Private workout" } && leaves.contains { $0.text == "Private note" })
+        #expect(leaves.filter { $0.text == "Private workout" }.allSatisfy(\.stats.isEmpty))
+        // A leaf's path never says what kind of thing it is.
+        let pyramid = build()
+        for node in pyramid.nodes.values where node.level == .leaf {
+            #expect(node.path.split(separator: "/").last?.hasPrefix("leaf-") == true, "\(node.path)")
+        }
     }
 
     @Test func everyResidualIsTrueOfItsSiblings() {
@@ -119,11 +126,36 @@ struct MemoryPyramidTests {
         let strict = pyramid.zoom("/time/2026/10", policy: .strict).text
         #expect(lab.contains("dollars spent") && lab.contains("hours of sleep"))
         #expect(!strict.contains("dollars spent") && !strict.contains("sleep") && !strict.contains("calendar"))
-        #expect(strict.contains("stays on this phone") && strict.contains("sets"))
+        #expect(strict.contains("sets"))
+        // A day lists only its claude-safe leaves: a walled one has no line, no path and no count.
         let spendDay = try #require(pyramid.nodes.values.first { node in
-            node.level == .day && node.children.contains { $0.contains("/spend-") }
+            node.level == .day && node.children.contains { pyramid.nodes[$0]?.text?.text.hasPrefix("Spent") == true }
+                && node.safeLeaves > 0
         })
         let day = pyramid.zoom(spendDay.path, policy: .strict).text
-        #expect(day.contains("on this phone only") && !day.contains("Spent $") && !day.contains("Spent €"))
+        #expect(!day.contains("Spent") && !day.contains("on this phone"))
+        #expect(day.components(separatedBy: "/leaf-").count - 1 == spendDay.safeLeaves, "\(day)")
+        for child in spendDay.children where pyramid.nodes[child]?.text?.taint == .deviceOnly {
+            #expect(!day.contains(child + ":") && pyramid.zoom(child, policy: .strict).isError)
+            #expect(!pyramid.zoom(child, policy: .lab).isError)
+        }
+    }
+
+    @Test func aDayWithOnlyWalledThingsIsNotThereUnderStrict() {
+        func day(_ number: Int, _ kind: String, _ sets: Double = 0) -> PyramidLeaf {
+            let at = EvalWorld.at(2026, 10, number, 18)
+            return kind == "workout"
+                ? PyramidLeaf(id: "w\(number)", at: at, kind: kind, text: "Push A",
+                              stats: ["workouts": 1, "sets": sets])
+                : PyramidLeaf(id: "s\(number)", at: at, kind: kind, text: "Spent $12.00 on food: lunch",
+                              taint: .deviceOnly, stats: ["spentUSD": 12])
+        }
+        let pyramid = build([day(1, "workout", 3), day(2, "workout", 9), day(3, "workout", 4), day(4, "spend")])
+        #expect(pyramid.zoom("/time/2026/10/04", policy: .strict).isError)
+        #expect(!pyramid.zoom("/time/2026/10/04", policy: .lab).isError)
+        let strict = pyramid.zoom("/time/2026/10", policy: .strict).text
+        #expect(!strict.contains("/time/2026/10/04") && !strict.contains("dollars"), "\(strict)")
+        #expect(strict.contains("most sets (9)"))
+        #expect(pyramid.zoom("/time/2026/10", policy: .lab).text.contains("dollars spent 12"))
     }
 }
