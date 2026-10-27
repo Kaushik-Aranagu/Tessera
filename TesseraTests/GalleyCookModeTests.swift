@@ -201,3 +201,15 @@ struct GalleyPrinterTests {
         }
     }
 }
+
+struct GalleyTearOffTests {
+    /// Sheet 334: six even steps from 40 pt up to a 4 pt overshoot, then the settle at home.
+    @Test func thePaidTicketPrintsInInSixStepsWithAnOvershoot() {
+        let steps = GalleyTearOff.steps
+        #expect(steps.count == 7 && steps[5] == 4 && steps.last == 0)
+        #expect(zip(steps, steps.dropFirst()).prefix(5).allSatisfy { $0.0 < $0.1 })
+        #expect(steps[0] > GalleyTearOff.from)
+        #expect(GalleyTearOff.liftX == -18 && GalleyTearOff.liftY == -70 && GalleyTearOff.angle == -5)
+        #expect(GalleyTearOff.delay < GalleyTearOff.fade)
+    }
+}

@@ -306,3 +306,20 @@ enum GalleyPrinter {
         return (1 ... 5).map { top * CGFloat($0) / 5 } + [drop]
     }()
 }
+
+/// Shopping's last Pay (sheet 334): the old ticket lifts 18 pt left and 70 pt up at -5 degrees from its top-left and
+/// fades over 440 ms; after 220 ms the paid ticket prints in from 40 pt up with a 4 pt overshoot, in six steps over
+/// 560 ms, with a double buzz. Reduce Motion is a plain swap.
+enum GalleyTearOff {
+    static let liftX: CGFloat = -18
+    static let liftY: CGFloat = -70
+    static let angle: Double = -5
+    static let fade: TimeInterval = 0.44
+    static let delay: TimeInterval = 0.22
+    static let print: TimeInterval = 0.56
+    static let from: CGFloat = -40
+    static let overshoot: CGFloat = 4
+
+    /// Six even steps from 40 pt above to 4 pt past home, then the settle at 0.
+    static let steps: [CGFloat] = (1 ... 6).map { from + (0 - from + overshoot) * CGFloat($0) / 6 } + [0]
+}
