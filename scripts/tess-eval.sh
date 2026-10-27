@@ -7,7 +7,7 @@
 #
 # --dry answers with a scripted brain: nothing leaves the Mac and nothing is spent. Without it this SPENDS MONEY on the
 # Claude API, from the key in the Mac keychain (item com.kaushikaranagu.tessera.anthropic / api-key; the key is never
-# printed or written). The month's allowance is the smaller of $50 and ($100 minus --phone-spent), minus what earlier
+# printed or written). The month's allowance is the smaller of $50 and ($100 minus --phone-spent minus $20 kept for the simulator), minus what earlier
 # runs spent this month (~/Library/Application Support/TessEval/ledger.json, one place whatever --out says); a call that would pass it is refused before it is sent.
 set -euo pipefail
 

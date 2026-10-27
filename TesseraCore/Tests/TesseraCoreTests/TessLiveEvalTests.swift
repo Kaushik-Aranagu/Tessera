@@ -124,9 +124,13 @@ struct TessLiveEvalTests {
         return recorded + delta
     }
 
+    /// What the simulator's own tests may spend this month, kept out of the runner's ceiling so the phone, the runners
+    /// and the simulator together can never pass his $100.
+    static let simulatorAllowanceDollars = 20.0
+
     /// $50, or $100 minus the phone's spend if that is smaller, minus what earlier runs spent this month.
     static func allowanceNano(phoneSpentDollars: Double, runnerSpentNano: Int64) -> Int64 {
-        let ceiling = min(50.0, 100.0 - phoneSpentDollars)
+        let ceiling = min(50.0, 100.0 - phoneSpentDollars - simulatorAllowanceDollars)
         return max(0, Int64(ceiling * 1_000_000_000) - runnerSpentNano)
     }
 
@@ -371,9 +375,13 @@ struct TessLiveEvalTests {
 
     @Test func theAllowanceIsTheSmallerOfFiftyAndWhatTheCapLeaves() {
         #expect(Self.allowanceNano(phoneSpentDollars: 0, runnerSpentNano: 0) == 50_000_000_000)
-        #expect(Self.allowanceNano(phoneSpentDollars: 70, runnerSpentNano: 0) == 30_000_000_000)
+        #expect(Self.allowanceNano(phoneSpentDollars: 30, runnerSpentNano: 0) == 50_000_000_000)
+        // The simulator's $20 is kept back: 100 - 50 - 20 leaves 30.
+        #expect(Self.allowanceNano(phoneSpentDollars: 50, runnerSpentNano: 0) == 30_000_000_000)
+        #expect(Self.allowanceNano(phoneSpentDollars: 70, runnerSpentNano: 0) == 10_000_000_000)
         #expect(Self.allowanceNano(phoneSpentDollars: 0, runnerSpentNano: 20_000_000_000) == 30_000_000_000)
-        #expect(Self.allowanceNano(phoneSpentDollars: 99.5, runnerSpentNano: 1) == 499_999_999)
+        #expect(Self.allowanceNano(phoneSpentDollars: 79.5, runnerSpentNano: 1) == 499_999_999)
+        #expect(Self.allowanceNano(phoneSpentDollars: 80, runnerSpentNano: 0) == 0)
         #expect(Self.allowanceNano(phoneSpentDollars: 100, runnerSpentNano: 0) == 0)
     }
 }
