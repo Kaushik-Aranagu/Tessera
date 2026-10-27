@@ -67,7 +67,7 @@ enum KindRules {
     /// A word or field name that is a secret, money, a body fact or a key: it never becomes a name.
     @MainActor
     static func isWalled(_ text: String, in store: ObjectStore) -> Bool {
-        ObjectPrivacy.isPrivateWord(text, in: store) || SecretWords.mentions(text) || looksLikeClaudeKey(text)
+        !Wall.judge(text, lastWeightKg: BodyWeight.lastKg(in: store)).isDisjoint(with: [.privateTitle, .secret, .key])
     }
 
     /// "Bench press" for "bench press": the first letter up, the rest as he typed it.

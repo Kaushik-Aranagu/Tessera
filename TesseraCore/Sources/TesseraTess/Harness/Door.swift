@@ -118,8 +118,7 @@ public final class Door {
     func strictHit(_ request: BrainRequest) -> Bool {
         let lastKg = BodyWeight.lastKg(in: ledger.store)
         return (request.system.map(\.text) + Self.requestText(request)).contains { text in
-            SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: lastKg)
-                || PrivateFacts.isCalorieShaped(text)
+            !Wall.judge(text, lastWeightKg: lastKg).isDisjoint(with: .strictScan)
         }
     }
 
