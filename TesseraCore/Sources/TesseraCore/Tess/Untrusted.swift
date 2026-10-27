@@ -17,7 +17,7 @@ public struct Untrusted: Sendable, Hashable {
     public init(_ text: String, from source: Provenance) {
         original = text
         self.source = source
-        steering = PromptSteering.found(text)
+        steering = PromptSteering.found(text, page: true)
     }
 
     /// Whether the text tried to talk to the model.
@@ -27,16 +27,27 @@ public struct Untrusted: Sendable, Hashable {
 
     /// The text a model may read: invisible characters out (hidden text can't say what he can't see), capped, inside
     /// one `<page>` block that says what kind of source it is. The site stays on the phone: a link he opened says
-    /// nothing a model needs. A closing tag inside the text (full-width ones too) is broken so the page can't end its
-    /// own block and speak after it.
+    /// nothing a model needs. Every angle bracket in the text, and anything that folds to one (full-width, small
+    /// forms), becomes a single angle quote, so nothing in it is tag-shaped: it can't close its block, open another
+    /// or pose as a system line (QA on #1473).
     public func packed() -> String {
         let visible = String(CanonicalText.visible(original).prefix(Self.maxCharacters))
-        let body = visible.replacing(#/(?i)[<\x{FF1C}\x{FE64}]\s*[/\x{FF0F}]\s*page/#, with: "< /page")
+        var body = String.UnicodeScalarView()
+        for scalar in visible.unicodeScalars {
+            let folded = String(scalar).precomposedStringWithCompatibilityMapping
+            if folded.contains("<") {
+                body.append("\u{2039}")
+            } else if folded.contains(">") {
+                body.append("\u{203A}")
+            } else {
+                body.append(scalar)
+            }
+        }
         let kind = switch source {
         case .web: "web"
         default: source.label.replacingOccurrences(of: "\"", with: "")
         }
-        return "<page source=\"\(kind)\">\n\(body)\n</page>"
+        return "<page source=\"\(kind)\">\n\(String(body))\n</page>"
     }
 
     /// The line every system prompt that carries a block holds, so the rule is said the same way everywhere.

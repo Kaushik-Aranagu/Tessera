@@ -11,20 +11,22 @@ public enum PromptSteering {
         "ignore all", "ignore the previous", "ignore previous", "ignore your", "ignore the rules",
         "ignore the above", "previous instructions", "previous rules", "disregard", "you are now",
         "admin mode", "system note", "system:", "new rule", "your instructions", "system prompt",
-        "call every tool", "call the tool",
-        // A page that writes a turn or closes its own data block (H4).
-        "assistant:", "human:", "<system", "</page", "from now on",
+        "call every tool", "call the tool", "<system", "</page",
     ]
+
+    /// Only in a page: a page that writes a turn of its own or a standing order. A recipe or a name can say these
+    /// plainly ("from now on, keep it chilled"), so a reply or a title is never refused for them (QA on #1473).
+    static let pagePhrases = ["assistant:", "human:", "from now on"]
 
     /// Whether the text holds a steering phrase.
     public static func mentions(_ text: String) -> Bool {
         !found(text).isEmpty
     }
 
-    /// Every steering phrase the text holds, in list order.
-    public static func found(_ text: String) -> [String] {
+    /// Every steering phrase the text holds, in list order. `page` adds the phrases only a page is held to.
+    public static func found(_ text: String, page: Bool = false) -> [String] {
         let typed = text.lowercased()
         let canonical = CanonicalText.of(text).lowercased()
-        return phrases.filter { typed.contains($0) || canonical.contains($0) }
+        return (page ? phrases + pagePhrases : phrases).filter { typed.contains($0) || canonical.contains($0) }
     }
 }
