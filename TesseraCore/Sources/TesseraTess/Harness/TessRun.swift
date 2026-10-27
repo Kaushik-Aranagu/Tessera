@@ -888,7 +888,11 @@ public final class TessRun {
                         return .toolResult(id: id, content: text, isError: false)
                     }
                     if name == TessGuide.name {
-                        // A pure read of what the app is: it runs again rather than reading as interrupted.
+                        // A pure read of what the app is: it runs again rather than reading as interrupted, held to
+                        // its schema like any call (H5).
+                        if let misfit = ToolInputCheck.problem(input, schema: TessGuide.spec.schema) {
+                            return .toolResult(id: id, content: misfit, isError: true)
+                        }
                         let page = TessGuide.run(arguments: input)
                         return .toolResult(id: id, content: page.text, isError: page.isError)
                     }
