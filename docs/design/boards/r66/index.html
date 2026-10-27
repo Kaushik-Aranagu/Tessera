@@ -1356,7 +1356,8 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   // top line
   T('Deck',24,62,19,.6,D);HIT.back=[0,40,90,34];T(mmss(Math.floor((Date.now()-S.t0)/1000)),378,62,22,.95,W,'r');T(S.phase==='done'?'saved':'done about '+clock(new Date(Date.now()+secsLeft()*1000)),378,84,15,.6,D,'r');
   T('Push A',24,104,36,.98,ACC);
-  if(S.phase==='done'){T('Done',24,300,150,.96);T(Math.max(1,mins())+' min, '+S.log.filter(x=>x.r).length+' sets, '+total().toLocaleString()+' lb',26,350,24,.85,D);
+  if(S.phase==='done'){T('Done',24,300,150,.96);/* 349: the session total counts up as the Done board is written, 900 ms, easing out, so the last pounds land slowly */
+   const ke=RM||!S.dt0?1:Math.min(1,(performance.now()-S.dt0)/900),tl=Math.round(total()*(1-Math.pow(1-ke,3)));T(Math.max(1,mins())+' min, '+S.log.filter(x=>x.r).length+' sets, '+tl.toLocaleString()+' lb',26,350,24,.85,D);
    LIFTS.forEach((x,i)=>{const y=420+i*40;const w=T(x.k,26,y,28,.85,D);tick(26+w+12,y-10,.9)});const nb=LIFTS.filter(x=>x.newBest);T(nb.length?'New best, '+nb.map(x=>x.k.toLowerCase()+' est. '+x.newBest+' lb').join(', '):'No new bests, steady work',26,640,26,.95,ACC);T('Back to the Deck',24,790,30,.95,ACC);HIT.done=[0,740,402,874];return}
   if(S.phase==='rest'){const nl=LIFTS[S.pending??S.li],ns=next(nl);
    T('Rest',24,170,26,.75,D);if(S.pr){const tx='new best, est. '+S.pr.v+' lb',w=T(tx,0,0,24,0),e=RM?1:Math.min(1,(performance.now()-S.pr.t0)/720);g.save();g.beginPath();g.rect(378-w-4,140,(w+8)*e,44);g.clip();T(tx,378,170,24,.97,ACC,'r');g.restore()}T(mmss(S.rest),20,330,178,.97);
@@ -1414,7 +1415,7 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   if(!LIFTS.some(x=>left(x)))return finish();
   S.phase='rest';S.restOf=S.rest=l.rest;S.pending=left(l)?null:LIFTS.findIndex(x=>left(x))}
  function endRest(){wipe();S.lt0=performance.now();S.phase='lift';S.pr=null;S.fix=null;S.f0=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
- function finish(){S.phase='done';pulse()}
+ function finish(){S.phase='done';S.dt0=performance.now();pulse()}
  const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest()}},1000);
  Object.assign(window.__wo,{tickRest:n=>{S.rest=Math.max(1,S.rest-n+1)},finish:()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()},feel:setFeel,log,pick});
  return ()=>{clearInterval(iv);cancelAnimationFrame(raf)}}};

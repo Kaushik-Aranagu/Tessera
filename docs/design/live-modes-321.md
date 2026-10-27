@@ -409,3 +409,11 @@ In workout mode, back from a rest, the set you just did gets its tick drawn by h
 - Earlier sets keep their finished ticks. The lifts list's ticks are unchanged.
 - Reduce Motion: the tick is simply there.
 - Test: t67 paper and black green; ptk2.js freezes the clock mid-draw (TK1.png: short stroke only) and after (TK2.png: full tick).
+
+## Sheet 349: the session total counts up
+
+On the workout's Done board, the pounds in "41 min, 12 sets, 9,795 lb" count up from 0 as the board is written: 900 ms, ease-out cubic, so the last few hundred pounds land slowly and the final figure settles rather than snaps.
+
+- Only the pounds count; minutes and sets are shown as they are.
+- Reduce Motion: the final number is simply there.
+- Test: t67 paper and black green; pct.js freezes the clock at 300 ms (CT1.png: 6,930 lb) and after (CT2.png: 9,795 lb).
