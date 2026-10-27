@@ -1,0 +1,380 @@
+[
+{
+"what": "encode 1 short ask (13 tokens), bge-small fp32, sentence-transformers end to end",
+"claimed_ms": 26,
+"measured_ms": 30.3777,
+"ok": true,
+"src": "encode 1 ask, sentence-transformers end to end (13 tokens)"
+},
+{
+"what": "transformer forward only, 128 tokens (re-entry state)",
+"claimed_ms": 70.65,
+"measured_ms": 70.615,
+"ok": true,
+"src": "transformer forward only, 1 sequence of 128 tokens"
+},
+{
+"what": "encode 1 leaf unbatched (write path)",
+"claimed_ms": 34.73,
+"measured_ms": 35.0858,
+"ok": true,
+"src": "encode 1 LoCoMo turn unbatched (write path), rotating"
+},
+{
+"what": "encode per leaf, batch 64, fp32",
+"claimed_ms": 21.44,
+"measured_ms": 22.3648,
+"ok": true,
+"src": "encode 640 LoCoMo turns, batch 64 -> per leaf"
+},
+{
+"what": "encode per leaf, batch 64, bf16 autocast (AMX)",
+"claimed_ms": 7.2,
+"measured_ms": 7.4596,
+"ok": true,
+"src": "encode 640 turns batch 64, bf16 autocast -> per leaf"
+},
+{
+"what": "encode 1 ask, int8 dynamic quantized encoder (cos 0.970, top-10 overlap 0.73)",
+"claimed_ms": 12.84,
+"measured_ms": 13.6481,
+"ok": true,
+"src": "encode 1 ask, int8 dynamic-quantized Linear layers"
+},
+{
+"what": "state head low-rank r=16, 1 vector",
+"claimed_ms": 0.006,
+"measured_ms": 0.0049,
+"ok": true,
+"src": "state head, low-rank r=16, 1 vector (numpy) + normalise"
+},
+{
+"what": "action head re-key, 1e4 keys",
+"claimed_ms": 14.05,
+"measured_ms": 12.4692,
+"ok": true,
+"src": "action head, low-rank r=16, recompute N=1e+04 keys (after refit)"
+},
+{
+"what": "action head re-key, 1e5 keys (allocation-bound)",
+"claimed_ms": 296.48,
+"measured_ms": 232.0057,
+"ok": true,
+"src": "action head, low-rank r=16, recompute N=1e+05 keys (after refit)"
+},
+{
+"what": "exact scan fp32, N=1e3",
+"claimed_ms": 0.0755,
+"measured_ms": 0.0234,
+"ok": false,
+"src": "score N=1e+03: fp32 GEMV numpy (OpenBLAS)"
+},
+{
+"what": "exact scan fp32, N=1e4",
+"claimed_ms": 0.7172,
+"measured_ms": 0.6453,
+"ok": true,
+"src": "score N=1e+04: fp32 GEMV numpy (OpenBLAS)"
+},
+{
+"what": "exact scan fp32, N=1e5",
+"claimed_ms": 7.07,
+"measured_ms": 6.8089,
+"ok": true,
+"src": "score N=1e+05: fp32 GEMV numpy (OpenBLAS)"
+},
+{
+"what": "exact scan fp32, N=1e6",
+"claimed_ms": 118.07,
+"measured_ms": 118.0518,
+"ok": true,
+"src": "score N=1e+06: fp32 GEMV numpy (OpenBLAS)"
+},
+{
+"what": "exact scan int8 fbgemm, N=1e4 (overlap 0.966)",
+"claimed_ms": 0.2917,
+"measured_ms": 0.2932,
+"ok": true,
+"src": "score N=1e+04: int8 keys, fbgemm dynamic-quant Linear"
+},
+{
+"what": "exact scan int8 fbgemm, N=1e5 (overlap 0.954)",
+"claimed_ms": 1.91,
+"measured_ms": 1.9258,
+"ok": true,
+"src": "score N=1e+05: int8 keys, fbgemm dynamic-quant Linear"
+},
+{
+"what": "exact scan int8 fbgemm, N=1e6",
+"claimed_ms": 35.81,
+"measured_ms": 37.3824,
+"ok": true,
+"src": "score N=1e+06: int8 keys, fbgemm dynamic-quant Linear"
+},
+{
+"what": "exact scan bf16, N=1e6",
+"claimed_ms": 95.96,
+"measured_ms": 82.0064,
+"ok": true,
+"src": "score N=1e+06: bf16 torch.mv (CPU)"
+},
+{
+"what": "1-bit codes + fp32 rerank top-200, N=1e5 (overlap 0.756)",
+"claimed_ms": 3.12,
+"measured_ms": 2.5829,
+"ok": true,
+"src": "score N=1e+05: 1-bit codes popcount + fp32 rerank top-200"
+},
+{
+"what": "top-10 argpartition, N=1e5",
+"claimed_ms": 0.1806,
+"measured_ms": 0.1425,
+"ok": true,
+"src": "top-10 of N=1e+05: argpartition + sort k"
+},
+{
+"what": "full argsort, N=1e5 (current e5/e6 code)",
+"claimed_ms": 8.76,
+"measured_ms": 8.819,
+"ok": true,
+"src": "full argsort of N=1e+05 (what e5/e6 do today)"
+},
+{
+"what": "top-10 argpartition, N=1e6",
+"claimed_ms": 3.39,
+"measured_ms": 2.9724,
+"ok": true,
+"src": "top-10 of N=1e+06: argpartition + sort k"
+},
+{
+"what": "int8 scan N=1e5, 4 queries in one pass (total)",
+"claimed_ms": 2.45,
+"measured_ms": 4.4919,
+"ok": false,
+"src": "N=1e+05, Q=4 queries in one pass, int8 fbgemm"
+},
+{
+"what": "fp32 torch scan N=1e5, 16 queries in one pass (total; 1.85 ms per query)",
+"claimed_ms": 29.65,
+"measured_ms": 26.4369,
+"ok": true,
+"src": "N=1e+05, Q=16 queries in one pass, torch S @ K.T"
+},
+{
+"what": "HNSW query N=1e5 ef=64 (overlap 0.948)",
+"claimed_ms": 0.1656,
+"measured_ms": 0.1585,
+"ok": true,
+"src": "HNSW query N=1e+05 ef=64, top-10"
+},
+{
+"what": "HNSW query N=1e6 ef=128 (overlap 0.924)",
+"claimed_ms": 0.4057,
+"measured_ms": 0.3806,
+"ok": true,
+"src": "HNSW query N=1e+06 ef=128, top-10"
+},
+{
+"what": "HNSW build N=1e5, single thread",
+"claimed_ms": 37007,
+"measured_ms": 36776.4306,
+"ok": true,
+"src": "HNSW build N=1e+05 (M=16, efC=100), whole index"
+},
+{
+"what": "HNSW build N=1e6, single thread",
+"claimed_ms": 501310,
+"measured_ms": 480174.4053,
+"ok": true,
+"src": "HNSW build N=1e+06 (M=16, efC=100), whole index"
+},
+{
+"what": "flat score + top-10, N=65536",
+"claimed_ms": 4.54,
+"measured_ms": 4.5672,
+"ok": true,
+"src": "flat score + top-10, N=16^4=65536"
+},
+{
+"what": "beam descent B=8, depth 4, N=65536",
+"claimed_ms": 0.0546,
+"measured_ms": 0.0658,
+"ok": true,
+"src": "beam descent B=8, depth 4 (N=65536), 400 dot products"
+},
+{
+"what": "flat score + top-10, N=1048576",
+"claimed_ms": 135.53,
+"measured_ms": 143.3226,
+"ok": true,
+"src": "flat score + top-10, N=16^5=1048576"
+},
+{
+"what": "beam descent B=8, depth 5, N=1048576",
+"claimed_ms": 0.1305,
+"measured_ms": 0.1011,
+"ok": true,
+"src": "beam descent B=8, depth 5 (N=1048576), 528 dot products"
+},
+{
+"what": "beam descent B=8, k-means tree, N=65536 (overlap vs flat 0.52)",
+"claimed_ms": 0.0513,
+"measured_ms": 0.0676,
+"ok": false,
+"src": "beam descent B=8, depth 4 (N=65536), k-means tree, 400 dots"
+},
+{
+"what": "beam descent B=64, k-means tree, N=65536 (overlap vs flat 0.85)",
+"claimed_ms": 0.7619,
+"measured_ms": 0.8867,
+"ok": true,
+"src": "beam descent B=64, depth 4 (N=65536), k-means tree, 2320 dots"
+},
+{
+"what": "BM25 e1 loop, N=1e4 (current code)",
+"claimed_ms": 6.53,
+"measured_ms": 6.4259,
+"ok": true,
+"src": "BM25 N=1e+04: e1-loop (score every doc in Python + full sort)"
+},
+{
+"what": "BM25 postings top-50, N=1e4",
+"claimed_ms": 0.0389,
+"measured_ms": 0.0317,
+"ok": true,
+"src": "BM25 N=1e+04: postings + argpartition top-50"
+},
+{
+"what": "BM25 postings top-50, N=1e5",
+"claimed_ms": 0.336,
+"measured_ms": 0.5758,
+"ok": false,
+"src": "BM25 N=1e+05: postings + argpartition top-50"
+},
+{
+"what": "RRF over two full 1e4 rankings (current code)",
+"claimed_ms": 7.37,
+"measured_ms": 5.0636,
+"ok": false,
+"src": "RRF fuse two full rankings of N=1e4 (e1/e5 fuse today)"
+},
+{
+"what": "RRF over two top-50 lists",
+"claimed_ms": 0.024,
+"measured_ms": 0.0198,
+"ok": true,
+"src": "RRF fuse two top-50 lists"
+},
+{
+"what": "internode path recompute depth 4, cached child K/V",
+"claimed_ms": 0.2735,
+"measured_ms": 0.2518,
+"ok": true,
+"src": "internode path recompute, depth 4, full 384x384, cached child K/V"
+},
+{
+"what": "internode path recompute depth 4, no cache",
+"claimed_ms": 1.7,
+"measured_ms": 1.1498,
+"ok": false,
+"src": "internode path recompute, depth 4, full 384x384, no cache"
+},
+{
+"what": "internode whole-tree recompute N=1e4 fp32",
+"claimed_ms": 64.45,
+"measured_ms": 93.2174,
+"ok": false,
+"src": "internode whole-tree recompute N=1e+04, full 384x384, fp32"
+},
+{
+"what": "internode whole-tree recompute N=1e5 fp32",
+"claimed_ms": 794.03,
+"measured_ms": 946.0125,
+"ok": true,
+"src": "internode whole-tree recompute N=1e+05, full 384x384, fp32"
+},
+{
+"what": "internode whole-tree recompute N=1e6 fp32 (allocation-bound)",
+"claimed_ms": 28352,
+"measured_ms": 18986.026,
+"ok": false,
+"src": "internode whole-tree recompute N=1e+06, full 384x384, fp32"
+},
+{
+"what": "online key update after one answer (filter + anchored move)",
+"claimed_ms": 0.0335,
+"measured_ms": 0.024,
+"ok": false,
+"src": "online key update after one answer (3 cites, filter + anchored move)"
+},
+{
+"what": "nightly refit step, r=16, 64 asks (about 8.4 s per 1e4 asks x 5 epochs)",
+"claimed_ms": 10.8,
+"measured_ms": 10.6497,
+"ok": true,
+"src": "nightly refit step, low-rank r=16, 64 asks x (64 in-batch + 10 hard + 1024 neg)"
+},
+{
+"what": "E5 pretraining, one fold, 40 epochs",
+"claimed_ms": 2741,
+"measured_ms": 3073.1203,
+"ok": true,
+"src": "E5 pretraining, one fold (8 LoCoMo chats ~4.7k nodes, 40 epochs, r=16)"
+},
+{
+"what": "replay eval gate, 500 asks x 1e5 keys",
+"claimed_ms": 673.41,
+"measured_ms": 771.3427,
+"ok": true,
+"src": "replay eval gate: 500 asks x N=1e+05 keys, recall@10"
+},
+{
+"what": "read hop with encoder, pyramid, N=65536",
+"claimed_ms": 27.42,
+"measured_ms": 25.7393,
+"ok": true,
+"src": "read hop, pyramid descent B=8, N=65536"
+},
+{
+"what": "read hop memory work only (descent + BM25 + RRF + context), N=65536",
+"claimed_ms": 0.3489,
+"measured_ms": 0.5124,
+"ok": false,
+"src": "read hop minus encoder (descent + BM25 + RRF + context), N=65536"
+},
+{
+"what": "read hop memory work only, flat, N=65536",
+"claimed_ms": 4.93,
+"measured_ms": 5.5349,
+"ok": true,
+"src": "read hop minus encoder, flat, N=65536"
+},
+{
+"what": "read-again loop 3 hops (memory-only), N=65536",
+"claimed_ms": 142.76,
+"measured_ms": 143.3866,
+"ok": true,
+"src": "read-again loop, 3 hops, pyramid, N=65536"
+},
+{
+"what": "write path with encoder, N=65536",
+"claimed_ms": 38.73,
+"measured_ms": 40.2019,
+"ok": true,
+"src": "write path (encode + place + ancestors + dirty + BM25), N=65536"
+},
+{
+"what": "write path without encoder and BM25, N=65536",
+"claimed_ms": 0.5147,
+"measured_ms": 0.5549,
+"ok": true,
+"src": "write path minus encoder and BM25 (place + ancestors + dirty), N=65536"
+},
+{
+"what": "forget path (naive log scan), N=65536",
+"claimed_ms": 16.52,
+"measured_ms": 13.2257,
+"ok": true,
+"src": "forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=65536"
+}
+]

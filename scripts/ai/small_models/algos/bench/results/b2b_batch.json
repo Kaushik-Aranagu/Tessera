@@ -1,0 +1,242 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, numpy K @ S.T",
+  "median_ms": 13.555885499999999,
+  "p95_ms": 21.012347499999976,
+  "n": 40,
+  "note": "13.56 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, numpy S @ K.T",
+  "median_ms": 10.209996499999999,
+  "p95_ms": 15.211746149999998,
+  "n": 40,
+  "note": "10.21 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, torch S @ K.T",
+  "median_ms": 11.1023305,
+  "p95_ms": 14.8478871,
+  "n": 40,
+  "note": "11.10 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, int8 fbgemm",
+  "median_ms": 2.2826255,
+  "p95_ms": 2.4172323999999996,
+  "n": 40,
+  "note": "2.28 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, numpy K @ S.T",
+  "median_ms": 27.045426499999998,
+  "p95_ms": 40.01356509999998,
+  "n": 40,
+  "note": "6.76 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, numpy S @ K.T",
+  "median_ms": 32.801939000000004,
+  "p95_ms": 39.5478673,
+  "n": 40,
+  "note": "8.20 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, torch S @ K.T",
+  "median_ms": 21.255274,
+  "p95_ms": 25.112041299999987,
+  "n": 40,
+  "note": "5.31 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, int8 fbgemm",
+  "median_ms": 2.4461375,
+  "p95_ms": 2.5718138999999995,
+  "n": 40,
+  "note": "0.61 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, numpy K @ S.T",
+  "median_ms": 33.5961755,
+  "p95_ms": 39.750706599999994,
+  "n": 40,
+  "note": "2.10 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, numpy S @ K.T",
+  "median_ms": 42.043433,
+  "p95_ms": 47.60042075,
+  "n": 40,
+  "note": "2.63 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, torch S @ K.T",
+  "median_ms": 29.6497025,
+  "p95_ms": 34.85575005,
+  "n": 40,
+  "note": "1.85 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, int8 fbgemm",
+  "median_ms": 4.402359000000001,
+  "p95_ms": 5.489258899999999,
+  "n": 40,
+  "note": "0.28 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, numpy K @ S.T",
+  "median_ms": 126.416755,
+  "p95_ms": 132.96522869999998,
+  "n": 8,
+  "note": "126.42 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, numpy S @ K.T",
+  "median_ms": 115.819879,
+  "p95_ms": 149.8240088,
+  "n": 8,
+  "note": "115.82 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, torch S @ K.T",
+  "median_ms": 147.981106,
+  "p95_ms": 170.0204472,
+  "n": 8,
+  "note": "147.98 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, int8 fbgemm",
+  "median_ms": 35.591548,
+  "p95_ms": 37.10580285,
+  "n": 8,
+  "note": "35.59 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, numpy K @ S.T",
+  "median_ms": 278.060289,
+  "p95_ms": 300.08992535,
+  "n": 8,
+  "note": "69.52 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, numpy S @ K.T",
+  "median_ms": 331.97229300000004,
+  "p95_ms": 399.1269426,
+  "n": 8,
+  "note": "82.99 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, torch S @ K.T",
+  "median_ms": 291.140121,
+  "p95_ms": 297.9381563,
+  "n": 8,
+  "note": "72.79 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, int8 fbgemm",
+  "median_ms": 65.692525,
+  "p95_ms": 73.3149857,
+  "n": 8,
+  "note": "16.42 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, numpy K @ S.T",
+  "median_ms": 279.21581349999997,
+  "p95_ms": 383.5286457,
+  "n": 8,
+  "note": "17.45 ms per query",
+  "q": 16,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, numpy S @ K.T",
+  "median_ms": 411.4640745,
+  "p95_ms": 418.8898714,
+  "n": 8,
+  "note": "25.72 ms per query",
+  "q": 16,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, torch S @ K.T",
+  "median_ms": 346.28465800000004,
+  "p95_ms": 367.6076946,
+  "n": 8,
+  "note": "21.64 ms per query",
+  "q": 16,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, int8 fbgemm",
+  "median_ms": 137.8230995,
+  "p95_ms": 154.4656248,
+  "n": 8,
+  "note": "8.61 ms per query",
+  "q": 16,
+  "N": 1000000
+ }
+]

@@ -1,0 +1,29 @@
+Could not reach the Hub (Cannot reach https://huggingface.co/api/models/BAAI/bge-small-en-v1.5: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.). Using cached commit hash for 'BAAI/bge-small-en-v1.5'.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 23132.49it/s]
+{
+ "re-encoded plain asks vs cache maxabs": 0.0,
+ "frozen plain": 0.5750148476422102,
+ "frozen +instruction": 0.5688373772947384,
+ "frozen inst - plain": [
+  -0.0061774703474719445,
+  -0.016962647181074198,
+  0.0037713080772641236
+ ],
+ "bridged r16 plain": 0.6573055949758888,
+ "bridged r16 +instruction": 0.653094196768731,
+ "bridged inst - plain": [
+  -0.00421139820715767,
+  -0.01410284203802018,
+  0.0054729246478123625
+ ],
+ "bridge gain plain (bridged - frozen)": [
+  0.08229074733367846,
+  0.06393765609848656,
+  0.10068666351905113
+ ],
+ "bridge gain with instruction": [
+  0.08425681947399274,
+  0.06552773816449015,
+  0.10276474571449246
+ ]
+}

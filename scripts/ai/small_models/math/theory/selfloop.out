@@ -1,0 +1,12 @@
+geometry (mean over 10 held-out chats): top1-top2 score gap 0.0476, |mean ask state| 0.560, mean <s,s'> 0.311, max initial win share 0.047, top-5 initial share 0.172
+
+loop gain for the 5 top-winning nodes of each chat: W0, dW per win, h (first-order drift of mean score per win), t* = 1/dW
+  move eta=0.1     W0 0.034  dW1 +0.0163  (positive for 0.92)  h +0.0229  median t* 60 asks
+  move eta=0.02    W0 0.034  dW1 +0.0025  (positive for 0.34)  h +0.0046  median t* 153 asks
+  centered eta=0.1 W0 0.034  dW1 +0.0046  (positive for 0.72)  h -0.0052  median t* 192 asks
+
+long horizon (10 passes, ~1500 self-cited asks per chat): per window of 150 visits, share of visits whose top-1 is the window's most frequent top-1 node, and recall@10 change vs no learning
+  move eta=0.1     top share 0.24 0.29 0.27 0.24 0.23 0.21 0.21 0.20 0.19 0.18 | d recall -0.026 -0.052 -0.072 -0.096 -0.111 -0.125 -0.136 -0.148 -0.165 -0.169
+  move eta=0.02    top share 0.06 0.09 0.14 0.18 0.21 0.23 0.24 0.24 0.24 0.24 | d recall -0.001 -0.015 -0.022 -0.028 -0.036 -0.045 -0.052 -0.056 -0.061 -0.067
+  centered eta=0.1 top share 0.07 0.07 0.06 0.06 0.05 0.05 0.05 0.05 0.05 0.05 | d recall -0.002 -0.010 -0.024 -0.028 -0.027 -0.030 -0.033 -0.037 -0.040 -0.037
+  move eta=0.1 cap=0.3 top share 0.12 0.10 0.10 0.09 0.09 0.09 0.08 0.08 0.08 0.08 | d recall -0.029 -0.046 -0.060 -0.069 -0.075 -0.072 -0.073 -0.074 -0.075 -0.075

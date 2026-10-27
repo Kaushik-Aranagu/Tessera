@@ -1,0 +1,22 @@
+fold 0 done
+fold 1 done
+fold 2 done
+fold 3 done
+fold 4 done
+session routing on LoCoMo held-out chats: share of evidence sessions in the top-3 sessions
+  bridge  lse-0.02   all 0.716   multi-hop 0.511
+  bridge  lse-0.05   all 0.724   multi-hop 0.513
+  bridge  max        all 0.707   multi-hop 0.489
+  bridge  mean       all 0.500   multi-hop 0.321
+  bridge  proto-2    all 0.499   multi-hop 0.359
+  bridge  proto-4    all 0.555   multi-hop 0.393
+  bridge  proto-8    all 0.610   multi-hop 0.405
+  frozen  lse-0.02   all 0.679   multi-hop 0.430
+  frozen  lse-0.05   all 0.652   multi-hop 0.435
+  frozen  max        all 0.670   multi-hop 0.413
+  frozen  mean       all 0.506   multi-hop 0.385
+  frozen  proto-2    all 0.495   multi-hop 0.362
+  frozen  proto-4    all 0.540   multi-hop 0.380
+  frozen  proto-8    all 0.598   multi-hop 0.400
+  dilution (frozen): children/session 22.8, |mean| 0.835, evidence margin in mean-pool (c*-cbar)/(n|mean|) 0.0075, std of mean-pool score across sessions 0.0249, evidence child minus median child 0.157
+  dilution (bridge): children/session 22.8, |mean| 0.585, evidence margin in mean-pool (c*-cbar)/(n|mean|) 0.0220, std of mean-pool score across sessions 0.0615, evidence child minus median child 0.318

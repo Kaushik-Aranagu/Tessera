@@ -1,0 +1,191 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 3, full 384x384, no cache",
+  "median_ms": 1.2181765,
+  "p95_ms": 1.6762652000000002,
+  "n": 300,
+  "note": "",
+  "depth": 3
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 3, full 384x384, cached child K/V",
+  "median_ms": 0.331877,
+  "p95_ms": 0.5615714,
+  "n": 300,
+  "note": "",
+  "depth": 3
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 4, full 384x384, no cache",
+  "median_ms": 1.7022335,
+  "p95_ms": 2.4334043999999997,
+  "n": 300,
+  "note": "",
+  "depth": 4
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 4, full 384x384, cached child K/V",
+  "median_ms": 0.2734895,
+  "p95_ms": 0.3715282500000001,
+  "n": 300,
+  "note": "",
+  "depth": 4
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 5, full 384x384, no cache",
+  "median_ms": 1.544064,
+  "p95_ms": 1.8852557500000002,
+  "n": 300,
+  "note": "",
+  "depth": 5
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 5, full 384x384, cached child K/V",
+  "median_ms": 0.51664,
+  "p95_ms": 1.2787326500000002,
+  "n": 300,
+  "note": "",
+  "depth": 5
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+04, full 384x384, fp32",
+  "median_ms": 64.448875,
+  "p95_ms": 122.77038579999999,
+  "n": 5,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+04, full 384x384, bf16 autocast",
+  "median_ms": 40.652355,
+  "p95_ms": 41.7148502,
+  "n": 5,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+05, full 384x384, fp32",
+  "median_ms": 794.034585,
+  "p95_ms": 1214.4893544,
+  "n": 3,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+05, full 384x384, bf16 autocast",
+  "median_ms": 704.446662,
+  "p95_ms": 1260.2326512,
+  "n": 3,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+06, full 384x384, fp32",
+  "median_ms": 28351.867603,
+  "p95_ms": 28351.867603,
+  "n": 1,
+  "note": "",
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+06, full 384x384, bf16 autocast",
+  "median_ms": 20884.17514,
+  "p95_ms": 20884.17514,
+  "n": 1,
+  "note": "",
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 3, low-rank r=32, no cache",
+  "median_ms": 0.539551,
+  "p95_ms": 0.8259524500000002,
+  "n": 300,
+  "note": "",
+  "depth": 3
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 3, low-rank r=32, cached child K/V",
+  "median_ms": 0.2793955,
+  "p95_ms": 0.4731073500000001,
+  "n": 300,
+  "note": "",
+  "depth": 3
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 4, low-rank r=32, no cache",
+  "median_ms": 1.283579,
+  "p95_ms": 1.5885309,
+  "n": 300,
+  "note": "",
+  "depth": 4
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 4, low-rank r=32, cached child K/V",
+  "median_ms": 0.9171585,
+  "p95_ms": 1.4653546500000008,
+  "n": 300,
+  "note": "",
+  "depth": 4
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 5, low-rank r=32, no cache",
+  "median_ms": 1.1585975,
+  "p95_ms": 2.02426785,
+  "n": 300,
+  "note": "",
+  "depth": 5
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode path recompute, depth 5, low-rank r=32, cached child K/V",
+  "median_ms": 0.5549364999999999,
+  "p95_ms": 1.1582946,
+  "n": 300,
+  "note": "",
+  "depth": 5
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+04, low-rank r=32, fp32",
+  "median_ms": 37.028509,
+  "p95_ms": 45.7282928,
+  "n": 5,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+05, low-rank r=32, fp32",
+  "median_ms": 714.51596,
+  "p95_ms": 768.7127801,
+  "n": 3,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b5_internode.py",
+  "what": "internode whole-tree recompute N=1e+06, low-rank r=32, fp32",
+  "median_ms": 21511.528183,
+  "p95_ms": 21511.528183,
+  "n": 1,
+  "note": "",
+  "N": 1000000
+ }
+]

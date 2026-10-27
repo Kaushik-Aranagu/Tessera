@@ -1,0 +1,17 @@
+[A] bridged rank-16 s.k, held-out chats 8-9
+    all (ask,node) pairs  p1=-0.183 p5=-0.094 p50=0.121 p95=0.335  share>=0.2 0.260
+    opened top-10         p1=0.244 p5=0.284 p50=0.404 p95=0.535  share>=0.2 0.9997
+    gold evidence         p1=0.087 p5=0.159 p50=0.374 p95=0.557  share>=0.2 0.8954
+    gold NOT in top-10    n=279  share>=0.2 0.7957
+    frozen cosine, all pairs p1=0.365 p5=0.417 p50=0.547 p95=0.672
+[B] b6 online(): s.k of the 3 cited keys before any update: [0.381, 0.42, 0.458]
+[C] k-means tree N=4096 real LoCoMo turns        B=1:0.30  B=4:0.66  B=8:0.82  B=16:0.91  B=32:0.96  B=64:0.99
+[C] k-means tree N=4096 synthetic leaf-shaped    B=1:0.15  B=4:0.40  B=8:0.56  B=16:0.71  B=32:0.84  B=64:0.94
+[D] N=1e+04 int8 scan + top-100 + fp32 rerank: median 0.403 ms p95 0.504  overlap 1.000
+[D] N=1e+05 int8 scan + top-100 + fp32 rerank: median 2.265 ms p95 2.422  overlap 1.000
+[E] fp32 GEMV N=1e+04: hot median 0.597 ms, cold (after 768 MB sweep) median 1.317 ms p95 1.745
+[E] fp32 GEMV N=1e+05: hot median 7.319 ms, cold (after 768 MB sweep) median 12.362 ms p95 15.716
+[F] re-key N=1e5: one-shot median 234.5 ms, chunked 4096 in place median 157.3 ms
+[G] log purge 1e4 entries: naive median 11.33 ms; with node->entries index median 0.5 us
+[H] BM25 postings vs e1 loop, top-10 agreement over 200 asks (N=5000): mean 0.988, min 0.8
+[I] whole-tree N=1e6 chunked by 65536-leaf blocks: 9680 ms (b5 one-shot reported 28352 ms)

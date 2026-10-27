@@ -1,0 +1,190 @@
+| script | what | median ms | p95 ms | runs | note |
+|---|---|---:|---:|---:|---|
+| b1_encoder.py | encode 1 ask, sentence-transformers end to end (13 tokens) | 26.00 | 34.48 | 100 |  |
+| b1_encoder.py | encode 1 ask, rotating over 1531 LoCoMo asks (median ~10 words) | 26.08 | 33.68 | 300 |  |
+| b1_encoder.py | tokenizer only, 1 ask | 0.1040 | 0.1624 | 200 |  |
+| b1_encoder.py | transformer forward only, 1 sequence of 16 tokens | 23.60 | 29.22 | 40 |  |
+| b1_encoder.py | transformer forward only, 1 sequence of 32 tokens | 23.60 | 30.02 | 40 |  |
+| b1_encoder.py | transformer forward only, 1 sequence of 64 tokens | 42.43 | 44.48 | 40 |  |
+| b1_encoder.py | transformer forward only, 1 sequence of 128 tokens | 70.65 | 79.70 | 40 |  |
+| b1_encoder.py | transformer forward only, 1 sequence of 256 tokens | 130.30 | 153.36 | 15 |  |
+| b1_encoder.py | transformer forward only, 1 sequence of 512 tokens | 257.65 | 263.29 | 15 |  |
+| b1_encoder.py | encode 640 LoCoMo turns, batch 64 -> per leaf | 21.44 | 22.98 | 5 | per-leaf ms |
+| b1_encoder.py | encode 1 LoCoMo turn unbatched (write path), rotating | 34.73 | 50.90 | 300 |  |
+| b1_encoder.py | encode 1 ask, int8 dynamic-quantized Linear layers | 12.84 | 18.38 | 100 | mean cos to fp32 0.9701; top-10 overlap on chat 0 0.730 |
+| b1_encoder.py | encode 640 turns batch 64, int8 dynamic -> per leaf | 12.02 | 12.72 | 5 | per-leaf ms |
+| b1_encoder.py | encode 1 ask, bf16 autocast (AMX on this CPU) | 34.61 | 46.61 | 100 | mean cos to fp32 1.0000 |
+| b1_encoder.py | encode 640 turns batch 64, bf16 autocast -> per leaf | 7.20 | 7.34 | 5 | per-leaf ms |
+| b2_scoring.py | state head, low-rank r=16, 1 vector (numpy) + normalise | 0.0060 | 0.0065 | 2000 |  |
+| b2_scoring.py | state head, full 384x384, 1 vector (numpy) + normalise | 0.0116 | 0.0138 | 2000 |  |
+| b2_scoring.py | state head, low-rank r=16, 1 vector (torch eager) | 0.0130 | 0.0197 | 2000 |  |
+| b2_scoring.py | action head, low-rank r=16, recompute N=1e+04 keys (after refit) | 14.05 | 14.26 | 30 |  |
+| b2_scoring.py | action head, low-rank r=16, recompute N=1e+05 keys (after refit) | 296.48 | 339.95 | 10 |  |
+| b2_scoring.py | score N=1e+03: fp32 GEMV numpy (OpenBLAS) | 0.0755 | 0.1365 | 400 |  |
+| b2_scoring.py | score N=1e+03: fp32, 4 queries in one GEMM (batched reads) | 0.2189 | 0.2949 | 400 |  |
+| b2_scoring.py | score N=1e+03: fp32 torch.mv | 0.1054 | 0.8041 | 400 |  |
+| b2_scoring.py | score N=1e+03: fp16 torch.mv (CPU) | 0.3107 | 0.4301 | 400 |  |
+| b2_scoring.py | score N=1e+03: bf16 torch.mv (CPU) | 0.0608 | 0.1506 | 400 |  |
+| b2_scoring.py | score N=1e+03: int8 keys, fbgemm dynamic-quant Linear | 0.0774 | 0.1322 | 400 | top-10 overlap with fp32 0.964 |
+| b2_scoring.py | score N=1e+03: 1-bit codes popcount + fp32 rerank top-200 | 0.0696 | 0.1677 | 400 | top-10 overlap with fp32 0.982 |
+| b2_scoring.py | top-10 of N=1e+03: argpartition + sort k | 0.0092 | 0.0136 | 400 |  |
+| b2_scoring.py | top-10 of N=1e+03: torch.topk | 0.0045 | 0.0066 | 400 |  |
+| b2_scoring.py | top-100 of N=1e+03: argpartition + sort k | 0.0077 | 0.0131 | 400 |  |
+| b2_scoring.py | top-100 of N=1e+03: torch.topk | 0.0033 | 0.0083 | 400 |  |
+| b2_scoring.py | full argsort of N=1e+03 (what e5/e6 do today) | 0.0185 | 0.0240 | 100 |  |
+| b2_scoring.py | score N=1e+04: fp32 GEMV numpy (OpenBLAS) | 0.7172 | 0.8435 | 400 |  |
+| b2_scoring.py | score N=1e+04: fp32, 4 queries in one GEMM (batched reads) | 1.67 | 1.86 | 400 |  |
+| b2_scoring.py | score N=1e+04: fp32 torch.mv | 0.7298 | 0.7936 | 400 |  |
+| b2_scoring.py | score N=1e+04: fp16 torch.mv (CPU) | 1.70 | 3.48 | 400 |  |
+| b2_scoring.py | score N=1e+04: bf16 torch.mv (CPU) | 0.5720 | 0.6341 | 400 |  |
+| b2_scoring.py | score N=1e+04: int8 keys, fbgemm dynamic-quant Linear | 0.2917 | 0.3575 | 400 | top-10 overlap with fp32 0.966 |
+| b2_scoring.py | score N=1e+04: 1-bit codes popcount + fp32 rerank top-200 | 0.3201 | 0.3789 | 400 | top-10 overlap with fp32 0.884 |
+| b2_scoring.py | top-10 of N=1e+04: argpartition + sort k | 0.0235 | 0.0317 | 400 |  |
+| b2_scoring.py | top-10 of N=1e+04: torch.topk | 0.0203 | 0.0264 | 400 |  |
+| b2_scoring.py | top-100 of N=1e+04: argpartition + sort k | 0.0238 | 0.0313 | 400 |  |
+| b2_scoring.py | top-100 of N=1e+04: torch.topk | 0.0346 | 0.0485 | 400 |  |
+| b2_scoring.py | full argsort of N=1e+04 (what e5/e6 do today) | 0.6547 | 0.6845 | 100 |  |
+| b2_scoring.py | score N=1e+05: fp32 GEMV numpy (OpenBLAS) | 7.07 | 10.40 | 60 |  |
+| b2_scoring.py | score N=1e+05: fp32, 4 queries in one GEMM (batched reads) | 26.97 | 36.72 | 60 |  |
+| b2_scoring.py | score N=1e+05: fp32 torch.mv | 9.11 | 11.38 | 60 |  |
+| b2_scoring.py | score N=1e+05: fp16 torch.mv (CPU) | 19.83 | 25.37 | 60 |  |
+| b2_scoring.py | score N=1e+05: bf16 torch.mv (CPU) | 4.84 | 5.38 | 60 |  |
+| b2_scoring.py | score N=1e+05: int8 keys, fbgemm dynamic-quant Linear | 1.91 | 1.98 | 60 | top-10 overlap with fp32 0.954 |
+| b2_scoring.py | score N=1e+05: 1-bit codes popcount + fp32 rerank top-200 | 3.12 | 3.19 | 60 | top-10 overlap with fp32 0.756 |
+| b2_scoring.py | top-10 of N=1e+05: argpartition + sort k | 0.1806 | 0.2183 | 60 |  |
+| b2_scoring.py | top-10 of N=1e+05: torch.topk | 0.2345 | 0.2781 | 60 |  |
+| b2_scoring.py | top-100 of N=1e+05: argpartition + sort k | 0.1787 | 0.2205 | 60 |  |
+| b2_scoring.py | top-100 of N=1e+05: torch.topk | 0.2607 | 0.2939 | 60 |  |
+| b2_scoring.py | full argsort of N=1e+05 (what e5/e6 do today) | 8.76 | 8.87 | 15 |  |
+| b2_scoring.py | score N=1e+06: fp32 GEMV numpy (OpenBLAS) | 118.07 | 148.66 | 12 |  |
+| b2_scoring.py | score N=1e+06: fp32, 4 queries in one GEMM (batched reads) | 285.23 | 353.55 | 12 |  |
+| b2_scoring.py | score N=1e+06: fp32 torch.mv | 151.39 | 181.90 | 12 |  |
+| b2_scoring.py | score N=1e+06: fp16 torch.mv (CPU) | 190.24 | 234.34 | 12 |  |
+| b2_scoring.py | score N=1e+06: bf16 torch.mv (CPU) | 95.96 | 107.52 | 12 |  |
+| b2_scoring.py | score N=1e+06: int8 keys, fbgemm dynamic-quant Linear | 35.81 | 36.47 | 12 |  |
+| b2_scoring.py | score N=1e+06: 1-bit codes popcount + fp32 rerank top-200 | 46.15 | 56.92 | 12 |  |
+| b2_scoring.py | top-10 of N=1e+06: argpartition + sort k | 3.39 | 3.59 | 12 |  |
+| b2_scoring.py | top-10 of N=1e+06: torch.topk | 3.14 | 3.58 | 12 |  |
+| b2_scoring.py | top-100 of N=1e+06: argpartition + sort k | 2.78 | 3.13 | 12 |  |
+| b2_scoring.py | top-100 of N=1e+06: torch.topk | 3.30 | 3.33 | 12 |  |
+| b2b_batch.py | N=1e+05, Q=1 queries in one pass, numpy K @ S.T | 13.56 | 21.01 | 40 | 13.56 ms per query |
+| b2b_batch.py | N=1e+05, Q=1 queries in one pass, numpy S @ K.T | 10.21 | 15.21 | 40 | 10.21 ms per query |
+| b2b_batch.py | N=1e+05, Q=1 queries in one pass, torch S @ K.T | 11.10 | 14.85 | 40 | 11.10 ms per query |
+| b2b_batch.py | N=1e+05, Q=1 queries in one pass, int8 fbgemm | 2.28 | 2.42 | 40 | 2.28 ms per query |
+| b2b_batch.py | N=1e+05, Q=4 queries in one pass, numpy K @ S.T | 27.05 | 40.01 | 40 | 6.76 ms per query |
+| b2b_batch.py | N=1e+05, Q=4 queries in one pass, numpy S @ K.T | 32.80 | 39.55 | 40 | 8.20 ms per query |
+| b2b_batch.py | N=1e+05, Q=4 queries in one pass, torch S @ K.T | 21.26 | 25.11 | 40 | 5.31 ms per query |
+| b2b_batch.py | N=1e+05, Q=4 queries in one pass, int8 fbgemm | 2.45 | 2.57 | 40 | 0.61 ms per query |
+| b2b_batch.py | N=1e+05, Q=16 queries in one pass, numpy K @ S.T | 33.60 | 39.75 | 40 | 2.10 ms per query |
+| b2b_batch.py | N=1e+05, Q=16 queries in one pass, numpy S @ K.T | 42.04 | 47.60 | 40 | 2.63 ms per query |
+| b2b_batch.py | N=1e+05, Q=16 queries in one pass, torch S @ K.T | 29.65 | 34.86 | 40 | 1.85 ms per query |
+| b2b_batch.py | N=1e+05, Q=16 queries in one pass, int8 fbgemm | 4.40 | 5.49 | 40 | 0.28 ms per query |
+| b2b_batch.py | N=1e+06, Q=1 queries in one pass, numpy K @ S.T | 126.42 | 132.97 | 8 | 126.42 ms per query |
+| b2b_batch.py | N=1e+06, Q=1 queries in one pass, numpy S @ K.T | 115.82 | 149.82 | 8 | 115.82 ms per query |
+| b2b_batch.py | N=1e+06, Q=1 queries in one pass, torch S @ K.T | 147.98 | 170.02 | 8 | 147.98 ms per query |
+| b2b_batch.py | N=1e+06, Q=1 queries in one pass, int8 fbgemm | 35.59 | 37.11 | 8 | 35.59 ms per query |
+| b2b_batch.py | N=1e+06, Q=4 queries in one pass, numpy K @ S.T | 278.06 | 300.09 | 8 | 69.52 ms per query |
+| b2b_batch.py | N=1e+06, Q=4 queries in one pass, numpy S @ K.T | 331.97 | 399.13 | 8 | 82.99 ms per query |
+| b2b_batch.py | N=1e+06, Q=4 queries in one pass, torch S @ K.T | 291.14 | 297.94 | 8 | 72.79 ms per query |
+| b2b_batch.py | N=1e+06, Q=4 queries in one pass, int8 fbgemm | 65.69 | 73.31 | 8 | 16.42 ms per query |
+| b2b_batch.py | N=1e+06, Q=16 queries in one pass, numpy K @ S.T | 279.22 | 383.53 | 8 | 17.45 ms per query |
+| b2b_batch.py | N=1e+06, Q=16 queries in one pass, numpy S @ K.T | 411.46 | 418.89 | 8 | 25.72 ms per query |
+| b2b_batch.py | N=1e+06, Q=16 queries in one pass, torch S @ K.T | 346.28 | 367.61 | 8 | 21.64 ms per query |
+| b2b_batch.py | N=1e+06, Q=16 queries in one pass, int8 fbgemm | 137.82 | 154.47 | 8 | 8.61 ms per query |
+| b2h_hnsw.py | HNSW build N=1e+04 (M=16, efC=100), whole index | 1,934 | 1,934 | 1 | 193 us per insert |
+| b2h_hnsw.py | HNSW query N=1e+04 ef=32, top-10 | 0.0854 | 0.1423 | 400 | top-10 overlap with exact 0.905 |
+| b2h_hnsw.py | HNSW query N=1e+04 ef=64, top-10 | 0.1299 | 0.2088 | 400 | top-10 overlap with exact 0.964 |
+| b2h_hnsw.py | HNSW query N=1e+04 ef=128, top-10 | 0.2452 | 0.3569 | 400 | top-10 overlap with exact 0.985 |
+| b2h_hnsw.py | HNSW build N=1e+05 (M=16, efC=100), whole index | 37,007 | 37,007 | 1 | 370 us per insert |
+| b2h_hnsw.py | HNSW query N=1e+05 ef=32, top-10 | 0.0900 | 0.1640 | 400 | top-10 overlap with exact 0.886 |
+| b2h_hnsw.py | HNSW query N=1e+05 ef=64, top-10 | 0.1656 | 0.2389 | 400 | top-10 overlap with exact 0.948 |
+| b2h_hnsw.py | HNSW query N=1e+05 ef=128, top-10 | 0.3171 | 0.4471 | 400 | top-10 overlap with exact 0.978 |
+| b2h_hnsw.py | HNSW build N=1e+06 (M=16, efC=100), whole index | 501,310 | 501,310 | 1 | 501 us per insert |
+| b2h_hnsw.py | HNSW query N=1e+06 ef=32, top-10 | 0.1387 | 0.2470 | 400 | top-10 overlap with exact 0.721 |
+| b2h_hnsw.py | HNSW query N=1e+06 ef=64, top-10 | 0.2171 | 0.3939 | 400 | top-10 overlap with exact 0.837 |
+| b2h_hnsw.py | HNSW query N=1e+06 ef=128, top-10 | 0.4057 | 0.6173 | 400 | top-10 overlap with exact 0.924 |
+| b3_pyramid.py | flat score + top-10, N=16^3=4096 | 0.2804 | 0.4198 | 300 |  |
+| b3_pyramid.py | beam descent B=1, depth 3 (N=4096), 48 dot products | 0.0220 | 0.0439 | 1000 | overlap vs flat: clustered 1.00, random 0.02 |
+| b3_pyramid.py | beam descent B=4, depth 3 (N=4096), 144 dot products | 0.0280 | 0.0635 | 1000 | overlap vs flat: clustered 1.00, random 0.07 |
+| b3_pyramid.py | beam descent B=8, depth 3 (N=4096), 272 dot products | 0.0357 | 0.0599 | 1000 | overlap vs flat: clustered 1.00, random 0.12 |
+| b3_pyramid.py | beam descent B=16, depth 3 (N=4096), 528 dot products | 0.0764 | 0.6994 | 1000 | overlap vs flat: clustered 1.00, random 0.24 |
+| b3_pyramid.py | flat score + top-10, N=16^4=65536 | 4.54 | 7.27 | 300 |  |
+| b3_pyramid.py | beam descent B=1, depth 4 (N=65536), 64 dot products | 0.0390 | 0.0999 | 1000 | overlap vs flat: clustered 0.99, random 0.00 |
+| b3_pyramid.py | beam descent B=4, depth 4 (N=65536), 208 dot products | 0.0530 | 0.0885 | 1000 | overlap vs flat: clustered 1.00, random 0.01 |
+| b3_pyramid.py | beam descent B=8, depth 4 (N=65536), 400 dot products | 0.0546 | 0.1075 | 1000 | overlap vs flat: clustered 1.00, random 0.02 |
+| b3_pyramid.py | beam descent B=16, depth 4 (N=65536), 784 dot products | 0.1921 | 0.2955 | 1000 | overlap vs flat: clustered 1.00, random 0.04 |
+| b3_pyramid.py | flat score + top-10, N=16^5=1048576 | 135.53 | 160.47 | 15 |  |
+| b3_pyramid.py | beam descent B=1, depth 5 (N=1048576), 80 dot products | 0.0817 | 0.1429 | 1000 | overlap vs flat: clustered 0.98, random 0.00 |
+| b3_pyramid.py | beam descent B=4, depth 5 (N=1048576), 272 dot products | 0.1039 | 0.1676 | 1000 | overlap vs flat: clustered 1.00, random 0.00 |
+| b3_pyramid.py | beam descent B=8, depth 5 (N=1048576), 528 dot products | 0.1305 | 0.2412 | 1000 | overlap vs flat: clustered 1.00, random 0.00 |
+| b3_pyramid.py | beam descent B=16, depth 5 (N=1048576), 1040 dot products | 0.1695 | 0.2911 | 1000 | overlap vs flat: clustered 1.00, random 0.01 |
+| b3k_kmeans_tree.py | beam descent B=1, depth 3 (N=4096), k-means tree, 48 dots | 0.0290 | 0.0449 | 500 | overlap vs flat 0.15 |
+| b3k_kmeans_tree.py | beam descent B=4, depth 3 (N=4096), k-means tree, 144 dots | 0.0366 | 0.0599 | 500 | overlap vs flat 0.40 |
+| b3k_kmeans_tree.py | beam descent B=8, depth 3 (N=4096), k-means tree, 272 dots | 0.0472 | 0.0782 | 500 | overlap vs flat 0.56 |
+| b3k_kmeans_tree.py | beam descent B=16, depth 3 (N=4096), k-means tree, 528 dots | 0.0711 | 0.1424 | 500 | overlap vs flat 0.71 |
+| b3k_kmeans_tree.py | beam descent B=32, depth 3 (N=4096), k-means tree, 784 dots | 0.1341 | 0.2136 | 500 | overlap vs flat 0.84 |
+| b3k_kmeans_tree.py | beam descent B=64, depth 3 (N=4096), k-means tree, 1296 dots | 0.3427 | 0.4110 | 500 | overlap vs flat 0.94 |
+| b3k_kmeans_tree.py | beam descent B=1, depth 4 (N=65536), k-means tree, 64 dots | 0.0402 | 0.0697 | 500 | overlap vs flat 0.16 |
+| b3k_kmeans_tree.py | beam descent B=4, depth 4 (N=65536), k-means tree, 208 dots | 0.0386 | 0.0575 | 500 | overlap vs flat 0.39 |
+| b3k_kmeans_tree.py | beam descent B=8, depth 4 (N=65536), k-means tree, 400 dots | 0.0513 | 0.0799 | 500 | overlap vs flat 0.52 |
+| b3k_kmeans_tree.py | beam descent B=16, depth 4 (N=65536), k-means tree, 784 dots | 0.1838 | 0.2703 | 500 | overlap vs flat 0.64 |
+| b3k_kmeans_tree.py | beam descent B=32, depth 4 (N=65536), k-means tree, 1296 dots | 0.3024 | 0.3782 | 500 | overlap vs flat 0.76 |
+| b3k_kmeans_tree.py | beam descent B=64, depth 4 (N=65536), k-means tree, 2320 dots | 0.7619 | 1.0357 | 500 | overlap vs flat 0.85 |
+| b4_bm25.py | BM25 N=1e+03: e1-loop (score every doc in Python + full sort) | 0.5972 | 0.8393 | 100 |  |
+| b4_bm25.py | BM25 N=1e+03: postings + argpartition top-50 | 0.0167 | 0.0291 | 300 |  |
+| b4_bm25.py | BM25 N=1e+03: scipy CSC column sum + top-50 | 0.0630 | 0.0869 | 300 |  |
+| b4_bm25.py | BM25 N=1e+03: add + remove one leaf in postings (write/forget) | 0.0954 | 0.1183 | 200 |  |
+| b4_bm25.py | BM25 N=1e+04: e1-loop (score every doc in Python + full sort) | 6.53 | 11.11 | 30 |  |
+| b4_bm25.py | BM25 N=1e+04: postings + argpartition top-50 | 0.0389 | 0.0636 | 300 |  |
+| b4_bm25.py | BM25 N=1e+04: scipy CSC column sum + top-50 | 0.1003 | 0.1348 | 300 |  |
+| b4_bm25.py | BM25 N=1e+04: add + remove one leaf in postings (write/forget) | 0.1482 | 0.1800 | 200 |  |
+| b4_bm25.py | RRF fuse two full rankings of N=1e4 (e1/e5 fuse today) | 7.37 | 13.21 | 50 |  |
+| b4_bm25.py | RRF fuse two top-50 lists | 0.0240 | 0.0321 | 2000 |  |
+| b4_bm25.py | BM25 N=1e+05: postings + argpartition top-50 | 0.3360 | 0.5299 | 300 |  |
+| b4_bm25.py | BM25 N=1e+05: scipy CSC column sum + top-50 | 0.4470 | 0.9746 | 300 |  |
+| b4_bm25.py | BM25 N=1e+05: add + remove one leaf in postings (write/forget) | 0.5664 | 0.9209 | 200 |  |
+| b5_internode.py | internode path recompute, depth 3, full 384x384, no cache | 1.22 | 1.68 | 300 |  |
+| b5_internode.py | internode path recompute, depth 3, full 384x384, cached child K/V | 0.3319 | 0.5616 | 300 |  |
+| b5_internode.py | internode path recompute, depth 4, full 384x384, no cache | 1.70 | 2.43 | 300 |  |
+| b5_internode.py | internode path recompute, depth 4, full 384x384, cached child K/V | 0.2735 | 0.3715 | 300 |  |
+| b5_internode.py | internode path recompute, depth 5, full 384x384, no cache | 1.54 | 1.89 | 300 |  |
+| b5_internode.py | internode path recompute, depth 5, full 384x384, cached child K/V | 0.5166 | 1.2787 | 300 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+04, full 384x384, fp32 | 64.45 | 122.77 | 5 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+04, full 384x384, bf16 autocast | 40.65 | 41.71 | 5 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+05, full 384x384, fp32 | 794.03 | 1214.49 | 3 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+05, full 384x384, bf16 autocast | 704.45 | 1260.23 | 3 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+06, full 384x384, fp32 | 28,352 | 28,352 | 1 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+06, full 384x384, bf16 autocast | 20,884 | 20,884 | 1 |  |
+| b5_internode.py | internode path recompute, depth 3, low-rank r=32, no cache | 0.5396 | 0.8260 | 300 |  |
+| b5_internode.py | internode path recompute, depth 3, low-rank r=32, cached child K/V | 0.2794 | 0.4731 | 300 |  |
+| b5_internode.py | internode path recompute, depth 4, low-rank r=32, no cache | 1.28 | 1.59 | 300 |  |
+| b5_internode.py | internode path recompute, depth 4, low-rank r=32, cached child K/V | 0.9172 | 1.4654 | 300 |  |
+| b5_internode.py | internode path recompute, depth 5, low-rank r=32, no cache | 1.16 | 2.02 | 300 |  |
+| b5_internode.py | internode path recompute, depth 5, low-rank r=32, cached child K/V | 0.5549 | 1.1583 | 300 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+04, low-rank r=32, fp32 | 37.03 | 45.73 | 5 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+05, low-rank r=32, fp32 | 714.52 | 768.71 | 3 |  |
+| b5_internode.py | internode whole-tree recompute N=1e+06, low-rank r=32, fp32 | 21,512 | 21,512 | 1 |  |
+| b6_train.py | online key update after one answer (3 cites, filter + anchored move) | 0.0335 | 0.0710 | 2000 |  |
+| b6_train.py | nightly refit step, low-rank r=16, 64 asks x (64 in-batch + 10 hard + 1024 neg) | 10.80 | 11.46 | 50 | => 1e4 logged asks x 5 epochs ~ 8.4 s |
+| b6_train.py | nightly refit step, full 384x384, 64 asks x (64 in-batch + 10 hard + 1024 neg) | 14.67 | 26.68 | 50 | => 1e4 logged asks x 5 epochs ~ 11.5 s |
+| b6_train.py | E5 pretraining, one fold (8 LoCoMo chats ~4.7k nodes, 40 epochs, r=16) | 2,741 | 2,741 | 1 |  |
+| b6_train.py | replay eval gate: 500 asks x N=1e+04 keys, recall@10 | 57.28 | 79.63 | 20 |  |
+| b6_train.py | replay eval gate: 500 asks x N=1e+05 keys, recall@10 | 673.41 | 2643.65 | 5 |  |
+| b7_paths.py | read hop, pyramid descent B=8, N=4096 | 24.80 | 31.65 | 100 |  |
+| b7_paths.py | read hop, flat scoring, N=4096 | 24.73 | 31.30 | 100 |  |
+| b7_paths.py | read hop minus encoder (descent + BM25 + RRF + context), N=4096 | 0.1147 | 0.1660 | 500 |  |
+| b7_paths.py | read hop minus encoder, flat, N=4096 | 0.4621 | 0.5245 | 300 |  |
+| b7_paths.py | read-again loop, 2 hops, pyramid, N=4096 | 84.49 | 124.31 | 60 |  |
+| b7_paths.py | read-again loop, 3 hops, pyramid, N=4096 | 137.96 | 208.61 | 60 |  |
+| b7_paths.py | write path (encode + place + ancestors + dirty + BM25), N=4096 | 36.24 | 56.69 | 100 |  |
+| b7_paths.py | write path minus encoder and BM25 (place + ancestors + dirty), N=4096 | 0.3381 | 0.4463 | 300 |  |
+| b7_paths.py | forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=4096 | 12.03 | 12.48 | 40 |  |
+| b7_paths.py | read hop, pyramid descent B=8, N=65536 | 27.42 | 36.95 | 100 |  |
+| b7_paths.py | read hop, flat scoring, N=65536 | 35.87 | 39.45 | 100 |  |
+| b7_paths.py | read hop minus encoder (descent + BM25 + RRF + context), N=65536 | 0.3489 | 0.5996 | 500 |  |
+| b7_paths.py | read hop minus encoder, flat, N=65536 | 4.93 | 6.62 | 300 |  |
+| b7_paths.py | read-again loop, 2 hops, pyramid, N=65536 | 76.24 | 105.55 | 60 |  |
+| b7_paths.py | read-again loop, 3 hops, pyramid, N=65536 | 142.76 | 196.21 | 60 |  |
+| b7_paths.py | write path (encode + place + ancestors + dirty + BM25), N=65536 | 38.73 | 59.21 | 100 |  |
+| b7_paths.py | write path minus encoder and BM25 (place + ancestors + dirty), N=65536 | 0.5147 | 0.6767 | 300 |  |
+| b7_paths.py | forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=65536 | 16.52 | 24.60 | 40 |  |

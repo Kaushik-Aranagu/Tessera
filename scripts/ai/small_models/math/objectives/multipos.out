@@ -1,0 +1,19 @@
+/tmp/claude-0/math/objectives/multipos.py:88: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  scales[a].append(float(b.scale.exp()))
+seed 0 fold 0 done
+seed 0 fold 1 done
+seed 0 fold 2 done
+seed 0 fold 3 done
+seed 0 fold 4 done
+seed 100 fold 0 done
+seed 100 fold 1 done
+seed 100 fold 2 done
+seed 100 fold 3 done
+seed 100 fold 4 done
+1531 held-out asks, recall@10, rank-16 heads, mean over seeds [0, 100]
+  lout_bi   all 0.655 (seeds 0.657 0.653)  multi-hop 0.476  |P|=1 0.722  |P|>=2 0.471  vs lout_bi +0.000 [+0.000,+0.000]  |P|>=2 delta +0.000  final scale 24.5
+  lout_fwd  all 0.657 (seeds 0.655 0.659)  multi-hop 0.487  |P|=1 0.721  |P|>=2 0.482  vs lout_bi +0.002 [-0.007,+0.010]  |P|>=2 delta +0.011  final scale 24.5
+  lin_bi    all 0.657 (seeds 0.659 0.655)  multi-hop 0.476  |P|=1 0.724  |P|>=2 0.475  vs lout_bi +0.002 [-0.005,+0.009]  |P|>=2 delta +0.004  final scale 25.2
+  mask_bi   all 0.657 (seeds 0.655 0.659)  multi-hop 0.480  |P|=1 0.723  |P|>=2 0.474  vs lout_bi +0.002 [-0.003,+0.006]  |P|>=2 delta +0.004  final scale 24.9
+  mask_fwd  all 0.658 (seeds 0.656 0.660)  multi-hop 0.494  |P|=1 0.720  |P|>=2 0.487  vs lout_bi +0.003 [-0.005,+0.011]  |P|>=2 delta +0.016  final scale 24.8

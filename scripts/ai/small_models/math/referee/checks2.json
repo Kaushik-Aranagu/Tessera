@@ -1,0 +1,119 @@
+{
+ "S1a Prop 4.2: argmin_sphere sum 1/2|k-s_t|^2 + mu/2|k-k0|^2 = unit(sum s_t + mu k0)": {
+  "ok": true,
+  "cos": 1.0
+ },
+ "S1b move rule with eta_t = 1/(1+|u_t|) reproduces unit(running sum) exactly": {
+  "ok": true,
+  "cos": 1.0
+ },
+ "S1c note: unit(mean s + mu k0) differs from unit(sum s + mu k0) for the same mu": {
+  "ok": true,
+  "cos_between": 0.3602050709038265
+ },
+ "S2 additive key unit(k0 + lam sum t) vs move steps: equal for 1 cite, differ (2nd order) already at 2 cites": {
+  "ok": true,
+  "mean_1_minus_cos": {
+   "1": 1.5543122344752193e-17,
+   "2": 1.841596103454135e-06,
+   "3": 7.190141156253327e-06
+  }
+ },
+ "S3 float32 'u - s_t' is not bitwise equal to the never-added sum (exactness needs canonical recomputation)": {
+  "ok": true,
+  "share_not_bit_equal": 1.0
+ },
+ "S4 Prop 2.4: 1 - R_tree <= L_hier on random 3-level trees": {
+  "ok": true,
+  "violations": 0,
+  "max_ratio": 0.4328642664321119
+ },
+ "S5 Prop 8: Pr[<a,q> > r_K(a)] <= K/(n_ref+1) (n_ref=150, K=10)": {
+  "ok": true,
+  "rate": 0.066775,
+  "bound": 0.06622516556291391
+ },
+ "S5 Prop 8: Pr[<a,q> > r_K(a)] <= K/(n_ref+1) (n_ref=40, K=5)": {
+  "ok": true,
+  "rate": 0.11925,
+  "bound": 0.12195121951219512
+ },
+ "S6a ||E||_F / ||E||_op ~ sqrt(d)/2 for an iid 384x384 matrix": {
+  "ok": true,
+  "ratio": 9.795131365573786,
+  "sqrt_d_over_2": 9.797958971132712
+ },
+ "S6b Prop 13 bound ||G^_r - G||_F <= ||G - G_r||_F + 2 sqrt(2r)(sigma_{r+1} + ||E||_op)": {
+  "ok": true,
+  "violations": 0
+ },
+ "S7 Prop 4: n(t) = -ln(1 - lam W0 t)/lam solves dn/dt = W0 e^{lam n}; t* = beta/(eta h W0)": {
+  "ok": true,
+  "tstar_top5": 61.6491137939892,
+  "tstar_leader": 44.597231255226234,
+  "tstar_eta002_top5": 304.3478260869565,
+  "tstar_eta002_leader": 220.16651248843664
+ },
+ "S8 Prop 7: forward blind to row offsets, backward blind to column offsets, sum blind only to the global constant": {
+  "ok": true
+ },
+ "S9 Analysis Prop 2: a wrong pull can LOWER theta_K (Delta theta_K < 0) when rho - a_d c_d < 0": {
+  "ok": false,
+  "rho_minus_ac": 0.47894685959196603,
+  "dtheta": 0.0
+ },
+ "S10 Prop 12: query-independent pool d' <= ||pi||_2 Delta/s, attained at alpha ~ pi; mean gives m^-1/2": {
+  "ok": true
+ },
+ "S11a Lemma 5/9: mean pairwise cosine = (n|mu|^2 - 1)/(n-1); |mean|^2 = 1/n + (1-1/n) rho": {
+  "ok": true
+ },
+ "S11b Prop 10 consistency: parent-parent cos ~ |mu|^2 / E|xbar|^2 predicted from measured inputs": {
+  "ok": true,
+  "pred_frozen": 0.9479811512519634,
+  "meas_frozen": 0.946,
+  "pred_bridge": 0.7617085347491878,
+  "meas_bridge": 0.756
+ },
+ "S11c Lemma 5 vs reported means: |mu|^2 vs ask-ask; <mu,mu_k> vs ask-node": {
+  "ok": true,
+  "frozen": [
+   0.5505639999999999,
+   0.529697476
+  ],
+  "bridge": [
+   0.31360000000000005,
+   0.09814728000000003
+  ],
+  "gap_frozen": 0.3921288665732222,
+  "gap_bridge": 0.6201567866273818
+ },
+ "S12 arithmetic": {
+  "view params 2dr": "12288",
+  "two full heads 2d^2": "294912",
+  "per ask full / lowrank": "(240.74448979591835, 20.06204081632653)",
+  "LoRA r16 Qwen3-8B attn": "15335424",
+  "Pi params dp=1024": "4587520",
+  "P params dp=1024 ms=1": "4587520",
+  "KV bytes/token fp16": "147456",
+  "KV(100 tok)/768B": "19200.0",
+  "log2(588)": "9.199672344836364",
+  "full heads / label bits": "26.1688113197906",
+  "move unrelated drift 0.1(0.308-0.379*0.100)": "0.027010000000000003",
+  "g/(h eta) eta=.1, .02": "(9.511278195488721, 47.556390977443606)",
+  "same with n_v/2 as in eq (4)": "(19.022556390977442, 95.11278195488721)",
+  "cap bound W<=W0 e^{zeta|mu|/beta}": "1.1259253665955387",
+  "self pred with p=0.748 fixed": "{0.02: -0.0031161160000000004, 0.05: -0.0075452843999999995, 0.1: -0.0225151788, 0.2: -0.0674582956}",
+  "self pred with realised p_self": "{0.02: -0.0022384840000000002, 0.05: -0.0060554649000000025, 0.1: -0.0225151788, 0.2: -0.0738888437}",
+  "p* eq (3)": "{'0.02': 0.4137931034482759, '0.05': 0.3793103448275862, '0.1': 0.24256837098692036, '0.2': -0.011651816312542793, 'c0.1': 0.5427251732101617}",
+  "B/(B+D)": "{'0.02': 0.7737226277372262, '0.05': 0.7055702917771883, '0.1': 0.7407407407407407, '0.2': 0.692741935483871, 'c0.1': 0.8149100257069409}",
+  "endpoint misses at p=.3,.6": "{0.02: (0.0005499999999999995, 0.00030000000000000035), 0.05: (0.0017800000000000003, 0.0015599999999999998), 0.1: (0.0019000000000000006, 0.0068000000000000005), 0.2: (0.0011000000000000038, 0.006599999999999995)}",
+  "coverage ceiling check: multi-hop share>3 * avg loss": "None",
+  "visible: B_vis - H": "-0.0023999999999999994",
+  "gated unrelated part = 0.556 H_c?": "(0.016457600000000003, 0.01133093525179856)",
+  "centered: H_c drop, B drop": "(0.722972972972973, 0.3660000000000001)",
+  "rank-1 gain share recovered by centering": "0.3695652173913043",
+  "dilution: 1/4 of mean->LSE gap by ridge, distilled-8 share": "(0.2500000000000002, 0.6830357142857144)",
+  "tau log n for n=15..33.5 at tau=.05": "(0.1354025100551105, 0.17557727194155104)"
+ }
+}

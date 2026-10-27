@@ -1,0 +1,168 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read hop, pyramid descent B=8, N=4096",
+  "median_ms": 24.800674,
+  "p95_ms": 31.650875449999997,
+  "n": 100,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read hop, flat scoring, N=4096",
+  "median_ms": 24.725611,
+  "p95_ms": 31.298814399999998,
+  "n": 100,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "  read hop minus encoder (descent + BM25 + RRF + context), N=4096",
+  "median_ms": 0.1146805,
+  "p95_ms": 0.16601209999999997,
+  "n": 500,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "  read hop minus encoder, flat, N=4096",
+  "median_ms": 0.462109,
+  "p95_ms": 0.5244933,
+  "n": 300,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read-again loop, 2 hops, pyramid, N=4096",
+  "median_ms": 84.488655,
+  "p95_ms": 124.31161809999999,
+  "n": 60,
+  "note": "",
+  "hops": 2,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read-again loop, 3 hops, pyramid, N=4096",
+  "median_ms": 137.95818400000002,
+  "p95_ms": 208.61229004999998,
+  "n": 60,
+  "note": "",
+  "hops": 3,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "write path (encode + place + ancestors + dirty + BM25), N=4096",
+  "median_ms": 36.2357095,
+  "p95_ms": 56.69445355,
+  "n": 100,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "  write path minus encoder and BM25 (place + ancestors + dirty), N=4096",
+  "median_ms": 0.338051,
+  "p95_ms": 0.44626750000000004,
+  "n": 300,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=4096",
+  "median_ms": 12.0284115,
+  "p95_ms": 12.479110050000001,
+  "n": 40,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read hop, pyramid descent B=8, N=65536",
+  "median_ms": 27.420879499999998,
+  "p95_ms": 36.94873995,
+  "n": 100,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read hop, flat scoring, N=65536",
+  "median_ms": 35.869724,
+  "p95_ms": 39.4543868,
+  "n": 100,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "  read hop minus encoder (descent + BM25 + RRF + context), N=65536",
+  "median_ms": 0.34892449999999997,
+  "p95_ms": 0.5995636999999999,
+  "n": 500,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "  read hop minus encoder, flat, N=65536",
+  "median_ms": 4.934077500000001,
+  "p95_ms": 6.6158769500000005,
+  "n": 300,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read-again loop, 2 hops, pyramid, N=65536",
+  "median_ms": 76.23564350000001,
+  "p95_ms": 105.5513387,
+  "n": 60,
+  "note": "",
+  "hops": 2,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "read-again loop, 3 hops, pyramid, N=65536",
+  "median_ms": 142.75565,
+  "p95_ms": 196.21048099999996,
+  "n": 60,
+  "note": "",
+  "hops": 3,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "write path (encode + place + ancestors + dirty + BM25), N=65536",
+  "median_ms": 38.7268925,
+  "p95_ms": 59.2074564,
+  "n": 100,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "  write path minus encoder and BM25 (place + ancestors + dirty), N=65536",
+  "median_ms": 0.5146585,
+  "p95_ms": 0.6767174500000002,
+  "n": 300,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b7_paths.py",
+  "what": "forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=65536",
+  "median_ms": 16.523166500000002,
+  "p95_ms": 24.603547,
+  "n": 40,
+  "note": "",
+  "N": 65536
+ }
+]

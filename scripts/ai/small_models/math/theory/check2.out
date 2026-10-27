@@ -1,0 +1,4 @@
+eta 0.02: mean |exact - first order| 1.03e-04, |exact - second order| 8.77e-07
+eta 0.1: mean |exact - first order| 2.59e-03, |exact - second order| 1.14e-04
+eta 0.3: mean |exact - first order| 2.14e-02, |exact - second order| 3.94e-03
+{'0-16': 15.0, '17-21': 18.8, '22-26': 23.7, '27-99': 33.5}

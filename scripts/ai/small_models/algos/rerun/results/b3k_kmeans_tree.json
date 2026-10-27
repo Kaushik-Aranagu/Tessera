@@ -1,0 +1,134 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=1, depth 3 (N=4096), k-means tree, 48 dots",
+  "median_ms": 0.021534499999999998,
+  "p95_ms": 0.029532449999999984,
+  "n": 500,
+  "note": "overlap vs flat 0.15",
+  "beam": 1,
+  "overlap": 0.14750000000000002,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=4, depth 3 (N=4096), k-means tree, 144 dots",
+  "median_ms": 0.0271645,
+  "p95_ms": 0.0374311,
+  "n": 500,
+  "note": "overlap vs flat 0.40",
+  "beam": 4,
+  "overlap": 0.40399999999999997,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=8, depth 3 (N=4096), k-means tree, 272 dots",
+  "median_ms": 0.0345835,
+  "p95_ms": 0.05783109999999998,
+  "n": 500,
+  "note": "overlap vs flat 0.56",
+  "beam": 8,
+  "overlap": 0.557,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=16, depth 3 (N=4096), k-means tree, 528 dots",
+  "median_ms": 0.11829300000000001,
+  "p95_ms": 0.19898525,
+  "n": 500,
+  "note": "overlap vs flat 0.71",
+  "beam": 16,
+  "overlap": 0.7094999999999999,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=32, depth 3 (N=4096), k-means tree, 784 dots",
+  "median_ms": 0.218658,
+  "p95_ms": 0.3480934499999998,
+  "n": 500,
+  "note": "overlap vs flat 0.84",
+  "beam": 32,
+  "overlap": 0.8355000000000001,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=64, depth 3 (N=4096), k-means tree, 1296 dots",
+  "median_ms": 0.4244295,
+  "p95_ms": 1.1880125999999993,
+  "n": 500,
+  "note": "overlap vs flat 0.94",
+  "beam": 64,
+  "overlap": 0.9405000000000001,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=1, depth 4 (N=65536), k-means tree, 64 dots",
+  "median_ms": 0.040417,
+  "p95_ms": 0.07044675,
+  "n": 500,
+  "note": "overlap vs flat 0.16",
+  "beam": 1,
+  "overlap": 0.1595,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=4, depth 4 (N=65536), k-means tree, 208 dots",
+  "median_ms": 0.0543275,
+  "p95_ms": 0.1461040999999998,
+  "n": 500,
+  "note": "overlap vs flat 0.39",
+  "beam": 4,
+  "overlap": 0.3945,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=8, depth 4 (N=65536), k-means tree, 400 dots",
+  "median_ms": 0.0676,
+  "p95_ms": 0.13124794999999997,
+  "n": 500,
+  "note": "overlap vs flat 0.52",
+  "beam": 8,
+  "overlap": 0.5175,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=16, depth 4 (N=65536), k-means tree, 784 dots",
+  "median_ms": 0.1164685,
+  "p95_ms": 0.20272224999999988,
+  "n": 500,
+  "note": "overlap vs flat 0.64",
+  "beam": 16,
+  "overlap": 0.638,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=32, depth 4 (N=65536), k-means tree, 1296 dots",
+  "median_ms": 0.32960049999999996,
+  "p95_ms": 0.584988,
+  "n": 500,
+  "note": "overlap vs flat 0.76",
+  "beam": 32,
+  "overlap": 0.7575,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b3k_kmeans_tree.py",
+  "what": "beam descent B=64, depth 4 (N=65536), k-means tree, 2320 dots",
+  "median_ms": 0.8867385,
+  "p95_ms": 1.03406155,
+  "n": 500,
+  "note": "overlap vs flat 0.85",
+  "beam": 64,
+  "overlap": 0.8475,
+  "N": 65536
+ }
+]

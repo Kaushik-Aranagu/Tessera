@@ -1,0 +1,15 @@
+/tmp/claude-0/math/theory/rank.py:72: RuntimeWarning: divide by zero encountered in log
+  gamma = -np.polyfit(np.log(ii), np.log(sig[:k]), 1)[0]
+action head: top singular values [1.176, 0.586, 0.099, 0.092, 0.079, 0.076, 0.073, 0.067]; noise edge by n asks 150:0.430, 300:0.290, 600:0.213, 1200:0.153, 2400:0.097, 4800:0.082 (log-log slope -0.49)
+   detectable directions r_detect(n): 150:2, 300:2, 600:2, 1200:2, 2400:2, 4800:2; signal spectrum power law gamma nan; top-16 share of signal energy 1.00
+state head: top singular values [1.294, 0.142, 0.116, 0.094, 0.092, 0.082, 0.077, 0.073]; noise edge by n asks 150:0.484, 300:0.370, 600:0.250, 1200:0.194, 2400:0.131, 4800:0.091 (log-log slope -0.48)
+   detectable directions r_detect(n): 150:1, 300:1, 600:1, 1200:1, 2400:1, 4800:1; signal spectrum power law gamma nan; top-16 share of signal energy 1.00
+fold 0 swept (100s)
+fold 1 swept (180s)
+fold 2 swept (274s)
+fold 3 swept (358s)
+fold 4 swept (457s)
+frozen held-out recall@10 0.575
+  2 chats (~274 asks)  rank:test/train  1:0.628/0.819  2:0.612/0.885  4:0.596/0.954  8:0.587/0.989  16:0.588/1.000  32:0.591/1.000  64:0.594/1.000  128:0.598/1.000  full:0.607/1.000
+  4 chats (~587 asks)  rank:test/train  1:0.652/0.743  2:0.636/0.782  4:0.634/0.842  8:0.626/0.917  16:0.611/0.971  32:0.602/0.990  64:0.606/0.996  128:0.600/0.998  full:0.602/0.999
+  8 chats (~1225 asks)  rank:test/train  1:0.667/0.712  2:0.666/0.724  4:0.662/0.747  8:0.659/0.800  16:0.650/0.870  32:0.650/0.931  64:0.636/0.966  128:0.630/0.982  full:0.611/0.997

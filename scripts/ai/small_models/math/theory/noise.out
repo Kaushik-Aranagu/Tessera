@@ -1,0 +1,57 @@
+4593 visits, baseline recall@10 0.657
+share of visits that are re-asks (related): 0.444
+  arm                              delta           95% CI  rel-part  unrel-pt   d|unrel  newFP    ok/wrong  delta by visit position <50/50-99/100+
+  move eta=0.02 cites=0.0        +0.0060  [+0.003,+0.009]   +0.0086   -0.0026   -0.0046   0.34      7035/0  +0.002 +0.008 +0.008
+  move eta=0.02 cites=0.3        +0.0011  [-0.001,+0.003]   +0.0030   -0.0019   -0.0034   0.39   4939/2096  +0.001 +0.002 +0.001
+  move eta=0.02 cites=0.6        -0.0024  [-0.005,+0.000]   -0.0005   -0.0019   -0.0034   0.45   2785/4250  -0.001 -0.002 -0.004
+  move eta=0.02 cites=1.0        -0.0085  [-0.012,-0.006]   -0.0055   -0.0030   -0.0054   0.54      0/7035  -0.004 -0.009 -0.012
+  move eta=0.02 cites=self       -0.0038  [-0.007,-0.001]   -0.0019   -0.0019   -0.0035   0.34   1599/2994  -0.002 +0.001 -0.009
+  move eta=0.02 cites=visible    -0.0006  [-0.003,+0.002]   +0.0015   -0.0021   -0.0039   0.24      3978/0  +0.001 +0.001 -0.003
+  move eta=0.05 cites=0.0        +0.0143  [+0.010,+0.019]   +0.0212   -0.0068   -0.0123   0.89      7035/0  +0.005 +0.015 +0.022
+  move eta=0.05 cites=0.3        +0.0048  [+0.000,+0.010]   +0.0115   -0.0067   -0.0120   0.98   4939/2096  -0.002 +0.002 +0.014
+  move eta=0.05 cites=0.6        -0.0067  [-0.011,-0.003]   +0.0007   -0.0074   -0.0133   1.14   2785/4250  -0.001 -0.011 -0.008
+  move eta=0.05 cites=1.0        -0.0233  [-0.028,-0.019]   -0.0165   -0.0068   -0.0123   1.37      0/7035  -0.008 -0.025 -0.036
+  move eta=0.05 cites=self       -0.0116  [-0.016,-0.007]   -0.0054   -0.0061   -0.0110   0.90   1457/3136  -0.002 -0.012 -0.020
+  move eta=0.05 cites=visible    +0.0022  [-0.001,+0.005]   +0.0064   -0.0042   -0.0076   0.65      4005/0  +0.002 +0.003 +0.002
+  move eta=0.1 cites=0.0         +0.0204  [+0.014,+0.027]   +0.0369   -0.0165   -0.0296   1.82      7035/0  +0.008 +0.018 +0.034
+  move eta=0.1 cites=0.3         -0.0029  [-0.009,+0.003]   +0.0153   -0.0182   -0.0328   2.02   4939/2096  -0.003 -0.007 +0.000
+  move eta=0.1 cites=0.6         -0.0232  [-0.030,-0.016]   -0.0039   -0.0193   -0.0347   2.25   2785/4250  -0.009 -0.030 -0.030
+  move eta=0.1 cites=1.0         -0.0636  [-0.071,-0.056]   -0.0380   -0.0257   -0.0462   2.75      0/7035  -0.020 -0.064 -0.103
+  move eta=0.1 cites=self        -0.0232  [-0.029,-0.018]   -0.0115   -0.0117   -0.0210   1.71   1159/3434  -0.006 -0.027 -0.035
+  move eta=0.1 cites=visible     -0.0024  [-0.007,+0.002]   +0.0081   -0.0105   -0.0189   1.35      3991/0  +0.002 -0.006 -0.004
+  move eta=0.2 cites=0.0         -0.0016  [-0.011,+0.007]   +0.0471   -0.0487   -0.0876   3.46      7035/0  -0.004 -0.009 +0.006
+  move eta=0.2 cites=0.3         -0.0443  [-0.054,-0.035]   +0.0060   -0.0503   -0.0904   3.75   4939/2096  -0.015 -0.058 -0.059
+  move eta=0.2 cites=0.6         -0.0826  [-0.093,-0.073]   -0.0264   -0.0562   -0.1011   4.11   2785/4250  -0.027 -0.093 -0.123
+  move eta=0.2 cites=1.0         -0.1476  [-0.158,-0.137]   -0.0867   -0.0609   -0.1095   4.66      0/7035  -0.050 -0.154 -0.231
+  move eta=0.2 cites=self        -0.0422  [-0.049,-0.036]   -0.0212   -0.0210   -0.0378   2.66    823/3770  -0.017 -0.049 -0.059
+  move eta=0.2 cites=visible     -0.0237  [-0.031,-0.017]   +0.0034   -0.0271   -0.0488   2.67      3878/0  -0.005 -0.033 -0.032
+  centered eta=0.1 cites=0.0     +0.0235  [+0.018,+0.029]   +0.0280   -0.0046   -0.0082   0.85      7035/0  +0.008 +0.024 +0.037
+  centered eta=0.1 cites=0.3     +0.0086  [+0.004,+0.013]   +0.0136   -0.0050   -0.0090   0.94   4939/2096  +0.000 +0.008 +0.017
+  centered eta=0.1 cites=0.6     -0.0013  [-0.006,+0.003]   +0.0048   -0.0061   -0.0109   1.04   2785/4250  -0.003 -0.005 +0.004
+  centered eta=0.1 cites=1.0     -0.0198  [-0.024,-0.015]   -0.0128   -0.0070   -0.0126   1.20      0/7035  -0.008 -0.028 -0.023
+  centered eta=0.1 cites=self    -0.0045  [-0.008,-0.001]   -0.0023   -0.0022   -0.0039   0.67   1521/3072  -0.001 -0.004 -0.009
+  centered eta=0.1 cites=visible +0.0028  [-0.001,+0.006]   +0.0066   -0.0038   -0.0069   0.58      4008/0  +0.001 +0.004 +0.003
+
+Linear model Delta(p) = alpha - beta p (least squares on p = 0, 0.3, 0.6), and endpoint model (p = 0, 1 only)
+  eta 0.02  alpha +0.0057 beta 0.0140 p*=0.411 R2=0.990 | measured p=.3,.6: +0.0011 -0.0024; endpoint-model prediction +0.0016 -0.0027; p*(endpoint)=0.414 | self: p_self=0.652 predicted -0.0022 (lin -0.0022) measured -0.0038
+  eta 0.05  alpha +0.0147 beta 0.0351 p*=0.418 R2=0.997 | measured p=.3,.6: +0.0048 -0.0067; endpoint-model prediction +0.0030 -0.0083; p*(endpoint)=0.380 | self: p_self=0.683 predicted -0.0074 (lin -0.0061) measured -0.0116
+  eta 0.1   alpha +0.0199 beta 0.0727 p*=0.274 R2=0.998 | measured p=.3,.6: -0.0029 -0.0232; endpoint-model prediction -0.0048 -0.0300; p*(endpoint)=0.243 | self: p_self=0.748 predicted -0.0277 (lin -0.0225) measured -0.0232
+  eta 0.2   alpha -0.0024 beta 0.1349 p*=-0.018 R2=0.999 | measured p=.3,.6: -0.0443 -0.0826; endpoint-model prediction -0.0454 -0.0892; p*(endpoint)=-0.011 | self: p_self=0.821 predicted -0.0793 (lin -0.0738) measured -0.0422
+  centered eta 0.1: alpha +0.0226 beta 0.0412 p*=0.549
+
+Components (sum over visits / visits), from the endpoint arms: B-H_e = related part at p=0 etc.
+  eta 0.02  p=0: related +0.0086 unrelated -0.0026 | p=1: related -0.0055 unrelated -0.0030
+  eta 0.05  p=0: related +0.0212 unrelated -0.0068 | p=1: related -0.0165 unrelated -0.0068
+  eta 0.1   p=0: related +0.0369 unrelated -0.0165 | p=1: related -0.0380 unrelated -0.0257
+  eta 0.2   p=0: related +0.0471 unrelated -0.0487 | p=1: related -0.0867 unrelated -0.0609
+
+Margin change of the correct node per update, re-ask pairs (ask s and later ask q share evidence e)
+  eta 0.02: 2936 (s,q,e) triples; mean margin before +0.026 (0.40 negative); rho=<s,q> 0.589, a=<k_e,q> 0.389, c=<k_e,s> 0.389
+    E[dm | correct] +0.0087 (first order eta(rho - a c) +0.0087, mean rel. error 0.006); E[dm | wrong] -0.0002;  margin break-even p*_m = 0.976; near the boundary (|m|<.05): +0.0089 / -0.0002 -> p*_m 0.979
+  eta 0.1: 2936 (s,q,e) triples; mean margin before +0.026 (0.40 negative); rho=<s,q> 0.589, a=<k_e,q> 0.389, c=<k_e,s> 0.389
+    E[dm | correct] +0.0441 (first order eta(rho - a c) +0.0433, mean rel. error 0.027); E[dm | wrong] -0.0011;  margin break-even p*_m = 0.976; near the boundary (|m|<.05): +0.0452 / -0.0010 -> p*_m 0.978
+
+Top-1 win concentration under self-feedback (eta 0.1), mean over runs: share of visits won by the top node / top 5
+  move: top-1 node 0.236, top-5 nodes 0.509
+  centered: top-1 node 0.083, top-5 nodes 0.260
+done 24s

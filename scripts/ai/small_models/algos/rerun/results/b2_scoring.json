@@ -1,0 +1,503 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "state head, low-rank r=16, 1 vector (numpy) + normalise",
+  "median_ms": 0.004937,
+  "p95_ms": 0.00533715,
+  "n": 2000,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "state head, full 384x384, 1 vector (numpy) + normalise",
+  "median_ms": 0.009455,
+  "p95_ms": 0.011456,
+  "n": 2000,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "state head, low-rank r=16, 1 vector (torch eager)",
+  "median_ms": 0.009514499999999999,
+  "p95_ms": 0.01434545,
+  "n": 2000,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "action head, low-rank r=16, recompute N=1e+04 keys (after refit)",
+  "median_ms": 12.4692145,
+  "p95_ms": 14.112164449999998,
+  "n": 30,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "action head, low-rank r=16, recompute N=1e+05 keys (after refit)",
+  "median_ms": 232.0056645,
+  "p95_ms": 298.0050426499999,
+  "n": 10,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: fp32 GEMV numpy (OpenBLAS)",
+  "median_ms": 0.0234295,
+  "p95_ms": 0.048486999999999884,
+  "n": 400,
+  "note": "",
+  "bytes_per_key": 1536,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: fp32, 4 queries in one GEMM (batched reads)",
+  "median_ms": 0.119949,
+  "p95_ms": 0.16458475,
+  "n": 400,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: fp32 torch.mv",
+  "median_ms": 0.0302085,
+  "p95_ms": 0.04756389999999995,
+  "n": 400,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: fp16 torch.mv (CPU)",
+  "median_ms": 0.178346,
+  "p95_ms": 0.23350479999999998,
+  "n": 400,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: bf16 torch.mv (CPU)",
+  "median_ms": 0.026701000000000003,
+  "p95_ms": 0.042305899999999945,
+  "n": 400,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: int8 keys, fbgemm dynamic-quant Linear",
+  "median_ms": 0.02276,
+  "p95_ms": 0.03935764999999997,
+  "n": 400,
+  "note": "top-10 overlap with fp32 0.964",
+  "bytes_per_key": 384,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+03: 1-bit codes popcount + fp32 rerank top-200",
+  "median_ms": 0.049994,
+  "p95_ms": 0.09443839999999992,
+  "n": 400,
+  "note": "top-10 overlap with fp32 0.982",
+  "bytes_per_key": 48,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+03: argpartition + sort k",
+  "median_ms": 0.0067545,
+  "p95_ms": 0.010621199999999994,
+  "n": 400,
+  "note": "",
+  "k": 10,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+03: torch.topk",
+  "median_ms": 0.003978499999999999,
+  "p95_ms": 0.006295999999999999,
+  "n": 400,
+  "note": "",
+  "k": 10,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+03: argpartition + sort k",
+  "median_ms": 0.007058,
+  "p95_ms": 0.012132199999999996,
+  "n": 400,
+  "note": "",
+  "k": 100,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+03: torch.topk",
+  "median_ms": 0.0042235,
+  "p95_ms": 0.005073399999999988,
+  "n": 400,
+  "note": "",
+  "k": 100,
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "full argsort of N=1e+03 (what e5/e6 do today)",
+  "median_ms": 0.021134,
+  "p95_ms": 0.038662749999999975,
+  "n": 100,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: fp32 GEMV numpy (OpenBLAS)",
+  "median_ms": 0.6452549999999999,
+  "p95_ms": 0.72972845,
+  "n": 400,
+  "note": "",
+  "bytes_per_key": 1536,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: fp32, 4 queries in one GEMM (batched reads)",
+  "median_ms": 1.5530495,
+  "p95_ms": 1.6761023499999999,
+  "n": 400,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: fp32 torch.mv",
+  "median_ms": 0.731568,
+  "p95_ms": 0.8304574499999999,
+  "n": 400,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: fp16 torch.mv (CPU)",
+  "median_ms": 1.2222865,
+  "p95_ms": 1.8348457999999996,
+  "n": 400,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: bf16 torch.mv (CPU)",
+  "median_ms": 0.5208465,
+  "p95_ms": 1.1888953,
+  "n": 400,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: int8 keys, fbgemm dynamic-quant Linear",
+  "median_ms": 0.2932405,
+  "p95_ms": 0.3893083499999999,
+  "n": 400,
+  "note": "top-10 overlap with fp32 0.966",
+  "bytes_per_key": 384,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+04: 1-bit codes popcount + fp32 rerank top-200",
+  "median_ms": 0.3853135,
+  "p95_ms": 0.65041195,
+  "n": 400,
+  "note": "top-10 overlap with fp32 0.884",
+  "bytes_per_key": 48,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+04: argpartition + sort k",
+  "median_ms": 0.023768499999999998,
+  "p95_ms": 0.031114999999999997,
+  "n": 400,
+  "note": "",
+  "k": 10,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+04: torch.topk",
+  "median_ms": 0.020253,
+  "p95_ms": 0.02586549999999999,
+  "n": 400,
+  "note": "",
+  "k": 10,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+04: argpartition + sort k",
+  "median_ms": 0.0240605,
+  "p95_ms": 0.031326799999999995,
+  "n": 400,
+  "note": "",
+  "k": 100,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+04: torch.topk",
+  "median_ms": 0.0348005,
+  "p95_ms": 0.049059149999999996,
+  "n": 400,
+  "note": "",
+  "k": 100,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "full argsort of N=1e+04 (what e5/e6 do today)",
+  "median_ms": 0.6598615,
+  "p95_ms": 0.69389865,
+  "n": 100,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: fp32 GEMV numpy (OpenBLAS)",
+  "median_ms": 6.8088809999999995,
+  "p95_ms": 11.04990185,
+  "n": 60,
+  "note": "",
+  "bytes_per_key": 1536,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: fp32, 4 queries in one GEMM (batched reads)",
+  "median_ms": 24.556294,
+  "p95_ms": 29.791465749999997,
+  "n": 60,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: fp32 torch.mv",
+  "median_ms": 7.7136325,
+  "p95_ms": 8.54762165,
+  "n": 60,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: fp16 torch.mv (CPU)",
+  "median_ms": 17.1423055,
+  "p95_ms": 19.256382849999998,
+  "n": 60,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: bf16 torch.mv (CPU)",
+  "median_ms": 4.793793,
+  "p95_ms": 5.13614355,
+  "n": 60,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: int8 keys, fbgemm dynamic-quant Linear",
+  "median_ms": 1.9258365,
+  "p95_ms": 2.25057605,
+  "n": 60,
+  "note": "top-10 overlap with fp32 0.954",
+  "bytes_per_key": 384,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+05: 1-bit codes popcount + fp32 rerank top-200",
+  "median_ms": 2.5828965000000004,
+  "p95_ms": 3.4595383499999994,
+  "n": 60,
+  "note": "top-10 overlap with fp32 0.756",
+  "bytes_per_key": 48,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+05: argpartition + sort k",
+  "median_ms": 0.14249099999999998,
+  "p95_ms": 0.17908834999999995,
+  "n": 60,
+  "note": "",
+  "k": 10,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+05: torch.topk",
+  "median_ms": 0.1741255,
+  "p95_ms": 0.2142015,
+  "n": 60,
+  "note": "",
+  "k": 10,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+05: argpartition + sort k",
+  "median_ms": 0.1354415,
+  "p95_ms": 0.17114074999999998,
+  "n": 60,
+  "note": "",
+  "k": 100,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+05: torch.topk",
+  "median_ms": 0.275378,
+  "p95_ms": 0.3494152499999999,
+  "n": 60,
+  "note": "",
+  "k": 100,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "full argsort of N=1e+05 (what e5/e6 do today)",
+  "median_ms": 8.818981,
+  "p95_ms": 9.3258093,
+  "n": 15,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: fp32 GEMV numpy (OpenBLAS)",
+  "median_ms": 118.05177599999999,
+  "p95_ms": 165.36653719999995,
+  "n": 12,
+  "note": "",
+  "bytes_per_key": 1536,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: fp32, 4 queries in one GEMM (batched reads)",
+  "median_ms": 281.262642,
+  "p95_ms": 335.41152044999995,
+  "n": 12,
+  "note": "",
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: fp32 torch.mv",
+  "median_ms": 144.31779749999998,
+  "p95_ms": 169.28623905,
+  "n": 12,
+  "note": "",
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: fp16 torch.mv (CPU)",
+  "median_ms": 177.8768495,
+  "p95_ms": 233.54839445,
+  "n": 12,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: bf16 torch.mv (CPU)",
+  "median_ms": 82.00644500000001,
+  "p95_ms": 98.89777524999998,
+  "n": 12,
+  "note": "",
+  "bytes_per_key": 768,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: int8 keys, fbgemm dynamic-quant Linear",
+  "median_ms": 37.382425,
+  "p95_ms": 43.55843935,
+  "n": 12,
+  "note": "",
+  "bytes_per_key": 384,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "score N=1e+06: 1-bit codes popcount + fp32 rerank top-200",
+  "median_ms": 44.681169999999995,
+  "p95_ms": 48.949264899999996,
+  "n": 12,
+  "note": "",
+  "bytes_per_key": 48,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+06: argpartition + sort k",
+  "median_ms": 2.9723635,
+  "p95_ms": 3.3778121,
+  "n": 12,
+  "note": "",
+  "k": 10,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-10 of N=1e+06: torch.topk",
+  "median_ms": 3.192128,
+  "p95_ms": 3.6475184,
+  "n": 12,
+  "note": "",
+  "k": 10,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+06: argpartition + sort k",
+  "median_ms": 2.915823,
+  "p95_ms": 3.5854984499999993,
+  "n": 12,
+  "note": "",
+  "k": 100,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2_scoring.py",
+  "what": "top-100 of N=1e+06: torch.topk",
+  "median_ms": 3.2248155,
+  "p95_ms": 3.57714865,
+  "n": 12,
+  "note": "",
+  "k": 100,
+  "N": 1000000
+ }
+]

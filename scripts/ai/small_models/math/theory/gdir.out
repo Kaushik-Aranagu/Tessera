@@ -1,0 +1,5 @@
+action sv1 1.176: |cos(u, mu_s)| 0.515 |cos(u, mu_k)| 0.614 |cos(v, mu_s)| 0.887 |cos(v, mu_k)| 0.998
+action sv2 0.586: |cos(u, mu_s)| 0.645 |cos(u, mu_k)| 0.218 |cos(v, mu_s)| 0.021 |cos(v, mu_k)| 0.004
+state sv1 1.294: |cos(u, mu_s)| 0.393 |cos(u, mu_k)| 0.322 |cos(v, mu_s)| 0.999 |cos(v, mu_k)| 0.878
+state sv2 0.142: |cos(u, mu_s)| 0.138 |cos(u, mu_k)| 0.163 |cos(v, mu_s)| 0.018 |cos(v, mu_k)| 0.051
+cos(mu_s, mu_k) frozen 0.883

@@ -1,0 +1,92 @@
+{
+ "C1 rank(S^T A - I) per fold (r=16)": [
+  32,
+  32,
+  32,
+  32,
+  32
+ ],
+ "C2": {
+  "frozen ask-ask": 0.5475,
+  "frozen ask-turn": 0.5301,
+  "frozen turn-turn": 0.663,
+  "frozen |mean(ask)-mean(turn)|": 0.3924,
+  "lowrank ask-ask": 0.3106,
+  "lowrank ask-turn": 0.0998,
+  "lowrank turn-turn": 0.267,
+  "lowrank |mean(ask)-mean(turn)|": 0.619,
+  "full ask-ask": 0.2366,
+  "full ask-turn": 0.0953,
+  "full turn-turn": 0.2338,
+  "full |mean(ask)-mean(turn)|": 0.5309
+ },
+ "C3": {
+  "frozen state->own ask": 0.9942,
+  "frozen key->own turn": 0.9997,
+  "frozen cos(view, anchor) ask": 1.0,
+  "frozen cos(view, anchor) turn": 1.0,
+  "lowrank state->own ask": 0.9942,
+  "lowrank key->own turn": 0.9812,
+  "lowrank cos(view, anchor) ask": 0.784,
+  "lowrank cos(view, anchor) turn": 0.6528,
+  "full state->own ask": 0.9942,
+  "full key->own turn": 0.9678,
+  "full cos(view, anchor) ask": 0.6758,
+  "full cos(view, anchor) turn": 0.5533
+ },
+ "C4 session hit-rate (frozen f)": {
+  "mean-centroid top1": 0.286,
+  "mean-centroid top3": 0.5062,
+  "max top1": 0.4589,
+  "max top3": 0.6699,
+  "lse tau=0.05 top1": 0.4464,
+  "lse tau=0.05 top3": 0.6521
+ },
+ "C4 sessions per chat": [
+  19,
+  19,
+  32,
+  29,
+  29,
+  28,
+  31,
+  30,
+  25,
+  30
+ ],
+ "C4 mean turns per session": 21.6,
+ "C5 m -> (empirical E[max]-mu, sigma*sqrt(2 ln m))": {
+  "1": [
+   -0.0012,
+   0.0
+  ],
+  "2": [
+   0.0359,
+   0.0782
+  ],
+  "4": [
+   0.0669,
+   0.1105
+  ],
+  "8": [
+   0.0905,
+   0.1354
+  ],
+  "16": [
+   0.1164,
+   0.1563
+  ],
+  "32": [
+   0.1337,
+   0.1748
+  ],
+  "64": [
+   0.1521,
+   0.1915
+  ]
+ },
+ "C5b frozen mean cos ask-ask vs ask-turn": [
+  0.5475,
+  0.5301
+ ]
+}

@@ -1,0 +1,1318 @@
+[
+[
+"b1_encoder.json",
+"encode 1 ask, sentence-transformers end to end (13 tokens)",
+25.999162,
+30.377688499999998,
+1.1684102933779172
+],
+[
+"b1_encoder.json",
+"encode 1 ask, rotating over 1531 LoCoMo asks (median ~10 words)",
+26.0810805,
+25.969559500000003,
+0.9957240651897074
+],
+[
+"b1_encoder.json",
+"tokenizer only, 1 ask",
+0.10396050000000001,
+0.048181,
+0.4634548698784634
+],
+[
+"b1_encoder.json",
+"transformer forward only, 1 sequence of 16 tokens",
+23.601766,
+23.7388595,
+1.0058086119487837
+],
+[
+"b1_encoder.json",
+"transformer forward only, 1 sequence of 32 tokens",
+23.599494,
+30.3769305,
+1.287185670167335
+],
+[
+"b1_encoder.json",
+"transformer forward only, 1 sequence of 64 tokens",
+42.4251235,
+44.388873000000004,
+1.0462874197643763
+],
+[
+"b1_encoder.json",
+"transformer forward only, 1 sequence of 128 tokens",
+70.648337,
+70.6150425,
+0.99952872917589
+],
+[
+"b1_encoder.json",
+"transformer forward only, 1 sequence of 256 tokens",
+130.298383,
+125.008679,
+0.9594031493084607
+],
+[
+"b1_encoder.json",
+"transformer forward only, 1 sequence of 512 tokens",
+257.648347,
+257.231518,
+0.9983821786366827
+],
+[
+"b1_encoder.json",
+"encode 640 LoCoMo turns, batch 64 -> per leaf",
+21.43774371875,
+22.364804321875,
+1.0432443178390163
+],
+[
+"b1_encoder.json",
+"encode 1 LoCoMo turn unbatched (write path), rotating",
+34.7273795,
+35.085778,
+1.0103203439234452
+],
+[
+"b1_encoder.json",
+"encode 1 ask, int8 dynamic-quantized Linear layers",
+12.843954499999999,
+13.648108,
+1.0626094946069766
+],
+[
+"b1_encoder.json",
+"encode 640 turns batch 64, int8 dynamic -> per leaf",
+12.018829226562499,
+12.2057970171875,
+1.015556239888307
+],
+[
+"b1_encoder.json",
+"encode 1 ask, bf16 autocast (AMX on this CPU)",
+34.612741,
+36.097089,
+1.0428844395767443
+],
+[
+"b1_encoder.json",
+"encode 640 turns batch 64, bf16 autocast -> per leaf",
+7.195206740624999,
+7.4595649718749995,
+1.0367408805305625
+],
+[
+"b2_scoring.json",
+"state head, low-rank r=16, 1 vector (numpy) + normalise",
+0.00602,
+0.004937,
+0.8200996677740864
+],
+[
+"b2_scoring.json",
+"state head, full 384x384, 1 vector (numpy) + normalise",
+0.011591,
+0.009455,
+0.8157190923992752
+],
+[
+"b2_scoring.json",
+"state head, low-rank r=16, 1 vector (torch eager)",
+0.0129745,
+0.009514499999999999,
+0.7333230567651932
+],
+[
+"b2_scoring.json",
+"action head, low-rank r=16, recompute N=1e+04 keys (after refit)",
+14.0475,
+12.4692145,
+0.8876465207332266
+],
+[
+"b2_scoring.json",
+"action head, low-rank r=16, recompute N=1e+05 keys (after refit)",
+296.48098400000003,
+232.0056645,
+0.7825313494642205
+],
+[
+"b2_scoring.json",
+"score N=1e+03: fp32 GEMV numpy (OpenBLAS)",
+0.0754805,
+0.0234295,
+0.3104046740548883
+],
+[
+"b2_scoring.json",
+"score N=1e+03: fp32, 4 queries in one GEMM (batched reads)",
+0.2188565,
+0.119949,
+0.5480714532124931
+],
+[
+"b2_scoring.json",
+"score N=1e+03: fp32 torch.mv",
+0.10536100000000001,
+0.0302085,
+0.28671424910545645
+],
+[
+"b2_scoring.json",
+"score N=1e+03: fp16 torch.mv (CPU)",
+0.310669,
+0.178346,
+0.5740707956056125
+],
+[
+"b2_scoring.json",
+"score N=1e+03: bf16 torch.mv (CPU)",
+0.0607985,
+0.026701000000000003,
+0.4391720190465226
+],
+[
+"b2_scoring.json",
+"score N=1e+03: int8 keys, fbgemm dynamic-quant Linear",
+0.07740749999999999,
+0.02276,
+0.294028356425411
+],
+[
+"b2_scoring.json",
+"score N=1e+03: 1-bit codes popcount + fp32 rerank top-200",
+0.0696075,
+0.049994,
+0.7182272025284631
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+03: argpartition + sort k",
+0.009160999999999999,
+0.0067545,
+0.7373103372994215
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+03: torch.topk",
+0.004504,
+0.003978499999999999,
+0.8833259325044404
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+03: argpartition + sort k",
+0.0076965,
+0.007058,
+0.9170402130838693
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+03: torch.topk",
+0.0033335,
+0.0042235,
+1.2669866506674665
+],
+[
+"b2_scoring.json",
+"full argsort of N=1e+03 (what e5/e6 do today)",
+0.0185065,
+0.021134,
+1.1419771431659147
+],
+[
+"b2_scoring.json",
+"score N=1e+04: fp32 GEMV numpy (OpenBLAS)",
+0.717194,
+0.6452549999999999,
+0.8996938066966538
+],
+[
+"b2_scoring.json",
+"score N=1e+04: fp32, 4 queries in one GEMM (batched reads)",
+1.6733825,
+1.5530495,
+0.9280899615001352
+],
+[
+"b2_scoring.json",
+"score N=1e+04: fp32 torch.mv",
+0.7297645,
+0.731568,
+1.0024713452079403
+],
+[
+"b2_scoring.json",
+"score N=1e+04: fp16 torch.mv (CPU)",
+1.702342,
+1.2222865,
+0.7180029042342844
+],
+[
+"b2_scoring.json",
+"score N=1e+04: bf16 torch.mv (CPU)",
+0.572037,
+0.5208465,
+0.9105119074465462
+],
+[
+"b2_scoring.json",
+"score N=1e+04: int8 keys, fbgemm dynamic-quant Linear",
+0.291682,
+0.2932405,
+1.0053431476745223
+],
+[
+"b2_scoring.json",
+"score N=1e+04: 1-bit codes popcount + fp32 rerank top-200",
+0.320116,
+0.3853135,
+1.2036683577203262
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+04: argpartition + sort k",
+0.023513,
+0.023768499999999998,
+1.010866329264662
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+04: torch.topk",
+0.0202945,
+0.020253,
+0.9979551109906625
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+04: argpartition + sort k",
+0.023828,
+0.0240605,
+1.0097574282356891
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+04: torch.topk",
+0.034612,
+0.0348005,
+1.0054460880619438
+],
+[
+"b2_scoring.json",
+"full argsort of N=1e+04 (what e5/e6 do today)",
+0.6546805,
+0.6598615,
+1.0079137838991692
+],
+[
+"b2_scoring.json",
+"score N=1e+05: fp32 GEMV numpy (OpenBLAS)",
+7.0690945,
+6.8088809999999995,
+0.963189981404266
+],
+[
+"b2_scoring.json",
+"score N=1e+05: fp32, 4 queries in one GEMM (batched reads)",
+26.9651645,
+24.556294,
+0.9106673167152384
+],
+[
+"b2_scoring.json",
+"score N=1e+05: fp32 torch.mv",
+9.1109525,
+7.7136325,
+0.8466329398600202
+],
+[
+"b2_scoring.json",
+"score N=1e+05: fp16 torch.mv (CPU)",
+19.826577999999998,
+17.1423055,
+0.8646124157179318
+],
+[
+"b2_scoring.json",
+"score N=1e+05: bf16 torch.mv (CPU)",
+4.84316,
+4.793793,
+0.9898068616357915
+],
+[
+"b2_scoring.json",
+"score N=1e+05: int8 keys, fbgemm dynamic-quant Linear",
+1.907602,
+1.9258365,
+1.0095588597621517
+],
+[
+"b2_scoring.json",
+"score N=1e+05: 1-bit codes popcount + fp32 rerank top-200",
+3.120736,
+2.5828965000000004,
+0.8276562003322294
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+05: argpartition + sort k",
+0.1805595,
+0.14249099999999998,
+0.7891636828856968
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+05: torch.topk",
+0.2345155,
+0.1741255,
+0.7424903684404656
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+05: argpartition + sort k",
+0.178702,
+0.1354415,
+0.7579182102046983
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+05: torch.topk",
+0.2606935,
+0.275378,
+1.0563286004445833
+],
+[
+"b2_scoring.json",
+"full argsort of N=1e+05 (what e5/e6 do today)",
+8.764518,
+8.818981,
+1.0062140325343618
+],
+[
+"b2_scoring.json",
+"score N=1e+06: fp32 GEMV numpy (OpenBLAS)",
+118.0713945,
+118.05177599999999,
+0.9998338420573155
+],
+[
+"b2_scoring.json",
+"score N=1e+06: fp32, 4 queries in one GEMM (batched reads)",
+285.230537,
+281.262642,
+0.9860888141861193
+],
+[
+"b2_scoring.json",
+"score N=1e+06: fp32 torch.mv",
+151.3940125,
+144.31779749999998,
+0.9532596112412305
+],
+[
+"b2_scoring.json",
+"score N=1e+06: fp16 torch.mv (CPU)",
+190.23989699999998,
+177.8768495,
+0.9350133820772621
+],
+[
+"b2_scoring.json",
+"score N=1e+06: bf16 torch.mv (CPU)",
+95.95769150000001,
+82.00644500000001,
+0.8546104404773015
+],
+[
+"b2_scoring.json",
+"score N=1e+06: int8 keys, fbgemm dynamic-quant Linear",
+35.808657499999995,
+37.382425,
+1.0439493577775152
+],
+[
+"b2_scoring.json",
+"score N=1e+06: 1-bit codes popcount + fp32 rerank top-200",
+46.148523499999996,
+44.681169999999995,
+0.9682036739485284
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+06: argpartition + sort k",
+3.3903220000000003,
+2.9723635,
+0.8767201168502579
+],
+[
+"b2_scoring.json",
+"top-10 of N=1e+06: torch.topk",
+3.135602,
+3.192128,
+1.018027160334762
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+06: argpartition + sort k",
+2.7755150000000004,
+2.915823,
+1.050552059707838
+],
+[
+"b2_scoring.json",
+"top-100 of N=1e+06: torch.topk",
+3.30053,
+3.2248155,
+0.9770598964408747
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=1 queries in one pass, numpy K @ S.T",
+13.555885499999999,
+12.874939,
+0.9497674644714283
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=1 queries in one pass, numpy S @ K.T",
+10.209996499999999,
+9.072918000000001,
+0.8886308628999042
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=1 queries in one pass, torch S @ K.T",
+11.1023305,
+7.3341135,
+0.6605922513295744
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=1 queries in one pass, int8 fbgemm",
+2.2826255,
+1.864935,
+0.8170131280843047
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=4 queries in one pass, numpy K @ S.T",
+27.045426499999998,
+24.562832,
+0.9082064947284156
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=4 queries in one pass, numpy S @ K.T",
+32.801939000000004,
+33.9669725,
+1.0355172143939415
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=4 queries in one pass, torch S @ K.T",
+21.255274,
+17.229206,
+0.810584987048391
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=4 queries in one pass, int8 fbgemm",
+2.4461375,
+4.4918745,
+1.836313167187045
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=16 queries in one pass, numpy K @ S.T",
+33.5961755,
+33.7249535,
+1.0038331148734474
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=16 queries in one pass, numpy S @ K.T",
+42.043433,
+32.760445000000004,
+0.7792048047075509
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=16 queries in one pass, torch S @ K.T",
+29.6497025,
+26.436885500000002,
+0.8916408351820732
+],
+[
+"b2b_batch.json",
+"N=1e+05, Q=16 queries in one pass, int8 fbgemm",
+4.402359000000001,
+6.384868,
+1.4503287896330124
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=1 queries in one pass, numpy K @ S.T",
+126.416755,
+124.6710285,
+0.9861907031231739
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=1 queries in one pass, numpy S @ K.T",
+115.819879,
+123.880854,
+1.0695992352055557
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=1 queries in one pass, torch S @ K.T",
+147.981106,
+167.2335465,
+1.1301006663647992
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=1 queries in one pass, int8 fbgemm",
+35.591548,
+34.1219095,
+0.9587082163439477
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=4 queries in one pass, numpy K @ S.T",
+278.060289,
+285.383828,
+1.0263379536370978
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=4 queries in one pass, numpy S @ K.T",
+331.97229300000004,
+321.3847245,
+0.968107071815177
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=4 queries in one pass, torch S @ K.T",
+291.140121,
+288.18973800000003,
+0.9898661064305871
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=4 queries in one pass, int8 fbgemm",
+65.692525,
+63.363388,
+0.9645448702116413
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=16 queries in one pass, numpy K @ S.T",
+279.21581349999997,
+315.8940615,
+1.1313616429536504
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=16 queries in one pass, numpy S @ K.T",
+411.4640745,
+423.979407,
+1.0304165862237384
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=16 queries in one pass, torch S @ K.T",
+346.28465800000004,
+349.4853625,
+1.009242986733764
+],
+[
+"b2b_batch.json",
+"N=1e+06, Q=16 queries in one pass, int8 fbgemm",
+137.8230995,
+144.067678,
+1.045308649440147
+],
+[
+"b2h_hnsw.json",
+"HNSW build N=1e+04 (M=16, efC=100), whole index",
+1933.8476279999668,
+1995.1262449994829,
+1.031687407069859
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+04 ef=32, top-10",
+0.085359,
+0.0635185,
+0.7441336004404925
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+04 ef=64, top-10",
+0.1298845,
+0.1214315,
+0.9349191012014519
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+04 ef=128, top-10",
+0.2452335,
+0.229015,
+0.9338650714523098
+],
+[
+"b2h_hnsw.json",
+"HNSW build N=1e+05 (M=16, efC=100), whole index",
+37007.34966300024,
+36776.43056300076,
+0.9937601827176953
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+05 ef=32, top-10",
+0.089971,
+0.10992350000000001,
+1.2217659023463117
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+05 ef=64, top-10",
+0.1655575,
+0.158495,
+0.9573411050541353
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+05 ef=128, top-10",
+0.31714200000000003,
+0.290867,
+0.9171506769838115
+],
+[
+"b2h_hnsw.json",
+"HNSW build N=1e+06 (M=16, efC=100), whole index",
+501309.56682800024,
+480174.40531400096,
+0.9578400993866315
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+06 ef=32, top-10",
+0.1386735,
+0.1372515,
+0.9897456976278812
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+06 ef=64, top-10",
+0.2171355,
+0.230329,
+1.0607615981725695
+],
+[
+"b2h_hnsw.json",
+"HNSW query N=1e+06 ef=128, top-10",
+0.40566800000000003,
+0.380622,
+0.9382598578147647
+],
+[
+"b3_pyramid.json",
+"flat score + top-10, N=16^3=4096",
+0.2804445,
+0.29737,
+1.0603524048430262
+],
+[
+"b3_pyramid.json",
+"beam descent B=1, depth 3 (N=4096), 48 dot products",
+0.0219775,
+0.0218275,
+0.9931748379024001
+],
+[
+"b3_pyramid.json",
+"beam descent B=4, depth 3 (N=4096), 144 dot products",
+0.0279995,
+0.027932,
+0.9975892426650476
+],
+[
+"b3_pyramid.json",
+"beam descent B=8, depth 3 (N=4096), 272 dot products",
+0.0356595,
+0.044369,
+1.2442406651803868
+],
+[
+"b3_pyramid.json",
+"beam descent B=16, depth 3 (N=4096), 528 dot products",
+0.0763685,
+0.071237,
+0.9328060653279819
+],
+[
+"b3_pyramid.json",
+"flat score + top-10, N=16^4=65536",
+4.5414455,
+4.567167,
+1.0056637253491207
+],
+[
+"b3_pyramid.json",
+"beam descent B=1, depth 4 (N=65536), 64 dot products",
+0.039049,
+0.052565,
+1.3461292222592127
+],
+[
+"b3_pyramid.json",
+"beam descent B=4, depth 4 (N=65536), 208 dot products",
+0.0530425,
+0.07590849999999999,
+1.4310882782674268
+],
+[
+"b3_pyramid.json",
+"beam descent B=8, depth 4 (N=65536), 400 dot products",
+0.054556,
+0.06579650000000001,
+1.2060359997067236
+],
+[
+"b3_pyramid.json",
+"beam descent B=16, depth 4 (N=65536), 784 dot products",
+0.1920615,
+0.114065,
+0.5938983086146885
+],
+[
+"b3_pyramid.json",
+"flat score + top-10, N=16^5=1048576",
+135.534257,
+143.322617,
+1.0574641435485939
+],
+[
+"b3_pyramid.json",
+"beam descent B=1, depth 5 (N=1048576), 80 dot products",
+0.081735,
+0.053064,
+0.6492200403743806
+],
+[
+"b3_pyramid.json",
+"beam descent B=4, depth 5 (N=1048576), 272 dot products",
+0.103884,
+0.07200100000000001,
+0.6930903700281084
+],
+[
+"b3_pyramid.json",
+"beam descent B=8, depth 5 (N=1048576), 528 dot products",
+0.13046649999999999,
+0.101053,
+0.7745513216036302
+],
+[
+"b3_pyramid.json",
+"beam descent B=16, depth 5 (N=1048576), 1040 dot products",
+0.16951,
+0.1699965,
+1.002870037165949
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=1, depth 3 (N=4096), k-means tree, 48 dots",
+0.0289925,
+0.021534499999999998,
+0.7427610588945416
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=4, depth 3 (N=4096), k-means tree, 144 dots",
+0.0365755,
+0.0271645,
+0.7426966138535359
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=8, depth 3 (N=4096), k-means tree, 272 dots",
+0.0472385,
+0.0345835,
+0.7321041099950253
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=16, depth 3 (N=4096), k-means tree, 528 dots",
+0.07112750000000001,
+0.11829300000000001,
+1.6631120171522968
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=32, depth 3 (N=4096), k-means tree, 784 dots",
+0.1341275,
+0.218658,
+1.630224972507502
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=64, depth 3 (N=4096), k-means tree, 1296 dots",
+0.34265199999999996,
+0.4244295,
+1.2386605068699441
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=1, depth 4 (N=65536), k-means tree, 64 dots",
+0.0402435,
+0.040417,
+1.0043112552337645
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=4, depth 4 (N=65536), k-means tree, 208 dots",
+0.038576,
+0.0543275,
+1.4083238282870179
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=8, depth 4 (N=65536), k-means tree, 400 dots",
+0.0513265,
+0.0676,
+1.317058439597479
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=16, depth 4 (N=65536), k-means tree, 784 dots",
+0.1837785,
+0.1164685,
+0.6337438819013105
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=32, depth 4 (N=65536), k-means tree, 1296 dots",
+0.3023795,
+0.32960049999999996,
+1.0900226371166033
+],
+[
+"b3k_kmeans_tree.json",
+"beam descent B=64, depth 4 (N=65536), k-means tree, 2320 dots",
+0.7618625,
+0.8867385,
+1.1639088418185697
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+03: e1-loop (score every doc in Python + full sort)",
+0.597236,
+0.950732,
+1.591886624382991
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+03: postings + argpartition top-50",
+0.0167295,
+0.0418015,
+2.4986700140470424
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+03: scipy CSC column sum + top-50",
+0.0630245,
+0.069401,
+1.1011749399043231
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+03: add + remove one leaf in postings (write/forget)",
+0.0953995,
+0.136043,
+1.4260347276453231
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+04: e1-loop (score every doc in Python + full sort)",
+6.5294405,
+6.425934,
+0.9841477229174537
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+04: postings + argpartition top-50",
+0.0388985,
+0.031666,
+0.8140673804902502
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+04: scipy CSC column sum + top-50",
+0.10025,
+0.078555,
+0.7835910224438902
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+04: add + remove one leaf in postings (write/forget)",
+0.1482345,
+0.11278099999999999,
+0.7608282822150039
+],
+[
+"b4_bm25.json",
+"RRF fuse two full rankings of N=1e4 (e1/e5 fuse today)",
+7.365182000000001,
+5.063593,
+0.687504124134339
+],
+[
+"b4_bm25.json",
+"RRF fuse two top-50 lists",
+0.024037,
+0.0197665,
+0.8223363980530016
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+05: postings + argpartition top-50",
+0.33604849999999997,
+0.575771,
+1.713356851763957
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+05: scipy CSC column sum + top-50",
+0.44700249999999997,
+0.6342345,
+1.4188611920514989
+],
+[
+"b4_bm25.json",
+"BM25 N=1e+05: add + remove one leaf in postings (write/forget)",
+0.566384,
+0.5095689999999999,
+0.8996881974067062
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 3, full 384x384, no cache",
+1.2181765,
+0.887529,
+0.7285717627946361
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 3, full 384x384, cached child K/V",
+0.331877,
+0.172843,
+0.5208043943991298
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 4, full 384x384, no cache",
+1.7022335,
+1.14978,
+0.6754537494415426
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 4, full 384x384, cached child K/V",
+0.2734895,
+0.251832,
+0.9208104881540242
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 5, full 384x384, no cache",
+1.544064,
+2.1604419999999998,
+1.3991920024040452
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 5, full 384x384, cached child K/V",
+0.51664,
+0.47839750000000003,
+0.9259784375967792
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+04, full 384x384, fp32",
+64.448875,
+93.21739,
+1.446377302939733
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+04, full 384x384, bf16 autocast",
+40.652355,
+45.516899,
+1.1196620466391185
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+05, full 384x384, fp32",
+794.034585,
+946.012524,
+1.19139964665393
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+05, full 384x384, bf16 autocast",
+704.446662,
+699.257202,
+0.9926332818651358
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+06, full 384x384, fp32",
+28351.867603,
+18986.026026,
+0.6696569796337166
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+06, full 384x384, bf16 autocast",
+20884.17514,
+16329.640116,
+0.7819145360796855
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 3, low-rank r=32, no cache",
+0.539551,
+0.4162035,
+0.7713886175727596
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 3, low-rank r=32, cached child K/V",
+0.2793955,
+0.21635349999999998,
+0.7743628655436468
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 4, low-rank r=32, no cache",
+1.283579,
+0.7973015,
+0.6211549892916602
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 4, low-rank r=32, cached child K/V",
+0.9171585,
+0.3270105,
+0.35654742337338635
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 5, low-rank r=32, no cache",
+1.1585975,
+0.641026,
+0.5532775618797727
+],
+[
+"b5_internode.json",
+"internode path recompute, depth 5, low-rank r=32, cached child K/V",
+0.5549364999999999,
+0.45671300000000004,
+0.8230004694230783
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+04, low-rank r=32, fp32",
+37.028509,
+39.736339,
+1.073128248291067
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+05, low-rank r=32, fp32",
+714.51596,
+696.988422,
+0.97546935410652
+],
+[
+"b5_internode.json",
+"internode whole-tree recompute N=1e+06, low-rank r=32, fp32",
+21511.528183,
+16141.491858,
+0.7503647216824048
+],
+[
+"b6_train.json",
+"online key update after one answer (3 cites, filter + anchored move)",
+0.033480499999999996,
+0.024046,
+0.7182091067935068
+],
+[
+"b6_train.json",
+"nightly refit step, low-rank r=16, 64 asks x (64 in-batch + 10 hard + 1024 neg)",
+10.803761999999999,
+10.649672500000001,
+0.985737421835098
+],
+[
+"b6_train.json",
+"nightly refit step, full 384x384, 64 asks x (64 in-batch + 10 hard + 1024 neg)",
+14.6749715,
+15.2891565,
+1.0418525514683283
+],
+[
+"b6_train.json",
+"E5 pretraining, one fold (8 LoCoMo chats ~4.7k nodes, 40 epochs, r=16)",
+2740.560358000039,
+3073.1203039995307,
+1.121347426276786
+],
+[
+"b6_train.json",
+"replay eval gate: 500 asks x N=1e+04 keys, recall@10",
+57.2814105,
+44.893446,
+0.7837349954921239
+],
+[
+"b6_train.json",
+"replay eval gate: 500 asks x N=1e+05 keys, recall@10",
+673.407696,
+771.342733,
+1.1454320132985234
+],
+[
+"b7_paths.json",
+"read hop, pyramid descent B=8, N=4096",
+24.800674,
+22.295358999999998,
+0.8989819792800792
+],
+[
+"b7_paths.json",
+"read hop, flat scoring, N=4096",
+24.725611,
+26.976291500000002,
+1.09102628444652
+],
+[
+"b7_paths.json",
+"read hop minus encoder (descent + BM25 + RRF + context), N=4096",
+0.1146805,
+0.11036750000000001,
+0.9623911650193363
+],
+[
+"b7_paths.json",
+"read hop minus encoder, flat, N=4096",
+0.462109,
+0.450888,
+0.975717850117613
+],
+[
+"b7_paths.json",
+"read-again loop, 2 hops, pyramid, N=4096",
+84.488655,
+78.632569,
+0.9306879012336036
+],
+[
+"b7_paths.json",
+"read-again loop, 3 hops, pyramid, N=4096",
+137.95818400000002,
+135.3292935,
+0.9809442946856998
+],
+[
+"b7_paths.json",
+"write path (encode + place + ancestors + dirty + BM25), N=4096",
+36.2357095,
+35.7367265,
+0.9862295231172444
+],
+[
+"b7_paths.json",
+"write path minus encoder and BM25 (place + ancestors + dirty), N=4096",
+0.338051,
+0.395992,
+1.1713972152130891
+],
+[
+"b7_paths.json",
+"forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=4096",
+12.0284115,
+12.592167,
+1.0468686575945627
+],
+[
+"b7_paths.json",
+"read hop, pyramid descent B=8, N=65536",
+27.420879499999998,
+25.739283999999998,
+0.9386746329562478
+],
+[
+"b7_paths.json",
+"read hop, flat scoring, N=65536",
+35.869724,
+39.693853000000004,
+1.1066116092780642
+],
+[
+"b7_paths.json",
+"read hop minus encoder (descent + BM25 + RRF + context), N=65536",
+0.34892449999999997,
+0.512417,
+1.4685612503564527
+],
+[
+"b7_paths.json",
+"read hop minus encoder, flat, N=65536",
+4.934077500000001,
+5.5348805,
+1.121766024145344
+],
+[
+"b7_paths.json",
+"read-again loop, 2 hops, pyramid, N=65536",
+76.23564350000001,
+80.181565,
+1.05175953555111
+],
+[
+"b7_paths.json",
+"read-again loop, 3 hops, pyramid, N=65536",
+142.75565,
+143.3865605,
+1.0044195133432547
+],
+[
+"b7_paths.json",
+"write path (encode + place + ancestors + dirty + BM25), N=65536",
+38.7268925,
+40.2019215,
+1.0380879772370066
+],
+[
+"b7_paths.json",
+"write path minus encoder and BM25 (place + ancestors + dirty), N=65536",
+0.5146585,
+0.554917,
+1.0782237153374519
+],
+[
+"b7_paths.json",
+"forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=65536",
+16.523166500000002,
+13.2256535,
+0.8004309282969458
+]
+]

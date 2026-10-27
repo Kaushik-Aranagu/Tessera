@@ -1,0 +1,52 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/bench/b6_train.py",
+  "what": "online key update after one answer (3 cites, filter + anchored move)",
+  "median_ms": 0.033480499999999996,
+  "p95_ms": 0.07101794999999998,
+  "n": 2000,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b6_train.py",
+  "what": "nightly refit step, low-rank r=16, 64 asks x (64 in-batch + 10 hard + 1024 neg)",
+  "median_ms": 10.803761999999999,
+  "p95_ms": 11.45835895,
+  "n": 50,
+  "note": "=> 1e4 logged asks x 5 epochs ~ 8.4 s"
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b6_train.py",
+  "what": "nightly refit step, full 384x384, 64 asks x (64 in-batch + 10 hard + 1024 neg)",
+  "median_ms": 14.6749715,
+  "p95_ms": 26.681812349999998,
+  "n": 50,
+  "note": "=> 1e4 logged asks x 5 epochs ~ 11.5 s"
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b6_train.py",
+  "what": "E5 pretraining, one fold (8 LoCoMo chats ~4.7k nodes, 40 epochs, r=16)",
+  "median_ms": 2740.560358000039,
+  "p95_ms": 2740.560358000039,
+  "n": 1,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b6_train.py",
+  "what": "replay eval gate: 500 asks x N=1e+04 keys, recall@10",
+  "median_ms": 57.2814105,
+  "p95_ms": 79.63201500000001,
+  "n": 20,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/bench/b6_train.py",
+  "what": "replay eval gate: 500 asks x N=1e+05 keys, recall@10",
+  "median_ms": 673.407696,
+  "p95_ms": 2643.6536297999996,
+  "n": 5,
+  "note": "",
+  "N": 100000
+ }
+]

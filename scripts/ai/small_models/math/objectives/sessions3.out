@@ -1,0 +1,17 @@
+fold 0 chat 0 done
+fold 0 chat 1 done
+fold 1 chat 2 done
+fold 1 chat 3 done
+fold 2 chat 4 done
+fold 2 chat 5 done
+fold 3 chat 6 done
+fold 3 chat 7 done
+fold 4 chat 8 done
+fold 4 chat 9 done
+bridge view, share of evidence sessions in top-3; prototypes scored by LSE tau=0.05
+  distilled-4            all 0.628   multi-hop 0.436
+  distilled-8            all 0.653   multi-hop 0.454
+  kmeans-4               all 0.571   multi-hop 0.381
+  kmeans-8               all 0.641   multi-hop 0.448
+  ridge-1 lam=0.001      all 0.556   multi-hop 0.387
+  ridge-1 lam=0.01       all 0.556   multi-hop 0.387

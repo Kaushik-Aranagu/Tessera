@@ -1,0 +1,242 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, numpy K @ S.T",
+  "median_ms": 12.874939,
+  "p95_ms": 26.02778019999999,
+  "n": 40,
+  "note": "12.87 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, numpy S @ K.T",
+  "median_ms": 9.072918000000001,
+  "p95_ms": 13.064653099999994,
+  "n": 40,
+  "note": "9.07 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, torch S @ K.T",
+  "median_ms": 7.3341135,
+  "p95_ms": 8.5859031,
+  "n": 40,
+  "note": "7.33 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=1 queries in one pass, int8 fbgemm",
+  "median_ms": 1.864935,
+  "p95_ms": 2.50606155,
+  "n": 40,
+  "note": "1.86 ms per query",
+  "q": 1,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, numpy K @ S.T",
+  "median_ms": 24.562832,
+  "p95_ms": 36.1478889,
+  "n": 40,
+  "note": "6.14 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, numpy S @ K.T",
+  "median_ms": 33.9669725,
+  "p95_ms": 41.832239399999985,
+  "n": 40,
+  "note": "8.49 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, torch S @ K.T",
+  "median_ms": 17.229206,
+  "p95_ms": 25.58228044999998,
+  "n": 40,
+  "note": "4.31 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=4 queries in one pass, int8 fbgemm",
+  "median_ms": 4.4918745,
+  "p95_ms": 5.940562799999998,
+  "n": 40,
+  "note": "1.12 ms per query",
+  "q": 4,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, numpy K @ S.T",
+  "median_ms": 33.7249535,
+  "p95_ms": 38.03587534999998,
+  "n": 40,
+  "note": "2.11 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, numpy S @ K.T",
+  "median_ms": 32.760445000000004,
+  "p95_ms": 52.24273185,
+  "n": 40,
+  "note": "2.05 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, torch S @ K.T",
+  "median_ms": 26.436885500000002,
+  "p95_ms": 30.716907749999997,
+  "n": 40,
+  "note": "1.65 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+05, Q=16 queries in one pass, int8 fbgemm",
+  "median_ms": 6.384868,
+  "p95_ms": 7.9846229,
+  "n": 40,
+  "note": "0.40 ms per query",
+  "q": 16,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, numpy K @ S.T",
+  "median_ms": 124.6710285,
+  "p95_ms": 133.10981195,
+  "n": 8,
+  "note": "124.67 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, numpy S @ K.T",
+  "median_ms": 123.880854,
+  "p95_ms": 149.7539866,
+  "n": 8,
+  "note": "123.88 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, torch S @ K.T",
+  "median_ms": 167.2335465,
+  "p95_ms": 194.2712501,
+  "n": 8,
+  "note": "167.23 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=1 queries in one pass, int8 fbgemm",
+  "median_ms": 34.1219095,
+  "p95_ms": 37.885143299999996,
+  "n": 8,
+  "note": "34.12 ms per query",
+  "q": 1,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, numpy K @ S.T",
+  "median_ms": 285.383828,
+  "p95_ms": 353.58666589999996,
+  "n": 8,
+  "note": "71.35 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, numpy S @ K.T",
+  "median_ms": 321.3847245,
+  "p95_ms": 377.57372095,
+  "n": 8,
+  "note": "80.35 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, torch S @ K.T",
+  "median_ms": 288.18973800000003,
+  "p95_ms": 307.79166485,
+  "n": 8,
+  "note": "72.05 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=4 queries in one pass, int8 fbgemm",
+  "median_ms": 63.363388,
+  "p95_ms": 64.059431,
+  "n": 8,
+  "note": "15.84 ms per query",
+  "q": 4,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, numpy K @ S.T",
+  "median_ms": 315.8940615,
+  "p95_ms": 362.58555160000003,
+  "n": 8,
+  "note": "19.74 ms per query",
+  "q": 16,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, numpy S @ K.T",
+  "median_ms": 423.979407,
+  "p95_ms": 460.63307495,
+  "n": 8,
+  "note": "26.50 ms per query",
+  "q": 16,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, torch S @ K.T",
+  "median_ms": 349.4853625,
+  "p95_ms": 352.07459245,
+  "n": 8,
+  "note": "21.84 ms per query",
+  "q": 16,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2b_batch.py",
+  "what": "N=1e+06, Q=16 queries in one pass, int8 fbgemm",
+  "median_ms": 144.067678,
+  "p95_ms": 168.34315679999997,
+  "n": 8,
+  "note": "9.00 ms per query",
+  "q": 16,
+  "N": 1000000
+ }
+]

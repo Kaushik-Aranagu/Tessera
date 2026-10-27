@@ -1,0 +1,131 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 1 ask, sentence-transformers end to end (13 tokens)",
+  "median_ms": 30.377688499999998,
+  "p95_ms": 35.5066317,
+  "n": 100,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 1 ask, rotating over 1531 LoCoMo asks (median ~10 words)",
+  "median_ms": 25.969559500000003,
+  "p95_ms": 39.24518955,
+  "n": 300,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "tokenizer only, 1 ask",
+  "median_ms": 0.048181,
+  "p95_ms": 0.07152295,
+  "n": 200,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "transformer forward only, 1 sequence of 16 tokens",
+  "median_ms": 23.7388595,
+  "p95_ms": 30.578671099999998,
+  "n": 40,
+  "note": "",
+  "tokens": 16
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "transformer forward only, 1 sequence of 32 tokens",
+  "median_ms": 30.3769305,
+  "p95_ms": 31.510788399999996,
+  "n": 40,
+  "note": "",
+  "tokens": 32
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "transformer forward only, 1 sequence of 64 tokens",
+  "median_ms": 44.388873000000004,
+  "p95_ms": 64.34038015,
+  "n": 40,
+  "note": "",
+  "tokens": 64
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "transformer forward only, 1 sequence of 128 tokens",
+  "median_ms": 70.6150425,
+  "p95_ms": 88.49002994999996,
+  "n": 40,
+  "note": "",
+  "tokens": 128
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "transformer forward only, 1 sequence of 256 tokens",
+  "median_ms": 125.008679,
+  "p95_ms": 142.26415489999997,
+  "n": 15,
+  "note": "",
+  "tokens": 256
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "transformer forward only, 1 sequence of 512 tokens",
+  "median_ms": 257.231518,
+  "p95_ms": 319.63088229999994,
+  "n": 15,
+  "note": "",
+  "tokens": 512
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 640 LoCoMo turns, batch 64 -> per leaf",
+  "median_ms": 22.364804321875,
+  "p95_ms": 22.426561097500002,
+  "n": 5,
+  "note": "per-leaf ms"
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 1 LoCoMo turn unbatched (write path), rotating",
+  "median_ms": 35.085778,
+  "p95_ms": 53.57282010000002,
+  "n": 300,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 1 ask, int8 dynamic-quantized Linear layers",
+  "median_ms": 13.648108,
+  "p95_ms": 18.323242699999998,
+  "n": 100,
+  "note": "mean cos to fp32 0.9701; top-10 overlap on chat 0 0.730",
+  "cos_to_fp32": 0.9701204299926758,
+  "top10_overlap": 0.7302013422818793
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 640 turns batch 64, int8 dynamic -> per leaf",
+  "median_ms": 12.2057970171875,
+  "p95_ms": 13.429160663125,
+  "n": 5,
+  "note": "per-leaf ms"
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 1 ask, bf16 autocast (AMX on this CPU)",
+  "median_ms": 36.097089,
+  "p95_ms": 45.845706899999996,
+  "n": 100,
+  "note": "mean cos to fp32 1.0000",
+  "cos_to_fp32": 0.9999898076057434
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b1_encoder.py",
+  "what": "encode 640 turns batch 64, bf16 autocast -> per leaf",
+  "median_ms": 7.4595649718749995,
+  "p95_ms": 7.821126730625,
+  "n": 5,
+  "note": "per-leaf ms"
+ }
+]

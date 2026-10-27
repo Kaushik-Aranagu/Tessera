@@ -1,0 +1,11 @@
+frozen: E<s,s'> all 0.548 (identity 0.548), unrelated 0.546 (sd 0.106), sharing evidence 0.717 | E<s,k> 0.530 (identity 0.530, sd 0.078), own evidence 0.679, 10th-best key 0.668 | |mu_s| 0.742 |mu_k| 0.814 cos(mu_s,mu_k) 0.877
+bridge: E<s,s'> all 0.311 (identity 0.311), unrelated 0.308 (sd 0.156), sharing evidence 0.575 | E<s,k> 0.100 (identity 0.100, sd 0.127), own evidence 0.396, 10th-best key 0.350 | |mu_s| 0.560 |mu_k| 0.517 cos(mu_s,mu_k) 0.339
+
+static leave-one-out alias scoring, bridge space (all other asks' cites as aliases):
+  keys     recall@10 0.657   top-10 slots held by non-evidence aliased nodes 4.08   skewness of N_10  3.07   busiest node in top-10 of 0.23 of asks
+  raw      recall@10 0.476   top-10 slots held by non-evidence aliased nodes 9.23   skewness of N_10  2.71   busiest node in top-10 of 0.25 of asks
+  csls     recall@10 0.566   top-10 slots held by non-evidence aliased nodes 8.63   skewness of N_10  2.71   busiest node in top-10 of 0.25 of asks
+  zmax     recall@10 0.615   top-10 slots held by non-evidence aliased nodes 5.87   skewness of N_10  3.18   busiest node in top-10 of 0.24 of asks
+  bonus    recall@10 0.674   top-10 slots held by non-evidence aliased nodes 7.04   skewness of N_10  3.23   busiest node in top-10 of 0.27 of asks
+  bonus_in recall@10 0.709   top-10 slots held by non-evidence aliased nodes 4.57   skewness of N_10  2.85   busiest node in top-10 of 0.22 of asks
+  entry rate of an unrelated alias: raw (beats the ask's 10th-best key) 0.414; bonus fires above its 10-NN level among training-chat asks 0.1931; among the other in-chat asks 0.0259

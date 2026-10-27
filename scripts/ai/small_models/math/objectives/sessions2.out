@@ -1,0 +1,14 @@
+fold 0 done
+fold 1 done
+fold 2 done
+fold 3 done
+fold 4 done
+one distilled vector per session (label-free, LSE tau=0.05); share of evidence sessions in top-3
+  bridge  distilled lam=0.1    all 0.555   multi-hop 0.385
+  bridge  distilled lam=1.0    all 0.531   multi-hop 0.381
+  bridge  distilled lam=10.0   all 0.430   multi-hop 0.315
+  frozen  distilled lam=0.1    all 0.520   multi-hop 0.376
+  frozen  distilled lam=1.0    all 0.472   multi-hop 0.358
+  frozen  distilled lam=10.0   all 0.333   multi-hop 0.279
+  evidence sessions per ask (all): mean 1.37; share with >3 sessions 0.039; coverage ceiling for a top-3 router 0.986
+  evidence sessions per ask (multi-hop): mean 2.68; share with >3 sessions 0.174; coverage ceiling for a top-3 router 0.939

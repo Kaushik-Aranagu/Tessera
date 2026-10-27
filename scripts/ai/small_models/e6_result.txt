@@ -1,0 +1,18 @@
+4593 question visits (1531 x 3 orders), held-out chats, recall@10; eta 0.1, cap 0.3
+  frozen                 0.575  +bm25 0.620  vs lowrank -0.082 [-0.092,-0.072]  multi-hop 0.385 when 0.665 inference 0.327 single-hop 0.631
+  bridged                0.610  +bm25 0.637  vs lowrank -0.047 [-0.057,-0.037]  multi-hop 0.405 when 0.719 inference 0.404 single-hop 0.660
+  bridged-lowrank        0.657  +bm25 0.656  vs lowrank +0.000 [+0.000,+0.000]  multi-hop 0.475 when 0.758 inference 0.441 single-hop 0.703
+  move cites=0.0         0.678  +bm25 0.661  vs lowrank +0.020 [+0.014,+0.026]  multi-hop 0.503 when 0.789 inference 0.480 single-hop 0.715
+  move cites=0.3         0.654  +bm25 0.659  vs lowrank -0.003 [-0.009,+0.004]  multi-hop 0.482 when 0.761 inference 0.462 single-hop 0.692
+  move cites=0.6         0.634  +bm25 0.655  vs lowrank -0.023 [-0.030,-0.017]  multi-hop 0.453 when 0.753 inference 0.402 single-hop 0.673
+  move cites=self        0.634  +bm25 0.654  vs lowrank -0.023 [-0.028,-0.018]  multi-hop 0.453 when 0.743 inference 0.419 single-hop 0.676
+  alias cites=0.0        0.463  +bm25 0.649  vs lowrank -0.195 [-0.209,-0.180]  multi-hop 0.342 when 0.597 inference 0.354 single-hop 0.463
+  alias cites=0.3        0.425  +bm25 0.645  vs lowrank -0.233 [-0.248,-0.218]  multi-hop 0.299 when 0.548 inference 0.307 single-hop 0.432
+  alias cites=0.6        0.397  +bm25 0.642  vs lowrank -0.260 [-0.275,-0.246]  multi-hop 0.264 when 0.521 inference 0.265 single-hop 0.409
+  alias cites=self       0.567  +bm25 0.647  vs lowrank -0.090 [-0.098,-0.082]  multi-hop 0.388 when 0.684 inference 0.368 single-hop 0.604
+  anchored cites=0.0     0.678  +bm25 0.661  vs lowrank +0.020 [+0.014,+0.028]  multi-hop 0.503 when 0.789 inference 0.479 single-hop 0.715
+  anchored cites=0.3     0.658  +bm25 0.660  vs lowrank +0.000 [-0.006,+0.007]  multi-hop 0.484 when 0.767 inference 0.447 single-hop 0.696
+  anchored cites=0.6     0.634  +bm25 0.657  vs lowrank -0.023 [-0.030,-0.016]  multi-hop 0.457 when 0.750 inference 0.422 single-hop 0.672
+  anchored cites=self    0.637  +bm25 0.655  vs lowrank -0.020 [-0.025,-0.015]  multi-hop 0.451 when 0.749 inference 0.426 single-hop 0.679
+
+[exited with code 0]

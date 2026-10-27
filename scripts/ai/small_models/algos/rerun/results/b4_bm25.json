@@ -1,0 +1,117 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+03: e1-loop (score every doc in Python + full sort)",
+  "median_ms": 0.950732,
+  "p95_ms": 1.4869294,
+  "n": 100,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+03: postings + argpartition top-50",
+  "median_ms": 0.0418015,
+  "p95_ms": 0.07216520000000001,
+  "n": 300,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+03: scipy CSC column sum + top-50",
+  "median_ms": 0.069401,
+  "p95_ms": 0.1440402000000001,
+  "n": 300,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+03: add + remove one leaf in postings (write/forget)",
+  "median_ms": 0.136043,
+  "p95_ms": 0.19381905,
+  "n": 200,
+  "note": "",
+  "N": 1000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+04: e1-loop (score every doc in Python + full sort)",
+  "median_ms": 6.425934,
+  "p95_ms": 12.308897699999996,
+  "n": 30,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+04: postings + argpartition top-50",
+  "median_ms": 0.031666,
+  "p95_ms": 0.05938535,
+  "n": 300,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+04: scipy CSC column sum + top-50",
+  "median_ms": 0.078555,
+  "p95_ms": 0.11848500000000001,
+  "n": 300,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+04: add + remove one leaf in postings (write/forget)",
+  "median_ms": 0.11278099999999999,
+  "p95_ms": 0.14725209999999994,
+  "n": 200,
+  "note": "",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "RRF fuse two full rankings of N=1e4 (e1/e5 fuse today)",
+  "median_ms": 5.063593,
+  "p95_ms": 5.875740899999999,
+  "n": 50,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "RRF fuse two top-50 lists",
+  "median_ms": 0.0197665,
+  "p95_ms": 0.0292555,
+  "n": 2000,
+  "note": ""
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+05: postings + argpartition top-50",
+  "median_ms": 0.575771,
+  "p95_ms": 0.9659882000000001,
+  "n": 300,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+05: scipy CSC column sum + top-50",
+  "median_ms": 0.6342345,
+  "p95_ms": 1.1657363,
+  "n": 300,
+  "note": "",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b4_bm25.py",
+  "what": "BM25 N=1e+05: add + remove one leaf in postings (write/forget)",
+  "median_ms": 0.5095689999999999,
+  "p95_ms": 0.6771713999999998,
+  "n": 200,
+  "note": "",
+  "N": 100000
+ }
+]

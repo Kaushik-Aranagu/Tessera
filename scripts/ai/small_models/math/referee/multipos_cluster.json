@@ -1,0 +1,23 @@
+{
+ "mask_fwd-lout_bi (m>=2)": {
+  "mean": 0.017415439416733822,
+  "chat_cluster_CI": [
+   0.001,
+   0.0383
+  ]
+ },
+ "lout_fwd-lout_bi (m>=2)": {
+  "mean": 0.011916242497513739,
+  "chat_cluster_CI": [
+   -0.0017,
+   0.0295
+  ]
+ },
+ "mask_fwd-lout_fwd (m>=2)": {
+  "mean": 0.005499196919220082,
+  "chat_cluster_CI": [
+   -0.0001,
+   0.0118
+  ]
+ }
+}

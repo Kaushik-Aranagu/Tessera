@@ -1,0 +1,17 @@
+428 LongMemEval-S questions (user-turn evidence), bridges trained on LoCoMo only, model BAAI/bge-small-en-v1.5
+  bm25                     turn@5 0.750  turn@10 0.826  session@5 0.886
+  frozen                   turn@5 0.745  turn@10 0.860  session@5 0.951
+  bridged                  turn@5 0.693  turn@10 0.822  session@5 0.900
+  bridged-lowrank          turn@5 0.723  turn@10 0.864  session@5 0.920
+  frozen+hybrid            turn@5 0.796  turn@10 0.886  session@5 0.943
+  bridged+hybrid           turn@5 0.781  turn@10 0.881  session@5 0.933
+  bridged-lowrank+hybrid   turn@5 0.805  turn@10 0.891  session@5 0.948
+  turn@10 by type:
+    knowledge-update           ( 72) bm25 0.956  frozen+hybrid 0.995  bridged+hybrid 0.988  bridged-lowrank+hybrid 0.995
+    multi-session              (125) bm25 0.757  frozen+hybrid 0.831  bridged+hybrid 0.845  bridged-lowrank+hybrid 0.847
+    single-session-assistant   (  5) bm25 0.600  frozen+hybrid 1.000  bridged+hybrid 1.000  bridged-lowrank+hybrid 1.000
+    single-session-preference  ( 30) bm25 0.578  frozen+hybrid 0.750  bridged+hybrid 0.694  bridged-lowrank+hybrid 0.694
+    single-session-user        ( 64) bm25 0.969  frozen+hybrid 0.953  bridged+hybrid 0.953  bridged-lowrank+hybrid 0.953
+    temporal-reasoning         (132) bm25 0.817  frozen+hybrid 0.873  bridged+hybrid 0.859  bridged-lowrank+hybrid 0.887
+
+[exited with code 0]

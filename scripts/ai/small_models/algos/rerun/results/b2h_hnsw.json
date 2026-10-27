@@ -1,0 +1,128 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW build N=1e+04 (M=16, efC=100), whole index",
+  "median_ms": 1995.1262449994829,
+  "p95_ms": 1995.1262449994829,
+  "n": 1,
+  "note": "200 us per insert",
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+04 ef=32, top-10",
+  "median_ms": 0.0635185,
+  "p95_ms": 0.11949149999999993,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.905",
+  "ef": 32,
+  "overlap": 0.905,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+04 ef=64, top-10",
+  "median_ms": 0.1214315,
+  "p95_ms": 0.19575564999999998,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.964",
+  "ef": 64,
+  "overlap": 0.9640000000000001,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+04 ef=128, top-10",
+  "median_ms": 0.229015,
+  "p95_ms": 0.3017012,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.985",
+  "ef": 128,
+  "overlap": 0.985,
+  "N": 10000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW build N=1e+05 (M=16, efC=100), whole index",
+  "median_ms": 36776.43056300076,
+  "p95_ms": 36776.43056300076,
+  "n": 1,
+  "note": "368 us per insert",
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+05 ef=32, top-10",
+  "median_ms": 0.10992350000000001,
+  "p95_ms": 0.2009461,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.886",
+  "ef": 32,
+  "overlap": 0.8859999999999999,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+05 ef=64, top-10",
+  "median_ms": 0.158495,
+  "p95_ms": 0.257045,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.948",
+  "ef": 64,
+  "overlap": 0.9484999999999999,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+05 ef=128, top-10",
+  "median_ms": 0.290867,
+  "p95_ms": 0.41884125,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.978",
+  "ef": 128,
+  "overlap": 0.9775,
+  "N": 100000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW build N=1e+06 (M=16, efC=100), whole index",
+  "median_ms": 480174.40531400096,
+  "p95_ms": 480174.40531400096,
+  "n": 1,
+  "note": "480 us per insert",
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+06 ef=32, top-10",
+  "median_ms": 0.1372515,
+  "p95_ms": 0.25361514999999996,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.721",
+  "ef": 32,
+  "overlap": 0.7205000000000001,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+06 ef=64, top-10",
+  "median_ms": 0.230329,
+  "p95_ms": 0.3667396499999998,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.837",
+  "ef": 64,
+  "overlap": 0.8370000000000001,
+  "N": 1000000
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b2h_hnsw.py",
+  "what": "HNSW query N=1e+06 ef=128, top-10",
+  "median_ms": 0.380622,
+  "p95_ms": 0.5962952999999999,
+  "n": 400,
+  "note": "top-10 overlap with exact 0.924",
+  "ef": 128,
+  "overlap": 0.924,
+  "N": 1000000
+ }
+]

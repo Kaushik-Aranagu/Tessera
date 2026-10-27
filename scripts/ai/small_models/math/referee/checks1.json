@@ -1,0 +1,124 @@
+{
+ "R1 L_out == H(y,p) == -(1/m) sum_p log p_p": {
+  "ok": true,
+  "maxdiff": 3.552713678800501e-15
+ },
+ "R2 e5 forward == (1/Q) sum_q L_out(q); backward == mean over cited v of CE with pi(q|v)": {
+  "ok": true,
+  "fwd_diff": 5.329070518200751e-15,
+  "bwd_diff": 3.552713678800501e-15
+ },
+ "R3 gradients of L_out/L_in/L_mask (and L_mask push >= L_out push)": {
+  "ok": true
+ },
+ "R4a Prop 1.1: 1-R@k <= L_mask/log(2+k-m) <= L_out/log(2+k-m) (ties broken against positives)": {
+  "ok": true,
+  "violations": 0,
+  "max_ratio": 0.7679142844142125
+ },
+ "R4b Prop 1.2: L_out = L_mask + E_q exactly": {
+  "ok": true,
+  "maxdiff": 4.736951607027041e-15
+ },
+ "R4c Prop 1.2 limit E_q -> H(unif(P), softmax_P) >= log m": {
+  "ok": true,
+  "E_seq": [
+   0.06615,
+   1.40722,
+   1.78199,
+   1.78861,
+   1.78861
+  ],
+  "H": 1.788608152480457
+ },
+ "R4d L_out with m_q=1 and a separable positive is decreasing in alpha (equalizer gives no bound)": {
+  "ok": true,
+  "L": [
+   1.866973,
+   0.731688,
+   0.023252,
+   8.1e-05,
+   -0.0
+  ]
+ },
+ "R5 grad_k of e5 backward CE = -alpha sum_q pi(q|v)(s_q - sbar_v); and grad wrt s_q != 0": {
+  "ok": true
+ },
+ "R6 L_key gradients (pull, push omega_u, centering, anchor) match autograd": {
+  "ok": true
+ },
+ "R7 Prop 4.1: unit(k+eta(s-k)) == unit(k - eta grad 1/2|k-s|^2) == unit(k + eta/(1-eta) s); FD gradient": {
+  "ok": true,
+  "d1": 0,
+  "d2": 5.551115123125783e-17,
+  "fd": 1.880392577757739e-10
+ },
+ "R7b Lemma 1(ii): error of Riemannian first-order form is O(eta^2)": {
+  "ok": true,
+  "errs": [
+   8.775416392928241e-05,
+   9.721831249814693e-07,
+   1.280756126162913e-08
+  ]
+ },
+ "R8 Lemma 1: second-order term correct (residual ~ eta^3)": {
+  "ok": true,
+  "first": {
+   "0.02": 4.4755161505267135e-05,
+   "0.1": 0.0011897455557112466,
+   "0.3": 0.012333959106012546
+  },
+  "second": {
+   "0.02": 8.992087175558456e-07,
+   "0.1": 0.00011893313586887355,
+   "0.3": 0.0036402190357811472
+  }
+ },
+ "R8b ||(1-eta)k + eta s||^2 = 1 - 2eta(1-c) + 2eta^2(1-c)": {
+  "ok": true
+ },
+ "R9 Prop A.5: unrolled form matches iteration; tan-angle formula (atan2 branch) and theta' < theta": {
+  "ok": true
+ },
+ "R10 Prop A.2: <k,k0> >= sqrt(1-gamma^2) after cap; but |k-k0| can exceed gamma after renormalisation": {
+  "ok": true,
+  "min_cos": 0.95393920141697,
+  "bound": 0.9539392014169457,
+  "max_dist": 0.303515398564982,
+  "gamma": 0.3,
+  "dist_limit": 0.3035153985650624
+ },
+ "R11 Prop A.1: Delta formula exact and rank = 2r generically": {
+  "ok": true,
+  "ranks": [
+   32,
+   32,
+   32,
+   32,
+   32
+  ]
+ },
+ "R12 Prop A.3: OR-region share = 1/2 + phi/(2 pi) (about 2/3 for random vectors in high d)": {
+  "ok": true,
+  "measured": 0.659825,
+  "exact": 0.6603193344032974
+ },
+ "R13 xi_m = E max of m std normals (0.564, 1.029, 1.766, 2.344) and <= sqrt(2 ln m)": {
+  "ok": true,
+  "xi": {
+   "2": 0.5642,
+   "4": 1.0294,
+   "16": 1.766,
+   "64": 2.3437
+  }
+ },
+ "R14 sum-LSE composes across levels; sandwich max <= LSE <= max + tau log n": {
+  "ok": true
+ },
+ "R14b mean-LSE (Analysis section's definition) does NOT compose with unequal subtree sizes": {
+  "ok": true,
+  "mean_lse_composed": 0.11258289917152334,
+  "mean_lse_direct": 0.12305189177194692,
+  "offset_tau_log_33_over_15": 0.040174761886440535
+ }
+}

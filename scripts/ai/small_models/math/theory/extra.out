@@ -1,0 +1,12 @@
+{
+ "drift_move": 0.26553457975387573,
+ "drift_centered": -0.02799934707581997,
+ "cites_per_cited_node": 1.6479269149683766,
+ "frac_nodes_ge2": 0.4061841180604357,
+ "frac_nodes_ge3": 0.1510892480674631,
+ "max_cites": 7.0,
+ "entry_pred_gauss": 0.3965133571728505,
+ "gap_theta_minus_mean": 0.2526931166648865,
+ "n_cross_eta01": 9.516392060842243,
+ "n_cross_eta002": 47.58196030421122
+}

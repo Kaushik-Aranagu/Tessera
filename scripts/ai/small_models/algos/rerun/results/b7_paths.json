@@ -1,0 +1,168 @@
+[
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read hop, pyramid descent B=8, N=4096",
+  "median_ms": 22.295358999999998,
+  "p95_ms": 32.6745192,
+  "n": 100,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read hop, flat scoring, N=4096",
+  "median_ms": 26.976291500000002,
+  "p95_ms": 36.0773862,
+  "n": 100,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "  read hop minus encoder (descent + BM25 + RRF + context), N=4096",
+  "median_ms": 0.11036750000000001,
+  "p95_ms": 0.17539159999999998,
+  "n": 500,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "  read hop minus encoder, flat, N=4096",
+  "median_ms": 0.450888,
+  "p95_ms": 0.8169779,
+  "n": 300,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read-again loop, 2 hops, pyramid, N=4096",
+  "median_ms": 78.632569,
+  "p95_ms": 110.88036340000001,
+  "n": 60,
+  "note": "",
+  "hops": 2,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read-again loop, 3 hops, pyramid, N=4096",
+  "median_ms": 135.3292935,
+  "p95_ms": 181.04957814999997,
+  "n": 60,
+  "note": "",
+  "hops": 3,
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "write path (encode + place + ancestors + dirty + BM25), N=4096",
+  "median_ms": 35.7367265,
+  "p95_ms": 50.180896999999995,
+  "n": 100,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "  write path minus encoder and BM25 (place + ancestors + dirty), N=4096",
+  "median_ms": 0.395992,
+  "p95_ms": 0.60028595,
+  "n": 300,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=4096",
+  "median_ms": 12.592167,
+  "p95_ms": 15.963093099999991,
+  "n": 40,
+  "note": "",
+  "N": 4096
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read hop, pyramid descent B=8, N=65536",
+  "median_ms": 25.739283999999998,
+  "p95_ms": 35.050772699999996,
+  "n": 100,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read hop, flat scoring, N=65536",
+  "median_ms": 39.693853000000004,
+  "p95_ms": 55.5043941,
+  "n": 100,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "  read hop minus encoder (descent + BM25 + RRF + context), N=65536",
+  "median_ms": 0.512417,
+  "p95_ms": 0.6836798,
+  "n": 500,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "  read hop minus encoder, flat, N=65536",
+  "median_ms": 5.5348805,
+  "p95_ms": 7.227078049999999,
+  "n": 300,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read-again loop, 2 hops, pyramid, N=65536",
+  "median_ms": 80.181565,
+  "p95_ms": 105.90392694999997,
+  "n": 60,
+  "note": "",
+  "hops": 2,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "read-again loop, 3 hops, pyramid, N=65536",
+  "median_ms": 143.3865605,
+  "p95_ms": 178.26320675,
+  "n": 60,
+  "note": "",
+  "hops": 3,
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "write path (encode + place + ancestors + dirty + BM25), N=65536",
+  "median_ms": 40.2019215,
+  "p95_ms": 55.29434644999999,
+  "n": 100,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "  write path minus encoder and BM25 (place + ancestors + dirty), N=65536",
+  "median_ms": 0.554917,
+  "p95_ms": 0.8835065000000001,
+  "n": 300,
+  "note": "",
+  "N": 65536
+ },
+ {
+  "script": "/tmp/claude-0/algos/review/rerun/b7_paths.py",
+  "what": "forget path (tombstone + BM25 + ancestors + purge 1e4-entry log), N=65536",
+  "median_ms": 13.2256535,
+  "p95_ms": 15.503768399999998,
+  "n": 40,
+  "note": "",
+  "N": 65536
+ }
+]

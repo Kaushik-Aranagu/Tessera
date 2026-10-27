@@ -1,0 +1,4 @@
+  all p=0.0        delta +0.0204 [+0.015,+0.027]  re-ask part +0.0369  unrelated part -0.0165
+  invisible p=0.0  delta +0.0183 [+0.013,+0.024]  re-ask part +0.0246  unrelated part -0.0063
+  invisible p=0.3  delta +0.0082 [+0.004,+0.013]  re-ask part +0.0135  unrelated part -0.0053
+  invisible p=0.6  delta -0.0008 [-0.006,+0.005]  re-ask part +0.0044  unrelated part -0.0052

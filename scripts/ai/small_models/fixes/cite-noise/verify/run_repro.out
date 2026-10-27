@@ -1,0 +1,101 @@
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 3782.88it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+data ready 133s
+fold 0 tuned 185s: move={'eta': 0.1}; move-tuned={'eta': 0.02}; contrastive={'eta': 0.05, 'eta_neg': 0.03}; agree-bm25={'eta': 0.1, 'agree': 5}; surprise={'eta': 0.1, 'weight': 20}; centered={'eta': 0.05, 'c': 1.0}; slow-adapter={'kind': 'adapter', 'lam': 1.0, 'alpha': 0.5}; verifier+move={'eta': 0.1, 'verifier': True}; combo={'eta': 0.1, 'agree': 50, 'eta_neg': 0.02, 'c': 1.0}; verifier+combo={'eta': 0.2, 'agree': 50, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}
+fold 0 tested 190s
+fold 1 tuned 236s: move={'eta': 0.1}; move-tuned={'eta': 0.02}; contrastive={'eta': 0.05, 'eta_neg': 0.03}; agree-bm25={'eta': 0.1, 'agree': 20}; surprise={'eta': 0.1, 'weight': 20}; centered={'eta': 0.2, 'c': 1.0}; slow-adapter={'kind': 'adapter', 'lam': 1.0, 'alpha': 0.5}; verifier+move={'eta': 0.1, 'verifier': True}; combo={'eta': 0.1, 'agree': None, 'eta_neg': 0.02, 'c': 1.0}; verifier+combo={'eta': 0.3, 'agree': None, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}
+fold 1 tested 249s
+fold 2 tuned 302s: move={'eta': 0.1}; move-tuned={'eta': 0.05}; contrastive={'eta': 0.05, 'eta_neg': 0.01}; agree-bm25={'eta': 0.1, 'agree': 20}; surprise={'eta': 0.2, 'weight': 20}; centered={'eta': 0.2, 'c': 1.0}; slow-adapter={'kind': 'adapter', 'lam': 10.0, 'alpha': 0.5}; verifier+move={'eta': 0.1, 'verifier': True}; combo={'eta': 0.2, 'agree': None, 'eta_neg': 0.02, 'c': 1.0}; verifier+combo={'eta': 0.2, 'agree': None, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}
+fold 2 tested 314s
+fold 3 tuned 357s: move={'eta': 0.1}; move-tuned={'eta': 0.02}; contrastive={'eta': 0.1, 'eta_neg': 0.03}; agree-bm25={'eta': 0.1, 'agree': 5}; surprise={'eta': 0.1, 'weight': 20}; centered={'eta': 0.1, 'c': 1.0}; slow-adapter={'kind': 'adapter', 'lam': 10.0, 'alpha': 0.5}; verifier+move={'eta': 0.1, 'verifier': True}; combo={'eta': 0.2, 'agree': 10, 'eta_neg': 0.02, 'c': 1.0}; verifier+combo={'eta': 0.3, 'agree': 10, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}
+fold 3 tested 369s
+fold 4 tuned 395s: move={'eta': 0.1}; move-tuned={'eta': 0.02}; contrastive={'eta': 0.05, 'eta_neg': 0.01}; agree-bm25={'eta': 0.1, 'agree': 5}; surprise={'eta': 0.1, 'weight': 20}; centered={'eta': 0.05, 'c': 1.0}; slow-adapter={'kind': 'adapter', 'lam': 1.0, 'alpha': 0.5}; verifier+move={'eta': 0.1, 'verifier': True}; combo={'eta': 0.1, 'agree': 20, 'eta_neg': 0.02, 'c': 1.0}; verifier+combo={'eta': 0.1, 'agree': None, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}
+fold 4 tested 404s
+
+4593 test visits (1531 questions x 3 orders), recall@10, rank-16 bridges
+  baseline (no learning)  0.657  multi-hop 0.475  +bm25 0.656
+  move: per-fold settings [{'eta': 0.1}, {'eta': 0.1}, {'eta': 0.1}, {'eta': 0.1}, {'eta': 0.1}]
+    clean    0.678  +0.020 [+0.015,+0.027] q-CI [+0.012,+0.030]  mh 0.503  +bm25 0.661 (+0.005)  learned 7035 ok / 0 wrong  chats +9/-1 (worst -0.022)
+    wrong30  0.654  -0.003 [-0.009,+0.003] q-CI [-0.012,+0.006]  mh 0.481  +bm25 0.660 (+0.004)  learned 4986 ok / 2049 wrong  chats +5/-5 (worst -0.031)
+    wrong60  0.633  -0.024 [-0.031,-0.017] q-CI [-0.033,-0.015]  mh 0.457  +bm25 0.656 (-0.001)  learned 2852 ok / 4183 wrong  chats +1/-9 (worst -0.062)
+    self     0.634  -0.023 [-0.029,-0.018] q-CI [-0.030,-0.016]  mh 0.453  +bm25 0.654 (-0.002)  learned 1159 ok / 3434 wrong  chats +0/-10 (worst -0.047)
+    far30    0.658  +0.001 [-0.005,+0.007] q-CI [-0.007,+0.010]  mh 0.483  +bm25 0.659 (+0.003)  learned 4986 ok / 2049 wrong  chats +7/-3 (worst -0.030)
+    far60    0.642  -0.015 [-0.022,-0.009] q-CI [-0.024,-0.007]  mh 0.466  +bm25 0.656 (-0.000)  learned 2852 ok / 4183 wrong  chats +3/-7 (worst -0.046)
+    visible  0.655  -0.002 [-0.007,+0.003] q-CI [-0.010,+0.005]  mh 0.476  +bm25 0.655 (-0.001)  learned 3991 ok / 0 wrong  chats +3/-6 (worst -0.016)
+  move-tuned: per-fold settings [{'eta': 0.02}, {'eta': 0.02}, {'eta': 0.05}, {'eta': 0.02}, {'eta': 0.02}]
+    clean    0.666  +0.008 [+0.005,+0.012] q-CI [+0.003,+0.014]  mh 0.486  +bm25 0.657 (+0.001)  learned 7035 ok / 0 wrong  chats +8/-1 (worst -0.008)
+    wrong30  0.661  +0.004 [+0.000,+0.007] q-CI [-0.001,+0.008]  mh 0.480  +bm25 0.658 (+0.002)  learned 4986 ok / 2049 wrong  chats +7/-3 (worst -0.011)
+    wrong60  0.655  -0.002 [-0.005,+0.001] q-CI [-0.007,+0.002]  mh 0.475  +bm25 0.657 (+0.001)  learned 2852 ok / 4183 wrong  chats +3/-6 (worst -0.016)
+    self     0.653  -0.004 [-0.008,-0.002] q-CI [-0.009,-0.000]  mh 0.469  +bm25 0.656 (+0.000)  learned 1575 ok / 3018 wrong  chats +3/-6 (worst -0.022)
+    far30    0.661  +0.004 [+0.000,+0.007] q-CI [-0.001,+0.008]  mh 0.482  +bm25 0.658 (+0.002)  learned 4986 ok / 2049 wrong  chats +6/-4 (worst -0.004)
+    far60    0.658  +0.001 [-0.002,+0.004] q-CI [-0.004,+0.005]  mh 0.475  +bm25 0.657 (+0.001)  learned 2852 ok / 4183 wrong  chats +6/-4 (worst -0.012)
+    visible  0.658  +0.001 [-0.002,+0.004] q-CI [-0.003,+0.005]  mh 0.477  +bm25 0.657 (+0.001)  learned 3994 ok / 0 wrong  chats +6/-3 (worst -0.006)
+  contrastive: per-fold settings [{'eta': 0.05, 'eta_neg': 0.03}, {'eta': 0.05, 'eta_neg': 0.03}, {'eta': 0.05, 'eta_neg': 0.01}, {'eta': 0.1, 'eta_neg': 0.03}, {'eta': 0.05, 'eta_neg': 0.01}]
+    clean    0.683  +0.026 [+0.020,+0.032] q-CI [+0.018,+0.034]  mh 0.500  +bm25 0.660 (+0.004)  learned 7035 ok / 0 wrong  chats +9/-1 (worst -0.014)
+    wrong30  0.671  +0.014 [+0.008,+0.020] q-CI [+0.006,+0.022]  mh 0.488  +bm25 0.659 (+0.003)  learned 4986 ok / 2049 wrong  chats +9/-1 (worst -0.013)
+    wrong60  0.660  +0.003 [-0.002,+0.009] q-CI [-0.005,+0.011]  mh 0.474  +bm25 0.658 (+0.002)  learned 2852 ok / 4183 wrong  chats +6/-4 (worst -0.009)
+    self     0.652  -0.005 [-0.011,+0.000] q-CI [-0.012,+0.003]  mh 0.466  +bm25 0.656 (-0.000)  learned 1537 ok / 3056 wrong  chats +5/-5 (worst -0.025)
+    far30    0.674  +0.017 [+0.011,+0.023] q-CI [+0.010,+0.025]  mh 0.491  +bm25 0.660 (+0.004)  learned 4986 ok / 2049 wrong  chats +9/-1 (worst -0.005)
+    far60    0.665  +0.008 [+0.002,+0.013] q-CI [+0.001,+0.015]  mh 0.476  +bm25 0.657 (+0.001)  learned 2852 ok / 4183 wrong  chats +8/-2 (worst -0.005)
+    visible  0.666  +0.008 [+0.004,+0.013] q-CI [+0.001,+0.015]  mh 0.482  +bm25 0.656 (+0.000)  learned 4048 ok / 0 wrong  chats +7/-3 (worst -0.005)
+  agree-bm25: per-fold settings [{'eta': 0.1, 'agree': 5}, {'eta': 0.1, 'agree': 20}, {'eta': 0.1, 'agree': 20}, {'eta': 0.1, 'agree': 5}, {'eta': 0.1, 'agree': 5}]
+    clean    0.661  +0.004 [-0.000,+0.009] q-CI [-0.002,+0.010]  mh 0.485  +bm25 0.659 (+0.003)  learned 3018 ok / 0 wrong  chats +6/-4 (worst -0.011)
+    wrong30  0.659  +0.002 [-0.002,+0.006] q-CI [-0.003,+0.007]  mh 0.480  +bm25 0.659 (+0.003)  learned 2137 ok / 350 wrong  chats +6/-4 (worst -0.012)
+    wrong60  0.655  -0.002 [-0.006,+0.002] q-CI [-0.007,+0.003]  mh 0.475  +bm25 0.658 (+0.002)  learned 1239 ok / 734 wrong  chats +4/-6 (worst -0.015)
+    self     0.651  -0.006 [-0.010,-0.003] q-CI [-0.012,-0.001]  mh 0.465  +bm25 0.657 (+0.001)  learned 1225 ok / 1176 wrong  chats +2/-8 (worst -0.015)
+    far30    0.661  +0.003 [-0.000,+0.007] q-CI [-0.002,+0.009]  mh 0.482  +bm25 0.659 (+0.003)  learned 2137 ok / 169 wrong  chats +6/-4 (worst -0.010)
+    far60    0.658  +0.001 [-0.003,+0.004] q-CI [-0.004,+0.005]  mh 0.476  +bm25 0.658 (+0.002)  learned 1239 ok / 319 wrong  chats +5/-5 (worst -0.011)
+    visible  0.657  -0.000 [-0.004,+0.004] q-CI [-0.006,+0.006]  mh 0.478  +bm25 0.658 (+0.002)  learned 2416 ok / 0 wrong  chats +5/-5 (worst -0.014)
+  surprise: per-fold settings [{'eta': 0.1, 'weight': 20}, {'eta': 0.1, 'weight': 20}, {'eta': 0.2, 'weight': 20}, {'eta': 0.1, 'weight': 20}, {'eta': 0.1, 'weight': 20}]
+    clean    0.678  +0.020 [+0.014,+0.026] q-CI [+0.012,+0.028]  mh 0.504  +bm25 0.661 (+0.005)  learned 5343 ok / 0 wrong  chats +9/-1 (worst -0.010)
+    wrong30  0.669  +0.011 [+0.006,+0.017] q-CI [+0.004,+0.018]  mh 0.493  +bm25 0.659 (+0.003)  learned 3817 ok / 1920 wrong  chats +9/-1 (worst -0.013)
+    wrong60  0.656  -0.001 [-0.006,+0.004] q-CI [-0.007,+0.005]  mh 0.482  +bm25 0.658 (+0.002)  learned 2203 ok / 3898 wrong  chats +4/-6 (worst -0.019)
+    self     0.657  +0.000 [+0.000,+0.000] q-CI [+0.000,+0.000]  mh 0.475  +bm25 0.656 (+0.000)  learned 0 ok / 0 wrong  chats +0/-0 (worst +0.000)
+    far30    0.659  +0.002 [-0.004,+0.008] q-CI [-0.006,+0.011]  mh 0.486  +bm25 0.659 (+0.003)  learned 3830 ok / 2024 wrong  chats +7/-3 (worst -0.016)
+    far60    0.640  -0.017 [-0.024,-0.011] q-CI [-0.025,-0.009]  mh 0.461  +bm25 0.654 (-0.002)  learned 2210 ok / 4141 wrong  chats +1/-9 (worst -0.042)
+    visible  0.658  +0.001 [-0.001,+0.003] q-CI [-0.002,+0.004]  mh 0.481  +bm25 0.655 (-0.001)  learned 2333 ok / 0 wrong  chats +6/-4 (worst -0.005)
+  centered: per-fold settings [{'eta': 0.05, 'c': 1.0}, {'eta': 0.2, 'c': 1.0}, {'eta': 0.2, 'c': 1.0}, {'eta': 0.1, 'c': 1.0}, {'eta': 0.05, 'c': 1.0}]
+    clean    0.681  +0.023 [+0.018,+0.029] q-CI [+0.015,+0.032]  mh 0.498  +bm25 0.662 (+0.006)  learned 7035 ok / 0 wrong  chats +9/-1 (worst -0.002)
+    wrong30  0.665  +0.008 [+0.003,+0.013] q-CI [+0.001,+0.015]  mh 0.487  +bm25 0.661 (+0.005)  learned 4986 ok / 2049 wrong  chats +8/-2 (worst -0.008)
+    wrong60  0.653  -0.004 [-0.009,+0.001] q-CI [-0.011,+0.003]  mh 0.472  +bm25 0.657 (+0.001)  learned 2852 ok / 4183 wrong  chats +3/-6 (worst -0.026)
+    self     0.652  -0.005 [-0.009,-0.002] q-CI [-0.011,+0.000]  mh 0.469  +bm25 0.656 (+0.000)  learned 1516 ok / 3077 wrong  chats +3/-6 (worst -0.023)
+    far30    0.668  +0.010 [+0.005,+0.016] q-CI [+0.003,+0.018]  mh 0.488  +bm25 0.659 (+0.003)  learned 4986 ok / 2049 wrong  chats +9/-1 (worst -0.003)
+    far60    0.655  -0.002 [-0.007,+0.004] q-CI [-0.009,+0.005]  mh 0.470  +bm25 0.658 (+0.002)  learned 2852 ok / 4183 wrong  chats +4/-6 (worst -0.019)
+    visible  0.661  +0.004 [-0.000,+0.007] q-CI [-0.002,+0.009]  mh 0.481  +bm25 0.657 (+0.001)  learned 4016 ok / 0 wrong  chats +7/-3 (worst -0.014)
+  slow-adapter: per-fold settings [{'kind': 'adapter', 'lam': 1.0, 'alpha': 0.5}, {'kind': 'adapter', 'lam': 1.0, 'alpha': 0.5}, {'kind': 'adapter', 'lam': 10.0, 'alpha': 0.5}, {'kind': 'adapter', 'lam': 10.0, 'alpha': 0.5}, {'kind': 'adapter', 'lam': 1.0, 'alpha': 0.5}]
+    clean    0.673  +0.016 [+0.009,+0.022] q-CI [+0.006,+0.026]  mh 0.478  +bm25 0.660 (+0.004)  learned 7035 ok / 0 wrong  chats +9/-1 (worst -0.014)
+    wrong30  0.667  +0.010 [+0.004,+0.016] q-CI [+0.001,+0.019]  mh 0.469  +bm25 0.657 (+0.000)  learned 4986 ok / 2049 wrong  chats +9/-1 (worst -0.008)
+    wrong60  0.656  -0.001 [-0.007,+0.005] q-CI [-0.010,+0.008]  mh 0.461  +bm25 0.655 (-0.001)  learned 2852 ok / 4183 wrong  chats +4/-6 (worst -0.017)
+    self     0.651  -0.007 [-0.013,-0.001] q-CI [-0.016,+0.002]  mh 0.459  +bm25 0.653 (-0.003)  learned 1629 ok / 2964 wrong  chats +4/-6 (worst -0.020)
+    far30    0.670  +0.013 [+0.007,+0.019] q-CI [+0.003,+0.022]  mh 0.467  +bm25 0.656 (+0.000)  learned 4986 ok / 2049 wrong  chats +10/-0 (worst +0.009)
+    far60    0.653  -0.004 [-0.010,+0.002] q-CI [-0.013,+0.005]  mh 0.454  +bm25 0.655 (-0.001)  learned 2852 ok / 4183 wrong  chats +3/-7 (worst -0.016)
+    visible  0.667  +0.009 [+0.004,+0.015] q-CI [+0.000,+0.018]  mh 0.469  +bm25 0.657 (+0.001)  learned 4037 ok / 0 wrong  chats +8/-2 (worst -0.007)
+  verifier+move: per-fold settings [{'eta': 0.1, 'verifier': True}, {'eta': 0.1, 'verifier': True}, {'eta': 0.1, 'verifier': True}, {'eta': 0.1, 'verifier': True}, {'eta': 0.1, 'verifier': True}]
+    clean    0.675  +0.018 [+0.012,+0.024] q-CI [+0.009,+0.027]  mh 0.502  +bm25 0.661 (+0.005)  learned 6341 ok / 0 wrong  chats +9/-1 (worst -0.019)
+    wrong30  0.665  +0.008 [+0.002,+0.013] q-CI [-0.000,+0.016]  mh 0.487  +bm25 0.660 (+0.004)  learned 4506 ok / 622 wrong  chats +8/-2 (worst -0.020)
+    wrong60  0.655  -0.002 [-0.007,+0.003] q-CI [-0.009,+0.005]  mh 0.479  +bm25 0.658 (+0.001)  learned 2591 ok / 1263 wrong  chats +4/-6 (worst -0.019)
+    self     0.646  -0.011 [-0.015,-0.007] q-CI [-0.018,-0.005]  mh 0.463  +bm25 0.656 (-0.000)  learned 1347 ok / 908 wrong  chats +1/-9 (worst -0.025)
+    far30    0.666  +0.009 [+0.003,+0.015] q-CI [+0.001,+0.017]  mh 0.488  +bm25 0.660 (+0.004)  learned 4506 ok / 622 wrong  chats +9/-1 (worst -0.018)
+    far60    0.658  +0.001 [-0.005,+0.006] q-CI [-0.007,+0.007]  mh 0.482  +bm25 0.658 (+0.002)  learned 2591 ok / 1263 wrong  chats +7/-3 (worst -0.027)
+    visible  0.656  -0.002 [-0.007,+0.003] q-CI [-0.009,+0.005]  mh 0.479  +bm25 0.656 (-0.000)  learned 3619 ok / 0 wrong  chats +4/-6 (worst -0.011)
+  combo: per-fold settings [{'eta': 0.1, 'agree': 50, 'eta_neg': 0.02, 'c': 1.0}, {'eta': 0.1, 'agree': None, 'eta_neg': 0.02, 'c': 1.0}, {'eta': 0.2, 'agree': None, 'eta_neg': 0.02, 'c': 1.0}, {'eta': 0.2, 'agree': 10, 'eta_neg': 0.02, 'c': 1.0}, {'eta': 0.1, 'agree': 20, 'eta_neg': 0.02, 'c': 1.0}]
+    clean    0.676  +0.018 [+0.013,+0.024] q-CI [+0.011,+0.026]  mh 0.501  +bm25 0.659 (+0.003)  learned 5079 ok / 0 wrong  chats +10/-0 (worst +0.001)
+    wrong30  0.667  +0.009 [+0.005,+0.014] q-CI [+0.003,+0.016]  mh 0.488  +bm25 0.659 (+0.003)  learned 3584 ok / 1209 wrong  chats +9/-1 (worst -0.003)
+    wrong60  0.657  +0.000 [-0.005,+0.005] q-CI [-0.006,+0.007]  mh 0.478  +bm25 0.658 (+0.002)  learned 2077 ok / 2487 wrong  chats +4/-6 (worst -0.015)
+    self     0.657  -0.001 [-0.005,+0.004] q-CI [-0.006,+0.005]  mh 0.471  +bm25 0.656 (-0.000)  learned 1417 ok / 2225 wrong  chats +4/-6 (worst -0.011)
+    far30    0.672  +0.015 [+0.010,+0.019] q-CI [+0.008,+0.022]  mh 0.491  +bm25 0.658 (+0.002)  learned 3584 ok / 1045 wrong  chats +10/-0 (worst +0.002)
+    far60    0.663  +0.005 [+0.001,+0.010] q-CI [-0.000,+0.011]  mh 0.476  +bm25 0.656 (-0.000)  learned 2077 ok / 2133 wrong  chats +7/-3 (worst -0.005)
+    visible  0.663  +0.005 [+0.001,+0.010] q-CI [-0.001,+0.011]  mh 0.484  +bm25 0.657 (+0.001)  learned 3317 ok / 0 wrong  chats +9/-1 (worst -0.004)
+  verifier+combo: per-fold settings [{'eta': 0.2, 'agree': 50, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}, {'eta': 0.3, 'agree': None, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}, {'eta': 0.2, 'agree': None, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}, {'eta': 0.3, 'agree': 10, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}, {'eta': 0.1, 'agree': None, 'eta_neg': 0.02, 'c': 1.0, 'verifier': True}]
+    clean    0.677  +0.019 [+0.013,+0.026] q-CI [+0.011,+0.028]  mh 0.506  +bm25 0.661 (+0.005)  learned 5319 ok / 0 wrong  chats +8/-2 (worst -0.006)
+    wrong30  0.667  +0.009 [+0.003,+0.015] q-CI [+0.002,+0.017]  mh 0.489  +bm25 0.660 (+0.004)  learned 3765 ok / 488 wrong  chats +8/-2 (worst -0.007)
+    wrong60  0.658  +0.000 [-0.004,+0.006] q-CI [-0.006,+0.007]  mh 0.483  +bm25 0.659 (+0.003)  learned 2160 ok / 984 wrong  chats +5/-5 (worst -0.012)
+    self     0.654  -0.003 [-0.007,+0.001] q-CI [-0.008,+0.003]  mh 0.472  +bm25 0.656 (+0.000)  learned 1314 ok / 741 wrong  chats +4/-6 (worst -0.016)
+    far30    0.668  +0.010 [+0.005,+0.016] q-CI [+0.003,+0.018]  mh 0.493  +bm25 0.660 (+0.004)  learned 3765 ok / 461 wrong  chats +8/-2 (worst -0.007)
+    far60    0.658  +0.001 [-0.004,+0.006] q-CI [-0.006,+0.007]  mh 0.480  +bm25 0.657 (+0.001)  learned 2160 ok / 925 wrong  chats +4/-6 (worst -0.017)
+    visible  0.659  +0.002 [-0.003,+0.006] q-CI [-0.005,+0.008]  mh 0.485  +bm25 0.658 (+0.002)  learned 3204 ok / 0 wrong  chats +6/-4 (worst -0.013)
+done 410s -> /tmp/claude-0/sm/fix-cite-noise/verify/results.json
+
+real	6m52.171s
+user	6m41.476s
+sys	0m6.658s
