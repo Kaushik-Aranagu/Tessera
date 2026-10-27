@@ -253,7 +253,9 @@ public enum RoutineSample {
         }
         try step("Read", 15, cue: "A few pages, nothing for work")
         try step("Journal", 5, cue: "Three lines is plenty")
-        try step("Lights", 1, cue: "Phone across the room", breath: "out")
+        let lights = try step("Lights", 1, cue: "Phone across the room", breath: "out")
+        try engine.perform(AddRoutineStep(parent: lights.id, title: "Phone away", seconds: 60,
+                                          cue: "Across the room, face down", breath: "out"), by: actor)
         return routine
     }
 }
