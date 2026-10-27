@@ -172,3 +172,21 @@ No full stops at the end of any of these (sheet 289).
   the action word comes back at full strength, no overlap.
 - For the builders: a trailing-edge `.mask` that animates its width to zero through `MotionPolicy`, then the action
   word's own transition in the completion.
+
+## 13. A routine's minutes count down (sheet 313)
+
+- On a routine's steps page the line above the steps ("5 steps, about 10 min left") used to be redrawn whole each time
+  a step was checked. Now only the number that changed moves, like a counter: a number going down drops in from
+  above while the old one falls away below; one going up (an undo) rises from below.
+- Every other word stays still. The number's own width eases from old to new, so "min left" slides over instead
+  of jumping when 10 becomes 8.
+- When the words change too (the last step makes it "All 5 steps done"), the old line eases out upward and the new
+  one rises in, never a swap.
+- Timing: the old number goes in 160 ms; the new one arrives over 300 ms from 60 ms with a little overshoot; the
+  width eases over 280 ms from 90 ms. Numbers 40 ms apart if more than one changes.
+- Reduce Motion: the line changes in place.
+- Measured on the board (`t57.js`): the Stretch routine checked step by step to "All 5 steps done" in paper and
+  black; the line always ends whole; `t39.js` finds no cut words and `t45.js` no stops.
+- For the builders: `Text` with `.contentTransition(.numericText(countsDown: true))` on the number alone, inside an
+  `HStack` with the unchanged words, animated through `MotionPolicy`. The same helper fits every "N left" line in the
+  app (Lists "6 of 14", Purse "about 2,125 still yours" keeps its "about").

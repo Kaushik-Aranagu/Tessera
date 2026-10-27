@@ -723,6 +723,22 @@ const DETAIL={
 function detailOf(r){if(DETAIL[r.id])return DETAIL[r.id];const m=/^(\d+) steps, about (\d+) min/.exec(r.k);
  if(m){const n=+m[1],L=+m[2];return {len:L,daysOn:'Every day',from:r.g==='Across the lake'?r.k.replace('from ','From '):'Made here',planted:'Oct 1',cap:'Small tree',who:'On the phone only',steps:Array.from({length:n},(_,i)=>['Step '+(i+1),Math.max(1,Math.round(L/n)),'What to do in this step.']),tess:'Kept most days this month.',split:'No step stands out yet.'}}
  return {len:+(/(\d+) min/.exec(r.k)||[0,1])[1],daysOn:'Every day',from:r.g==='Across the lake'?r.k.replace('from ','From '):'Made here',planted:'Oct 1',cap:'Small tree',who:'On the phone only',one:[r.n+'.','One thing, once a day.'],tess:'Kept most days this month.',split:'No day stands out yet.'}}
+/* 313: a line that only changes its numbers rolls just those numbers, like a counter: a number going down drops in
+   from above, one going up rises from below, and every other word stays still. A line whose words change too eases
+   out upward and the new one rises in (as the shape foot line, sheet 310). Never a swap. */
+function numRoll(e,was){const now=e.textContent;if(RM||!was||was===now)return;const sp=t=>t.split(/(\d+)/);const A=sp(was),B=sp(now);
+ const same=A.length===B.length&&A.every((x,i)=>i%2||x===B[i]);
+ if(!same){const g=e.cloneNode(true);g.textContent=was;g.style.pointerEvents='none';e.after(g);
+  g.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -4px'}],{duration:140,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish=()=>g.remove();
+  e.animate([{opacity:0,translate:'0 4px'},{opacity:1,translate:'0 0'}],{duration:240,delay:120,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});return}
+ e.innerHTML=B.map((x,i)=>i%2&&x!==A[i]?'<span class="nr" data-was="'+A[i]+'">'+x+'</span>':x.replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('');
+ e.querySelectorAll('.nr').forEach((n,j)=>{const down=+n.textContent<+n.dataset.was,d=down?-1:1;n.style.cssText='display:inline-block;position:relative';
+  const g=h('span','',n.dataset.was);g.style.cssText='position:absolute;left:0;top:0;pointer-events:none';n.appendChild(g);
+  g.animate([{opacity:1,translate:'0 0',filter:'blur(0)'},{opacity:0,translate:'0 '+(-d*.7)+'em',filter:'blur(1px)'}],{duration:160,delay:j*40,easing:'cubic-bezier(.4,0,.8,.6)',fill:'forwards'}).onfinish=()=>g.remove();
+  const w=h('span','',n.firstChild.nodeValue);n.firstChild.nodeValue='';n.prepend(w);w.style.display='inline-block';
+  w.animate([{opacity:0,translate:'0 '+(d*.7)+'em',filter:'blur(1px)'},{opacity:1,translate:'0 0',filter:'blur(0)'}],{duration:300,delay:60+j*40,easing:'cubic-bezier(.2,.9,.3,1.15)',fill:'backwards'});
+  /* the number's own width eases from the old to the new, so the words after it slide over rather than jump */
+  const w1=n.getBoundingClientRect().width/K,w0=g.getBoundingClientRect().width/K;if(Math.abs(w1-w0)>.5)n.animate([{width:w0+'px'},{width:w1+'px'}],{duration:280,delay:90+j*40,easing:'cubic-bezier(.3,0,.2,1)',fill:'backwards'})})}
 SCREENS.routine={title:'A routine',accent:'routines',tess:'Hip opener drops first on short nights. Want a small way for those?',render(el,P){
  const r=R.find(x=>x.id===(P.id||'stretch'))||R[0],D=detailOf(r);const nSteps=D.steps?D.steps.length:1;
  if(!D.hist)D.hist=hist(r.id.length,r.at??12*60,D.len,nSteps,(i,dow,x)=>r.st==='care'&&i>20&&x<.7?'miss':r.st==='begin'&&i>19?'miss':i===9?'rest':x<.1?'miss':'ok');
@@ -742,7 +758,7 @@ SCREENS.routine={title:'A routine',accent:'routines',tess:'Hip opener drops firs
   let y=26,html='<div style="position:absolute;top:0;font-size:13px;color:var(--ink2)">'+(open.length?D.steps.length+' steps, about '+left+' min left':'All '+D.steps.length+' steps done')+'</div>';
   open.forEach((i,j)=>{const [n,m,how]=D.steps[i],c=j===0;html+='<div class="step'+(c?' cur':'')+'" data-i="'+i+'" style="top:'+y+'px"><div class="row"><span class="nm">'+n+'<i class="k"></i></span><span class="mn">'+m+'<small>min</small></span></div>'+(c?'<div class="how">'+how+'</div>':'')+'</div>';y+=c?96:44});
   if(dn.length){y+=14;html+='<div class="slab" style="top:'+y+'px">Done</div>';y+=18;dn.forEach(i=>{const [n,m]=D.steps[i];html+='<div class="step done" data-i="'+i+'" style="top:'+y+'px"><div class="row"><span class="nm">'+n+'<i class="k"></i></span><span class="mn">'+m+'<small>min</small></span></div></div>';y+=44})}
-  pane.innerHTML=html;pane.querySelectorAll('.step').forEach(e=>swipeStep(e,+e.dataset.i));
+  const wasH=pane.firstElementChild&&pane.firstElementChild.dataset.h&&pane.firstElementChild.textContent;pane.innerHTML=html;const hd=pane.firstElementChild;if(hd){hd.dataset.h=1;numRoll(hd,wasH)}pane.querySelectorAll('.step').forEach(e=>swipeStep(e,+e.dataset.i));
   f.textContent=!dn.length?'Start':open.length?'Next step':'Do it again';f.onclick=()=>{if(open.length)check(open[0]);else{doneSteps=new Set();draw()}}}
  function check(i){if(doneSteps.has(i)){doneSteps.delete(i);draw();return}const e=$('.step[data-i="'+i+'"]',pane);e&&e.classList.add('done');
   setTimeout(()=>{doneSteps.add(i);draw();if(doneSteps.size===D.steps.length){petals(el,120,300);r.st='done';receipt(el,r.n+', done. Sixth evening running.',()=>{doneSteps.delete(i);draw()})}else receipt(el,D.steps[i][0]+', done.',()=>{doneSteps.delete(i);draw()})},RM?0:600)}
