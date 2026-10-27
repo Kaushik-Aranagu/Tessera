@@ -144,8 +144,10 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             var strictLeft = Self.maxStrictTools
             var unionsLeft = Self.maxStrictUnions
             var strictNames: Set<String> = []
-            let writesFirst = request.tools.filter { !ToolPicker.reads.contains($0.name) }
-                + request.tools.filter { ToolPicker.reads.contains($0.name) }
+            // The real write tools (TessTools minus the reads) rank first; guide, zoom, notebook and the rest follow.
+            let writeTools = TessTools.writeNames
+            let writesFirst = request.tools.filter { writeTools.contains($0.name) }
+                + request.tools.filter { !writeTools.contains($0.name) }
             for tool in writesFirst where tool.strict && strictLeft > 0 {
                 let unions = (try? JSONSerialization.jsonObject(with: tool.schema)).map(Self.unionCount) ?? 0
                 if unions <= unionsLeft {

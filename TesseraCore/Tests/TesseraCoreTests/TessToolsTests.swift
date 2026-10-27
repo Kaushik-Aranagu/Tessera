@@ -260,9 +260,8 @@ struct TessToolsTests {
 
 extension TessToolsTests {
     /// The API's strict-tool limits (live run, Oct 27): at most 20 strict tools, 16 union parameters, and a grammar
-    /// that
-    /// stays small enough. The request keeps strict a deliberate half of the first two (10 tools, 8 unions), writes
-    /// first, and sends the rest plain.
+    /// that stays small enough. The request keeps strict a deliberate half of the first two (10 tools, 8 unions),
+    /// writes first, and sends the rest plain.
     @Test func strictToolsStayUnderTheApiBudget() throws {
         let tools = try TessTools.claudeTools.map {
             try ToolSpec(name: $0.name, description: $0.description,
@@ -277,8 +276,14 @@ extension TessToolsTests {
         let unions = strict.reduce(0) { $0 + ClaudeBrain.unionCount(in: $1["input_schema"] as Any) }
         #expect(unions <= ClaudeBrain.maxStrictUnions)
         #expect(sent.count == tools.count)
-        // Writes come first: some write tool is strict.
-        let isRead = { (tool: [String: Any]) in ToolPicker.reads.contains(tool["name"] as? String ?? "") }
-        #expect(strict.contains { !isRead($0) })
+        // Writes come first: the strict slots go to real TessTools writes, not to guide, zoom or notebook.
+        let writeTools = TessTools.writeNames
+        let strictNames = strict.compactMap { $0["name"] as? String }
+        #expect(!strictNames.isEmpty && strictNames.allSatisfy(writeTools.contains))
+    }
+
+    @Test func theWriteNamesAreTheToolsThatWrite() {
+        #expect(TessTools.writeNames == Set(TessTools.all.map(\.name)).subtracting(ToolPicker.reads)
+            .subtracting(["rehearse"]))
     }
 }

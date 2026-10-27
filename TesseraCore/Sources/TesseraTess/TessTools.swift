@@ -55,6 +55,14 @@ public enum TessTools {
          plantRoutine, pauseRoutine, rehearse]
     }
 
+    /// The tools that write (every tool but the reads and rehearse), by name: a nonisolated list the request builder
+    /// can read off the main actor. A test keeps it equal to `all`.
+    public nonisolated static let writeNames: Set<String> = [
+        "logSet", "createTask", "completeTask", "rescheduleTask", "addGroceries", "addToList", "createList",
+        "createNote", "createRecipe", "startShop", "cookTogether", "setServeTime", "checkListItem", "startWorkout",
+        "startCooking", "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine",
+    ]
+
     /// The tools Claude may be given: everything but the device-only ones (money).
     public static var claudeTools: [Tool] {
         all.filter { !$0.deviceOnly }

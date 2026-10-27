@@ -73,6 +73,8 @@ struct TessLiveEvalTests {
         var world: String
         var policy: String
         var dry: Bool
+        /// The moment the run's clocks were pinned to (the world's own), not the day it ran.
+        var worldNow: String
         var allowanceDollars: Double
         var spentNano: Int64
         var asked: Int
@@ -141,6 +143,28 @@ struct TessLiveEvalTests {
 
     @Test func liveRun() async throws {
         guard let options = Self.options() else { return }
+        try await perform(options)
+    }
+
+    /// A dry run with a time limit near zero asks the first question, skips the rest for the time limit, and stamps the
+    /// report with the world's own moment, not the wall clock. Nothing leaves the Mac.
+    @Test func aDryRunWithNoTimeSkipsTheRestAndPinsTheWorldDate() async throws {
+        let out = FileManager.default.temporaryDirectory.appendingPathComponent("tess-eval-dry-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: out) }
+        let options = Options(world: .small, policy: .lab, kinds: ["count"], phoneSpentDollars: nil, outDir: out,
+                              dry: true, maxMinutes: 0.00001)
+        try await perform(options)
+        let files = try FileManager.default.contentsOfDirectory(at: out, includingPropertiesForKeys: nil)
+        let file = try #require(files.first { $0.pathExtension == "json" })
+        let report = try JSONDecoder().decode(Report.self, from: Data(contentsOf: file))
+        #expect(report.dry) // a dry run's "spend" is the scripted brain's own, never money
+        #expect(report.asked == 1)
+        #expect(report.questions.dropFirst().allSatisfy { $0.skipped == "the run's time limit was reached" })
+        #expect(report.questions.count > 1)
+        #expect(report.worldNow == ISO8601DateFormatter().string(from: EvalWorld.now))
+    }
+
+    func perform(_ options: Options) async throws {
         let manager = FileManager.default
         try manager.createDirectory(at: options.outDir, withIntermediateDirectories: true)
         let monthKey = TessSpendFile.monthKey(.now, calendar: .current)
@@ -187,13 +211,10 @@ struct TessLiveEvalTests {
                           costNano: TessUsageLedger.capNano - allowance, latency: 0, outcome: "works",
                           requestID: nil)
         }
-        // The Door's clock stays at the run's start, so a run that crosses midnight on the 1st can't start a fresh
-        // month (and a fresh allowance) partway through.
         // The world's own moment (Friday Oct 23, 2026, 6:10 PM Pacific), not the wall clock: its dates are fixed, so a
-        // run
-        // on any other day would have Tess answer "October 2025" for a question about last month. The in-store ledger
-        // and
-        // the Door share it, so a run that crosses real midnight on the 1st can't start a fresh month either.
+        // run on any other day would have Tess answer "October 2025" for a question about last month. The in-store
+        // ledger and the Door share it, so a run that crosses real midnight on the 1st can't start a fresh month
+        // (and a fresh allowance) partway through either.
         let runStart = EvalWorld.now
         let before = ledger.monthTotal(now: runStart)
 
@@ -336,7 +357,8 @@ struct TessLiveEvalTests {
         let day = ISO8601DateFormatter().string(from: .now).prefix(10)
         let report = Report(
             date: String(day), world: options.world.rawValue, policy: options.policy == .strict ? "strict" : "lab",
-            dry: options.dry, allowanceDollars: Double(allowance) / 1_000_000_000, spentNano: spent,
+            dry: options.dry, worldNow: ISO8601DateFormatter().string(from: runStart),
+            allowanceDollars: Double(allowance) / 1_000_000_000, spentNano: spent,
             asked: results.filter { $0.skipped == nil }.count, passed: scored.filter(\.passed).count,
             stoppedForCap: stopped, sent: SentScan(rows: sentLog.count, walledWordHits: Array(Set(hits)).sorted(),
                                                    keyShaped: keyShaped),
