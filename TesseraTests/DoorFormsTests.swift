@@ -98,4 +98,21 @@ struct DoorFormsTests {
         let many = (0 ..< 12).map { ("d\($0)", "Door number \($0)") }
         #expect(DoorForms.fit(.index, names: many, focus: 0, scale: 1) == nil, "the view then keeps the reel")
     }
+
+    @Test func theFocusedIndexRowIsFortyFourTallAndNeighboursKeepTheirPitch() throws {
+        let layout = try #require(DoorForms.fit(.index, names: names, focus: 1, scale: 1))
+        for placement in layout.placements {
+            let target = DoorForms.indexTarget(placement)
+            if placement.bold {
+                #expect(target.height == 44, "about 7 pt into each neighbour")
+                #expect(target.midY == placement.rect.midY)
+            } else {
+                #expect(target.height == DoorForms.indexPitch)
+            }
+            #expect(target.width >= 44)
+        }
+        let spec = DoorsDialElement().spec
+        let request = RenderRequest(variant: ElementVariant(form: 1))
+        #expect(ElementConformance.failure(.touch, spec: spec, request: request) == nil)
+    }
 }

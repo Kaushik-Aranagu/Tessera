@@ -11,7 +11,7 @@ enum DoorsForm: String, CaseIterable, Sendable {
 }
 
 extension EnvironmentValues {
-    // The form the landing dial takes. The shell (or Tess's reshape) sets it; the default is the designed reel.
+    /// The form the landing dial takes. The shell (or Tess's reshape) sets it; the default is the designed reel.
     @Entry var doorsForm: DoorsForm = .reel
 }
 
@@ -114,10 +114,14 @@ enum DoorForms {
     }
 
     /// The tap area of an index door: its column cell, wide enough to tap and as tall as the row pitch.
+    /// The focused row (the bold one) is the full 44 pt tall, about 7 pt into each neighbour (design, Oct 27).
+    static let focusTargetHeight: CGFloat = 44
+
     static func indexTarget(_ placement: DoorPlacement, pitch: CGFloat = indexPitch) -> CGRect {
         let width = max(placement.rect.width, ElementConformance.targetLong)
         let x = min(placement.rect.maxX, frame.maxX) - width
-        return CGRect(x: max(x, frame.minX), y: placement.rect.midY - pitch / 2, width: width, height: pitch)
+        let height = placement.bold ? focusTargetHeight : pitch
+        return CGRect(x: max(x, frame.minX), y: placement.rect.midY - height / 2, width: width, height: height)
     }
 
     // MARK: Sentence

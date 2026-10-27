@@ -83,9 +83,16 @@ struct DoorsDial: View {
     var body: some View {
         Group {
             if let layout = formLayout {
-                DoorsFormView(doors: doors, layout: layout, isShown: isShown, open: open) {
-                    turnedToIndex = true
-                }
+                DoorsFormView(
+                    doors: doors, layout: layout, isShown: isShown, open: open,
+                    turnTo: { door in
+                        if let index = doors.firstIndex(of: door) {
+                            move(index - wrapped(focus))
+                        }
+                    },
+                    turnBy: { move($0) },
+                    showAll: { turnedToIndex = true }
+                )
                 .frame(width: DoorForms.frame.width, height: DoorForms.frame.height, alignment: .topLeading)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             } else {
