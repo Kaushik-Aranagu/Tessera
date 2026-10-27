@@ -1026,7 +1026,7 @@ function wheelOf(host,rows,opts){let f=opts.start||0;const els=rows.map((r,i)=>{
 /* Training landing v2 (230 v3.2, colors v20) */
 SCREENS.training={title:'Training',accent:'training',tess:'Bench went up 10 lb since October. Push A tonight starts on the rower.',render(el){
  el.appendChild(h('div','ttl','Training')).style.color='var(--training)';
- const s1=h('div','stat','<span class="o" style="color:var(--gold)">5</span><span>weeks in a row on plan</span>');s1.style.top='112px';el.appendChild(s1);
+ const s1=h('div','stat','<span class="o" style="color:var(--gold)">14</span><span>sessions since Oct 1</span>');s1.style.top='112px';el.appendChild(s1);
  const s2=h('div','stat','<span class="o" style="color:var(--green)">+10<span class="u" style="font-size:16px">lb</span></span><span>on bench since Oct 1</span>');s2.style.top='156px';el.appendChild(s2);
  const td=h('div','door','<div class="sc" style="color:var(--slate)">Today</div><b style="font-size:52px;color:var(--clay);line-height:1.1">Push A</b><span>about 45 min, 4 lifts. Starts on the rower.</span>');td.style.top='218px';td.onclick=()=>go('workout');el.appendChild(td);
  const d1=h('div','door','<b>This week</b><span><span style="color:var(--training)">3</span> of 6 done. <span style="color:var(--teal)">Pull A</span> tomorrow.</span>');d1.style.top='380px';d1.onclick=()=>receipt(el,'This week opens here. Its page is in sheet 230.');el.appendChild(d1);
@@ -2165,7 +2165,7 @@ SCREENS.routines={title:'Routines',accent:'routines',tess:'Journal has been dry 
  const wine=t=>'<span style="color:var(--wine)">'+t+'</span>',grn=t=>'<span style="color:var(--green)">'+t+'</span>',slt=t=>'<span style="color:var(--slate)">'+t+'</span>';
  return landingV3(el,{name:'Watch',color:'var(--routines)',theme:'grow',
   sw:{x:[{k:'Evening',lines:['Walk around 6','Stretch at 8 pm']},{k:'Night',lines:['Read at 9','Journal, one line']},{k:'Morning',lines:['Water, done','Lunch prep at 11']}]},
-  w:[{hdr:'Next',big:'Walk',mid:'Around 6, 30 minutes',sml:'Tended five days in a row'},
+  w:[{hdr:'Next',big:'Walk',mid:'Around 6, 30 minutes',sml:'Last walked yesterday, 6:10 pm'},
    {hdr:'Thirsty',big:'Journal',c:'var(--wine)',mid:'Dry since Saturday',sml:'One line tonight brings it back'},
    {hdr:'Today',big:'3',unit:' of 7',num:1,mid:'Tended, four to go',sml:'Stretch at 8 pm, nine minutes'}],
   keystone:k=>{const c=h('div','lclip');c.style.cssText+='left:0;width:402px';c.innerHTML='<iframe title="Woodland" scrolling="no" src="watch.html?embed=1&look='+(phone.dataset.look==='black'?'black':'paper')+'"></iframe>';c.firstChild.style.left='0';k.appendChild(c);return null},
