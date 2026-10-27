@@ -17,10 +17,12 @@ public extension MemoryPyramid {
         func label(_ object: ObjectRecord) -> String? {
             ObjectPrivacy.shownLabel(of: object, in: store, classes: classes)
         }
-        // Belt and braces over the shown label: a walled title, a secret word or a key never becomes leaf text.
+        // Belt and braces over the shown label: a walled title, a secret word or a key never becomes leaf text, and
+        // nor does anything the Door's strict scan would refuse ("ate 600 calories"), which would refuse the whole run.
         func plain(_ text: String) -> Bool {
             !ObjectPrivacy.isPrivateTitle(text, lastWeightKg: lastKg) && !SecretWords.mentions(text)
-                && !looksLikeClaudeKey(text)
+                && !looksLikeClaudeKey(text) && !PrivateFacts.isWalled(text, lastWeightKg: lastKg)
+                && !PrivateFacts.isCalorieShaped(text)
         }
         func past(_ date: Date?) -> Date? {
             date.flatMap { $0 < now ? $0 : nil }

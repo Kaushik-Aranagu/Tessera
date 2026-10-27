@@ -87,6 +87,22 @@ struct PyramidStoreLeavesTests {
         #expect(all.allSatisfy { $0.stats.isEmpty && $0.taint == .deviceOnly })
     }
 
+    @Test(arguments: ["ate 600 calories today", "Burned 400 kcal on the bike", "Hurt my knee on the stairs",
+                      "Paid $40 at the clinic"])
+    func aNoteTheStrictScanWouldRefuseIsItsLabel(body: String) throws {
+        let note = try make(.note, "Today")
+        try store.set("body", to: .text(body), on: note)
+        note.createdAt = at(10, 8)
+        let leaf = try #require(leaves().first { $0.kind == "note" })
+        #expect(leaf.text == "Private note" && leaf.taint == .deviceOnly && leaf.stats.isEmpty, "\(body)")
+        // Every claude-safe leaf passes the Door's own strict scan.
+        try workout("Push Day", on: at(10, 6), sets: [(95, 3)])
+        for safe in leaves() where safe.taint == .claudeSafe {
+            #expect(!PrivateFacts.isWalled(safe.text, lastWeightKg: BodyWeight.lastKg(in: store))
+                && !PrivateFacts.isCalorieShaped(safe.text) && !SecretWords.mentions(safe.text), "\(safe.text)")
+        }
+    }
+
     @Test func strictReadsAsIfThePrivateRowsNeverHappened() throws {
         try workout("Push Day", on: at(10, 6), sets: [(95, 3)])
         try workout("Pull Day", on: at(10, 20), sets: [(70, 8)])
