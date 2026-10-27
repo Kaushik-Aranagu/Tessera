@@ -157,6 +157,10 @@ struct TesseraApp: App {
                 if url.host() == "workout", model.session != nil {
                     model.isWorkoutPresented = true
                 }
+                // Sheet 344: the cooking activity opens the ticket with the alert printed.
+                if url.host() == "cook" {
+                    model.openCook(from: url)
+                }
             }
         }
     }

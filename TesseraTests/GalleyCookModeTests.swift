@@ -238,3 +238,51 @@ struct GalleySpikeTests {
         #expect(!eat.detail.hasSuffix("."))
     }
 }
+
+struct CookAlertContentTests {
+    private let now = Date(timeIntervalSinceReferenceDate: 800_000_000)
+
+    private func timer(_ label: String, _ seconds: TimeInterval) -> CookTimerInput {
+        CookTimerInput(label: label, endsAt: now.addingTimeInterval(seconds), startedAt: now.addingTimeInterval(-600))
+    }
+
+    /// Sheet 344: when a pan timer ends the activity names the food and says READY, OFF THE HEAT; the next timer that
+    /// still runs reads as "onions to go" beside its countdown; the link opens the ticket with the alert printed.
+    @Test func aTimerThatEndedNamesTheFoodAndTheNextOneIsToGo() throws {
+        let state = try #require(CookFace.state(timers: [timer("Brown the chicken", -3), timer("Onions", 358)],
+                                                nextStep: nil, isPrivate: false, appNow: now, realNow: now))
+        #expect(state.readyFood == "Chicken" && CookFace.readyLine == "READY, OFF THE HEAT")
+        #expect(state.timerLabel == "Onions" && state.nextLabel == nil)
+        let two = try #require(CookFace.state(
+            timers: [timer("Rice", 60), timer("Onions", 358), timer("Brown the chicken", -3)],
+            nextStep: nil,
+            isPrivate: false,
+            appNow: now,
+            realNow: now
+        ))
+        #expect(two.nextLabel == "onions to go" && two.nextEndsAt != nil && two.readyFood == "Chicken")
+    }
+
+    @Test func theLastTimerEndingKeepsTheActivityToSayReady() throws {
+        let state = try #require(CookFace.state(timers: [timer("Rice", -2)], nextStep: nil, isPrivate: false,
+                                                appNow: now, realNow: now))
+        #expect(state.readyFood == "Rice" && state.others == 0)
+        #expect(CookFace.state(timers: [], nextStep: nil, isPrivate: false, appNow: now, realNow: now) == nil)
+    }
+
+    @Test func aPrivateCookNamesNoFood() throws {
+        let state = try #require(CookFace.state(timers: [timer("Secret stew", -1), timer("Hidden", 90)], nextStep: "x",
+                                                isPrivate: true, appNow: now, realNow: now))
+        #expect(state.readyFood == "Timer" && state.timerLabel == "Timer" && state.nextStep == nil)
+        #expect(state.nextLabel == nil || state.nextLabel == "timer to go")
+    }
+
+    @Test func theLinkNamesTheCookAndTheAlert() throws {
+        let cook = UUID()
+        let url = try #require(CookFace.alertLink(cook: cook, food: "Chicken"))
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(url.scheme == "tessera" && url.host() == "cook")
+        #expect(items.first { $0.name == "cook" }?.value == cook.uuidString)
+        #expect(items.first { $0.name == "alert" }?.value == "Chicken")
+    }
+}

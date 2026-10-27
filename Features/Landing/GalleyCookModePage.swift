@@ -7,6 +7,8 @@ import TesseraCore
 /// Behind the "Cooking mode" switch (On); Off keeps the clock page.
 struct GalleyCookModePage: View {
     let cookID: UUID
+    /// A ready line to print when the page opens (the Live Activity's link: "Chicken"), sheet 344.
+    var alert: String?
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -50,15 +52,21 @@ struct GalleyCookModePage: View {
             }
         }
         .onChange(of: session?.current) { clearPrinted() }
+        .task {
+            // Opened from the Live Activity with an alert: the ticket opens with the ready line already printed.
+            guard let alert else { return }
+            try? await Task.sleep(for: .milliseconds(400))
+            await printLine(GalleyCookWords.readyLine(label: alert))
+        }
         #if DEBUG
-            .task {
-                // Simulator only (LaunchFlags): `-printNow` feeds the ready line after 3 s, for stills and recordings.
-                guard LaunchFlags.has("-printNow") else { return }
-                try? await Task.sleep(for: .seconds(3))
-                await printLine(GalleyCookWords.readyLine(label: "Chicken"))
-            }
+        .task {
+            // Simulator only (LaunchFlags): `-printNow` feeds the ready line after 3 s, for stills and recordings.
+            guard LaunchFlags.has("-printNow") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            await printLine(GalleyCookWords.readyLine(label: "Chicken"))
+        }
         #endif
-            .tesseraFeedback(cue)
+        .tesseraFeedback(cue)
     }
 
     private func screen(_ session: CookClockSession, now: Date) -> some View {
@@ -436,10 +444,11 @@ struct GalleyCookModePage: View {
 /// The cook cover's single door: the cooking mode, or the clock page when the switch is Off.
 struct CookEntry: View {
     let cookID: UUID
+    var alert: String?
 
     var body: some View {
         if Tier1b.cookModeIsOn {
-            GalleyCookModePage(cookID: cookID)
+            GalleyCookModePage(cookID: cookID, alert: alert)
         } else {
             CookClockPage(cookID: cookID)
         }

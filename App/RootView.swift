@@ -119,6 +119,7 @@ struct RootView: View {
             }
         }
         .fullScreenCover(item: $demoCook) { CookEntry(cookID: $0.id) }
+        .fullScreenCover(item: $model.cookLink) { CookEntry(cookID: $0.id, alert: $0.alert) }
         #if DEBUG
             .fullScreenCover(isPresented: $demoShop) { GalleyShopModePage() }
             .fullScreenCover(item: $demoRoutine) { RoutineModePage(routineID: $0.id) }
