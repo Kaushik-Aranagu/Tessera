@@ -155,7 +155,7 @@ struct ElementLooksTests {
         #expect(ToolPicker.pick("denser doors", frame: deckFrame(), looks: dense).bound == nil)
         // Open: the model gets the look calls first, and the look lines from settings.
         let open = ToolPicker.pick("I don't like this dial, what would be better here", frame: deckFrame())
-        #expect(open.bound == nil && open.looks && open.tools.prefix(2) == ["setLook", "showLooks"])
+        #expect(open.bound == nil && open.looks && open.tools.prefix(3) == ["tryLook", "setLook", "showLooks"])
         let lines = deckFrame().lookLines(RoomLooks()).map(\.text)
         #expect(lines.contains(
             "Look of dial: reel; other forms index, sentence; traits density designed of airy/designed/dense."
@@ -215,6 +215,53 @@ struct ElementLooksTests {
         // A form no place has never reaches the stage or the shell.
         #expect(LookWords.isKnown(.form("card"), place: "dial") == false)
         #expect(StageReport(places: [StageFlags(place: .dial)]).line == "It passes every check")
+    }
+
+    @Test func sheTriesLooksOffScreenThenSetsOneThatPassedWithoutStagingItAgain() async throws {
+        let helper = TessRunTests()
+        func look(_ form: String) -> String {
+            #"{"place":"dial","form":"\#(form)","trait":null,"value":null}"#
+        }
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [helper.use("t1", "tryLook", look("index")), helper.use("t2", "tryLook", look("sentence"))],
+            [helper.use("t3", "setLook", look("sentence"))],
+            [.text("The doors read as one sentence now")],
+        ])
+        let r = try helper.rig([.haiku: haiku])
+        let log = StageLog()
+        r.run.stage = { place, change in
+            log.changes.append(change)
+            let passes = change == .form("sentence")
+            return StageReport(places: [StageFlags(place: place, fits: passes)])
+        }
+        let events = await helper.collect(r.run.ask("I don't like this dial, what would be better here",
+                                                    frame: deckFrame()))
+        // Two tries staged; the set one had passed, so it isn't staged again. Only the set reaches the shell.
+        #expect(log.changes == [.form("index"), .form("sentence")])
+        let shells = events.compactMap { event -> ShellIntent? in
+            if case let .shell(intent) = event { intent } else { nil }
+        }
+        #expect(shells.map(\.call) == ["setLook"])
+        let tried = try #require(haiku.requestsSeen.dropFirst().first).messages.last?.content
+            .compactMap { piece -> String? in
+                if case let .toolResult(_, content, _) = piece { content } else { nil }
+            } ?? []
+        #expect(tried == ["Tried, not shown: the dial fails fits. Try another, or tell him why",
+                          "Tried, not shown: it passes every check. setLook shows it"])
+    }
+
+    @Test func aFourthTryIsRefused() async throws {
+        let helper = TessRunTests()
+        let r = try helper.rig([:])
+        let id = UUID()
+        let arguments = ["place": "dial", "form": "index"]
+        for _ in 0 ..< TessRun.maxTries {
+            #expect(await r.run.tryLook(arguments, runID: id).isError == false)
+        }
+        #expect(await r.run.tryLook(arguments, runID: id).text.hasPrefix("That's 3 tries"))
+        // A new ask starts again.
+        #expect(await r.run.tryLook(arguments, runID: UUID()).isError == false)
+        #expect(await r.run.tryLook(["place": "dial", "form": "card"], runID: UUID()).isError)
     }
 
     @Test func aReshapeTravelsWhatBothFormsShowAndCollapsesOnlyWhenNothingIsShared() {

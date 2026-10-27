@@ -47,15 +47,20 @@ public struct BudgetChange: Sendable, Equatable {
 /// - Sweep: when the weekly sweep ran, recall's start becomes the smallest setting that scored the best. A section
 ///   only ever shrinks this way, on an equal score, so accuracy is never traded for size.
 /// - Cost is not an input. The $100 cap still stops calls if a bug runs away; it never shapes a size.
+/// Its numbers are knobs (input-hygiene H9): each is read from the knob table, and the statics are what they ship as.
 public struct BudgetTuner: Sendable {
-    public static let faultRate = 0.3
-    public static let growth = 1.5
-    public static let floorStep = 0.05
-    public static let lowestFloor = 0.3
+    public static let faultRate = Knob.budgetFaultRate.shipped
+    public static let growth = Knob.budgetGrowth.shipped
+    public static let floorStep = Knob.budgetFloorStep.shipped
+    public static let lowestFloor = Knob.budgetLowestFloor.shipped
     /// Fewer runs than this in the week says too little to move anything on faults.
-    public static let minimumRuns = 5
+    public static let minimumRuns = Int(Knob.budgetMinimumRuns.shipped)
 
-    public init() {}
+    public var knobs: KnobTable
+
+    public init(knobs: KnobTable = KnobTable()) {
+        self.knobs = knobs
+    }
 
     public func tune(_ table: BudgetTable, uses: [ContextUse], misses: [EvalMiss] = [],
                      sweeps: [SweepResult] = []) -> (table: BudgetTable, changes: [BudgetChange])
@@ -83,15 +88,18 @@ public struct BudgetTuner: Sendable {
                 let runs = uses.filter { $0.agent == key.agent && $0.model == key.model.rawValue }
                 let runCount = Set(runs.map(\.runID)).count
                 let faults = runs.reduce(0) { $0 + $1.opens.count + $1.recalls }
-                if runCount >= Self.minimumRuns, Double(faults) / Double(runCount) > Self.faultRate {
-                    let grown = Self.grow(row.start(.recall), ceiling: BudgetRow.ceiling(.recall, model: key.model))
+                let rate = Double(faults) / Double(runCount)
+                if runCount >= knobs.int(.budgetMinimumRuns), rate > knobs.value(.budgetFaultRate) {
+                    let grown = Self.grow(row.start(.recall), ceiling: BudgetRow.ceiling(.recall, model: key.model),
+                                          growth: knobs.value(.budgetGrowth))
                     if grown != row.start(.recall) {
                         changes.append(.init(agent: key.agent, model: key.model, what: "recall start",
                                              from: Double(row.start(.recall)), to: Double(grown),
                                              why: "it kept fetching what the pack didn't hold"))
                         row.starts[.recall] = grown
                     }
-                    let floor = max(Self.lowestFloor, ((row.recallFloor - Self.floorStep) * 100).rounded() / 100)
+                    let step = knobs.value(.budgetFloorStep)
+                    let floor = max(knobs.value(.budgetLowestFloor), ((row.recallFloor - step) * 100).rounded() / 100)
                     if floor != row.recallFloor {
                         changes.append(.init(agent: key.agent, model: key.model, what: "recall floor",
                                              from: row.recallFloor, to: floor, why: "let more related things in"))
@@ -105,7 +113,8 @@ public struct BudgetTuner: Sendable {
                 // Expertise is never trimmed and holds its whole pack, so a miss there is a recipe fix, not a size.
                 guard section != .expertise else { continue }
                 if section == .recall, row.start(.recall) != before.start(.recall) { continue }
-                let grown = Self.grow(row.start(section), ceiling: BudgetRow.ceiling(section, model: key.model))
+                let grown = Self.grow(row.start(section), ceiling: BudgetRow.ceiling(section, model: key.model),
+                                      growth: knobs.value(.budgetGrowth))
                 guard grown != row.start(section) else { continue }
                 changes.append(.init(agent: key.agent, model: key.model, what: "\(section.rawValue) start",
                                      from: Double(row.start(section)), to: Double(grown),
@@ -122,7 +131,7 @@ public struct BudgetTuner: Sendable {
 
     /// Half again, at least 1,000 tokens, never past `ceiling` (and never down, if a sweep already set it higher).
     /// A section that ships with a start of 0 never grows: its ceiling is twice 0. Give it a start to let it grow.
-    static func grow(_ start: Int, ceiling: Int) -> Int {
+    static func grow(_ start: Int, ceiling: Int, growth: Double = BudgetTuner.growth) -> Int {
         max(start, min(ceiling, max(1000, Int((Double(start) * growth).rounded()))))
     }
 

@@ -48,6 +48,16 @@ public final class TessRun {
     /// The shell's quiet stage (sheet 287, section 5): a look Tess picks is drawn off screen first and applied only
     /// if it passes. Nil until the host has one; then the shell's own check is the only gate.
     public var stage: LookStage?
+    /// The most looks Tess tries off screen for one ask (rehearsal.md section 2): past that she asks him.
+    nonisolated static let maxTries = 3
+
+    /// The looks tried in the run in flight: how many tries are left, and the ones that passed, which `setLook`
+    /// needn't stage again.
+    struct LookTries {
+        var runID: UUID
+        var left = TessRun.maxTries
+        var passed: Set<String> = []
+    }
 
     private final class Active: @unchecked Sendable {
         let id = UUID()
@@ -74,6 +84,14 @@ public final class TessRun {
     private var current: Active?
     /// The memory slice for the run in flight, built on its first recall or path read.
     private var memory: (runID: UUID, index: MemoryIndex)?
+    private var tries: LookTries?
+    /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's. Dropped when the run ends,
+    /// with its copy of his store.
+    private(set) var rehearsal: (runID: UUID, rehearsal: Rehearsal, slow: Bool)?
+    /// The time one rehearsal try may take (`Rehearsal.seconds`); a test sets it lower.
+    var rehearsalSeconds = Rehearsal.seconds
+    /// What she hears when a rehearsal ran out of time, and on every write after it in the same ask.
+    static let slowRehearsal = "That took too long to try. Change nothing and ask him first"
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -225,9 +243,33 @@ public final class TessRun {
         ]
     }
 
+    /// Tries a look off screen (the quiet stage): never a shell call, since nothing is shown.
+    static var tryLookSpec: ToolSpec {
+        let schema = TessSchema.object([
+            ("place", .string("The place: dial, widget, page, needs, doorSummary, glyph, keystone...")),
+            ("form", .nullable(.string("A form from the look line, or designed for the studio's look"))),
+            ("trait", .nullable(.string("A trait from the look line, with value"))),
+            ("value", .nullable(.string("The trait's new value"))),
+        ])
+        let data = (try? JSONSerialization.data(withJSONObject: schema.json, options: [.sortedKeys])) ?? Data()
+        return ToolSpec(name: "tryLook", description: "Try a look off screen before you show it: draws this screen "
+            + "with one form, or one trait at one value, and says which checks it fails (fits, floor, contrast, "
+            + "rules, touch, calm). Shows and changes nothing. On an open ask try up to three, then setLook one that "
+            + "passes, or tell him why none fit", schema: data)
+    }
+
+    /// The rehearsal as Claude reads it: the device-only tool's own input, run here, so what comes back is
+    /// what the Door lets through (`rehearsed`).
+    static var rehearseSpec: ToolSpec? {
+        guard let tool = TessTools.tool(named: RehearseFlags.tool),
+              let data = try? JSONSerialization.data(withJSONObject: tool.input.json, options: [.sortedKeys])
+        else { return nil }
+        return ToolSpec(name: tool.name, description: RehearseFlags.description, schema: data)
+    }
+
     /// Only the tools a pick named, in its order (shell calls included); `open` rides along as a read.
     static func toolSpecs(only names: [String]) -> [ToolSpec] {
-        let all = toolSpecs() + shellSpecs()
+        let all = toolSpecs() + shellSpecs() + [tryLookSpec] + (rehearseSpec.map { [$0] } ?? [])
         return names.compactMap { name in all.first { $0.name == name } }
     }
 
@@ -299,6 +341,10 @@ public final class TessRun {
         }
         let specs = pick.map { Self.toolSpecs(only: $0.tools) }
             ?? Self.toolSpecs()
+        if let reason = pick?.rehearse, specs.contains(where: { $0.name == RehearseFlags.tool }) {
+            // Only when the phone has the rehearsal: a line about a tool she wasn't given would mislead her.
+            fragments.append(PackFragment(RehearseFlags.line(reason, count: pick?.count)))
+        }
         return Pack(system: system, cacheAfter: cache, tools: withTools ? specs : [],
                     fragments: fragments, handles: handles)
     }
@@ -373,6 +419,11 @@ public final class TessRun {
     {
         var budget = TessTools.maxRecordsPerPhrase
         var pauses = 0
+        defer {
+            // The copy of his store and the tries live only as long as the ask.
+            rehearsal = nil
+            tries = nil
+        }
         while state.round <= Self.maxRounds {
             let request = BrainRequest(system: pack.system, messages: state.messages, tools: pack.tools,
                                        toolChoice: pack.tools.isEmpty ? .auto : plan.toolChoice,
@@ -495,7 +546,9 @@ public final class TessRun {
         var result: (text: String, isError: Bool)
         // Only a call this turn was offered can run, whatever name the model returns; and a device-only tool (money)
         // never runs for a Claude rung, even if it were offered: it runs bound, or on the phone's own model.
-        let deviceOnly = TessTools.tool(named: name)?.deviceOnly == true
+        // The rehearsal is device-only as a tool, but it writes nothing: it runs here, and a Claude rung reads
+        // only what the Door lets through. A money call inside it still fails off the phone.
+        let deviceOnly = name != RehearseFlags.tool && TessTools.tool(named: name)?.deviceOnly == true
         switch name {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
             result = ("That isn't a call I can make here.", true)
@@ -531,6 +584,11 @@ public final class TessRun {
                 sink(.ghost(ghost))
             }
             result = (answer.text, answer.isError)
+        case RehearseFlags.tool:
+            result = rehearsed(input, runID: runID, onDevice: onDevice, offered: offered)
+        case "tryLook":
+            let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
+            result = await tryLook(args.compactMapValues { $0 as? String }, runID: runID)
         case _ where ElementCatalog.shellCalls.contains(name):
             // A shell call writes nothing: the host plays it.
             let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
@@ -544,12 +602,15 @@ public final class TessRun {
                     object = id
                 }
             }
-            if name == "setLook", let refusal = await staged(strings) {
+            if name == "setLook", let refusal = await staged(strings, runID: runID) {
                 result = refusal
                 break
             }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
             result = ("Shown.", false)
+        case _ where rehearsal?.runID == runID && rehearsal?.slow == true && !ToolPicker.reads.contains(name):
+            // A rehearsal that ran out of time proved nothing: she asks him instead of writing unrehearsed.
+            result = (Self.slowRehearsal, true)
         default:
             do {
                 let records = try TessTools.run(name, arguments: input, engine: engine, pending: true, now: now(),
@@ -574,16 +635,90 @@ public final class TessRun {
 
     /// A look the model picked, checked before the host sees it: a form or value the place has, then the quiet stage.
     /// Nil when it may go to the shell; otherwise what the model hears instead. Nothing is shown either way.
-    func staged(_ arguments: [String: String]) async -> (text: String, isError: Bool)? {
+    /// A look she tried that passed this run isn't staged again.
+    func staged(_ arguments: [String: String], runID: UUID) async -> (text: String, isError: Bool)? {
         guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
               let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
         else {
             return ("That place has no such look. Use one from its look line.", true)
         }
+        if tries?.runID == runID, tries?.passed.contains(Self.tryKey(key, change)) == true {
+            return nil
+        }
         guard let stage else { return nil }
         let report = await stage(place, change)
         guard !report.passed else { return nil }
         return ("Not shown: \(report.line); his look stays. Try another form, or tell him why", false)
+    }
+
+    /// Runs `rehearse` on a copy of his store with the ask's one `Rehearsal`. The phone's own model reads the whole
+    /// result; a Claude rung reads its fragments as the Door's policy allows (strict holds money, body and private
+    /// lines back and says how many), never the receipts.
+    /// Only calls this turn offered may be tried, so the Deck can't rehearse the Purse's tools.
+    func rehearsed(_ input: Data, runID: UUID, onDevice: Bool, offered: Set<String>) -> (text: String, isError: Bool) {
+        guard let asked = RehearseFlags.calls(input) else {
+            return ("Give the calls to try, each with its name and arguments.", true)
+        }
+        let unoffered = asked.calls.map(\.name).filter { !offered.contains($0) || $0 == RehearseFlags.tool }
+        guard unoffered.isEmpty else {
+            return ("Only calls offered here can be rehearsed, not \(unoffered.joined(separator: ", "))", true)
+        }
+        let current: Rehearsal
+        if let kept = rehearsal, kept.runID == runID {
+            if kept.slow {
+                return (Self.slowRehearsal, true)
+            }
+            current = kept.rehearsal
+        } else {
+            current = Rehearsal(engine: engine)
+            current.seconds = rehearsalSeconds
+            rehearsal = (runID, current, false)
+        }
+        guard current.tries < Rehearsal.budget else {
+            // Said here, not as the rehearsal's own refusal, which strict holds back with the other refusals.
+            return ("That's \(Rehearsal.budget) rehearsals for this ask. Ask him instead of guessing", true)
+        }
+        let result = current.try(asked.calls, expecting: asked.expecting,
+                                 scope: MemoryScope(agent, policy: door.policy()), onDevice: onDevice)
+        if result.failed.contains(where: { if case .overBudget = $0 { true } else { false } }) {
+            // Nothing says the change is safe: no more tries, and no write for the rest of the ask.
+            rehearsal = (runID, current, true)
+            return (Self.slowRehearsal, true)
+        }
+        if onDevice {
+            return (result.text, false)
+        }
+        return (RehearseFlags.forClaude(result, policy: door.policy()), false)
+    }
+
+    /// A look tried off screen (`tryLook`): the place's own list, then the quiet stage. Nothing is shown or kept. At
+    /// most `maxTries` per ask; one that passed goes straight to the shell when she then sets it.
+    func tryLook(_ arguments: [String: String], runID: UUID) async -> (text: String, isError: Bool) {
+        guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
+              let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
+        else {
+            return ("That place has no such look. Use one from its look line.", true)
+        }
+        var run = tries.flatMap { $0.runID == runID ? $0 : nil } ?? LookTries(runID: runID)
+        guard run.left > 0 else {
+            return ("That's \(Self.maxTries) tries for this ask. Set the best one, or ask him", true)
+        }
+        run.left -= 1
+        defer { tries = run }
+        guard let stage else {
+            return ("It is one of the place's looks. This phone can't draw it off screen yet; setLook checks it", false)
+        }
+        let report = await stage(place, change)
+        guard report.passed else {
+            return ("Tried, not shown: \(report.line). Try another, or tell him why", false)
+        }
+        run.passed.insert(Self.tryKey(key, change))
+        return ("Tried, not shown: it passes every check. setLook shows it", false)
+    }
+
+    /// One look change on one place, as the tries remember it.
+    static func tryKey(_ place: String, _ change: LookChange) -> String {
+        "\(place) \(change)"
     }
 
     // MARK: Bound calls
