@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 // The test world as pyramid leaves (P1, docs/ai/harness/memory-pyramid.md), so the pyramid is scored on a known
 // world before it reads his store. What must never count never becomes a leaf: a workout deleted as a mistake, a
@@ -37,7 +38,8 @@ public extension EvalWorld {
                 ["earnedUSD": amount], taint: .deviceOnly)
         }
         for (index, note) in notes.enumerated() {
-            add("note", index, note.at, note.isPrivate ? "Private note" : note.body, ["notes": 1])
+            add("note", index, note.at, note.isPrivate ? "Private note" : note.body, ["notes": 1],
+                taint: !note.isPrivate && Self.isWalled(note.body) ? .deviceOnly : .claudeSafe)
         }
         var chore = 0
         for item in chores {
@@ -65,8 +67,16 @@ public extension EvalWorld {
             add("event", index, event.start, "\(event.title), \(event.minutes) min", ["events": 1], taint: .deviceOnly)
         }
         for (index, line) in told.enumerated() where line.forgotten.map({ $0 > now }) ?? true {
-            add("told", index, line.at, "He told you: \(line.text)", ["told": 1])
+            add("told", index, line.at, "He told you: \(line.text)", ["told": 1],
+                taint: Self.isWalled(line.text) ? .deviceOnly : .claudeSafe)
         }
         return leaves
+    }
+
+    /// Words the Door's strict scan would refuse ("Hurt my left shoulder", "Locker combo 4-27-19") stay on the phone,
+    /// so a strict context never carries them and a strict run is never refused for one.
+    static func isWalled(_ text: String) -> Bool {
+        looksLikeClaudeKey(text) || SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: nil)
+            || PrivateFacts.isCalorieShaped(text)
     }
 }
