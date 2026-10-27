@@ -60,12 +60,19 @@ public extension Knob {
 
 /// Who moved a knob.
 public enum KnobSetter: String, Codable, Sendable {
-    /// Kaushik, from Developer mode. The only one who may loosen a wall.
+    /// Kaushik, by his own tap in Developer mode: only `KnobTable.setByOwner` with an `OwnerTap` writes it. The only
+    /// one who may loosen a wall.
     case owner
     /// A tuner, at night.
     case tuner
     /// Developer mode's own reset or a test run.
     case developer
+}
+
+/// Proof that a move is his own tap in Developer mode (QA on #1476): `.owner` is never just something a caller says.
+/// Only the Developer mode screen may build one, behind `@_spi(DeveloperMode)`; a test fails if anything else does.
+public struct OwnerTap: Sendable {
+    @_spi(DeveloperMode) public init() {}
 }
 
 /// One move of a knob: kept in the table's log, newest last.
@@ -80,6 +87,9 @@ public struct KnobChange: Codable, Sendable, Equatable {
 
 /// The knobs as set, in `Application Support/Tessera/tess-knobs.json` (excluded from backups). It holds only what was
 /// moved and the log of moves; a knob never moved reads as shipped.
+///
+/// The $100 monthly cap is not a knob: it stays in the ledger. If it ever becomes one, it is a wall whose range ends
+/// at 100.
 public struct KnobTable: Codable, Sendable, Equatable {
     public static let fileName = "tess-knobs.json"
     /// The most moves the log keeps.
@@ -89,6 +99,7 @@ public struct KnobTable: Codable, Sendable, Equatable {
         case outOfRange = "That is outside the knob's range."
         case loosensAWall = "Only Kaushik can loosen a wall."
         case notWhole = "That knob takes whole numbers."
+        case ownerNeedsTap = "A move as Kaushik goes through setByOwner, with his tap."
     }
 
     public private(set) var values: [String: Double]
@@ -99,19 +110,40 @@ public struct KnobTable: Codable, Sendable, Equatable {
         self.log = log
     }
 
-    /// What the knob reads now: its set value when that is still in range, else what it shipped as.
+    /// What the knob reads now: its set value when that is still in range, else what it shipped as. A wall set
+    /// looser than shipped reads so only when the log's last move of it is his, to that value; anything else (a
+    /// file written by hand or by a bug) reads as shipped (QA on #1476).
     public func value(_ knob: Knob) -> Double {
-        values[knob.id].flatMap { knob.range.contains($0) ? $0 : nil } ?? knob.shipped
+        guard let set = values[knob.id], knob.range.contains(set) else { return knob.shipped }
+        if knob.loosens(from: knob.shipped, to: set) {
+            let last = log.last { $0.knob == knob.id }
+            guard last?.by == .owner, last?.to == set else { return knob.shipped }
+        }
+        return set
     }
 
     public func int(_ knob: Knob) -> Int {
         Int(value(knob).rounded())
     }
 
-    /// Moves a knob, or says why not. A move to where it already is changes nothing and logs nothing. Moving back to
-    /// the shipped value clears it from the file but is logged like any move.
+    /// Moves a knob for a tuner or Developer mode, or says why not. A move to where it already is changes nothing
+    /// and logs nothing. Moving back to the shipped value clears it from the file but is logged like any move.
     public mutating func set(_ knob: Knob, to new: Double, by setter: KnobSetter, why: String,
                              at date: Date = .now) throws(Refusal)
+    {
+        guard setter != .owner else { throw .ownerNeedsTap }
+        try move(knob, to: new, by: setter, why: why, at: date)
+    }
+
+    /// His own move from Developer mode: the only kind that may loosen a wall.
+    public mutating func setByOwner(_ knob: Knob, to new: Double, why: String, tap _: OwnerTap,
+                                    at date: Date = .now) throws(Refusal)
+    {
+        try move(knob, to: new, by: .owner, why: why, at: date)
+    }
+
+    private mutating func move(_ knob: Knob, to new: Double, by setter: KnobSetter, why: String,
+                               at date: Date) throws(Refusal)
     {
         guard knob.range.contains(new) else { throw .outOfRange }
         guard !knob.whole || new == new.rounded() else { throw .notWhole }
@@ -120,8 +152,10 @@ public struct KnobTable: Codable, Sendable, Equatable {
         guard setter == .owner || !knob.loosens(from: old, to: new) else { throw .loosensAWall }
         values[knob.id] = new == knob.shipped ? nil : new
         log.append(KnobChange(knob: knob.id, from: old, to: new, by: setter, why: why, at: date))
-        if log.count > Self.logLimit {
-            log.removeFirst(log.count - Self.logLimit)
+        // Past the limit the oldest tuner and Developer mode moves go first: his own moves are what a loosened wall
+        // reads by, so they stay while any other move is left to drop.
+        while log.count > Self.logLimit {
+            log.remove(at: log.firstIndex { $0.by != .owner } ?? 0)
         }
     }
 

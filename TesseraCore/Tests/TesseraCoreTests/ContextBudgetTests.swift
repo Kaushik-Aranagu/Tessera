@@ -142,8 +142,8 @@ struct ContextBudgetTests {
 
     @Test func theTunerReadsItsKnobs() throws {
         var knobs = KnobTable()
-        try knobs.set(.budgetMinimumRuns, to: 3, by: .owner, why: "test")
-        try knobs.set(.budgetGrowth, to: 2, by: .owner, why: "test")
+        try knobs.set(.budgetMinimumRuns, to: 3, by: .developer, why: "test")
+        try knobs.set(.budgetGrowth, to: 2, by: .developer, why: "test")
         let (few, _) = BudgetTuner(knobs: knobs).tune(BudgetTable(), uses: uses(3, opens: 5))
         #expect(few.row(agent: "training", model: .haiku).start(.recall) == 72000)
     }
