@@ -26,6 +26,8 @@ struct WorkoutModeScreen: View {
     @State private var dragSteps = 0
     @State private var dust = 0
     @State private var finishHold = false
+    /// Sheet 336: the clip over the new-best line (0 closed, 1 open), widened over 720 ms.
+    @State private var bestReveal = 0.0
 
     private static let slate = Color(hex: 0x1F2524)
     private let dragStep: CGFloat = 26
@@ -41,6 +43,8 @@ struct WorkoutModeScreen: View {
         .gesture(swipe)
         .preferredColorScheme(.dark)
         .statusBarHidden(false)
+        // Fixed slots: the lines scale with Dynamic Type up to here, and the 170 pt numerals shrink to fit instead.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     private var slate: some View {
@@ -53,7 +57,7 @@ struct WorkoutModeScreen: View {
         let board = state.scoreboard(at: now)
         return VStack(alignment: .leading, spacing: 0) {
             top(now: now)
-                .frame(height: 76)
+                .frame(height: 64)
             middle(board: board, now: now)
             Spacer(minLength: 8)
             if let receipt {
@@ -62,12 +66,13 @@ struct WorkoutModeScreen: View {
                     .foregroundStyle(Chalk.quiet)
                     .lineLimit(1).minimumScaleFactor(0.6)
                     .frame(height: 28)
+                    .accessibilityIdentifier("mode.receipt")
                     .transition(.opacity)
             } else {
                 Color.clear.frame(height: 28)
             }
             thumb(board: board, now: now)
-                .frame(height: 220)
+                .frame(height: 190)
         }
         .padding(.horizontal, 22)
         .tesseraAnimation(value: receipt)
@@ -83,17 +88,19 @@ struct WorkoutModeScreen: View {
                         .frame(minHeight: 44, alignment: .leading)
                 }
                 .accessibilityLabel("\(state.title), back")
+                .accessibilityIdentifier("mode.title")
                 Text("hold to finish").font(Chalk.font(16)).foregroundStyle(Chalk.faint).lineLimit(1)
                     .onLongPressGesture(minimumDuration: 0.6) { finish(now) }
                     .accessibilityAddTraits(.isButton)
                     .accessibilityLabel("Hold to finish")
+                    .accessibilityIdentifier("mode.hold")
             }
             Spacer(minLength: 12)
             VStack(alignment: .trailing, spacing: 2) {
                 Text(band.clock).font(Chalk.font(34, relativeTo: .title)).monospacedDigit().foregroundStyle(Chalk.white)
-                    .lineLimit(1)
+                    .lineLimit(1).accessibilityIdentifier("mode.clock")
                 Text(band.doneAbout.lowercased()).font(Chalk.font(16)).foregroundStyle(Chalk.quiet)
-                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .lineLimit(1).minimumScaleFactor(0.7).accessibilityIdentifier("mode.doneAbout")
             }
         }
     }
@@ -105,7 +112,12 @@ struct WorkoutModeScreen: View {
             HStack {
                 Text(board.header).font(Chalk.font(18, relativeTo: .callout)).tracking(2).foregroundStyle(Chalk.quiet)
                 Spacer()
-                Text(board.trailing).font(Chalk.font(18, relativeTo: .callout)).tracking(1).foregroundStyle(Chalk.quiet)
+                if let best = state.restNewBest {
+                    newBestLine(best)
+                } else {
+                    Text(board.trailing).font(Chalk.font(18, relativeTo: .callout)).tracking(1)
+                        .foregroundStyle(Chalk.quiet)
+                }
             }
             .lineLimit(1).minimumScaleFactor(0.7)
             .frame(height: 24)
@@ -124,6 +136,7 @@ struct WorkoutModeScreen: View {
         return VStack(alignment: .leading, spacing: 6) {
             Text(lift.name).font(Chalk.font(34, relativeTo: .title)).foregroundStyle(Chalk.white)
                 .lineLimit(1).minimumScaleFactor(0.5).frame(height: 40, alignment: .leading)
+                .accessibilityIdentifier("mode.lift")
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(board.main).font(Chalk.font(170)).foregroundStyle(Chalk.white)
                     .lineLimit(1).minimumScaleFactor(0.4).monospacedDigit()
@@ -135,11 +148,12 @@ struct WorkoutModeScreen: View {
                 }
                 .lineLimit(1).minimumScaleFactor(0.5)
             }
-            .frame(height: 150, alignment: .leading)
+            .frame(height: 124, alignment: .leading)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .contentShape(Rectangle())
             .gesture(weightDrag)
             .accessibilityElement(children: .ignore)
+            .accessibilityIdentifier("mode.weight")
             .accessibilityLabel(
                 "\(board.main) \(board.unit), \(board.multiplier.replacingOccurrences(of: "×", with: "times"))"
             )
@@ -157,7 +171,7 @@ struct WorkoutModeScreen: View {
     private func barAndPlates(model: WorkoutModeState.Board) -> some View {
         Group {
             if let plates = model.plates {
-                PlateBar(load: plates, inventory: state.inventory)
+                PlateBar(load: plates, inventory: state.inventory).accessibilityIdentifier("mode.bar")
             } else if state.current.isWarmUp {
                 Color.clear
             } else {
@@ -169,6 +183,7 @@ struct WorkoutModeScreen: View {
         Text(model.plates.map { $0.line.prefix(1).uppercased() + $0.line.dropFirst() } ?? " ")
             .font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.white)
             .lineLimit(1).minimumScaleFactor(0.6).frame(height: 26, alignment: .leading)
+            .accessibilityIdentifier("mode.platesLine")
     }
 
     private func chips(model: WorkoutModeState.Board) -> some View {
@@ -189,6 +204,8 @@ struct WorkoutModeScreen: View {
             Spacer(minLength: 0)
         }
         .frame(height: 32)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("mode.chips")
     }
 
     private func infoLines(board: WorkoutModeState.Scoreboard) -> some View {
@@ -196,8 +213,10 @@ struct WorkoutModeScreen: View {
         return VStack(alignment: .leading, spacing: 2) {
             Text(board.info2).font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
                 .lineLimit(1).minimumScaleFactor(0.6).frame(height: 26, alignment: .leading)
+                .accessibilityIdentifier("mode.lastTime")
             Text(estimate).font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
                 .lineLimit(1).frame(height: 26, alignment: .leading)
+                .accessibilityIdentifier("mode.estimate")
         }
     }
 
@@ -210,15 +229,19 @@ struct WorkoutModeScreen: View {
                 .lineLimit(1).minimumScaleFactor(0.4)
                 .contentTransition(.numericText(countsDown: true))
                 .tesseraAnimation(Theme.Motion.snappy, value: board.main)
-                .frame(height: 164, alignment: .leading)
+                .frame(height: 150, alignment: .leading)
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            chalkStrokes(now: now)
+                .accessibilityIdentifier("mode.restTime")
+            chalkStrokes(now: now).accessibilityIdentifier("mode.strokes")
             Text(board.info1).font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.white)
                 .lineLimit(1).minimumScaleFactor(0.6).frame(height: 30, alignment: .leading)
+                .accessibilityIdentifier("mode.restNext")
             Text(model.loadNext ?? " ").font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
                 .lineLimit(1).minimumScaleFactor(0.6).frame(height: 26, alignment: .leading)
+                .accessibilityIdentifier("mode.loadNext")
             Text("How did it feel").font(Chalk.font(40, relativeTo: .title)).foregroundStyle(Chalk.blue)
                 .lineLimit(1).minimumScaleFactor(0.6).frame(height: 46, alignment: .leading)
+                .accessibilityIdentifier("mode.howFelt")
             HStack(spacing: 10) {
                 ForEach(WorkoutModeState.Felt.allCases, id: \.self) { felt in
                     Button { applyFelt(felt) } label: {
@@ -228,6 +251,7 @@ struct WorkoutModeScreen: View {
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Chalk.quiet, lineWidth: 2))
                     }
                     .accessibilityLabel(felt.word)
+                    .accessibilityIdentifier("mode.felt.\(felt.rawValue)")
                     .accessibilityHint(hint(for: felt))
                 }
             }
@@ -257,13 +281,53 @@ struct WorkoutModeScreen: View {
         }
     }
 
+    /// "new best, est. 216 lb" top right in accent chalk, the unit at half size. The clip widens over 720 ms; under
+    /// Reduce Motion it is simply there.
+    private func newBestLine(_ best: WorkoutModeState.NewBest) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text("new best, est.").font(Chalk.font(20, relativeTo: .callout))
+            Text(best.number).font(Chalk.font(28, relativeTo: .title3))
+            Text(state.unit.symbol).font(Chalk.font(14, relativeTo: .caption))
+        }
+        .foregroundStyle(Chalk.blue)
+        .lineLimit(1)
+        .fixedSize()
+        .mask(alignment: .leading) {
+            GeometryReader { proxy in
+                Rectangle().frame(width: proxy.size.width * (reduceMotion ? 1 : bestReveal))
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("New best, estimated \(best.number) \(state.unit.symbol)")
+        .accessibilityIdentifier("mode.newBest")
+        .onAppear { revealBest() }
+    }
+
+    private func revealBest() {
+        guard !reduceMotion else {
+            bestReveal = 1
+            return
+        }
+        bestReveal = 0
+        withAnimation(.easeOut(duration: 0.72)) { bestReveal = 1 }
+        BestBuzz.play()
+    }
+
     private func doneBody(board: WorkoutModeState.Scoreboard) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(board.main).font(Chalk.font(170)).foregroundStyle(Chalk.white).lineLimit(1).minimumScaleFactor(0.4)
-                .frame(height: 150, alignment: .leading)
+                .frame(height: 124, alignment: .leading)
             Text(state.finishLine(at: AppClock.now)).font(Chalk.font(26, relativeTo: .title3))
                 .foregroundStyle(Chalk.white)
                 .lineLimit(2).minimumScaleFactor(0.6).frame(height: 64, alignment: .leading)
+            // The session's real new bests, from the ledger's best per lift; else steady work.
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(state.doneBestLines.prefix(3).enumerated()), id: \.offset) { _, line in
+                    Text(line).font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.blue)
+                        .lineLimit(1).minimumScaleFactor(0.6).frame(height: 30, alignment: .leading)
+                }
+            }
+            .accessibilityIdentifier("mode.doneBests")
         }
     }
 
@@ -281,6 +345,7 @@ struct WorkoutModeScreen: View {
                         .lineLimit(1).minimumScaleFactor(0.6).frame(minHeight: 56, alignment: .leading)
                 }
                 .accessibilityHint("Or swipe up")
+                .accessibilityIdentifier("mode.verb")
             }
             Spacer(minLength: 8)
             steps()
@@ -298,6 +363,7 @@ struct WorkoutModeScreen: View {
         let summary = state.summary(at: now)
         return Text(summary.footer.isEmpty ? " " : summary.footer).font(Chalk.font(20, relativeTo: .callout))
             .foregroundStyle(Chalk.quiet).lineLimit(1).minimumScaleFactor(0.6).frame(height: 24, alignment: .leading)
+            .accessibilityIdentifier("mode.footer")
     }
 
     /// The lifts down the right edge, above Tess's corner: tap one to jump.
@@ -322,10 +388,11 @@ struct WorkoutModeScreen: View {
                     .frame(minHeight: 40, alignment: .trailing)
                 }
                 .accessibilityLabel("\(lift.name), \(lift.setsLeft) sets left")
+                .accessibilityIdentifier("mode.step.\(index)")
             }
         }
         .frame(maxWidth: 190, alignment: .trailing)
-        .padding(.bottom, 64)
+        .padding(.bottom, 56)
     }
 
     // MARK: Gestures
