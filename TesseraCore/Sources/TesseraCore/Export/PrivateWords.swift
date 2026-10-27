@@ -201,59 +201,180 @@ enum PrivateWords {
         if let cache = context.privateLabelsCache, cache.revision == context.revision {
             return cache.labels
         }
-        let result = computeLabels(in: context)
-        context.privateLabelsCache = (context.revision, result)
-        return result
+        let store = ObjectStore(context: context)
+        let last = BodyWeight.lastKg(in: store)
+        let state: LabelState = if let previous = context.labelState, !context.labelNeedsFull, previous.lastKg == last,
+                                   let next = incremental(from: previous, in: context, store: store, lastKg: last)
+        {
+            next
+        } else {
+            fullState(in: context, store: store, lastKg: last)
+        }
+        context.labelState = state
+        context.labelDirty.removeAll(keepingCapacity: true)
+        context.labelNeedsFull = false
+        context.privateLabelsCache = (context.revision, state.final)
+        return state.final
     }
 
-    private static func computeLabels(in context: TesseraContext) -> [UUID: String] {
-        let store = ObjectStore(context: context)
-        let classes = systemClasses(in: context)
-        let last = BodyWeight.lastKg(in: store)
-        let records = context.all(ObjectRecord.self).filter { !$0.isClassObject }
+    /// How the labels were reached, kept so a write can be folded in without a pass over everything: what each object
+    /// read as on its own (`direct`), the lowercased titles of those, and the final labels once what is inside a
+    /// private
+    /// object and what carries its title are private with it.
+    struct LabelState {
+        var lastKg: Double?
+        var direct: [UUID: String]
+        var directTitles: [UUID: String]
+        var titles: Set<String>
+        var final: [UUID: String]
+    }
 
-        func genericLabel(_ object: ObjectRecord) -> String {
-            Self.genericLabel(object, classes: classes)
+    /// An object's label on its own words, before anything propagates.
+    private static func directLabel(of object: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef],
+                                    lastKg last: Double?) -> String?
+    {
+        if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
+            return label
         }
-        func words(_ object: ObjectRecord) -> [String] {
-            Self.words(of: object, store: store, classes: classes)
+        if store.value("isPrivate", of: object) == .bool(true)
+            || isPrivateTitle(object.title, lastWeightKg: last)
+            || words(of: object, store: store, classes: classes)
+            .contains(where: { !isNumberList($0) && isPrivateText($0, lastWeightKg: last) })
+        {
+            return genericLabel(object, classes: classes)
         }
+        return nil
+    }
 
-        var result: [UUID: String] = [:]
-        for object in records {
-            if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
-                result[object.id] = label
-            } else if store.value("isPrivate", of: object) == .bool(true)
-                || isPrivateTitle(object.title, lastWeightKg: last)
-                || words(object).contains(where: { !isNumberList($0) && isPrivateText($0, lastWeightKg: last) })
-            {
-                result[object.id] = genericLabel(object)
-            }
-        }
-        // What is inside a private object, and what carries its title, is private with it.
-        var titles = Set(records.filter { result[$0.id] != nil }.map { $0.title.lowercased() })
-            .subtracting(labels.map { $0.lowercased() })
+    private static func privateTitles(_ directTitles: [UUID: String]) -> Set<String> {
+        var titles = Set(directTitles.values).subtracting(labels.map { $0.lowercased() })
         titles.remove("")
+        return titles
+    }
+
+    /// What an object reads as once what is inside a private object and what carries a private title are private with
+    /// it. Adds to `result` only, so the end state is the same whatever order the objects come in.
+    private static func propagate(_ candidates: [ObjectRecord], titles: Set<String>, into result: inout [UUID: String],
+                                  classes: [SystemCatalog.Key: ClassDef])
+    {
         var changed = true
         while changed {
             changed = false
-            for object in records where result[object.id] == nil {
+            for object in candidates where result[object.id] == nil {
                 if let parent = object.parent, let label = result[parent.id] {
                     result[object.id] = label
                     changed = true
                 } else if titles.contains(object.title.lowercased()) {
-                    result[object.id] = genericLabel(object)
+                    result[object.id] = genericLabel(object, classes: classes)
                     changed = true
                 } else if let ingredientClass = classes[.ingredient], object.classDef?.id == ingredientClass.id,
                           Self.onlyPrivateUse(of: object, private: result)
                 {
                     // An ingredient only private recipes or items use gives their words away (G37).
-                    result[object.id] = genericLabel(object)
+                    result[object.id] = genericLabel(object, classes: classes)
                     changed = true
                 }
             }
         }
-        return result
+    }
+
+    static func fullState(in context: TesseraContext, store: ObjectStore, lastKg last: Double?) -> LabelState {
+        let classes = systemClasses(in: context)
+        let records = context.all(ObjectRecord.self).filter { !$0.isClassObject }
+        var direct: [UUID: String] = [:]
+        var directTitles: [UUID: String] = [:]
+        for object in records {
+            if let label = directLabel(of: object, store: store, classes: classes, lastKg: last) {
+                direct[object.id] = label
+                directTitles[object.id] = object.title.lowercased()
+            }
+        }
+        // What is inside a private object, and what carries its title, is private with it.
+        let titles = privateTitles(directTitles)
+        var result = direct
+        propagate(records, titles: titles, into: &result, classes: classes)
+        return LabelState(lastKg: last, direct: direct, directTitles: directTitles, titles: titles, final: result)
+    }
+
+    /// Folds the writes since `previous` in: the objects written, what is inside them, what links to or from them and
+    /// whatever carries a title that became or stopped being private are looked at again; every other label cannot
+    /// have changed. Nil when too much changed for that to pay off (the caller then does the full pass).
+    private static func incremental(from previous: LabelState, in context: TesseraContext, store: ObjectStore,
+                                    lastKg last: Double?) -> LabelState?
+    {
+        let classes = systemClasses(in: context)
+        var state = previous
+        // The objects to look at again, grown until nothing else depends on them.
+        var affected: [UUID: ObjectRecord] = [:]
+        var queue: [ObjectRecord] = []
+        var gone: [UUID] = []
+        func add(_ object: ObjectRecord) {
+            guard !object.isClassObject, affected[object.id] == nil else { return }
+            affected[object.id] = object
+            queue.append(object)
+        }
+        for id in context.labelDirty {
+            if let object = context.objects[id] {
+                add(object)
+            } else {
+                gone.append(id)
+            }
+        }
+        let limit = max(2000, context.objects.count / 4)
+        func close() -> Bool {
+            while let object = queue.popLast() {
+                if affected.count > limit {
+                    return false
+                }
+                object.children?.forEach(add)
+                object.outgoingLinks?.compactMap(\.toObject).forEach(add)
+                object.incomingLinks?.compactMap(\.from).forEach(add)
+            }
+            return true
+        }
+        guard close() else { return nil }
+        for id in gone {
+            state.direct[id] = nil
+            state.directTitles[id] = nil
+            state.final[id] = nil
+        }
+        for object in affected.values {
+            if let label = directLabel(of: object, store: store, classes: classes, lastKg: last) {
+                state.direct[object.id] = label
+                state.directTitles[object.id] = object.title.lowercased()
+            } else {
+                state.direct[object.id] = nil
+                state.directTitles[object.id] = nil
+            }
+        }
+        // A title that became or stopped being private moves everything that carries it.
+        let titles = privateTitles(state.directTitles)
+        let moved = titles.symmetricDifference(state.titles)
+        if !moved.isEmpty {
+            for object in context.objects.values
+                where !object.isClassObject && moved.contains(object.title.lowercased())
+            {
+                add(object)
+            }
+            guard close() else { return nil }
+            for object in affected.values where state.direct[object.id] == nil {
+                if let label = directLabel(of: object, store: store, classes: classes, lastKg: last) {
+                    state.direct[object.id] = label
+                    state.directTitles[object.id] = object.title.lowercased()
+                }
+            }
+            // The new objects can move titles again; settle until they stop.
+            let settled = privateTitles(state.directTitles)
+            if settled != titles {
+                return nil
+            }
+        }
+        state.titles = titles
+        for object in affected.values {
+            state.final[object.id] = state.direct[object.id]
+        }
+        propagate(Array(affected.values), titles: titles, into: &state.final, classes: classes)
+        return state
     }
 
     /// The texts of an object that a private word may hide in. A process keeps its resume point as JSON

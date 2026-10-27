@@ -31,6 +31,13 @@ struct RehearsalScaleTests {
         let clock = ContinuousClock()
         // The app reads the real store's labels all the time, so they are warm before a rehearsal starts.
         let warm = clock.measure { _ = PrivateWords.labels(in: store.context) }
+        // One write later the labels are folded in, not worked out again from every object.
+        let note = try store.create(#require(classes[.note]), title: "Trip packing")
+        let afterWrite = clock.measure { _ = PrivateWords.labels(in: store.context) }
+        print("REHEARSAL one write then labels \(afterWrite) \(note.title)")
+        #if !DEBUG
+            #expect(afterWrite < .seconds(1))
+        #endif
         let rehearsal = Rehearsal(engine: engine)
         rehearsal.seconds = 1000
         var seconds: [Double] = []
