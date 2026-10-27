@@ -105,7 +105,8 @@ struct HomeMosaicPage: View {
                     .padding(.top, BridgePlace.widget.minY * rise)
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot(onHold: { wheelHeld = $0 }, onGlance: { playGlance($0) })
-                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                        // The dial's names fit their 40 pt places: its type stops at xLarge (bounds check, Oct 26).
+                        .dynamicTypeSize(...DynamicTypeSize.xLarge)
                         .frame(width: BridgePlace.doors.width, height: BridgePlace.doors.height, alignment: .top)
                         .mosaicShield()
                         .padding(.leading, BridgePlace.doors.minX)

@@ -164,6 +164,9 @@ struct AppsListSlot: View {
                         line(rows[index], isMiddle: offset == 0, offset: offset)
                             .offset(y: (CGFloat(offset) + 1) * rowHeight + drag)
                             .transition(.identity)
+                            // The rows waiting outside the three places are clipped away; VoiceOver skips them too, so
+                            // nothing reads over the widget or the foot (bounds check, Oct 26).
+                            .accessibilityHidden(abs(offset) > 1)
                     }
                 }
             }

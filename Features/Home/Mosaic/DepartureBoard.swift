@@ -198,6 +198,7 @@ struct DepartureBoard: View {
                 plainSegment(seg, li: li)
             }
         }
+        .accessibilityHidden(true)
         if reduceMotion {
             // Reduce Motion: a plain swap, no letters.
             plain
@@ -216,6 +217,7 @@ struct DepartureBoard: View {
                             .fixedSize()
                     }
                 }
+                .accessibilityHidden(true)
                 // Letters the new line no longer has go at once: the row's right edge stays at the last word (x 378),
                 // and nothing draws past it (Kaushik, Oct 26).
             }
@@ -267,6 +269,8 @@ struct DepartureBoard: View {
     @ViewBuilder
     private func unitView(_ unit: Unit, cells: [Cell], li: Int) -> some View {
         let seg = unit.seg
+        // The flap letters are drawing only: the board is one accessibility element with the whole text and its doors
+        // as actions, so no letter cell reads (or measures) over its neighbours.
         let content = HStack(spacing: 6) {
             ForEach(Array(unit.words.enumerated()), id: \.offset) { _, word in
                 HStack(spacing: 0) {

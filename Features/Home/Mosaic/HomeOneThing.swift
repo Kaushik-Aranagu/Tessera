@@ -159,6 +159,9 @@ struct HomeOneThing: View {
                     .tracking(13 * 0.12)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    // The header ends where the Big line starts (429 + 15 = 444): fixed size, never over it.
+                    .dynamicTypeSize(...DynamicTypeSize.large)
+                    .frame(height: 15, alignment: .top)
             }
             .offset(y: 17)
             tier(thing, delay: 0.2, height: 64) { big(thing) }
