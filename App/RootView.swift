@@ -86,6 +86,8 @@ struct RootView: View {
                 }
 
                 DoorwayOverlay(doorway: model.doorway)
+                // Sheet 299: on a look change the old page leaves on top, ground first, ink last.
+                LookInkOverlay()
                 PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }

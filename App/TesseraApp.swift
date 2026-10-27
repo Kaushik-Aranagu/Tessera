@@ -16,6 +16,7 @@ struct TesseraApp: App {
     init() {
         FontRegistry.registerAll()
         Theme.configure()
+        LookInk.install()
         AppClock.configure()
         let container = TesseraSchema.makeContainer()
         self.container = container
