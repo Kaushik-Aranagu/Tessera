@@ -7,6 +7,7 @@ import Testing
 /// number stays on the phone as a private note, "paid" or "spent" with an amount is always money, a bare spend verb
 /// is a task or a note again, and a secret word in a shopping shape stays on Groceries.
 @MainActor
+@Suite(.oldWalls)
 struct PrivacyFollowupTests {
     static let la = TimeZone(identifier: "America/Los_Angeles")!
 

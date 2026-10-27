@@ -7,6 +7,7 @@ import Testing
 /// most its cap of maybes through remember with evidence, and what it said becomes its episode. A quiet day, the AI
 /// flag off, or a lab-only room under strict means no call; strict never shows it money or body things.
 @MainActor
+@Suite(.oldWalls)
 struct TessReflectTests {
     let helper = TessRunTests()
     let now = Date(timeIntervalSince1970: 1_793_000_000)

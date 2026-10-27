@@ -2,6 +2,7 @@ import Foundation
 import Testing
 
 /// Rules the code keeps by convention, checked on the source (QA low on #650, #654).
+@Suite(.oldWalls)
 struct HouseRulesTests {
     static let root = URL(filePath: #filePath).deletingLastPathComponent()
         .appending(path: "../../..").standardized

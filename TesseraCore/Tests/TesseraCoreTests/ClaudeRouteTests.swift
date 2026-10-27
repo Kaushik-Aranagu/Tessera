@@ -78,7 +78,7 @@ final class RouteStub: URLProtocol, @unchecked Sendable {
 
 /// The Claude step of capture (tess-model-layer.md T3; Product 8:28 PM PT Oct 15): misses go to Claude when the key
 /// is saved, the switch is on, there's no "Not today" pause and money is left; tool calls land as pending ghosts.
-@Suite(.serialized) @MainActor
+@Suite(.oldWalls, .serialized) @MainActor
 struct ClaudeRouteTests {
     static let key = "sk-ant-TEST-" + UUID().uuidString
     let store = ObjectStore.open(inMemory: true)

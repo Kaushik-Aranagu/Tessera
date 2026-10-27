@@ -39,20 +39,30 @@ public struct MemoryScope: Sendable, Equatable {
                   classIDs: Set(spec.classIDs), notebook: spec.notebook, policy: policy)
     }
 
-    /// The system's own bookkeeping never enters a slice: turns, sent rows, settings, the profile and the memory lines
-    /// that beliefs already carry.
-    static let neverRead: Set<SystemCatalog.Key> = [
-        .tessTurn, .tessCall, .tessSent, .tessSentExact, .tessWaiting, .tessMemory, .settings, .meProfile, .heldNotice,
-        .closedDay, .tessAgent, .notebookPage, .agentEpisode,
-    ]
+    /// The system's own bookkeeping never enters a slice: turns, sent rows, settings and the memory lines that beliefs
+    /// already carry. While Claude sees everything (`ClaudeSees`, his Oct 27 call) his profile and meal numbers may,
+    /// under lab; before it they never did.
+    static var neverRead: Set<SystemCatalog.Key> {
+        let bookkeeping: Set<SystemCatalog.Key> = [
+            .tessTurn, .tessCall, .tessSent, .tessSentExact, .tessWaiting, .tessMemory, .settings, .heldNotice,
+            .closedDay, .tessAgent, .notebookPage, .agentEpisode,
+        ]
+        return ClaudeSees.everything ? bookkeeping : bookkeeping.union([.meProfile])
+    }
 
-    /// What strict keeps on the phone beyond the lab-only belief classes: the calendar and Health mirrors and held
-    /// notices (their titles are free text the Door's scan can't read), and meal numbers. `strictRawKeys` names system
-    /// classes by key so a class that lands later (meal nutrition) is walled the day it exists.
-    static let strictNever: Set<SystemCatalog.Key> = [.event, .sleepNight, .stepsDay, .restingHeartRate, .heldNotice]
+    /// What strict keeps on the phone beyond the lab-only belief classes: his profile, the calendar and Health mirrors
+    /// and held notices (their titles are free text the Door's scan can't read), and meal numbers. `strictRawKeys`
+    /// names system classes by key so a class that lands later (meal nutrition) is walled the day it exists. Under lab
+    /// all of it is read (his Oct 27 call: Claude sees everything).
+    static let strictNever: Set<SystemCatalog.Key> = [
+        .meProfile, .event, .sleepNight, .stepsDay, .restingHeartRate, .heldNotice,
+    ]
     static let strictRawKeys: Set<String> = ["mealNutrition", "nutrition", "nutritionRow"]
-    /// Never in any slice, by key, for classes that may land after this file (meal numbers are never recalled).
-    static let neverRawKeys: Set<String> = ["mealNutrition"]
+    /// Never in any slice, by key, for classes that may land after this file: meal numbers, before Claude saw
+    /// everything.
+    static var neverRawKeys: Set<String> {
+        ClaudeSees.everything ? [] : ["mealNutrition"]
+    }
 
     /// Whether `classDef` or a class above it has one of these system keys.
     @MainActor

@@ -469,17 +469,20 @@ public struct ClaudeRecipeReader {
         return String(text[start...].prefix(24000))
     }
 
-    /// The page text that may leave the phone: every line with a secret, money, a body fact or a Claude key cut (a4-2;
-    /// the same two checks capture runs, one line at a time). Recipes are full of small numbers and "PIN the
-    /// dough", so secret words go by the pasted-line cut, not the capture one.
+    /// The page text that may leave the phone: every line with a Claude key cut, and, with `ClaudeSees.everything`
+    /// off, every line with a secret, money or a body fact too (a4-2; the same two checks capture runs, one line at a
+    /// time). Recipes are full of small numbers and "PIN the dough", so secret words go by the pasted-line cut, not
+    /// the capture one.
     /// Hidden characters go first and each line is judged as typed and folded, so "paid 2<zero-width>0" or full-width
     /// digits can't pass the wall and read as an amount once packed (input-hygiene H4, QA on #1473).
     static func sendable(_ text: String, lastWeightKg: Double?) -> String {
-        SecretWords.cut(CanonicalText.visible(text)).text.components(separatedBy: .newlines).filter { line in
-            let readings = [line, CanonicalText.of(line)]
-            return !looksLikeClaudeKey(line)
-                && !readings.contains { PrivateFacts.isWalled(withoutMeasures($0), lastWeightKg: lastWeightKg) }
-        }.joined(separator: "\n")
+        let visible = CanonicalText.visible(text)
+        return (ClaudeSees.everything ? visible : SecretWords.cut(visible).text).components(separatedBy: .newlines)
+            .filter { line in
+                !ClaudeSees.blocks(line, walled: [line, CanonicalText.of(line)].contains {
+                    PrivateFacts.isWalled(withoutMeasures($0), lastWeightKg: lastWeightKg)
+                })
+            }.joined(separator: "\n")
     }
 
     /// A recipe amount with two decimals right before a cooking unit is a measure, not money (Product, after #666):

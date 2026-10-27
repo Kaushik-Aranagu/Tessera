@@ -7,6 +7,7 @@ import Testing
 /// that titles something from words it was handed (the on-device model, Claude's tools, RememberFact, the memory
 /// turnover, Plan my day's pack) keeps money, secrets and his weight off titles, logs and packs.
 @MainActor
+@Suite(.oldWalls)
 struct WallsBypassTests {
     struct Row: Decodable {
         struct Seed: Decodable {

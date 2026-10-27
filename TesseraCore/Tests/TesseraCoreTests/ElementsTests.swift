@@ -6,6 +6,7 @@ import Testing
 /// Tess AI-first (docs/ai/harness/elements.md): the screen says what it shows and what can be done to it, "this" is
 /// what he touched or what is in focus, a short command on the thing in focus runs with no model, money calls never
 /// reach Claude, and Tess gets the screen's calls first.
+@Suite(.oldWalls)
 struct ElementsTests {
     let now = Date(timeIntervalSince1970: 1_793_000_000)
 
