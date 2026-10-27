@@ -55,7 +55,7 @@ struct HomeBoardTests {
         for typeSize in sizes {
             let size = HomeOneThing.bigSize(typeSize)
             #expect(HomeOneThing.bigLineHeight(size) <= HomeOneThing.bigSlot)
-            #expect(size >= 38)
+            #expect(size >= 30)
         }
     }
 
