@@ -59,16 +59,17 @@ public enum TestStore {
         try context.database.write { try $0.execute(sql: "PRAGMA application_id = \(applicationID)") }
     }
 
-    /// The class name of the first live row that a fresh catalog doesn't install (the built-in plan, equipment and the
-    /// Groceries list are expected), or nil when the store holds nothing but the catalog.
+    /// The class name of the first row, deleted ones included, that a fresh catalog doesn't install (the built-in
+    /// plan, equipment and the Groceries list are expected), or nil when the store holds nothing but the catalog. A
+    /// store holding only his deleted rows is still his.
     public static func firstRowOfHis(in store: ObjectStore) throws -> String? {
         let fresh = ObjectStore.open(inMemory: true)
         _ = try fresh.prepareCatalog()
         var catalog: [String: Int] = [:]
-        for object in fresh.context.objects.values where !object.isDeleted {
+        for object in fresh.context.objects.values {
             catalog[rowKey(object), default: 0] += 1
         }
-        for object in store.context.objects.values where !object.isDeleted {
+        for object in store.context.objects.values {
             let key = rowKey(object)
             guard let left = catalog[key], left > 0 else { return object.classDef?.name ?? "object" }
             catalog[key] = left - 1

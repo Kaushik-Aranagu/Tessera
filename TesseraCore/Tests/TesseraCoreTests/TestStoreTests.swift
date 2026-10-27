@@ -52,6 +52,12 @@ struct TestStoreTests {
         #expect(!TestStore.hasHisHistory(store.context))
         #expect(throws: TestStore.Refusal.hasHisRows("Task")) { try SettingsStore(engine: engine).stampAsTestStore() }
         #expect(!SettingsStore.isTestStore(in: store))
+        // Deleted rows of his count too.
+        let deleted = ObjectStore.open(inMemory: true)
+        let deletedEngine = try ActionEngine(store: deleted, classes: deleted.prepareCatalog())
+        let gone = try deletedEngine.perform(CreateTask(title: "Old task"), by: .system).output
+        deleted.softDelete(gone)
+        #expect(throws: TestStore.Refusal.hasHisRows("Task")) { try TestStore.stamp(deleted) }
         // A store holding only the catalog still stamps.
         let fresh = ObjectStore.open(inMemory: true)
         _ = try fresh.prepareCatalog()
