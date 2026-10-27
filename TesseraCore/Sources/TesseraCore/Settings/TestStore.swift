@@ -12,6 +12,9 @@ public enum TestStore {
         case isHisStore
         /// The store holds rows he or Tess made (an op by anyone but the system): it is someone's data.
         case hasHisHistory
+        /// The store holds a row the built-in catalog doesn't (the class it is of): it is someone's data, even a copy
+        /// of his made in memory with no op by him in it.
+        case hasHisRows(String)
     }
 
     /// "TEST" as the SQLite application id.
@@ -50,7 +53,31 @@ public enum TestStore {
         guard !isStamped(context) else { return }
         guard !isHisStore(context) else { throw Refusal.isHisStore }
         guard !hasHisHistory(context) else { throw Refusal.hasHisHistory }
+        if let row = try firstRowOfHis(in: store) {
+            throw Refusal.hasHisRows(row)
+        }
         try context.database.write { try $0.execute(sql: "PRAGMA application_id = \(applicationID)") }
+    }
+
+    /// The class name of the first live row that a fresh catalog doesn't install (the built-in plan, equipment and the
+    /// Groceries list are expected), or nil when the store holds nothing but the catalog.
+    public static func firstRowOfHis(in store: ObjectStore) throws -> String? {
+        let fresh = ObjectStore.open(inMemory: true)
+        _ = try fresh.prepareCatalog()
+        var catalog: [String: Int] = [:]
+        for object in fresh.context.objects.values where !object.isDeleted {
+            catalog[rowKey(object), default: 0] += 1
+        }
+        for object in store.context.objects.values where !object.isDeleted {
+            let key = rowKey(object)
+            guard let left = catalog[key], left > 0 else { return object.classDef?.name ?? "object" }
+            catalog[key] = left - 1
+        }
+        return nil
+    }
+
+    private static func rowKey(_ object: ObjectRecord) -> String {
+        "\(object.classDef?.id.uuidString ?? "none")|\(object.title)"
     }
 
     /// Puts the stamp on a copy of a stamped store's database (a rehearsal's fork), so the copy is a test store too.
