@@ -277,6 +277,8 @@ let rT=null;
 function receipt(el,msg,undo,word){msg=String(msg).replace(/\.\s*$/,'');let r=$('.receipt',el);if(!r){r=h('div','receipt');el.appendChild(r)}
  r.innerHTML=msg+(undo?' <button style="color:var(--room)">'+(word||'Undo')+'</button>':'');
  if(undo)r.querySelector('button').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT);rT=setTimeout(()=>{r.innerHTML=''},10000)}
+/* 354: Undo takes the pen back. The strike pulls out right to left, then the line comes back to full ink */
+function unstrike(row,then){if(!row||RM||!row.classList.contains('got'))return then();if(row.classList.contains('ungot'))return;row.classList.remove('justgot');row.classList.add('ungot');setTimeout(then,280)}
 function petals(host,x,y){if(RM)return;const cols=['#E7A6C9','#F1D27A','#9ED3B6','#F4B7A1'];for(let i=0;i<7;i++){const p=h('i','petal');p.style.left=x+'px';p.style.top=y+'px';p.style.background=cols[i%4];p.style.setProperty('--dx',(Math.random()*70-35)+'px');p.style.setProperty('--dy',(-30-Math.random()*50)+'px');p.style.setProperty('--rot',(Math.random()*240-120)+'deg');host.appendChild(p);setTimeout(()=>p.remove(),1400)}}
 function localXY(e,host){const r=host.getBoundingClientRect();return [(e.clientX-r.left)/K,(e.clientY-r.top)/K]}
 const lockAxis=(dx,dy,a)=>a||(Math.hypot(dx,dy)<8?null:Math.abs(dx)>Math.abs(dy)?'x':'y');
@@ -1552,7 +1554,7 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
  const left=()=>ST.filter((_,i)=>!S.done.has(i)).reduce((a,x)=>a+(x.tm?x.tm/60:3),0);
  const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='ack'){S.alert=null;return paint()}
    /* 353: tap a Needs line to set it out (mise en place): the pen strikes it, tap again to bring it back */
-   if(a.startsWith('ig')){const k=ST[S.i].k+'.'+a.slice(2);if(S.prep.has(k))S.prep.delete(k);else{S.prep.add(k);S.pj=k;setTimeout(()=>{if(S.pj===k)S.pj=null},450);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}}return paint(1)}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);const was=S.T[k]>0?mm(S.T[k]):'0:00';S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1);
+   if(a.startsWith('ig')){const k=ST[S.i].k+'.'+a.slice(2);if(S.prep.has(k))return unstrike(P.querySelector('[data-a="ig'+a.slice(2)+'"]'),()=>{S.prep.delete(k);paint(1)});else{S.prep.add(k);S.pj=k;setTimeout(()=>{if(S.pj===k)S.pj=null},450);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}}return paint(1)}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);const was=S.T[k]>0?mm(S.T[k]):'0:00';S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1);
    /* 346: a timer you start rolls up from 0:00 to its time; tapping a running one adds a minute and the minutes roll on */
    const o=P.querySelector('[data-a="tm'+k+'"] .o');if(o&&!RM)numRoll(o,was);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}}if(a.startsWith('st')){S.i=+a.slice(2);paint()}}});
  let lastKey='';
@@ -1601,11 +1603,11 @@ SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortil
    '<div class="tk-steps">'+AIS.map((x,a)=>'<div data-a="ai'+a+'" class="'+(a===S.a?'on':'')+(leftIn(a)?'':' dn'+(S.jd===a?' jd':''))+'">'+x.k+'</div>').join('')+'</div>'+
    '<div class="tk-verb" data-a="got">'+(allLeft()?'Got it':'Pay')+'</div><div class="tk-sub">'+(it?'<span data-a="skip">not here, ask me later</span>':'swipe up')+'</div>';
   const k2=S.a+'|'+j+'|'+S.fin;if(!RM&&lastKey&&k2!==lastKey){P.innerHTML=html;[...P.querySelectorAll('.tk-item,.tk-how,.tk-cue')].forEach((e,i)=>e.animate([{opacity:0,transform:'translateX(30px)'},{opacity:1,transform:'none'}],{duration:360,delay:i*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))}else P.innerHTML=html;lastKey=k2;P.querySelectorAll('.tk-big,.tk-how,.tk-cue,.tk-h,.tk-top span').forEach(fitLine)}
- function toggle(a,j){const k=key(a,j);if(S.got.has(k))S.got.delete(k);else S.got.add(k);paint()}
+ function toggle(a,j){const k=key(a,j);if(S.got.has(k))return unstrike(P.querySelector('[data-a="it'+k+'"]'),()=>{S.got.delete(k);paint()});S.got.add(k);paint()}
  function got(){if(S.fin)return back();const j=nextJ(S.a);if(j<0){const n=AIS.findIndex((_,a)=>leftIn(a));if(n<0){S.fin=1;GET=[];return tear()}S.a=n;return paint()}
   const k=key(S.a,j),aa=S.a,nm=AIS[S.a].it[j][0],tacoDone=()=>AIS.every((x,a)=>x.it.every((q,i)=>q[3]!=='For the tacos'||S.got.has(key(a,i)))),was=tacoDone();S.got.add(k);
   /* 342: the moment the last thing for a dish is in the basket, the top line says so for two seconds */
-  if(!was&&tacoDone()){S.flash='Everything for the tacos';clearTimeout(S.ft);S.ft=setTimeout(()=>{S.flash=null;lastKey='';paint()},2200)}S.just=k;setTimeout(()=>{if(S.just===k)S.just=null},400);if(!leftIn(aa)){S.jd=aa;setTimeout(()=>{if(S.jd===aa)S.jd=null},700)}GET=GET.filter(x=>x!==nm);receipt(el,nm+', in the basket',()=>{S.got.delete(k);paint()});paint()}
+  if(!was&&tacoDone()){S.flash='Everything for the tacos';clearTimeout(S.ft);S.ft=setTimeout(()=>{S.flash=null;lastKey='';paint()},2200)}S.just=k;setTimeout(()=>{if(S.just===k)S.just=null},400);if(!leftIn(aa)){S.jd=aa;setTimeout(()=>{if(S.jd===aa)S.jd=null},700)}GET=GET.filter(x=>x!==nm);receipt(el,nm+', in the basket',()=>unstrike(P.querySelector('[data-a="it'+k+'"]'),()=>{S.got.delete(k);paint()}));paint()}
  function tear(){if(RM)return paint();const g=P.cloneNode(true);g.classList.add('tk-torn');P.after(g);if(navigator.vibrate)try{navigator.vibrate([4,40,10])}catch(e){}
   g.animate([{transform:'none',opacity:1},{transform:'translate(-18px,-70px) rotate(-5deg)',opacity:0}],{duration:440,easing:'cubic-bezier(.5,0,.75,.3)',fill:'forwards'}).onfinish=()=>g.remove();
   paint();P.animate([{transform:'translateY(-40px)',opacity:0},{transform:'translateY(-40px)',opacity:1,offset:.01},{transform:'translateY(4px)',offset:.75},{transform:'none'}],{duration:560,delay:220,easing:'steps(6)',fill:'backwards'})}
@@ -1690,7 +1692,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .fullboard{background:var(--p-bg)!important}
 .fullboard canvas.fb{position:absolute;left:0;top:0;width:402px;height:874px}
 .fullboard .fbpad{position:absolute;inset:0;z-index:5;touch-action:none;cursor:pointer}
-.fullboard .receipt{color:#e8e8e2;top:704px!important;bottom:auto!important}
+.fullboard .receipt{color:#e8e8e2;top:704px!important;bottom:auto!important;z-index:6}
 .fullticket{background:var(--p-bg)!important;color:#2B2620;--ink:#2B2620;--ink2:#6A6155;--tk:#93611A}
 .fullticket .tk-bg{position:absolute;inset:0;background:#F3ECDD}
 .fullticket .tk-rail{position:absolute;left:0;right:0;top:50px;height:8px;background:linear-gradient(#b9b9b9,#8d8d8d);box-shadow:0 2px 3px rgba(0,0,0,.18)}
@@ -1729,6 +1731,9 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .tl.got::after{content:'';position:absolute;left:-2px;right:-2px;top:52%;height:1.6px;background:rgba(43,38,32,.6);transform-origin:0 50%;border-radius:1px}
 .tl.justgot::after{animation:tkstrike .3s cubic-bezier(.3,.7,.3,1) both}
 .tl.justgot .tn,.tl.justgot .tv,.tl.justgot .td{transition:opacity .3s .15s}
+.tl.ungot::after{transform-origin:100% 50%;animation:tkunstrike .26s cubic-bezier(.5,0,.75,.3) both}
+.tl.ungot .tn,.tl.ungot .tv,.tl.ungot .td{opacity:1;transition:opacity .22s .04s}
+@keyframes tkunstrike{from{transform:scaleX(1) rotate(-.6deg)}to{transform:scaleX(0) rotate(-.6deg)}}
 @keyframes tkstrike{from{transform:scaleX(0) rotate(-.6deg)}to{transform:scaleX(1) rotate(-.6deg)}}
 @media (prefers-reduced-motion:reduce){.tl.justgot::after{animation:none}}
 /* 350: a step just done is struck by the same pen as the shopping list, then stays struck */
@@ -1742,7 +1747,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .tk-steps div.dn{text-decoration:line-through;text-decoration-thickness:1.5px;color:rgba(43,38,32,.4)}
 .tk-verb{position:absolute;left:0;bottom:62px;font-size:44px;font-weight:700;color:var(--tk);line-height:48px}
 .tk-sub{position:absolute;left:0;bottom:40px;font-size:14px;color:var(--ink2)}
-.fullticket .receipt{top:auto;bottom:118px!important;left:24px;right:140px;color:var(--ink2)}
+.fullticket .receipt{top:auto;bottom:118px!important;left:24px;right:140px;color:var(--ink2);z-index:6}
 .fulldusk{background:var(--p-bg)!important;color:#F4EEF2;--ink:#F4EEF2;--ink2:rgba(244,238,242,.68);--rt:#F0B9DD}
 .fulldusk .dk-sky{position:absolute;inset:0;--n:0;background:linear-gradient(180deg,color-mix(in srgb,#2a2140 calc(100% - var(--n)*40%),#0c0b14) 0%,color-mix(in srgb,#5b3a62 calc(100% - var(--n)*70%),#151224) 55%,color-mix(in srgb,#c98472 calc(100% - var(--n)*85%),#1d1830) 100%);transition:background 2s}
 .fulldusk .dk-paper{position:absolute;left:24px;right:24px;top:52px;bottom:0;font-family:var(--sans)}
@@ -1768,7 +1773,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .dk-steps div.dn{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px}.dk-steps div.sk{opacity:.6}.dk-steps div.sk i{font-family:var(--serif,'Newsreader',serif);font-size:14px;margin-right:8px;color:var(--ink2)}
 .dk-verb{position:absolute;left:0;bottom:62px;font-size:44px;font-weight:800;color:var(--rt);line-height:48px;letter-spacing:-.02em}
 .dk-sub{position:absolute;left:0;bottom:40px;font-size:14px;color:var(--ink2);display:flex;gap:18px}
-.fulldusk .receipt{bottom:118px!important;right:140px;color:var(--ink2)}
+.fulldusk .receipt{bottom:118px!important;right:140px;color:var(--ink2);z-index:6}
 .one.wo{cursor:ns-resize}
 .one.mode .big{max-width:none}
 .swn.rise{animation:lrise .32s cubic-bezier(.3,.9,.3,1)}

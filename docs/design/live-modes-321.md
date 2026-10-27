@@ -451,3 +451,11 @@ In cooking mode, the Needs lines are now a mise en place checklist. Tap a line (
 - It is optional and never blocks Next. Nothing counts or nags about it.
 - One 4 ms tick on strike, none on un-strike.
 - Test: t67 paper and black green; pmp.js taps Tortillas with a real pointer (struck, MP1.png), then again (back).
+
+## Sheet 354: Undo takes the pen back
+
+- Cook (Needs lines) and Shop (aisle lines, and Undo on the receipt): bringing a struck line back no longer snaps. The pen line pulls out from the right edge toward the start, 260 ms, slow first then quick (cubic-bezier .5,0,.75,.3), while the words come back to full ink over 220 ms. The line repaints unstruck at 280 ms
+- Reads as the pen being lifted off the page, the reverse of the strike in 334 and 353, never a fade
+- Reduce Motion: the line comes back at once
+- Fix found on the way: in all three whole-screen modes that have a touch pad (Deck board, Galley ticket, Watch dusk) the pad sat above the receipt, so Undo could not be tapped. The receipt now sits above the pad (z-index 6 over 5). Builders: check the same layering on the phone, Undo must take a tap in every mode
+- Probes: boards/r66/pun.js (strike pulls back, then clears) and pun2.js (Undo is the top element in workout, cook and shop)
