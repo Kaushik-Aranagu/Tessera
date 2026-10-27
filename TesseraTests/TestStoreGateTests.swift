@@ -7,7 +7,6 @@ import Testing
 /// stamp is unreachable without the simulator flag.
 @MainActor
 struct TestStoreGateTests {
-    /// A store with only the catalog in it (no launch writes), which is the only kind that may be stamped.
     private func bareStore() throws -> ObjectStore {
         let store = ObjectStore.open(inMemory: true)
         _ = try store.prepareCatalog()
@@ -18,7 +17,6 @@ struct TestStoreGateTests {
         let container = TesseraSchema.makeContainer(inMemory: true)
         let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         #expect(!TestStoreGate.allowsClaude(app.store))
-        // Unstamped: the old rule alone decides.
         app.settingsAreReal = false
         #expect(!app.asksClaude)
         app.settingsAreReal = true
@@ -35,21 +33,45 @@ struct TestStoreGateTests {
         app.settingsAreReal = false
         #expect(TestStoreGate.allowsClaude(app.store))
         #expect(app.asksClaude)
-        // His own choice of Off still wins.
         try SettingsStore(engine: app.engine).update { $0.missesGoToClaude = false }
         #expect(!app.asksClaude)
     }
 
-    @Test func stampIsUnreachableWithoutTheSimulatorFlag() throws {
+    @Test func withoutTheFlagNothingIsStampedAndTheRealPathIsUntouched() throws {
         let store = try bareStore()
-        // On the phone (not allowed) the flag does nothing.
-        #expect(!TestStoreGate.stampIfFlagged(store, arguments: [TestStoreGate.flag], allowed: false))
+        #expect(TestStoreGate.stampIfFlagged(store, arguments: []) == .notAsked)
         #expect(!TestStore.isStamped(store.context))
-        // On the simulator without the flag, nothing either.
-        #expect(!TestStoreGate.stampIfFlagged(store, arguments: [], allowed: true))
-        #expect(!TestStore.isStamped(store.context))
-        // Both: it stamps.
-        #expect(TestStoreGate.stampIfFlagged(store, arguments: [TestStoreGate.flag], allowed: true))
-        #expect(TestStore.isStamped(store.context))
+        #expect(TestStoreGate.flaggedContainer(arguments: []) == nil)
+    }
+
+    @Test func theFlagOnlyStampsOnTheSimulator() throws {
+        let store = try bareStore()
+        let outcome = TestStoreGate.stampIfFlagged(store, arguments: [TestStoreGate.flag])
+        #if targetEnvironment(simulator)
+            #expect(outcome == .stamped && TestStore.isStamped(store.context))
+        #else
+            #expect(outcome == .notAsked && !TestStore.isStamped(store.context))
+        #endif
+    }
+
+    @Test func aFlaggedLaunchOpensAFreshTempStoreAndStampsIt() throws {
+        let container = TestStoreGate.flaggedContainer(arguments: [TestStoreGate.flag])
+        #if targetEnvironment(simulator)
+            let made = try #require(container)
+            let store = ObjectStore(context: made.mainContext)
+            #expect(TestStore.isStamped(store.context))
+            #expect(!TestStore.isHisStore(store.context))
+            #expect(TestStore.allowsClaude(store))
+            let url = try #require(made.mainContext.url)
+            #expect(url != TesseraSchema.defaultURL)
+            try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+        #else
+            #expect(container == nil)
+        #endif
+    }
+
+    @Test func hisStoreFileIsRefusedEvenWithTheFlag() {
+        // The app's own store counts as his, so the stamp refuses it (the reason a flagged launch opens a temp store).
+        #expect(TestStore.isHisStore(url: TesseraSchema.defaultURL))
     }
 }

@@ -17,11 +17,14 @@ struct TesseraApp: App {
         FontRegistry.registerAll()
         Theme.configure()
         AppClock.configure()
-        let container = TesseraSchema.makeContainer()
+        // `-testStore` (simulator only): a fresh stamped store under the temporary folder, so his store is never
+        // opened.
+        let testContainer = TestStoreGate.flaggedContainer()
+        let container = testContainer ?? TesseraSchema.makeContainer()
         self.container = container
         // Data from builds before GRDB (SwiftData) moves across once, then the old store goes to Backups.
         // Only into a store on disk: if opening fell back to memory, leave the old files for next launch.
-        if TesseraSchema.lastOpenOutcome != .inMemoryFallback {
+        if testContainer == nil, TesseraSchema.lastOpenOutcome != .inMemoryFallback {
             try? LegacyStore.migrate(into: container.mainContext)
         }
         let model = AppModel(context: container.mainContext, seedsStarterLists: true)
