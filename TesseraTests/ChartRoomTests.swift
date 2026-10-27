@@ -287,6 +287,43 @@ struct ChartRoomTests {
         #expect(OutlineSetting.duration(reduceMotion: true) == 0.2)
     }
 
+    // MARK: Sheets 360 and 361: point, then say; how the room says no
+
+    @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {
+        let room = model()
+        room.pickFor = .milliseconds(60)
+        room.pick(.keystone)
+        #expect(room.picked == nil, "an empty place cannot be picked")
+        room.setSentences(2)
+        let before = room.document
+        room.pick(.keystone)
+        #expect(room.picked == .keystone)
+        #expect(room.sayObject == "what to change about the keystone")
+        #expect(room.document == before, "picking writes nothing")
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(room.picked == nil && room.sayObject == "what to build")
+    }
+
+    @Test func aRefusalOffersAChangeThatPlaysAsAnOrdinaryGhost() {
+        let room = model()
+        room.setSentences(2)
+        let bigger = RoomPatch(room: "Chart room", say: "Bigger numbers", ops: [.init(op: "look", trait: "size", value: "big")])
+        room.refuse("That size is not in the scale.", offer: ("Bigger numbers", bigger))
+        #expect(room.note?.line == "That size is not in the scale")
+        #expect(room.note?.button == "Bigger numbers")
+        room.takeOffer()
+        #expect(room.note == nil && room.pending != nil)
+    }
+
+    @Test func aKitMissIsQueuedWithUndo() {
+        let said = Said()
+        let room = model(said: said)
+        room.kitMiss("Ring")
+        #expect(said.lines == ["Ring, queued for your next install"] && room.queued == ["Ring"])
+        said.undo?()
+        #expect(room.queued.isEmpty)
+    }
+
     // MARK: Sheet 359 acceptance: the finished room, frames
 
     /// Where each place of the finished room sits on the 402 x 874 design screen.

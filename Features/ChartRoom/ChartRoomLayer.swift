@@ -23,7 +23,10 @@ struct ChartRoomLayer: View {
             ZStack(alignment: .topLeading) {
                 ForEach(DocumentRoom.outlined, id: \.place) { entry in
                     let rect = frame(entry.place, scale: scale, dx: dx)
-                    let set = committed[entry.place] != nil || (entry.place == .widget && model.reachLine != nil)
+                    // Sheet 362: a ghost on a place brings its outline down too, so the dashed line never crosses a
+                    // word.
+                    let set = committed[entry.place] != nil || ghosts.contains(entry.place)
+                        || (entry.place == .widget && model.reachLine != nil)
                     let step = OutlineSetting.frame(at: 1, y: 0, setting: set, reduceMotion: reduceMotion)
                     Outline(name: entry.name, showsName: !ghosts.contains(entry.place))
                         .frame(width: rect.width - 4, height: rect.height - 4, alignment: .topLeading)
@@ -57,6 +60,30 @@ struct ChartRoomLayer: View {
                         }
                     }
                 }
+                // A tap on a filled place picks it (sheet 360); the picked one wears a slate line 6 pt outside.
+                if model.pending == nil {
+                    ForEach([Place.title, .switcher, .keystone, .caption, .widget].filter { committed[$0] != nil },
+                            id: \.self)
+                    { place in
+                        let rect = frame(place, scale: scale, dx: dx)
+                        Color.clear
+                            .frame(width: rect.width, height: rect.height)
+                            .contentShape(Rectangle())
+                            .onTapGesture { model.pick(place) }
+                            .offset(x: rect.minX, y: rect.minY)
+                            .accessibilityHidden(true)
+                    }
+                }
+                if let place = model.picked {
+                    let rect = frame(place, scale: scale, dx: dx).insetBy(dx: -6, dy: -6)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Theme.Colors.Accent.chart, lineWidth: 1.5)
+                        .frame(width: rect.width, height: rect.height)
+                        .offset(x: rect.minX, y: rect.minY)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+                noteLine(scale: scale)
                 widgetNote(scale: scale, dx: dx)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -79,6 +106,30 @@ struct ChartRoomLayer: View {
         }
         out.origin.x += dx
         return out
+    }
+
+    /// Tess's refusal line above the foot, with her offer as one plain button (sheet 361).
+    @ViewBuilder
+    private func noteLine(scale: CGFloat) -> some View {
+        if let note = model.note {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                FitLine(forms: FitLine.cuts(note.line), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+                if let button = note.button {
+                    Button { model.takeOffer() } label: {
+                        Text(button)
+                            .font(.custom("Figtree", size: 15, relativeTo: .callout).weight(.bold))
+                            .foregroundStyle(Theme.Colors.Accent.chart)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("chart.offer")
+                }
+            }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .frame(width: 354, alignment: .leading)
+            .offset(x: 24, y: 730 * scale)
+        }
     }
 
     /// While Tess works, what he said, in quotes (Newsreader italic 20, ink 2); then the reach line with Allow.

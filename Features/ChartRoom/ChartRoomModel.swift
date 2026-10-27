@@ -38,6 +38,13 @@ final class DemoRoomData: RoomData {
     }
 }
 
+/// Tess's line when a rule says no, with at most one button: her offer.
+struct RoomNote: Equatable {
+    var line: String
+    var button: String?
+    var patch: RoomPatch?
+}
+
 /// A patch shown before it is set.
 struct PendingPatch: Equatable, Identifiable {
     let id = UUID()
@@ -71,7 +78,13 @@ final class ChartRoomModel {
     private(set) var cue = HapticCue()
     /// How many of the canned sentences have set (the next one is `canned[cursor]`).
     private(set) var cursor: Int
+    /// The place he pointed at (sheet 360): a tap on a filled place picks it for 30 s. Writes nothing.
+    private(set) var picked: Place?
+    /// Tess's line with one receipt button (sheet 361): a refusal and her offer, run as a normal ghost change.
+    private(set) var note: RoomNote?
     @ObservationIgnored let data: RoomData
+    @ObservationIgnored private var pickTask: Task<Void, Never>?
+    @ObservationIgnored var pickFor: Duration = .seconds(30)
     @ObservationIgnored private let defaults: UserDefaults?
     @ObservationIgnored private let drying: Duration
     @ObservationIgnored private var dryTask: Task<Void, Never>?
@@ -310,6 +323,66 @@ final class ChartRoomModel {
         document = doc
         cursor = Self.canned.count
     }
+
+    // MARK: Point, then say (sheet 360)
+
+    /// What the pointed-at place is called in the foot's small line.
+    static func name(of place: Place) -> String {
+        switch place {
+        case .switcher: "line"
+        case .needs: "needs"
+        default: place.rawValue
+        }
+    }
+
+    /// A tap on a filled place picks it (a tap on the picked one lets it go). One light tick; nothing is written.
+    func pick(_ place: Place) {
+        guard nodes[place] != nil, pending == nil else { return }
+        pickTask?.cancel()
+        if picked == place {
+            picked = nil
+            return
+        }
+        picked = place
+        cue.play(.selection)
+        pickTask = Task { [weak self, pickFor] in
+            try? await Task.sleep(for: pickFor)
+            guard !Task.isCancelled else { return }
+            self?.picked = nil
+        }
+    }
+
+    /// What the Say word's small line reads: "what to change about the keystone", or "what to build".
+    var sayObject: String {
+        picked.map { "what to change about the \(Self.name(of: $0))" } ?? DocumentRoom.sayObject
+    }
+
+    // MARK: How the room says no (sheet 361)
+
+    /// A rule refusal: Tess's one line, and her offer as a receipt button that runs it as a normal ghost change.
+    func refuse(_ reason: String, offer: (label: String, patch: RoomPatch)? = nil) {
+        note = RoomNote(line: PartText.shown(reason), button: offer?.label, patch: offer?.patch)
+    }
+
+    /// The offer was taken: it plays as a ghost change like any other.
+    func takeOffer() {
+        guard let patch = note?.patch else { return }
+        note = nil
+        propose(patch)
+    }
+
+    func dismissNote() {
+        note = nil
+    }
+
+    /// A kit miss (a part the kit does not have): queued for the next install, with Undo to take the request back.
+    func kitMiss(_ part: String) {
+        queued.append(part)
+        say("\(part), queued for your next install") { [weak self] in self?.queued.removeAll { $0 == part } }
+    }
+
+    /// Parts asked for that the kit lacks, waiting for the next install.
+    private(set) var queued: [String] = []
 
     func reset() {
         dryTask?.cancel()

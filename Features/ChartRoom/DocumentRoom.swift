@@ -20,6 +20,8 @@ struct DocumentRoom: RoomContent {
     /// The places a pending patch fills: drawn at 38% until it sets.
     var ghost: Set<Place> = []
     var accent: Color = Theme.Colors.Accent.chart
+    /// The small line the Say word carries (it names the place he pointed at).
+    var sayObject = DocumentRoom.sayObject
 
     func screen(for _: ShellRoute, state _: RoomState) -> Screen {
         func slot(_ place: Place, _ kind: SlotKind, _ payload: SlotPayload?, id: String? = nil) -> SlotContent? {
@@ -100,7 +102,7 @@ struct DocumentRoom: RoomContent {
                 steps.append(ShellStep(id: "does:\(id)", verb: verb, object: object, hold: false))
             }
         }
-        steps.append(ShellStep(id: "say", verb: "Say", object: Self.sayObject))
+        steps.append(ShellStep(id: "say", verb: "Say", object: sayObject))
         let first = steps.first?.id ?? "say"
         return SlotContent(id: ContentID("chart.action.\(first)"), kind: .action,
                            payload: .action(steps, accent: accent), ghost: ghost.contains(.actionWord))

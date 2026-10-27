@@ -50,7 +50,7 @@ final class ChartRoomDriver: ShellRoomDriver {
 
     func content(model: AppModel, scheme _: ColorScheme) -> any RoomContent {
         chart.attach(model.engine)
-        return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent)
+        return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent, sayObject: chart.sayObject)
     }
 
     func handle(_ intent: ShellIntent, navigator _: ShellNavigator) -> Bool {
@@ -86,9 +86,11 @@ struct ChartShellHost: View {
     var body: some View {
         let _ = app.revision
         let _ = chart.attach(app.engine)
-        ShellView(room: DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces), navigator: navigator,
-                  accent: Theme.Colors.Accent.chart)
-        { intent in
+        ShellView(
+            room: DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, sayObject: chart.sayObject),
+            navigator: navigator,
+            accent: Theme.Colors.Accent.chart
+        ) { intent in
             switch intent {
             case .back: navigator.pop()
             case let .action(id): run(id, chart)
