@@ -1,6 +1,6 @@
 import Foundation
-@testable import Tessera
 import SwiftUI
+@testable import Tessera
 import Testing
 
 @MainActor
@@ -57,5 +57,13 @@ struct HomeBoardTests {
             #expect(HomeOneThing.bigLineHeight(size) <= HomeOneThing.bigSlot)
             #expect(size >= 38)
         }
+    }
+
+    /// Kaushik, Oct 26: no full stop on a shown line, and the board must not get one to flip.
+    @Test func boardSegmentsCarryNoFullStop() {
+        let segments = [DepartureSegment(text: "Pasta", kind: .plain), DepartureSegment(text: "tonight.", kind: .plain),
+                        DepartureSegment(text: "Dr. Lin at 2.5 km.", kind: .plain)]
+        let shown = HomeBoard.unstopped(segments).map(\.text)
+        #expect(shown == ["Pasta", "tonight", "Dr. Lin at 2.5 km"])
     }
 }
