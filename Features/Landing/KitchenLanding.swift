@@ -308,6 +308,7 @@ struct KitchenLandingPage: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
     @State private var cookCover: KitchenCookCover?
+    @State private var shopping = false
     @State private var recipe: KitchenCookCover?
     @State private var focus = 0
     @State private var switcherIndex = 0
@@ -361,7 +362,8 @@ struct KitchenLandingPage: View {
             .overlay { KeystoneHandover(kind: .galleyTicket, from: Self.firstTicketCentre(pass.tickets)) }
             .toolbar(.hidden, for: .navigationBar)
             // A cover hides the landing: its live drawing waits (sheet 286, live only when seen).
-            .liveScope(cookCover == nil && recipe == nil)
+            .liveScope(cookCover == nil && recipe == nil && !shopping)
+            .fullScreenCover(isPresented: $shopping) { GalleyShopModePage() }
             .fullScreenCover(item: $cookCover) { CookEntry(cookID: $0.id) }
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
     }
@@ -394,7 +396,9 @@ struct KitchenLandingPage: View {
     /// The foot (283 v3): a verb over its object. Cook (tonight's dish), swipe across for Get (To get). There is no
     /// Dishes model yet, so no Wash. With nothing planned, Cook opens Recipes to pick tonight's dish.
     private func action(_ front: KitchenFront, _ facts: GalleyRoomContent.Facts) -> LandingFootAction {
-        let get = LandingFootAction.Step(verb: "Get", object: "To get") { open(.groceries) }
+        let get = Tier1b.shopModeIsOn
+            ? LandingFootAction.Step(verb: "Shop", object: "The list") { shopping = true }
+            : LandingFootAction.Step(verb: "Get", object: "To get") { open(.groceries) }
         return LandingFootAction(word: "Cook", object: facts.cookObject, hint: facts.cookHint, alternates: [get]) {
             if let meal = front.tonight {
                 cook(meal)

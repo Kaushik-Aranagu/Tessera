@@ -96,3 +96,55 @@ struct GalleyCookModeTests {
 
     private enum Failure: Error { case none }
 }
+
+@MainActor
+struct GalleyShopModeTests {
+    private func facts() -> GalleyShopFacts {
+        var facts = GalleyShopFacts()
+        facts.aisles = [
+            .init(name: "Produce", items: [.init(id: "a", name: "Onions", amount: "2", why: "For the tacos tonight"),
+                                           .init(id: "b", name: "Limes", amount: nil, why: nil)]),
+            .init(name: "Dairy", items: [.init(id: "c", name: "Milk", amount: "1 gal", why: "You are low"),
+                                         .init(id: "d", name: "Eggs", amount: "12", why: nil),
+                                         .init(id: "e", name: "Butter", amount: nil, why: nil)]),
+        ]
+        facts.got = 4
+        facts.tonight = "Tacos"
+        return facts
+    }
+
+    @Test func wordsAndBand() {
+        let facts = facts()
+        #expect(GalleyShopWords.band(facts) == ["5 of 9 to get", "2 aisles to go"])
+        #expect(GalleyShopWords.header(facts, aisle: 1) == "Dairy, 2 of 2")
+        #expect(GalleyShopWords.after(facts.aisles[1]) == "After it, eggs, butter")
+        #expect(GalleyShopWords.after(.init(name: "Last", items: [facts.aisles[0].items[0]])) == "Last in this aisle")
+    }
+
+    @Test func notHereMovesAThingToTheEnd() {
+        let moved = GalleyShopWords.notHere(facts().aisles[1], item: "c")
+        #expect(moved.items.map(\.name) == ["Eggs", "Butter", "Milk"])
+    }
+
+    @Test func eachPlaceHasItsJob() throws {
+        let screen = GalleyShopContent(facts: facts()).screen(for: .landing(GalleyShopContent.room),
+                                                              state: RoomState(dialFocus: 1))
+        guard case let .widget(items)? = screen[.widget]?.payload else { throw Failure.none }
+        #expect(items.first?.big == "Milk" && items.first?.middle == "1 gal" && items.first?.small == "You are low")
+        #expect(items.first?.header == "Dairy, 2 of 2")
+        guard case let .dial(doors)? = screen[.dial]?.payload else { throw Failure.none }
+        #expect(doors.map(\.name) == ["Produce", "Dairy"] && doors.map(\.count) == ["2", "3"])
+        guard case let .summary(door)? = screen[.doorSummary]?.payload else { throw Failure.none }
+        #expect(door.lines == ["Milk 1 gal", "Eggs 12", "Butter"])
+        guard case let .action(steps, _)? = screen[.actionWord]?.payload else { throw Failure.none }
+        #expect(steps.map(\.verb) == ["Got", "Not here", "Pay"] && steps.last?.hold == true)
+        let rail = GalleyShopContent.tickets(facts(), aisle: 1)
+        #expect(rail.map(\.id) == ["shop.aisle", "shop.tonight"] && rail[0].lines == [
+            "Milk 1 gal",
+            "Eggs 12",
+            "Butter",
+        ])
+    }
+
+    private enum Failure: Error { case none }
+}

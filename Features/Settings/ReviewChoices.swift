@@ -370,6 +370,11 @@ final class ReviewChoices {
                says: ["On": "Cook opens the Galley with the step you are on and a ticket for each pan timer.",
                       "Off": "Cook opens the clock page as before."],
                readiness: .live),
+        // Sheet 322: the Galley's shopping mode (the aisle you are in on a rail), On by default.
+        Choice(id: "galleyShopMode", name: "Shopping mode", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "Shop opens the Galley with the aisle you are in, the next thing and a dial of aisles.",
+                      "Off": "Get opens Groceries as before."],
+               readiness: .live),
         // Kaushik, Oct 23: any wheel blurs the rows away from its focus; this switch turns it off.
         Choice(id: "depthOnWheels", name: "Depth on wheels", values: ["On", "Off"], defaultValue: "On",
                says: ["On": "Rows a little way from the focus of a wheel go softly out of focus.",
@@ -440,7 +445,7 @@ final class ReviewChoices {
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
-        ("Kitchen v2", ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch", "galleyCookMode"]),
+        ("Kitchen v2", ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch", "galleyCookMode", "galleyShopMode"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
         ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),

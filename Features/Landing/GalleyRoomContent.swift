@@ -21,6 +21,8 @@ struct GalleyRoomContent: RoomContent {
         /// Cook's object: tonight's dish (short), or "Pick tonight's dish".
         var cookObject = "Pick tonight's dish"
         var cookHint = "Opens Recipes"
+        /// Shopping mode is on: the foot says Shop (the list), not Get (To get).
+        var shopMode = false
         /// Each door's rows, for its page.
         var rows: [String: [ShellRow]] = [:]
     }
@@ -109,7 +111,8 @@ struct GalleyRoomContent: RoomContent {
     private var action: SlotContent {
         SlotContent(id: "galley.action", kind: .action, payload: .action([
             ShellStep(id: "cook", verb: "Cook", object: facts.cookObject),
-            ShellStep(id: "get", verb: "Get", object: "To get"),
+            facts.shopMode ? ShellStep(id: "get", verb: "Shop", object: "The list")
+                : ShellStep(id: "get", verb: "Get", object: "To get"),
         ], accent: accent))
     }
 }
@@ -160,6 +163,7 @@ extension GalleyRoomContent.Facts {
             facts.cookHint = "Starts \(meal.title)"
         }
         facts.rows = rows(front, pass)
+        facts.shopMode = Tier1b.shopModeIsOn
         return facts
     }
 
@@ -305,6 +309,7 @@ struct GalleyShellHost: View {
     @State private var link: HomeLink?
     @State private var recipe: KitchenCookCover?
     @State private var cookCover: KitchenCookCover?
+    @State private var shopping = false
 
     var body: some View {
         let _ = model.revision
@@ -324,7 +329,8 @@ struct GalleyShellHost: View {
             }
         }
         // A cover hides the room: its live drawing (the rail, the hand-over) waits.
-        .liveScope(link == nil && recipe == nil && cookCover == nil)
+        .liveScope(link == nil && recipe == nil && cookCover == nil && !shopping)
+        .fullScreenCover(isPresented: $shopping) { GalleyShopModePage() }
         .fullScreenCover(item: $link) { $0.destination }
         .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
         .fullScreenCover(item: $cookCover) { CookEntry(cookID: $0.id) }
@@ -370,7 +376,11 @@ struct GalleyShellHost: View {
             }
         case let .action(id):
             if id == "get" {
-                link = .groceries
+                if Tier1b.shopModeIsOn {
+                    shopping = true
+                } else {
+                    link = .groceries
+                }
             } else if let meal = front.tonight {
                 cook(meal)
             } else {

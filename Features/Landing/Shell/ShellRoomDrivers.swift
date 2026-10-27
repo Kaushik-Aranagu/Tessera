@@ -118,6 +118,7 @@ final class GalleyRoomDriver: ShellRoomDriver {
     var link: HomeLink?
     var recipe: KitchenCookCover?
     var cookCover: KitchenCookCover?
+    var shopping = false
     @ObservationIgnored private var facts: GalleyRoomContent.Facts?
     @ObservationIgnored private var front: KitchenFront?
     @ObservationIgnored private weak var model: AppModel?
@@ -164,7 +165,11 @@ final class GalleyRoomDriver: ShellRoomDriver {
             item(id)
         case let .action(id):
             if id == "get" {
-                link = .groceries
+                if Tier1b.shopModeIsOn {
+                    shopping = true
+                } else {
+                    link = .groceries
+                }
             } else if let meal = front?.tonight {
                 cook(meal)
             } else {
@@ -220,6 +225,7 @@ private struct GalleyPresenter: View {
         Color.clear
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .fullScreenCover(isPresented: $driver.shopping) { GalleyShopModePage() }
             .fullScreenCover(item: $driver.link) { $0.destination }
             .fullScreenCover(item: $driver.recipe) { RecipeView(recipeID: $0.id) }
             .fullScreenCover(item: $driver.cookCover) { CookEntry(cookID: $0.id) }
