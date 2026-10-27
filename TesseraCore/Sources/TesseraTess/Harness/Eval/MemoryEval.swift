@@ -154,7 +154,7 @@ public struct MemoryEval: Sendable {
             .find: finds(facts), .acrossDays: counts(facts), .when: starts(facts),
             .changed: facts.changes.map(changed), .dontKnow: facts.unknowns.map(unknown),
         ]
-        let written = Dictionary(pools.values.flatMap { $0 }.map { ($0.id, $0) }) { first, _ in first }
+        let written = Dictionary(pools.values.flatMap(\.self).map { ($0.id, $0) }) { first, _ in first }
         let kept = keep.compactMap { written[$0] }
         var random = SplitMix(seed: Self.seed(night))
         for kind in EvalKind.allCases {
@@ -173,7 +173,9 @@ public struct MemoryEval: Sendable {
                     added = true
                 }
             }
-            if !added, pools.values.allSatisfy(\.isEmpty) { break }
+            if !added, pools.values.allSatisfy(\.isEmpty) {
+                break
+            }
         }
         return picked
     }

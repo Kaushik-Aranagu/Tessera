@@ -38,6 +38,16 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     /// "Rain alert" (Lookout): a local notice before rain; nil is off. The lead in minutes, 30 when unset.
     public var rainAlert: Bool?
     public var rainAlertLead: Int?
+    /// "test" on a store the test world made (`EvalWorldSeeder`): it may call Claude (the key, the ask gate and the cap
+    /// still apply), it is never backed up or exported, and it keeps its own sent log, ledger and trace.
+    public var storeKind: String?
+
+    public var isTestStore: Bool {
+        storeKind == Self.testKind
+    }
+
+    public static let testKind = "test"
+
     /// His looks per room and place (sheet 286), as `RoomLooks` JSON; nil is every place as drawn.
     public var placeLooks: String?
 
@@ -127,6 +137,20 @@ public struct SettingsStore {
         try update(by: actor) { $0.mosaicBackdrop = nil }
     }
 
+    /// Whether this store was made by the test world. Reads the settings object directly, so a backup can ask it with
+    /// only a context in hand.
+    @MainActor
+    public static func isTestStore(in store: ObjectStore) -> Bool {
+        guard let object = store.object(id: objectID), !object.isDeleted else { return false }
+        return store.value("storeKind", of: object)?.stringValue == TesseraSettings.testKind
+    }
+
+    /// Stamps the store as a test store (the seeder does it, once, before anything else is written).
+    @discardableResult
+    public func stampAsTestStore() throws -> TesseraSettings {
+        try update(by: .system) { $0.storeKind = TesseraSettings.testKind }
+    }
+
     /// All nil until the first write; creates nothing.
     public func read() -> TesseraSettings {
         guard let object = engine.store.object(id: Self.objectID), !object.isDeleted else { return TesseraSettings() }
@@ -155,6 +179,7 @@ public struct SettingsStore {
         if case let .bool(value)? = store.value("rainAlert", of: object) {
             settings.rainAlert = value
         }
+        settings.storeKind = text("storeKind")
         settings.rainAlertLead = store.number("rainAlertLead", of: object).map { Int($0) }
             .flatMap { (5 ... 1440).contains($0) ? $0 : nil }
         settings.dayStartHour = store.number("dayStartHour", of: object).map { Int($0) }
@@ -243,6 +268,7 @@ public struct WriteSettings: EngineAction {
         try transaction.set("quietEndMinute", to: settings.quietEndMinute.map { .number(Double($0)) }, on: object)
         try transaction.set("rainAlert", to: settings.rainAlert.map(FieldValue.bool), on: object)
         try transaction.set("rainAlertLead", to: settings.rainAlertLead.map { .number(Double($0)) }, on: object)
+        try transaction.set("storeKind", to: settings.storeKind.map(FieldValue.text), on: object)
         // Whatever is handed in is written as one of the three plain forms, so a stray text never lands.
         try transaction.set("mosaicBackdrop",
                             to: MosaicBackdrop(encoded: settings.mosaicBackdrop).encoded.map(FieldValue.text),
@@ -256,5 +282,25 @@ public struct WriteSettings: EngineAction {
 
     public func summary(in _: ObjectStore) -> String {
         "Changed a preference"
+    }
+}
+
+/// Where a test store keeps its own sent log, usage ledger and trace: beside its database file, never in the app's
+/// own data folder, so a test run can't touch the real ones (docs/ai/harness/test-world.md section 2).
+public enum TestStoreFiles {
+    public static func sibling(of storeURL: URL, _ name: String) -> URL {
+        storeURL.deletingLastPathComponent().appendingPathComponent("tessera-test-\(name)")
+    }
+
+    public static func sentLog(of storeURL: URL) -> URL {
+        sibling(of: storeURL, "sent-log.json")
+    }
+
+    public static func ledger(of storeURL: URL) -> URL {
+        sibling(of: storeURL, "usage-ledger.json")
+    }
+
+    public static func trace(of storeURL: URL) -> URL {
+        sibling(of: storeURL, "trace.json")
     }
 }
