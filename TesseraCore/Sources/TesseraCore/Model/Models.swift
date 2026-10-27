@@ -392,6 +392,7 @@ public final class ObjectLink: TesseraModel, AttachableModel {
             guard oldValue !== from else { return }
             oldValue?.outgoingLinks.remove(self)
             from?.outgoingLinks.append(self)
+            context?.noteLabelObject(oldValue)
             didChange()
         }
     }
@@ -402,6 +403,7 @@ public final class ObjectLink: TesseraModel, AttachableModel {
             guard oldValue !== toObject else { return }
             oldValue?.incomingLinks.remove(self)
             toObject?.incomingLinks.append(self)
+            context?.noteLabelObject(oldValue)
             didChange()
         }
     }
