@@ -2831,6 +2831,11 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-act .av{display:block;font:600 24px/32px var(--sans);letter-spacing:-.01em;white-space:nowrap}
 .ch-act .ao{display:block;font:500 13px/18px var(--sans);color:var(--ink2);white-space:nowrap}
 .ch-act.water{color:var(--teal)}
+/* 360: point, then say. A tap on a set place picks it for 30 s: its outline comes back solid in slate, and the action
+   word names it, so "make this calmer" changes only that place */
+.chart .ch-pl.pt{opacity:1;transform:none;border-color:transparent;outline:1.5px solid var(--slate);outline-offset:6px;border-radius:16px;transition:opacity .22s,transform .22s}.ch-pl.pt i{opacity:0}
+.ch-key.calm .th b{animation-duration:7s}
+.chart .ch-c[data-p]{cursor:pointer}
 @media (prefers-reduced-motion:reduce){.ch-key .th b{animation:none}.ch-pl{transition:opacity .2s}.ch-pl.set{transform:none}}
 `;document.head.appendChild(st)}
 SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for. I’ll build it a piece at a time.',render(el){el.classList.add('chart');el.style.setProperty('--room','var(--slate)');
@@ -2847,26 +2852,31 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
  function draw(ghost){const t=th();let s='';
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the '+t.n.toLowerCase()+' is thirsty':', all watered')+'</div>';
-  if(at>=2)s+='<div class="ch-c ch-key" data-p="key">'+[...plants].sort((a,b)=>b.d-a.d).map(p=>'<div class="'+(at>=3&&p===t&&p.d>0?'th':'')+'"><b>'+p.d+'</b><span>'+p.n+'</span></div>').join('')+'</div>'+
+  if(at>=2)s+='<div class="ch-c ch-key'+(calm?' calm':'')+'" data-p="key">'+[...plants].sort((a,b)=>b.d-a.d).map(p=>'<div class="'+(at>=3&&p===t&&p.d>0?'th':'')+'"><b>'+p.d+'</b><span>'+p.n+'</span></div>').join('')+'</div>'+
    '<div class="ch-c ch-cap" data-p="cap">Days since water'+(at>=3&&t.d>0?', the '+t.n.toLowerCase()+' first':'')+'</div>';
   if(at>=4&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
   if(heard)s+='<div class="ch-c ch-heard">“'+heard+'”</div>';
   layer.innerHTML=s;
   if(ghost)ghost.forEach(k=>layer.querySelectorAll('[data-p="'+k+'"]').forEach(e=>e.classList.add('gh')));
-  Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));
+  Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('pt',sel===k));
   const water=at>=4&&reach&&t.d>0;act.className='ch-act'+(water?' water':'');
-  act.innerHTML=water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.toLowerCase().replace(/^./,c=>c)+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
- let heard='';
+  act.innerHTML=sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.toLowerCase().replace(/^./,c=>c)+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
+ let heard='',sel=null,selT=0,calm=false;const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget'};
  function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;at++;draw(S.fills);
   // the drying line runs along the foot of each place it filled, 2 s, then the ghost sets
   const lines=S.fills.map(k=>{const [x,y,w,hh]=PL[k];const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
    if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});return l});
   dry=setTimeout(()=>{dry=null;lines.forEach(l=>l.remove());heard='';draw();receipt(el,S.r,()=>{at--;if(S.reach)reach=false;heard='';draw()})},2000)}
- act.onclick=()=>{const t=th();if(at>=4&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
- layer.onclick=e=>{const b=e.target.closest('[data-a="allow"]');if(!b)return;reach=true;draw()};
+ function pointed(){const k=sel;sel=null;clearTimeout(selT);if(k!=='key'||calm){draw();return receipt(el,'Say it, and Tess changes only the '+NAME[k])}
+  heard='Make this calmer';draw(['key']);const [x,y,w,hh]=PL.key;const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
+  if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});
+  dry=setTimeout(()=>{dry=null;l.remove();heard='';calm=true;draw();receipt(el,'Keystone, calmer',()=>{calm=false;draw()})},2000)}
+ act.onclick=()=>{if(dry)return;if(sel)return pointed();const t=th();if(at>=4&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
+ layer.onclick=e=>{const b=e.target.closest('[data-a="allow"]');if(b){reach=true;return draw()}const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
+  sel=sel===c.dataset.p?null:c.dataset.p;clearTimeout(selT);if(sel)selT=setTimeout(()=>{sel=null;draw()},30000);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}draw()};
  draw();
- window.__ch={say,get at(){return at},allow:()=>{reach=true;draw()},plants:()=>plants};
- return ()=>{clearTimeout(dry)}}};
+ window.__ch={say,get at(){return at},get sel(){return sel},get calm(){return calm},allow:()=>{reach=true;draw()},plants:()=>plants};
+ return ()=>{clearTimeout(dry);clearTimeout(selT)}}};
 
 
 /* 359: the same Chart room after a dozen sentences. It renders through landingV3, the player every preset room uses,

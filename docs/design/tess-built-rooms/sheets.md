@@ -43,3 +43,13 @@ The design and its reasons are on the Tess-built rooms page (`index.html` here; 
 - Colors: teal for the room, wine for the thirstiest, ink, and the glyph's own green. That is four, inside the 3 to 4 rule
 - Door summaries are last-time lines and steady facts ("Last watered Wednesday", "Water every 7 days"), never a run of days
 - Probe: `docs/design/boards/r66/pcf.js` (no overlap between places, nothing clipped)
+
+## Sheet 360: point, then say
+
+- In the Chart room, a tap on a place that holds something picks it for 30 seconds. A solid 1.5 pt slate line comes up 6 pt outside the place's frame, so it never touches the words inside, with a light haptic tick
+- The action word names the place: "Say" with "what to change about the keystone". Whatever he says next changes only that place. This is the "this" of the Tess frame (a touch within 30 s), made visible
+- Example on the board: pick the keystone, then "Make this calmer". The keystone goes ghost with the drying line and sets with its breathing slowed from 3.6 s to 7 s (the motion trait, one step calmer). The receipt reads "Keystone, calmer" with Undo
+- Tapping the same place again, or 30 s passing, lets it go. A ghost can't be picked
+- Builder A: the pick is `RoomState`-level UI, not a patch (it writes nothing). Core: the job's context sends the picked place's part ids first, and the validator refuses a patch that touches other places while one is picked, with "That changes more than the keystone. Say it again without picking?"
+- Reduce Motion: the line appears without the 220 ms fade
+- Probe: `docs/design/boards/r66/ppt.js`
