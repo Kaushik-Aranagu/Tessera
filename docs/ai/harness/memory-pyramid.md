@@ -83,6 +83,12 @@ Each has a pass line set before it runs. A failure gets written up here too.
    - Replay test-world asks over ten simulated nights.
    - Pass: descents per ask fall at least 30% by night 5, with no loss of accuracy. If the top fills with trivia,
      raise k.
+   - **P3 shared promotion (Swift, built):** `PyramidPromotions` counts what readers had to dig for, by level and
+     fact (`busiest:<total>`, `top:<kind>`, `last:<kind>`). After k digs (3) the fact shows on every node of that
+     level, each node's line computed exactly by `MemoryPyramid.factLine`, right after the totals in `zoom`. A line
+     unused for 30 days goes, and a level keeps 3, freshest first. Under strict a fact line is computed as if the
+     walled leaves never happened; under lab a line that read one is `deviceOnly`. Only fact keys (a total or a leaf
+     kind, letters only) and level names are stored.
    - **P3b (Swift, built):** `PyramidAsk` resolves an ask's dates first ("last month" on Oct 23 reads "September
      2026") and drops stop words. `PyramidRouter` scores each child by weights on (ask word, child feature) pairs,
      starting from words alone, and learns only the residual from cited answers: a step the words already get right

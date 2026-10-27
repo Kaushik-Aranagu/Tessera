@@ -273,7 +273,10 @@ public struct MemoryPyramid: Sendable {
 
     /// One node as Tess reads it: its title, its totals, then each child with what sets it apart, best first. Under
     /// strict, money, body and calendar things are not there at all: no total, no residual, no leaf, no path, no count.
-    public func zoom(_ path: String, policy: DoorPolicy) -> (text: String, isError: Bool) {
+    /// The facts `promotions` shows at the node's level come right after the totals, each computed exactly.
+    public func zoom(_ path: String, policy: DoorPolicy,
+                     promotions: PyramidPromotions? = nil) -> (text: String, isError: Bool)
+    {
         let key = path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
         func visible(_ path: String) -> Bool {
             policy == .lab || (nodes[path]?.safeLeaves ?? 0) > 0
@@ -294,6 +297,11 @@ public struct MemoryPyramid: Sendable {
         }
         if !totals.isEmpty {
             lines.append("Totals: " + totals.joined(separator: ", "))
+        }
+        for fact in promotions?.facts(at: node.level) ?? [] {
+            if let line = factLine(fact, at: key, policy: policy), allowed(line) {
+                lines.append(line.text)
+            }
         }
         if node.level == .day {
             // A day lists its leaves word for word.
