@@ -37,4 +37,14 @@ struct HomeBoardTests {
         }
         #expect(HomeBoard.lines(date: date, notices: [], rotation: 0, moment: nil).count == 3)
     }
+
+    /// The page caps type at AX1, so the one-thing cut at AX1 and AX3 is the same, and a larger size never cuts less.
+    @Test func oneThingCutStopsGrowingAtAX1() {
+        let line = "Bench best 205 lb, 3 weeks ago with a long tail"
+        let ax1 = HomeOneThing.cut(line, size: 38, width: 262, typeSize: .accessibility1)
+        #expect(HomeOneThing.cut(line, size: 38, width: 262, typeSize: .accessibility3) == ax1)
+        #expect(HomeOneThing.cut(line, size: 38, width: 262, typeSize: .accessibility5) == ax1)
+        let large = HomeOneThing.cut(line, size: 38, width: 262, typeSize: .large)
+        #expect(large.count >= ax1.count)
+    }
 }

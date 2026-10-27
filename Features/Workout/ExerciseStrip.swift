@@ -37,7 +37,7 @@ struct ExerciseStrip: View {
         case .remaining:
             Paint.cream.opacity(0.2)
         case .current:
-            TimelineView(.animation(minimumInterval: 1 / 60, paused: reduceMotion)) { context in
+            LiveTimeline(LiveFeatures.exerciseStrip, minimumInterval: 1 / 60) { context in
                 let time = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.period)
                     / Self.period
                 // The glint crosses in the first 30% of each period, then the segment just glows.

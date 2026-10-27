@@ -186,7 +186,7 @@ struct ProcessSeam: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 60, paused: reduceMotion)) { context in
+        LiveTimeline(LiveFeatures.processSeam, minimumInterval: 1 / 60) { context in
             let period = Theme.Machining.processGlintPeriod
             let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: period) / period
             // The glint crosses in the first 30% of each period, then the seam just glows.

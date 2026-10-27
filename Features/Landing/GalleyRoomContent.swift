@@ -342,6 +342,8 @@ struct GalleyShellHost: View {
 
     private func handle(_ intent: ShellIntent, front: KitchenFront) {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             navigator.pop()
         case let .openDoor(id):

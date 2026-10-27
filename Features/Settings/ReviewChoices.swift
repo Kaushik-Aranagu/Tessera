@@ -419,7 +419,7 @@ final class ReviewChoices {
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
         ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
-        // Harness H1b to H3 (Claude for Tess): lab mode, her looks, asking her anything.
+        // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
         ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
 

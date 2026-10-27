@@ -121,6 +121,7 @@ enum AppsListRows {
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
     @Environment(\.playDoorway) private var playDoorway
+    @Environment(\.openShellDoor) private var openShellDoor
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
@@ -313,7 +314,9 @@ struct AppsListSlot: View {
     private func open(_ row: AppsListRows.Row) {
         if row.extra == nil, case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
-        } else {
+        } else if !openShellDoor(row.door) {
+            // The standing shell holds the room when it can (its places change in place); else the doorway plays
+            // into the room's own page.
             playDoorway(row.accent, false) { door = row.door }
         }
     }

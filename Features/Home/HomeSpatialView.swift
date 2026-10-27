@@ -128,6 +128,9 @@ struct HomeSpatialView: View {
                             }
                         }
                         .scrollDisabled(false)
+                        // Live only when seen: the pager keeps every page resident, so only the page in front
+                        // (and not under a full-screen link) draws live.
+                        .liveScope(Int(progress.rounded()) == sibling.rawValue && presented == nil)
                         .containerRelativeFrame(.horizontal)
                         // The hero's parallax stays inside its own page.
                         .clipped()

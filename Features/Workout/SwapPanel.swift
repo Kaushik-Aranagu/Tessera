@@ -134,7 +134,9 @@ struct TopSetCheckLine: View {
             : "That was heavy. Drop to \(weight) for the rest?"
         Button(action: onAccept) {
             VStack(alignment: .leading, spacing: 2) {
-                TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion || check.isAccepted)) { context in
+                LiveClock(LiveFeatures.swapPanel, minimumInterval: 1 / 20,
+                          paused: reduceMotion || check.isAccepted)
+                { context in
                     let breath = (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * 2 * .pi) + 1) / 2
                     Text(text)
                         .font(Theme.voice)

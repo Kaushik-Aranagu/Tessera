@@ -84,6 +84,8 @@ struct HomeDayStrip: View {
                 ForEach(lanes) { lane in
                     DayStrokePage(lane: lane)
                         .containerRelativeFrame(.horizontal)
+                        // Sheets 294, 295: a day crossing the strip's side edge rolls over it.
+                        .edgeRoll(axis: .horizontal, preset: .card)
                         .id(lane.offset)
                 }
             }
