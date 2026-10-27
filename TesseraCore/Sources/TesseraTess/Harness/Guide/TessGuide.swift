@@ -10,7 +10,8 @@ import TesseraCore
 /// when a room, place, call, form, trait or tool has no page, so the book can't fall behind the app.
 @MainActor
 public enum TessGuide {
-    public static let name = "guide"
+    /// Nonisolated, with `aboutPhrases` and `isAbout`, because the tool picker reads them off the main actor.
+    public nonisolated static let name = "guide"
     /// The most one answer holds.
     public static let maxCharacters = 1200
     /// The most pages one search lists.
@@ -114,13 +115,13 @@ public enum TessGuide {
 
     /// Asks about how the app or Tess works ("how do I pause a routine", "what does the dial do"): the picker offers
     /// the guide on these. "Why is my bench stuck" is about his training, not the app, so a bare "why is" is not one.
-    static let aboutPhrases = [
+    nonisolated static let aboutPhrases = [
         "how do i", "how can i", "how does", "how do you", "what does", "what can you", "what can i", "what do you",
         "where is", "where do i", "where can i", "why did you", "why do you", "what is this", "what's this",
         "who are you", "what are you", "is there a way", "help me understand",
     ]
 
-    public static func isAbout(_ ask: String) -> Bool {
+    public nonisolated static func isAbout(_ ask: String) -> Bool {
         let spaced = " " + ask.lowercased().split { !$0.isLetter && $0 != "'" }.joined(separator: " ") + " "
         return aboutPhrases.contains { spaced.contains(" \($0) ") }
     }
