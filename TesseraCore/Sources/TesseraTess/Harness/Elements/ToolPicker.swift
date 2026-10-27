@@ -105,6 +105,12 @@ public enum ToolPicker {
                 .count
             tools.insert(TessGuide.name, at: lead)
         }
+        if TessZoomTool.isAbout(ask), !tools.contains(TessZoomTool.name) {
+            // His past by time: the pyramid rides right after the calls that lead and the guide, like the guide.
+            let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) || $0 == RehearseFlags.tool
+                || $0 == TessGuide.name }.count
+            tools.insert(TessZoomTool.name, at: lead)
+        }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks, rehearse: rehearse, count: rehearse == nil ? nil : RehearseFlags.count(ask))
     }

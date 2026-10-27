@@ -84,6 +84,14 @@ public final class TessRun {
     private var current: Active?
     /// The memory slice for the run in flight, built on its first recall or path read.
     private var memory: (runID: UUID, index: MemoryIndex)?
+    /// His past as a pyramid (`zoom`); nil builds it from his store. A test or the eval world sets its own.
+    public var pyramidSource: (@MainActor () -> MemoryPyramid)?
+    /// The router that names where a zoom starts; the host sets the one it keeps (`PyramidRouter.load()`).
+    public var pyramidRouter: @MainActor () -> PyramidRouter = { PyramidRouter() }
+    /// The gists written at night for the pyramid's nodes; none until the host keeps them.
+    public var pyramidGists: @MainActor () -> PyramidGists = { PyramidGists() }
+    /// The pyramid built from his store, kept until the store changes or the day turns.
+    private var pyramidCache: (revision: Int, day: Date, pyramid: MemoryPyramid)?
     private var tries: LookTries?
     /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's. Dropped when the run ends,
     /// with its copy of his store.
@@ -288,7 +296,23 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec, TessGuide.spec]
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs
+            + [AgentNotebook.spec, askAgentSpec, TessGuide.spec, TessZoomTool.spec]
+    }
+
+    /// His past as a pyramid: the source's, or built from his store once per store change and day.
+    func pyramid() -> MemoryPyramid {
+        if let pyramidSource {
+            return pyramidSource()
+        }
+        let store = engine.store, day = calendar.startOfDay(for: now())
+        if let pyramidCache, pyramidCache.revision == store.revision, pyramidCache.day == day {
+            return pyramidCache.pyramid
+        }
+        let leaves = MemoryPyramid.leaves(store: store, classes: engine.classes, now: now())
+        let built = MemoryPyramid(leaves: leaves, calendar: calendar)
+        pyramidCache = (store.revision, day, built)
+        return built
     }
 
     /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
@@ -303,7 +327,7 @@ public final class TessRun {
 
     /// system[0] voice (cache), tools, system[1] profile (cache); fragments ride on the ask.
     func pack(about: [ObjectRecord], screen: String?, withTools: Bool, frame: TessFrame? = nil,
-              pick: ToolPicker.Pick? = nil) -> Pack
+              pick: ToolPicker.Pick? = nil, ask: String? = nil) -> Pack
     {
         var system = [TextBlock(Self.voice)]
         var cache: [CacheMark] = [CacheMark(0, .oneHour)]
@@ -347,6 +371,12 @@ public final class TessRun {
             // Tier 1 of the guide: what it holds, so she pages in only what the ask needs.
             fragments.append(PackFragment(TessGuide.contentsLine))
         }
+        if withTools, let ask, pick?.tools.contains(TessZoomTool.name) == true {
+            // Tier 1 of the pyramid: how paths look, and where to start when the router is sure. Only paths: what
+            // a node holds comes back through zoom, under the Door's policy.
+            fragments.append(PackFragment(TessZoomTool.line(for: ask, pyramid: pyramid(), router: pyramidRouter(),
+                                                            policy: door.policy(), now: now(), calendar: calendar)))
+        }
         if let reason = pick?.rehearse, specs.contains(where: { $0.name == RehearseFlags.tool }) {
             // Only when the phone has the rehearsal: a line about a tool she wasn't given would mislead her.
             fragments.append(PackFragment(RehearseFlags.line(reason, count: pick?.count)))
@@ -382,7 +412,7 @@ public final class TessRun {
         lastRung = plan.ladder.first
         lastAskAt = now()
         let pack = pack(about: about, screen: context.screen, withTools: claudeOn, frame: context.frame,
-                        pick: context.pick)
+                        pick: context.pick, ask: text)
         let messages = history() + [BrainMessage(.user, text: text)]
         _ = conversation.append(role: .user, text: text, about: about, at: now())
         var state = TessRunState(startedAt: now(), askText: text, aboutIDs: about.map(\.id), messages: messages)
@@ -596,6 +626,10 @@ public final class TessRun {
         case TessGuide.name:
             // What the app is, never his data: the same page on every rung and policy.
             result = TessGuide.run(arguments: input)
+        case TessZoomTool.name:
+            // His past, read only: the node shows what the Door's policy lets it.
+            result = TessZoomTool.run(arguments: input, pyramid: pyramid(), policy: door.policy(),
+                                      gists: pyramidGists())
         case Self.askAgent:
             // Tess asks her rooms; each runs as itself, in parallel, and its writes land as ghost rows.
             let answer = await askAgents(input, handles: handles, onDevice: onDevice)
@@ -889,7 +923,7 @@ public final class TessRun {
                         let page = TessGuide.run(arguments: input)
                         return .toolResult(id: id, content: page.text, isError: page.isError)
                     }
-                    if name == TessOpenTool.name || name == "query" {
+                    if name == TessOpenTool.name || name == "query" || name == TessZoomTool.name {
                         return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
                     }
                     return .toolResult(
