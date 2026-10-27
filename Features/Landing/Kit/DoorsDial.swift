@@ -236,6 +236,13 @@ struct DoorSummary: View {
     /// The rows of the per-row styles (chalk, fog, grow), each in its fixed place, keyed by door so a turn swaps them.
     /// `label` and `line` are the rows' heights (20 and 24 at the default size; they grow with Dynamic Type so a
     /// line never sits in a box shorter than itself, which is what drew "..." at AX5).
+    /// How many summary lines fit the doors place under the label (120 pt less its 12 pt top): 3 at default sizes,
+    /// fewer at accessibility sizes, never under 1, so the summary never runs into the foot.
+    static func fittingLines(label labelHeight: CGFloat, line lineHeight: CGFloat, hasLabel: Bool = true) -> Int {
+        let room = 108 - (hasLabel ? labelHeight : 0)
+        return max(1, min(3, Int(room / max(lineHeight, 1))))
+    }
+
     static func rows(_ door: DialDoor, key: String? = nil, label labelHeight: CGFloat = 20,
                      line lineHeight: CGFloat = 24) -> [Row]
     {
@@ -246,7 +253,8 @@ struct DoorSummary: View {
             rows.append(Row(id: "\(key)#label", text: label, isLabel: true, isFirst: false, index: 0, y: 0))
             y = labelHeight
         }
-        for (index, line) in door.lines.prefix(3).enumerated() {
+        let shown = fittingLines(label: labelHeight, line: lineHeight, hasLabel: door.label != nil)
+        for (index, line) in door.lines.prefix(shown).enumerated() {
             rows.append(Row(id: "\(key)#\(index)", text: line, isLabel: false, isFirst: index == 0,
                             index: rows.count, y: y + CGFloat(index) * lineHeight))
         }
@@ -287,7 +295,8 @@ struct DoorSummary: View {
                 FitLine(forms: FitLine.cuts(label), size: 13, color: Theme.Colors.inkSecondary)
                     .frame(width: 192, height: labelHeight, alignment: .leading)
             }
-            ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+            let shown = Self.fittingLines(label: labelHeight, line: lineHeight, hasLabel: door.label != nil)
+            ForEach(Array(door.lines.prefix(shown).enumerated()), id: \.offset) { index, line in
                 FitLine(
                     forms: FitLine.cuts(line),
                     size: 16,
@@ -314,7 +323,7 @@ struct DoorSummary: View {
                         : .identity)
             }
         }
-        .frame(width: 192, height: labelHeight + 3 * lineHeight, alignment: .topLeading)
+        .frame(width: 192, height: min(108, labelHeight + 3 * lineHeight), alignment: .topLeading)
         .tesseraAnimation(style.animation(rows: rows.count), value: ownMove ? door.id : "summary")
         .accessibilityElement(children: .combine)
     }
