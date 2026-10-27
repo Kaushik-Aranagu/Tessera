@@ -164,3 +164,20 @@ For the builders: `Text(word).contentTransition(.interpolate)` is not enough her
 Lay out each letter as its own `Text` in an `HStack(spacing: 0)` keyed by its matched index (a longest common
 subsequence of the two words), with `.matchedGeometryEffect` for the kept letters and a `.move(edge: .top)` plus
 `.opacity` transition for the rest, all through `MotionPolicy`.
+
+## Sheet 310: shape mode's foot line (Oct 26)
+
+- **No full stops.** Shape mode's foot line ended its sentences ("Tap a place to reshape it.", "Drawn next round.").
+  They are gone, and the line now reads as one phrase: what the place is now, then what comes next in italics, for
+  example "Rise, stack, rows now, *more detail, just names* next round".
+- **It eases between places.** Tapping a new place used to swap the foot line in one frame. Now the old lines leave
+  upward by 3 pt (120 ms, 20 ms apart) and the new ones rise 4 pt into place (220 ms, 40 ms apart). Picking a look
+  for the doors only re-marks the words, so the line does not move under the finger.
+- Fast taps never stack two lines: only the last place picked is shown.
+- Reduce Motion: the line changes in place.
+- Measured on the board (`t54.js`): Deck in paper and Galley in black, every place in turn plus a burst of three
+  fast taps; no line ends in a stop, the Index word still changes the look, and `t39.js` still finds no cut words.
+
+For the builders: the foot line is a `Text` keyed by the picked place with `.id(place)` and a
+`.transition(.asymmetric(insertion: .offset(y: 4).combined(with: .opacity), removal: .offset(y: -3).combined(with:
+.opacity)))`, through `MotionPolicy`. Strip a trailing full stop at the source, as sheet 301 says.

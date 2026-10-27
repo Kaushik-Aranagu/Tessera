@@ -2551,14 +2551,22 @@ function shapeBind(el,room){const nav=el.querySelector('.lnav');if(!nav||nav._sb
  nav.addEventListener('click',e=>{if(nav._held||el.classList.contains('shaping')){e.stopImmediatePropagation();e.preventDefault();if(nav._held){nav._held=0;return}shapeOff(el,room)}},true)}
 function shapeOn(el,room){if(el.classList.contains('shaping')||!el.querySelector(':scope > .dial'))return;el.classList.add('shaping');const nav=el.querySelector('.lnav');nav._was=nav._word||nav.textContent;navMorph(nav,'Done');thAside(el,1);
  const ul=el.querySelector('.undoline');if(ul)ul.innerHTML='';el._shapeFrom=LOOKS[room]||'reel';
- const bar=h('div','shapebar','<b>Shape</b><span>Tap a place to reshape it.</span>');el.appendChild(bar);
+ const bar=h('div','shapebar','<b>Shape</b><span>Tap a place to reshape it</span>');el.appendChild(bar);
  SH_PLACES.forEach(([k,x,y,w,hh],i)=>{const p=h('div','shp');p.dataset.k=k;p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px;border-radius:'+Math.min(22,Math.max(10,.3*Math.min(w,hh)))+'px';el.appendChild(p);
   if(!RM)p.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'scale(1.006)',offset:.7},{opacity:1,transform:'none'}],{duration:440,delay:i*30,easing:'cubic-bezier(.2,.8,.3,1)',fill:'backwards'});
   p.onclick=e=>{e.stopPropagation();shapePick(el,room,k)};if(k==='dial')shapeSwipe(el,room,p)})}
-function shapeBar(el,room,k){const bar=el.querySelector(':scope > .shapebar');if(!bar)return;const P=SH_PLACES.find(x=>x[0]===k);
- if(k==='dial'){const cur=LOOKS[room]||'reel';bar.innerHTML='<b>Doors</b><span class="fw">'+FORMS.dial.map(f=>'<button data-f="'+f+'"'+(f===cur?' class="on"':'')+'>'+FORM_WORD[f]+'</button>').join('')+'</span>';
-  bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=e=>{e.stopPropagation();shapeTo(el,room,b.dataset.f)})}
- else bar.innerHTML='<b>'+k[0].toUpperCase()+k.slice(1)+'</b><span>'+P[5][0]+'. <i>'+P[5][1]+'</i>. Drawn next round.</span>'}
+function shapeBar(el,room,k){const bar=el.querySelector(':scope > .shapebar');if(!bar)return;const P=SH_PLACES.find(x=>x[0]===k);let html,bind=null;
+ if(k==='dial'){const cur=LOOKS[room]||'reel';html='<b>Doors</b><span class="fw">'+FORMS.dial.map(f=>'<button data-f="'+f+'"'+(f===cur?' class="on"':'')+'>'+FORM_WORD[f]+'</button>').join('')+'</span>';
+  bind=()=>bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=e=>{e.stopPropagation();shapeTo(el,room,b.dataset.f)})}
+ else{const now=P[5][0];html='<b>'+k[0].toUpperCase()+k.slice(1)+'</b><span>'+now[0].toUpperCase()+now.slice(1)+' now'+(P[5][1]==='next round'?', more next round':', <i>'+P[5][1]+'</i> next round')+'</span>'}
+ /* 310: the foot line eases between places. Picking the same place again (a look changed) only re-marks the words */
+ if(bar._k===k&&k==='dial'){bar.innerHTML=html;bind&&bind();return}
+ const first=!bar._k;bar._k=k;const gen=bar._g=(bar._g||0)+1;
+ const put=()=>{if(bar._g!==gen)return;bar.innerHTML=html;bind&&bind();if(RM)return;
+  [...bar.children].forEach((c,i)=>c.animate([{opacity:0,translate:'0 4px'},{opacity:1,translate:'0 0'}],{duration:220,delay:i*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))};
+ if(RM){put();return}
+ const old=[...bar.children];old.forEach(c=>c.style.pointerEvents='none');
+ let n=old.length;if(!n)return put();old.forEach((c,i)=>c.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -3px'}],{duration:first?140:120,delay:i*20,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish=()=>{if(--n===0)put()})}
 function shapePick(el,room,k){el.querySelectorAll(':scope > .shp').forEach(p=>p.classList.toggle('on',p.dataset.k===k));shapeBar(el,room,k)}
 function shapeTo(el,room,f){if((LOOKS[room]||'reel')===f)return;LOOKS[room]=f;setDoorLook(el,room,f,true);shapeBar(el,room,'dial')}
 function shapeSwipe(el,room,p){let x0=null,lens=null,cur=null,nx=null;
@@ -2588,7 +2596,7 @@ function shapeOff(el,room){el.classList.remove('shaping');const nav=el.querySele
  if(was!==now)thUndo(el,false,'Doors as '+(now==='index'?'an index':'a '+FORM_WORD[now].toLowerCase())+'.',()=>{LOOKS[room]=was;setDoorLook(el,room,was,true)},null)}
 ['notes','weather','training','kitchen','routines','money'].forEach(room=>{const S=SCREENS[room];if(!S||S._shaped)return;const r=S.render;S._shaped=1;
  S.render=function(el,P){const c=r.call(this,el,P);if(el.querySelector(':scope > .dial'))shapeBind(el,room);return c}});
-window.__shape={on:(r)=>shapeOn(current,r),off:(r)=>shapeOff(current,r)};
+window.__shape={on:(r)=>shapeOn(current,r),off:(r)=>shapeOff(current,r),pick:(r,k)=>shapePick(current,r,k)};
 TH_DEMOS['shape-deck']=['training',()=>{shapeOn(current,'training');setTimeout(()=>shapePick(current,'training','dial'),500)}];
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
