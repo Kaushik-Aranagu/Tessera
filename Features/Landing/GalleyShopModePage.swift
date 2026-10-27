@@ -42,6 +42,27 @@ struct GalleyShopModePage: View {
         }
         .onAppear(perform: begin)
         .tesseraFeedback(cue)
+        #if DEBUG
+            .task {
+                // Simulator only (LaunchFlags): `-shopGot` checks the first thing after 3 s (the pen stroke);
+                // `-shopPay` checks three things, then pays after 3 s (the tear-off), for stills and recordings.
+                let pay = LaunchFlags.has("-shopPay")
+                guard LaunchFlags.has("-shopGot") || pay else { return }
+                try? await Task.sleep(for: .seconds(3))
+                if pay {
+                    let groceries = Groceries(store: model.store, classes: model.classes)
+                    for item in groceries.aisles().flatMap(\.items).prefix(3) {
+                        _ = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
+                    }
+                    model.touch()
+                    try? await Task.sleep(for: .seconds(1))
+                    self.pay()
+                } else {
+                    let facts = Self.facts(model: model, trip: trip, pushed: pushed)
+                    got(facts, 0)
+                }
+            }
+        #endif
     }
 
     private func ticket(facts: GalleyShopFacts, index: Int, data: GalleyShopScreen) -> some View {

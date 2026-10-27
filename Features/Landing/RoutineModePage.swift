@@ -295,6 +295,14 @@ struct RoutineModePage: View {
         made.start(at: AppClock.now)
         name = routine.title
         total = book.totalMinutes(of: routine)
+        #if DEBUG
+            // Simulator only (LaunchFlags): `-routineSkip N` moves N moves on, to see the dusk deepen, for stills.
+            if let value = LaunchFlags.value(after: "-routineSkip"), let count = Int(value) {
+                for _ in 0 ..< count {
+                    made.next(now: AppClock.now)
+                }
+            }
+        #endif
         run = made
     }
 }
