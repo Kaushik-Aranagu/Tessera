@@ -83,6 +83,12 @@ Each has a pass line set before it runs. A failure gets written up here too.
    - Replay test-world asks over ten simulated nights.
    - Pass: descents per ask fall at least 30% by night 5, with no loss of accuracy. If the top fills with trivia,
      raise k.
+   - **P3b (Swift, built):** `PyramidAsk` resolves an ask's dates first ("last month" on Oct 23 reads "September
+     2026") and drops stop words. `PyramidRouter` scores each child by weights on (ask word, child feature) pairs,
+     starting from words alone, and learns only the residual from cited answers: a step the words already get right
+     and sure trains nothing. Each node keeps right and wrong counts for confidence. At night year pairs fade, nodes
+     that are gone lose their counts, and the pairs are pruned to the ones that moved most. Under strict a walled node
+     is never an option and a cite through one trains nothing. Weights rank; they never hide a node from a search.
 4. **P4: more axes and more sources.**
    - Add class, entity and room, plus lateral links. Then conversation turns and told lines as free-text leaves,
      with topic and entity learned from their words.
