@@ -28,6 +28,14 @@ public enum CanonicalText {
         return String(out)
     }
 
+    /// The text with only its invisible characters removed: what a model reads of untrusted text is what he would see,
+    /// with every amount, fraction and accent left as written (folding would turn "½" into "1⁄2").
+    public static func visible(_ text: String) -> String {
+        var out = String.UnicodeScalarView()
+        out.append(contentsOf: text.unicodeScalars.filter { !isInvisible($0) })
+        return String(out)
+    }
+
     /// Characters that draw nothing: format characters (zero-width spaces and joiners, the soft hyphen, direction
     /// marks and overrides, tags, the byte-order mark), variation selectors, the grapheme joiner and Hangul fillers.
     static func isInvisible(_ scalar: Unicode.Scalar) -> Bool {
