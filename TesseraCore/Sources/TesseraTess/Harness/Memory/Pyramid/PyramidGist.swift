@@ -282,10 +282,12 @@ public struct PyramidDistiller {
 
     // MARK: Run
 
-    /// Asks for one node's gist under the Door's policy. Nil when the policy sees nothing there, the Door sent
-    /// nothing, or no sentence survived the check.
-    public func distill(_ path: String, in pyramid: MemoryPyramid, gists: PyramidGists) async -> PyramidGist? {
-        let policy = door.policy()
+    /// Asks for one node's gist under a policy, the Door's own when none is given. Nil when the policy sees nothing
+    /// there, the Door sent nothing, or no sentence survived the check.
+    public func distill(_ path: String, in pyramid: MemoryPyramid, gists: PyramidGists,
+                        policy given: DoorPolicy? = nil) async -> PyramidGist?
+    {
+        let policy = given ?? door.policy()
         guard let node = pyramid.nodes[path],
               let material = Self.material(path, in: pyramid, gists: gists, policy: policy),
               !material.children.isEmpty else { return nil }
@@ -319,10 +321,11 @@ public struct PyramidDistiller {
     /// children's new gists. `limit` caps the calls.
     public func refresh(_ pyramid: MemoryPyramid, gists: PyramidGists, limit: Int = .max) async -> PyramidGists {
         var gists = gists
+        // One policy for the whole pass, so every gist is written, read and stored under the same one.
         let policy = door.policy()
         for path in gists.stale(in: pyramid, policy: policy).prefix(limit) {
-            if let gist = await distill(path, in: pyramid, gists: gists) {
-                gists[path, policy] = gist
+            if let gist = await distill(path, in: pyramid, gists: gists, policy: policy) {
+                gists[path, gist.policy] = gist
             }
         }
         return gists

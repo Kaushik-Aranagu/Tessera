@@ -92,6 +92,18 @@ struct PyramidGistTests {
         #expect(PyramidDistiller.material(day(5), in: pyramid, gists: PyramidGists(), policy: .strict) == nil)
     }
 
+    @Test func aGivenPolicyDecidesWhatIsSentAndWhereTheGistIsKept() async throws {
+        // A lab Door asked for a strict gist: strict's material, stored as strict.
+        let pyramid = small()
+        let brain = ScriptedBrain(.haiku, rounds: [reply([("Sets peaked at 9 on Oct 2.", [day(2)])])])
+        let rig = try DoorRig(brains: [.haiku: brain], policy: .lab)
+        let written = await PyramidDistiller(door: rig.door).distill(month, in: pyramid, gists: PyramidGists(),
+                                                                     policy: .strict)
+        let words = Door.words(try #require(brain.requestsSeen.first))
+        #expect(!words.contains("dollars") && !words.contains(day(5)))
+        #expect(written?.policy == .strict)
+    }
+
     @Test func strictReadsOnlyStrictGists() throws {
         let pyramid = small()
         let node = try #require(pyramid.nodes[month])

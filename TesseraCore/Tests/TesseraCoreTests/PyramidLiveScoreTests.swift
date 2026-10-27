@@ -158,8 +158,8 @@ struct PyramidLiveScoreTests {
                 stopped = true
                 break
             }
-            if let gist = await distiller.distill(path, in: pyramid, gists: gists) {
-                gists[path, policy] = gist
+            if let gist = await distiller.distill(path, in: pyramid, gists: gists, policy: policy) {
+                gists[path, gist.policy] = gist
                 summary.written += 1
                 summary.sentences += gist.sentences.count
                 for drop in gist.dropped {
