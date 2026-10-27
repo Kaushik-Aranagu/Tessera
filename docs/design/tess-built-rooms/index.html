@@ -1,0 +1,263 @@
+<title>Tess-built rooms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+:root{
+  --bg:#F4EFE6;--paper:#FBF8F2;--ink:#2B2620;--ink2:#6E655A;--ink3:#9C9286;--rule:#DDD3C4;
+  --ember:#B4532A;--teal:#1E6E77;--gold:#7E6A1E;--wine:#8C2F39;--slate:#4E5D6C;--green:#3D6B45;
+  --code:#EFE8DC;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16130F;--paper:#1E1A15;--ink:#EEE7DC;--ink2:#B3A898;--ink3:#857B6E;--rule:#3A332B;
+  --ember:#E2895F;--teal:#84C3C9;--gold:#D9C27A;--wine:#D98A93;--slate:#A9B7C5;--green:#9CC9A3;--code:#26211B;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16130F;--paper:#1E1A15;--ink:#EEE7DC;--ink2:#B3A898;--ink3:#857B6E;--rule:#3A332B;
+  --ember:#E2895F;--teal:#84C3C9;--gold:#D9C27A;--wine:#D98A93;--slate:#A9B7C5;--green:#9CC9A3;--code:#26211B;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.6 Figtree,system-ui,-apple-system,sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:760px;margin:0 auto}
+h1{font:300 44px/1.08 Outfit,Figtree,sans-serif;letter-spacing:-.01em;margin:0 0 14px;text-wrap:balance}
+h2{font:600 22px/1.25 Figtree,sans-serif;margin:56px 0 10px;text-wrap:balance}
+h3{font:600 16px/1.3 Figtree,sans-serif;margin:26px 0 4px}
+p{margin:0 0 14px;max-width:66ch}
+.lede{font:400 21px/1.5 Newsreader,Georgia,serif;color:var(--ink);max-width:60ch}
+.kicker{font:600 12px/1 Figtree,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);margin-bottom:18px}
+.meta{color:var(--ink2);font-size:14px}
+a{color:var(--teal)}
+code,.mono{font:400 13px/1.55 'JetBrains Mono',ui-monospace,Menlo,monospace}
+p code{background:var(--code);padding:1px 5px;border-radius:3px}
+hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+.say{font:italic 400 19px/1.45 Newsreader,Georgia,serif;color:var(--ink)}
+/* tiers */
+.tiers{display:grid;gap:0;border-top:1px solid var(--rule);margin-top:18px}
+.tier{display:grid;grid-template-columns:64px 1fr;gap:4px 18px;padding:18px 0;border-bottom:1px solid var(--rule)}
+.tier .n{font:300 34px/1 Outfit,sans-serif;color:var(--tc)}
+.tier b{font-weight:600}
+.tier .f{display:flex;flex-wrap:wrap;gap:4px 22px;font-size:14px;color:var(--ink2);margin-top:6px}
+.tier .f span em{font-style:normal;color:var(--ink)}
+/* flow */
+ol.flow{list-style:none;padding:0;margin:18px 0;counter-reset:f}
+ol.flow li{counter-increment:f;display:grid;grid-template-columns:34px 1fr;gap:12px;padding:10px 0}
+ol.flow li::before{content:counter(f);font:300 24px/1.1 Outfit,sans-serif;color:var(--ember)}
+/* demo */
+.demo{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
+@media (max-width:680px){.demo{grid-template-columns:minmax(0,1fr)}}
+.phone{width:100%;max-width:300px;aspect-ratio:300/600;margin:0 auto;border:1px solid var(--rule);border-radius:42px;background:var(--paper);
+  position:relative;overflow:hidden;padding:54px 22px 22px;transition:padding .4s}
+.phone.airy{padding-top:70px}
+.phone .grain{position:absolute;inset:0;opacity:0;transition:opacity .8s;pointer-events:none;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.phone.grained .grain{opacity:.5}
+.island{position:absolute;top:12px;left:50%;width:84px;height:24px;margin-left:-42px;border-radius:14px;background:#0d0b09}
+.blank{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink3);font:italic 400 17px Newsreader,serif;transition:opacity .4s}
+.r-title{font:300 36px/1.05 Outfit,sans-serif;color:var(--teal);margin:0 0 8px}
+.r-line{font:400 17px/1.35 Figtree,sans-serif;color:var(--ink);margin-bottom:22px}
+.r-list{display:grid;gap:12px;transition:gap .4s}
+.airy .r-list{gap:20px}
+.r-row{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:10px}
+.r-row .nm{font:500 19px/1.2 Figtree,sans-serif}
+.r-row .d{font:400 13px Figtree,sans-serif;color:var(--ink2);text-align:right}
+.r-row .d b{font:400 18px Outfit,sans-serif;color:var(--ink)}
+.r-row.thirsty .nm{color:var(--wine);animation:breathe 3.2s ease-in-out infinite}
+.calm .r-row.thirsty .nm{animation-duration:5.5s}
+@keyframes breathe{50%{opacity:.62}}
+.r-act{position:absolute;left:22px;bottom:30px;font:600 20px Figtree,sans-serif;color:var(--teal);background:none;border:0;padding:6px 0;cursor:pointer}
+.r-act[disabled]{color:var(--ink3);cursor:default}
+.r-note{position:absolute;left:22px;right:22px;bottom:70px;font-size:13px;color:var(--ink2);min-height:18px}
+.r-note button{background:none;border:0;font:600 13px Figtree,sans-serif;color:var(--teal);cursor:pointer;padding:0 4px}
+.fade-in{animation:fin .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fin{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){.fade-in,.r-row.thirsty .nm{animation:none}}
+.side{min-width:0}
+.steps{display:grid;gap:2px;margin:0 0 16px}
+.steps button{all:unset;cursor:pointer;display:grid;grid-template-columns:22px 1fr;gap:8px;padding:8px 0;font:italic 400 17px/1.35 Newsreader,serif;color:var(--ink3)}
+.steps button .k{font:400 13px/1.9 Outfit,sans-serif;font-style:normal}
+.steps button.next{color:var(--ink)}
+.steps button.done{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:var(--ink3)}
+.steps button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.out{border-top:1px solid var(--rule);padding-top:12px}
+.out .tl{font:600 13px Figtree,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--tc,var(--ink2));margin-bottom:4px}
+.out .why{font-size:14px;color:var(--ink2);margin-bottom:10px}
+.reach{font-size:14px;color:var(--wine);margin:6px 0 10px}
+.reach button{font:600 14px Figtree,sans-serif;background:none;border:0;color:var(--wine);cursor:pointer;padding:0 0 0 6px}
+.doc{background:var(--code);border-radius:6px;padding:12px 14px;max-height:280px;overflow:auto;white-space:pre;margin:0}
+.ops{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink2);margin:0 0 10px}
+.ctl{display:flex;gap:18px;margin-top:10px}
+.ctl button{background:none;border:0;padding:4px 0;font:600 15px Figtree,sans-serif;color:var(--teal);cursor:pointer}
+.ctl button[disabled]{color:var(--ink3);cursor:default}
+/* layer diagram */
+.diag{overflow-x:auto;margin:20px 0}
+.diag svg{display:block;max-width:100%;height:auto}
+.diag text{font-family:Figtree,sans-serif;fill:var(--ink)}
+.diag .s{fill:var(--ink2);font-size:12px}
+.diag .ln{stroke:var(--rule);stroke-width:1}
+.diag .ar{stroke:var(--ink3);stroke-width:1.2;fill:none}
+/* ideas */
+.ideas{counter-reset:i;margin-top:10px}
+.idea{counter-increment:i;padding:16px 0 14px;border-bottom:1px solid var(--rule);display:grid;grid-template-columns:44px 1fr;gap:2px 14px}
+.idea::before{content:counter(i);font:300 28px/1 Outfit,sans-serif;color:var(--gold);grid-row:span 2}
+.idea h3{margin:0 0 4px}
+.idea p{margin:0;color:var(--ink)}
+.idea .src{font-size:13px;color:var(--ink2);margin-top:4px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--ink2);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.tw{overflow-x:auto}
+.un{color:var(--gold);font-size:13px}
+ul{padding-left:20px;margin:6px 0 14px}li{margin:4px 0;max-width:66ch}
+</style>
+
+<main>
+<div class="kicker">Design studio, frontier sketch, Oct 27</div>
+<h1>Tess-built rooms</h1>
+<p class="lede">The app becomes a player and a room becomes a document. You say what you want, Tess writes the change, and the phone draws it straight away. Nothing installs unless a brand-new kind of part has to be born.</p>
+<p class="meta">This is design only; nothing is built yet. It starts as one experimental room, working name <b>Chart room</b>: the room where a navigator draws. The polished rooms stay as they are. Research notes with every source are in the repo at <code>docs/design/tess-built-rooms/research.md</code>.</p>
+
+<h2>Try it: a blank frame, seven sentences</h2>
+<p>Tap the sentences in order. Each one shows which tier did the work, the patch Tess wrote, and the room document after it. Undo walks back one step at a time. The sentences are fixed for this sketch; in the app they would be anything you say.</p>
+<div class="demo">
+  <div class="phone" id="ph"><div class="grain"></div><div class="island"></div><div class="blank" id="blank">A blank frame</div><div id="room"></div><div class="r-note" id="note"></div><button class="r-act" id="act" hidden>Watered</button></div>
+  <div class="side">
+    <div class="steps" id="steps"></div>
+    <div class="out" id="out"><div class="tl">Nothing yet</div><div class="why">Start with the first sentence.</div></div>
+    <div class="ctl"><button id="undo" disabled>Undo</button><button id="reset">Start over</button></div>
+  </div>
+</div>
+
+<h2>The shape</h2>
+<p>Every system that has done this in production uses the same split. Airbnb, Lyft, Shopify, Yandex's DivKit, Flutter's remote widgets and Google's A2UI all work this way. The phone owns a fixed kit of native parts, a document composes them and binds them to data, and anything beyond composing runs in a sandboxed interpreter. Tessera already has the first half: fixed places on every screen, rooms that only hand data to them, and a look catalog Tess can turn by voice.</p>
+<div class="diag"><svg viewBox="0 0 720 300" width="720" role="img" aria-label="Layers: Tess and the Mac edge write the room document; the player on the phone renders it from its native kit, runs sandboxed logic, reads objects">
+  <text x="0" y="22" font-size="15" font-weight="600">Writes</text>
+  <text x="120" y="22" font-size="15" fill="var(--ember)" style="fill:var(--ember)">Tess on the phone</text><text x="120" y="40" class="s">turns a sentence into a patch, checks it, shows a ghost</text>
+  <text x="430" y="22" font-size="15" style="fill:var(--slate)">Mac edge</text><text x="430" y="40" class="s">reads the source on GitHub, builds packs and new parts,</text><text x="430" y="56" class="s">checks them in the simulator</text>
+  <line class="ln" x1="0" y1="74" x2="720" y2="74"/>
+  <text x="0" y="104" font-size="15" font-weight="600">Saved</text>
+  <text x="120" y="104" font-size="15" style="fill:var(--teal)">Room document</text><text x="120" y="122" class="s">parts, arrangement, bindings to objects, looks, reactions, reach.</text><text x="120" y="138" class="s">Stored as objects in the engine; every change is an op you can undo</text>
+  <line class="ln" x1="0" y1="156" x2="720" y2="156"/>
+  <text x="0" y="186" font-size="15" font-weight="600">Runs</text>
+  <text x="120" y="186" font-size="15">Player</text><text x="120" y="204" class="s">native kit of parts,</text><text x="120" y="220" class="s">themes, motion, haptics</text>
+  <text x="300" y="186" font-size="15">Logic</text><text x="300" y="204" class="s">sandboxed scripts or wasm,</text><text x="300" y="220" class="s">no reach beyond what it's handed</text>
+  <text x="510" y="186" font-size="15">Looks</text><text x="510" y="204" class="s">tokens, traits,</text><text x="510" y="220" class="s">shaders</text>
+  <line class="ln" x1="0" y1="238" x2="720" y2="238"/>
+  <text x="0" y="268" font-size="15" font-weight="600">Reads</text>
+  <text x="120" y="268" font-size="15">Your objects</text><text x="120" y="286" class="s">plants, sets, notes, lists, through the same paths every room uses; never copied into the document</text>
+</svg></div>
+
+<h2>Four tiers, picked by the size of the change</h2>
+<p>Tess picks the smallest tier that can do the job. You pick nothing; you just see how long it takes.</p>
+<div class="tiers">
+  <div class="tier" style="--tc:var(--teal)"><div class="n">1</div><div><b>Specs.</b> Color, type, size, spacing, order, what shows, a new part from the kit, a binding to your objects. A patch to the document.<div class="f"><span>Runs <em>on the phone</em></span><span>Takes <em>instantly</em></span><span>Install <em>never</em></span><span>Undo <em>one word</em></span></div></div></div>
+  <div class="tier" style="--tc:var(--gold)"><div class="n">2</div><div><b>Shaders.</b> Textures, grain, glow, a sky, a material no token can make. Small GPU programs.<div class="f"><span>Runs <em>on the phone</em></span><span>Takes <em>a few seconds</em></span><span>Install <em>never</em></span><span>Undo <em>one word</em></span></div></div></div>
+  <div class="tier" style="--tc:var(--ember)"><div class="n">2½</div><div><b>Logic packs.</b> Reactions and coordination between parts: when this changes, glow that; a timer that drives a list; a rule that sorts. Written as script, or as Swift compiled to wasm on the Mac, and run in a sandbox on the phone.<div class="f"><span>Runs <em>Mac builds, phone runs</em></span><span>Takes <em>under a minute</em></span><span>Install <em>never</em></span><span>Undo <em>one word</em></span></div></div></div>
+  <div class="tier" style="--tc:var(--slate)"><div class="n">3</div><div><b>New parts.</b> A kind of element the kit doesn't have yet, like a spinnable ring of pots. Tess writes native Swift on the Mac, which reads the current source from GitHub, builds it, and checks it in the simulator with screenshots and an accessibility audit.<div class="f"><span>Runs <em>Mac</em></span><span>Takes <em>minutes</em></span><span>Install <em>with your next build</em></span><span>Undo <em>the room keeps its last version</em></span></div></div></div>
+</div>
+<p style="margin-top:14px">Why tier 3 still needs an install: an iPhone only loads native code that was signed when the app was installed, and it gives apps no JIT. Apple's own engineers confirm this, and it holds even in Developer Mode. Scripts, wasm, shaders and data are all allowed to arrive later. That is why tier 2½ exists: it moves most "code" changes onto the no-install side. Each new part that lands also widens the kit for good, so installs get rarer over time.</p>
+
+<h2>From one sentence to the screen</h2>
+<p class="say">"Make the plant list calmer and glow the thirstiest one"</p>
+<ol class="flow">
+  <li><div><b>Read.</b> Tess takes the sentence along with the room document, what you last touched (anything within 30 seconds counts as "this"), and the kit's own description of itself, which the app generates from code.</div></li>
+  <li><div><b>Plan, then patch.</b> She thinks in plain words first, then emits a small strict patch. Strict formats make models reason worse, so planning stays free and only the output is constrained. "Calmer" is a step on the motion trait. "Glow the thirstiest" is a reaction plus a look.</div></li>
+  <li><div><b>Check.</b> Three gates. Shape: the schema. Sense: the engine's validator, the same pattern the class builder uses. Sight: the phone renders the change offscreen at the largest type in both themes and checks overlap, contrast, tap size and cut words. A failure retries once, quietly.</div></li>
+  <li><div><b>Show a ghost.</b> The change appears in place, faint. A small change sets after the 2-second drying line. Anything that widens what the room can touch waits for its own tap.</div></li>
+  <li><div><b>Keep history.</b> The patch is an op group in the log. "Undo", "go back to this morning's version" and "what changed?" all work, and so does undo of an undo.</div></li>
+</ol>
+
+<h2>The room document</h2>
+<p>The document is a flat list of parts linked by ids rather than a deep tree, because models write flat lists more reliably (A2UI's finding). Data is bound by path and never copied in. Changes are JSON Patch operations, which map one to one onto ops. Here is the room after the first six sentences above (the seventh is still building on the Mac):</p>
+<pre class="doc mono" id="finaldoc"></pre>
+
+<h2>New ideas, past the prior art</h2>
+<div class="ideas">
+  <div class="idea"><h3>Rooms are objects too</h3><p>A room document is stored as objects in the engine, with a class, links and history, so UI is as linkable, searchable and undoable as your data. "Last Tuesday's version of this room" becomes a query, and you can link a note to the room it describes.</p><div class="src">From Smalltalk's live objects, without its unversioned state</div></div>
+  <div class="idea"><h3>Speak in traits, finish with your thumb</h3><p>Small changes move along named axes (density, size, motion, weight) rather than raw numbers, so they survive a theme swap. After each spoken change, the axis that moved stays under your thumb for a few seconds, so "a bit calmer" can be finished by feel.</p><div class="src">Look catalog plus Bret Victor's "immediate connection"</div></div>
+  <div class="idea"><h3>Ghost variants for vague asks</h3><p>"Make it nicer" produces two or three ghosts stacked in place. You swipe through them and keep one. What you keep becomes local taste data, which the small on-device model uses to rank the next set of variants.</p><div class="src">Galileo and Stitch variants, turned into a learning loop</div></div>
+  <div class="idea"><h3>Facts and wishes, so every reaction has a because</h3><p>Parts never call each other. They post facts ("Orchid: 6 days since water") and wishes ("glow the thirstiest"). You can ask Tess "why is that glowing?" and she traces it. The Mac can replay a week of real facts against a new room version as a test drawn from your own life.</p><div class="src">Dynamicland's Claim, Wish, When; HyperCard's message path</div></div>
+  <div class="idea"><h3>A reach line</h3><p>Each part declares what it may touch: read a class, write a class (always as a pending, undoable group), a timer, a haptic. When an edit widens the room's reach, a separate line says so ("can now mark plants watered") and needs its own tap. Money writes are never grantable to a room, and the key never enters a document.</p><div class="src">Object capabilities (WASI, MCP Apps' bridge)</div></div>
+  <div class="idea"><h3>Signed packs, and the weekly install as a release train</h3><p>Logic packs and shader libraries are signed by the Mac with a key whose public half ships in the app. The phone runs only what verifies. Brand-new parts batch up for the build that goes out with the profile refresh anyway.</p><div class="src">React Native's over-the-air split, applied to wasm and Metal</div></div>
+  <div class="idea"><h3>Paths become roads</h3><p>The phone notes which compositions, scripts and shaders you keep. The Mac proposes promoting the well-worn ones into native parts under the same name, so a room gets faster and more polished on its own while its document stays the same.</p><div class="src">A tracing JIT, at the level of product rather than machine code</div></div>
+  <div class="idea"><h3>Copy a room like a prototype</h3><p>"Like the Galley, but for my plants" copies a room's document and rebinds it to another class, without starting from a template. It is how the preset rooms eventually become editable: each one is rewritten as a document the player renders exactly as it does today.</p><div class="src">Self's prototypes; Embark's dynamic documents</div></div>
+</div>
+
+<h2>What gets built first</h2>
+<div class="tw"><table>
+<tr><th>Slice</th><th>What</th><th>Who</th></tr>
+<tr><td>R1</td><td>Chart room, blank. The document as engine objects, the player for about twelve parts (title, line, list, number, action word, dial, glyph, image, divider, stack, grid, ghost), the strict <code>patchRoom</code> tool, the validator, ghost and undo</td><td>Core (document, ops, tool), Builder A (player, motion)</td></tr>
+<tr><td>R2</td><td>Sight checks on the phone: offscreen render at the extremes, overlap, contrast, cut words. Ghost variants</td><td>Builder A, Design</td></tr>
+<tr><td>R3</td><td>Logic: the fact and wish bus and sandboxed scripts in JavaScriptCore with a reach line. Then WasmKit packs from the Mac</td><td>Core</td></tr>
+<tr><td>R4</td><td>Shaders: metallibs built on the Mac and loaded on the phone. Source compiled on the phone for previews</td><td>Builder A, Core</td></tr>
+<tr><td>R5</td><td>The Mac edge part builder: reads the source, writes a new part, builds, runs a simulator check and an accessibility audit, and queues it for the next install</td><td>Core (Mac)</td></tr>
+<tr><td>R6</td><td>Rewrite one preset room as a document that renders exactly the same, then let you reshape it by talking</td><td>Builder B, Design</td></tr>
+</table></div>
+
+<h2>Risks and what isn't verified</h2>
+<ul>
+<li>SwiftUI's shader effects take only a precompiled metallib. Whether a metallib downloaded after install loads on a real device is <span class="un">unverified</span>, and R4 starts by testing it. If it doesn't load, on-phone shaders draw through a Metal view instead.</li>
+<li>WasmKit speed on the phone is <span class="un">unverified</span>. The interpreter is many times slower than native, which is fine for reactions and too slow for drawing; drawing stays native.</li>
+<li>Free developer profiles expire every 7 days. The release-train idea relies on that refresh anyway.</li>
+<li>The older Build with Tess page (stretch 3) said Claude never writes code or screens. Your ask today supersedes it for this room. Its privacy section is already superseded by your rule this morning: everything may go to Claude except the key.</li>
+</ul>
+
+<hr>
+<p class="meta">Sources: Airbnb Ghost Platform, Lyft, DoorDash and Shopify engineering posts; DivKit; Flutter rfw; Cash App Redwood and Zipline; Google Generative UI (Nov 2025) and A2UI v0.8; MCP Apps and the OpenAI Apps SDK; Vercel json-render; Apple UICoder (NAACL 2024); Jelly (CHI 2025); "Let Me Speak Freely?" (2024); UIClip; Morphic, Self, HyperCard, Dynamicland, Ink &amp; Switch on malleable software; App Review guideline 2.5.2, DPLA 3.3.1(B) and Apple DTS on dlopen (Jan 2025); WasmKit; Metal and SwiftUI ShaderLibrary docs. Links are in the research notes.</p>
+</main>
+
+<script>
+(()=>{
+const PLANTS=[{n:'Orchid',d:6},{n:'Monstera',d:4},{n:'Fern',d:2},{n:'Basil',d:1}];
+const STEPS=[
+ {say:'Start a room for my plants',tier:'1',tc:'var(--teal)',name:'Spec',took:'instant',why:'Two parts from the kit, a title and a line bound to the Plant class.',
+  ops:[{op:'add',path:'/parts/-',value:{id:'title',kind:'title',text:'Plants'}},{op:'add',path:'/parts/-',value:{id:'line',kind:'line',text:'{count} plants, the {thirstiest} is thirsty',bind:'Plant'}}]},
+ {say:'Show them by when I last watered',tier:'1',tc:'var(--teal)',name:'Spec',took:'instant',why:'A list part bound to Plant, sorted by the lastWatered field. It shows the last time, never a run of days.',
+  ops:[{op:'add',path:'/parts/-',value:{id:'list',kind:'list',bind:'Plant',sort:'-daysSince(lastWatered)',row:{big:'name',small:'{daysSince} days since water'}}}]},
+ {say:'Make it calmer and airier',tier:'1',tc:'var(--teal)',name:'Spec',took:'instant',why:'Two steps on named traits, motion and density, so it survives any theme.',
+  ops:[{op:'replace',path:'/look/motion',value:'calm'},{op:'replace',path:'/look/density',value:'airy'}]},
+ {say:'Put a soft paper grain behind it',tier:'2',tc:'var(--gold)',name:'Shader',took:'about 3 s',why:'No token makes grain, so Tess writes a small noise shader, which the phone compiles and checks for contrast.',
+  ops:[{op:'add',path:'/looks/-',value:{id:'grain',kind:'shader',lib:'grain.metallib',fn:'paperGrain',amount:0.5,under:'room'}}]},
+ {say:'Glow the thirstiest one',tier:'2½',tc:'var(--ember)',name:'Logic pack',took:'about 20 s',why:'A reaction. The list posts a fact for each plant, and a small rule wishes a glow on the one with the most days. Ask "why is the orchid glowing?" and Tess can trace it.',
+  ops:[{op:'add',path:'/reactions/-',value:{id:'thirst',when:'fact Plant.daysSince',claim:'thirstiest = max(daysSince)',wish:'glow(list.row[thirstiest])',pack:'thirst.wasm'}}]},
+ {say:'Add a Watered button that ticks it off',tier:'1',tc:'var(--teal)',name:'Spec, wider reach',took:'instant, then one tap',why:'An action word from the kit. It writes to your plants, which widens what this room may touch, so that waits for its own tap.',
+  reach:'This room can now mark plants watered',
+  ops:[{op:'add',path:'/parts/-',value:{id:'act',kind:'actionWord',verb:'Watered',object:'{thirstiest}',does:'Plant.lastWatered = now'}},{op:'add',path:'/reach/-',value:'write Plant.lastWatered'}]},
+ {say:'Make the list a ring of pots I can spin',tier:'3',tc:'var(--slate)',name:'New part',took:'minutes, then your next install',why:'The kit has no spinnable ring. Tess writes it in Swift on the Mac, builds it, and checks it in the simulator. It arrives with your next install, and the list stays until then.',
+  ops:[{op:'queue',part:'potRing',status:'building on the Mac, then in your next install'}],noRender:true}
+];
+let at=0,reach=false,plants=PLANTS.map(p=>({...p})),wateredUndo=null;
+const $=id=>document.getElementById(id);
+const doc=()=>{const d={room:'Chart room',schema:1,parts:[],look:{motion:'designed',density:'designed'},looks:[],reactions:[],reach:['read Plant']};
+  for(let i=0;i<at;i++)STEPS[i].ops.forEach(o=>{if(o.op==='queue'){(d.queued=d.queued||[]).push(o.part);return}const k=o.path.split('/')[1];if(o.op==='replace'){d[k][o.path.split('/')[2]]=o.value}else d[k].push(o.value)});
+  if(at>=6&&!reach)d.reach=d.reach.filter(x=>!x.startsWith('write'));return d};
+function render(fresh){
+  const d=doc(),ph=$('ph'),room=$('room');const has=id=>d.parts.some(p=>p.id===id);
+  $('blank').style.opacity=d.parts.length?0:1;
+  ph.classList.toggle('airy',d.look.density==='airy');ph.classList.toggle('calm',d.look.motion==='calm');ph.classList.toggle('grained',d.looks.length>0);
+  const sorted=[...plants].sort((a,b)=>b.d-a.d),th=sorted[0];const glow=d.reactions.length>0;
+  let h='';
+  if(has('title'))h+='<div class="r-title'+(fresh==='title'?' fade-in':'')+'">Plants</div>';
+  if(has('line'))h+='<div class="r-line'+(fresh==='title'?' fade-in':'')+'">'+plants.length+' plants, the '+th.n.toLowerCase()+' is thirsty</div>';
+  if(has('list'))h+='<div class="r-list'+(fresh==='list'?' fade-in':'')+'">'+sorted.map(p=>'<div class="r-row'+(glow&&p===th&&p.d>0?' thirsty':'')+'"><span class="nm">'+p.n+'</span><span class="d">'+(p.d===0?'watered today':'<b>'+p.d+'</b> '+(p.d===1?'day':'days')+' since water')+'</span></div>').join('')+'</div>';
+  room.innerHTML=h;
+  const a=$('act');a.hidden=!has('act');a.disabled=!reach;a.textContent='Watered'+(th&&th.d>0?' the '+th.n.toLowerCase():'');
+  $('steps').innerHTML=STEPS.map((s,i)=>'<button data-i="'+i+'" class="'+(i<at?'done':i===at?'next':'')+'"><span class="k">'+(i+1)+'</span><span>'+s.say+'</span></button>').join('');
+  $('undo').disabled=at===0;
+  const o=$('out');
+  if(!at){o.innerHTML='<div class="tl">Nothing yet</div><div class="why">Start with the first sentence.</div>';return}
+  const s=STEPS[at-1];o.style.setProperty('--tc',s.tc);
+  o.innerHTML='<div class="tl">Tier '+s.tier+', '+s.name+', '+s.took+'</div><div class="why">'+s.why+'</div>'+
+   (s.reach&&!reach?'<div class="reach">'+s.reach+'<button id="allow">Allow</button></div>':'')+
+   '<pre class="ops mono">'+s.ops.map(x=>JSON.stringify(x)).join('\n')+'</pre><pre class="doc mono">'+esc(JSON.stringify(d,null,2))+'</pre>';
+  const al=$('allow');if(al)al.onclick=()=>{reach=true;render()};
+}
+const esc=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+$('steps').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;if(i!==at)return;at++;const k=STEPS[i].ops[0].value&&STEPS[i].ops[0].value.id;render(k);$('note').textContent=''});
+$('undo').onclick=()=>{if(!at)return;if(at===6)reach=false;at--;render();$('note').textContent=''};
+$('reset').onclick=()=>{at=0;reach=false;plants=PLANTS.map(p=>({...p}));render();$('note').textContent=''};
+$('act').onclick=()=>{if(!reach)return;const th=[...plants].sort((a,b)=>b.d-a.d)[0];if(th.d===0)return;const was=th.d;th.d=0;render();
+  const n=$('note');n.innerHTML=th.n+', watered <button>Undo</button>';n.querySelector('button').onclick=()=>{th.d=was;render();n.textContent=''};clearTimeout(wateredUndo);wateredUndo=setTimeout(()=>{n.textContent=''},10000)};
+render();
+// final document for the static section
+const save=at;at=6;reach=true;$('finaldoc').textContent=JSON.stringify(doc(),null,2);at=save;reach=false;render();
+})();
+</script>
