@@ -417,3 +417,12 @@ On the workout's Done board, the pounds in "41 min, 12 sets, 9,795 lb" count up 
 - Only the pounds count; minutes and sets are shown as they are.
 - Reduce Motion: the final number is simply there.
 - Test: t67 paper and black green; pct.js freezes the clock at 300 ms (CT1.png: 6,930 lb) and after (CT2.png: 9,795 lb).
+
+## Sheet 350: done steps are struck by the pen
+
+In cooking and routine modes, the step you just finished is struck in the step list by the same pen stroke as the shopping list (332): a 1.5 pt line drawn left to right across the word in 320 ms (100 ms delay, cubic-bezier(.3,.7,.3,1), a hair of tilt), then it stays struck.
+
+- The line stays inside the word's box, so nothing reaches past the right edge.
+- Earlier done steps keep their plain strike. Undo removes it.
+- Reduce Motion: the strike is simply there.
+- Test: t67 paper and black green (lines whole); pjd.js finishes "Char" and reads it as the just-done step, struck (JD1.png).

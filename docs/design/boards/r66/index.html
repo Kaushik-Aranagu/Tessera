@@ -1515,12 +1515,12 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
    (s.br?'<div class="dk-breath">'+(inh?'breathe in':'breathe out')+'</div>':'<div class="dk-breath" aria-hidden="true"></div>')+
    '<div class="dk-time"><b class="o">'+mm(S.left)+'</b><span>'+(S.pause?'paused':s.pg?'to about page&nbsp;'+(s.pg+Math.round(s.mv[0][1]*s.ppm/60)):s.mv[S.j+1]?'then '+s.mv[S.j+1][0].toLowerCase():'then '+(ST[S.i+1]?ST[S.i+1].k.toLowerCase():'sleep'))+'</span></div>'+
    (s.mv.length>1?'<div class="dk-moves">'+s.mv.map((q,j)=>'<div class="'+(j<S.j?'dn':j===S.j?'on':'')+'"><span>'+q[0]+'</span><span class="o">'+mm(q[1])+'</span></div>').join('')+'</div>':'')+
-   '<div class="dk-steps">'+ST.map((x,i)=>'<div data-a="st'+i+'" class="'+(i===S.i?'on':'')+(S.done.has(i)?' dn':S.skip.has(i)?' sk':'')+'">'+(S.skip.has(i)?'<i>tomorrow</i>':'')+x.k+'</div>').join('')+'</div>'+
+   '<div class="dk-steps">'+ST.map((x,i)=>'<div data-a="st'+i+'" class="'+(i===S.i?'on':'')+(S.done.has(i)?' dn'+(S.jd===i?' jd':''):S.skip.has(i)?' sk':'')+'">'+(S.skip.has(i)?'<i>tomorrow</i>':'')+x.k+'</div>').join('')+'</div>'+
    '<div class="dk-verb" data-a="next">Next</div><div class="dk-sub"><span data-a="pause">'+(S.pause?'go on':'pause')+'</span><span data-a="skip">not tonight</span></div>');
    if(lastKey&&!RM&&key.split('|').slice(0,2).join()!==lastKey.split('|').slice(0,2).join())P.querySelectorAll('.dk-h,.dk-big,.dk-cue,.dk-time').forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(14px)',filter:'blur(4px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:700,delay:i*90,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key;P.querySelectorAll('.dk-cue,.dk-top span').forEach(fitLine);const bg=P.querySelector('.dk-big');if(bg){let f=84;bg.style.fontSize=f+'px';while(bg.scrollWidth>bg.clientWidth+1&&f>40){f-=4;bg.style.fontSize=f+'px'}}}
   else{const o=P.querySelector('.dk-time .o');if(o&&!S.fin){const v=mm(S.left);if(o.textContent!==v){const w=o.textContent;o.textContent=v;numRoll(o,w)}}const b=P.querySelector('.dk-breath');if(b&&ST[S.i].br){const t=inh?'breathe in':'breathe out';if(b.textContent!==t)b.textContent=t;const f=inh?breath/4:1-(breath-4)/6;b.style.letterSpacing=(.04+f*.5).toFixed(3)+'em';b.style.opacity=(.45+f*.45).toFixed(2)}}}
  function step(){let n=-1;for(let k=1;k<=ST.length;k++){const q=(S.i+k)%ST.length;if(!S.done.has(q)&&!S.skip.has(q)){n=q;break}}if(n<0){S.fin=1;return paint()}go2(n)}
- function next(){if(S.fin)return back();const s=ST[S.i];if(s.mv[S.j+1]){S.j++;S.left=s.mv[S.j][1];return paint()}const was=S.i;S.done.add(was);receipt(el,s.k+', tended'+(s.pg?', about page '+(s.pg+Math.round((s.mv[0][1]-S.left)*s.ppm/60)):''),()=>{S.done.delete(was);S.fin=0;go2(was)});step()}
+ function next(){if(S.fin)return back();const s=ST[S.i];if(s.mv[S.j+1]){S.j++;S.left=s.mv[S.j][1];return paint()}const was=S.i;S.done.add(was);S.jd=was;setTimeout(()=>{if(S.jd===was)S.jd=null},700);receipt(el,s.k+', tended'+(s.pg?', about page '+(s.pg+Math.round((s.mv[0][1]-S.left)*s.ppm/60)):''),()=>{S.done.delete(was);S.fin=0;go2(was)});step()}
  paint();const iv=setInterval(()=>{if(!document.contains(el))return;if(!S.fin&&!S.pause&&S.left>0){S.left--;if(!S.left){const s=ST[S.i];if(s.mv[S.j+1]){S.j++;S.left=s.mv[S.j][1]}}}paint()},250);
  let sub=0;const iv2=setInterval(()=>{},1000);
  window.__rt.fast=n=>{S.left=Math.max(1,S.left-n)};window.__rt.next=next;return ()=>{clearInterval(iv);clearInterval(iv2)}}};
@@ -1561,7 +1561,7 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
    '<div class="tk-big tk-wrap">'+s.t+'</div><div class="tk-how">'+s.d+'</div><div class="tk-cue"><b>Done when</b> '+s.cue+'</div>'+
    '<div class="tk-rule"></div><div class="tk-lb">Needs</div>'+s.ing.map(([a,b])=>lead(a,b)).join('')+
    '<div class="tk-rule"></div><div class="tk-lb">Timers</div>'+timers+
-   '<div class="tk-steps">'+ST.map((x,i)=>'<div data-a="st'+i+'" class="'+(i===S.i?'on':'')+(S.done.has(i)?' dn':'')+'">'+x.k+'</div>').join('')+'</div>'+
+   '<div class="tk-steps">'+ST.map((x,i)=>'<div data-a="st'+i+'" class="'+(i===S.i?'on':'')+(S.done.has(i)?' dn'+(S.jd===i?' jd':''):'')+'">'+x.k+'</div>').join('')+'</div>'+
    '<div class="tk-verb" data-a="next">'+(ST.filter((_,i)=>!S.done.has(i)).length===1&&!S.done.has(S.i)?'Serve':'Next')+'</div><div class="tk-sub">'+(S.done.has(S.i)?'turn to what is left':'swipe up, or tap')+'</div>';
   if(key!==lastKey||force){P.innerHTML=html;if(lastKey&&!RM&&key.split('|')[0]!==lastKey.split('|')[0])[...P.children].forEach((e,i)=>e.animate([{clipPath:'inset(0 0 100% 0)',transform:'translateY(-8px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:360,delay:i*28,easing:'steps(6)',fill:'backwards'}));lastKey=key;P.querySelectorAll('.tk-how,.tk-cue,.tk-top span').forEach(fitLine)}
   else{P.querySelectorAll('.tl.run .o').forEach((o,j)=>{const k=o.closest('[data-a]').dataset.a.slice(2);const v=mm(S.T[k]);if(o.textContent!==v){const w=o.textContent;o.textContent=v;numRoll(o,w)}});const tp=P.querySelector('.tk-top span:last-child');if(tp&&!S.fin)tp.textContent=mins()+' min in, eat about '+clock(new Date(Date.now()+left()*60000))}}
@@ -1573,7 +1573,7 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
  function spike(){if(RM)return paint();const g=P.cloneNode(true);g.classList.add('tk-torn');g.style.transformOrigin='50% -18px';P.after(g);if(navigator.vibrate)try{navigator.vibrate([10])}catch(e){}
   g.animate([{transform:'none',opacity:1},{transform:'translateY(-24px) scale(.18,.06)',opacity:0}],{duration:400,easing:'cubic-bezier(.55,0,.8,.4)',fill:'forwards'}).onfinish=()=>g.remove();
   lastKey='';paint();P.animate([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:620,delay:300,easing:'steps(8)',fill:'backwards'})}
- function next(){S.alert=null;if(S.fin)return back();const was=S.i;if(!S.done.has(was)){S.done.add(was);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);S.fin=0;S.i=was;paint()})}
+ function next(){S.alert=null;if(S.fin)return back();const was=S.i;if(!S.done.has(was)){S.done.add(was);S.jd=was;setTimeout(()=>{if(S.jd===was)S.jd=null},700);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);S.fin=0;S.i=was;paint()})}
   if(S.done.size===ST.length){S.fin=1;return spike()}let n=was;for(let k=1;k<=ST.length;k++){const q=(was+k)%ST.length;if(!S.done.has(q)){n=q;break}}S.i=n;const s=ST[n];if(s.tm&&S.T[s.k]==null)S.T[s.k]=s.tm;paint()}
  paint();const iv=setInterval(()=>{if(!document.contains(el))return;let ch=0;for(const k in S.T){if(S.T[k]>0){S.T[k]--;if(!S.T[k]){ch=1;S.alert=k;feed()}}}paint(ch)},1000);
  window.__ck.fast=n=>{for(const k in S.T)if(S.T[k]>0)S.T[k]=Math.max(1,S.T[k]-n)};window.__ck.next=next;return ()=>clearInterval(iv)}};
@@ -1728,6 +1728,10 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .tl.justgot .tn,.tl.justgot .tv,.tl.justgot .td{transition:opacity .3s .15s}
 @keyframes tkstrike{from{transform:scaleX(0) rotate(-.6deg)}to{transform:scaleX(1) rotate(-.6deg)}}
 @media (prefers-reduced-motion:reduce){.tl.justgot::after{animation:none}}
+/* 350: a step just done is struck by the same pen as the shopping list, then stays struck */
+.tk-steps div.jd,.dk-steps div.jd{text-decoration:none;position:relative}
+.tk-steps div.jd::after,.dk-steps div.jd::after{content:'';position:absolute;left:0;right:0;top:52%;height:1.5px;background:currentColor;transform-origin:0 50%;animation:tkstrike .32s .1s cubic-bezier(.3,.7,.3,1) both}
+@media (prefers-reduced-motion:reduce){.tk-steps div.jd::after,.dk-steps div.jd::after{animation:none}}
 .tl.now .tn{font-weight:700}
 .tk-steps{position:absolute;right:0;bottom:92px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .tk-steps div{font-size:17px;line-height:24px;color:var(--ink2)}
