@@ -54,12 +54,19 @@ enum ShownLines {
 @MainActor
 struct NoTrailingPeriodTests {
     @Test func deck() {
-        for day in [TrainingDay.ready(name: "Push A", minutes: 45, lifts: 4), .rest(next: "Pull A", nextDay: Date().addingTimeInterval(86400)), .done(name: "Push A", next: "Pull A"), .nothing] {
+        for day in [
+            TrainingDay.ready(name: "Push A", minutes: 45, lifts: 4),
+            .rest(next: "Pull A", nextDay: Date().addingTimeInterval(86400)),
+            .done(name: "Push A", next: "Pull A"),
+            .nothing,
+        ] {
             let screens = ShownLines.screens(DeckRoomContent(facts: DeckRoomContentTests.facts(day: day)),
                                              room: DeckRoomContent.room)
             let stops = ShownLines.endingInAFullStop(screens)
-        #expect(stops.isEmpty, "\(stops)")
-        for stop in stops { print("FULLSTOP: \(stop)") }
+            #expect(stops.isEmpty, "\(stops)")
+            for stop in stops {
+                print("FULLSTOP: \(stop)")
+            }
         }
     }
 
@@ -68,7 +75,9 @@ struct NoTrailingPeriodTests {
                                          room: SettingsRoomContent.room)
         let stops = ShownLines.endingInAFullStop(screens)
         #expect(stops.isEmpty, "\(stops)")
-        for stop in stops { print("FULLSTOP: \(stop)") }
+        for stop in stops {
+            print("FULLSTOP: \(stop)")
+        }
     }
 
     @Test func watch() {
@@ -76,7 +85,9 @@ struct NoTrailingPeriodTests {
                                          room: WatchRoomContent.room)
         let stops = ShownLines.endingInAFullStop(screens)
         #expect(stops.isEmpty, "\(stops)")
-        for stop in stops { print("FULLSTOP: \(stop)") }
+        for stop in stops {
+            print("FULLSTOP: \(stop)")
+        }
     }
 
     @Test func lookout() {
@@ -85,8 +96,10 @@ struct NoTrailingPeriodTests {
             let facts = LookoutRoomContent.Facts(snapshot: WeatherSample.make(now: now, fahrenheit: true))
             let screens = ShownLines.screens(LookoutRoomContent(facts: facts), room: LookoutRoomContent.room)
             let stops = ShownLines.endingInAFullStop(screens)
-        #expect(stops.isEmpty, "\(stops)")
-        for stop in stops { print("FULLSTOP: \(stop)") }
+            #expect(stops.isEmpty, "\(stops)")
+            for stop in stops {
+                print("FULLSTOP: \(stop)")
+            }
         }
     }
 
@@ -95,7 +108,9 @@ struct NoTrailingPeriodTests {
                                          room: GalleyRoomContent.room)
         let stops = ShownLines.endingInAFullStop(screens)
         #expect(stops.isEmpty, "\(stops)")
-        for stop in stops { print("FULLSTOP: \(stop)") }
+        for stop in stops {
+            print("FULLSTOP: \(stop)")
+        }
     }
 
     @Test func purse() {
@@ -103,6 +118,8 @@ struct NoTrailingPeriodTests {
                                          room: PurseRoomContent.room)
         let stops = ShownLines.endingInAFullStop(screens)
         #expect(stops.isEmpty, "\(stops)")
-        for stop in stops { print("FULLSTOP: \(stop)") }
+        for stop in stops {
+            print("FULLSTOP: \(stop)")
+        }
     }
 }

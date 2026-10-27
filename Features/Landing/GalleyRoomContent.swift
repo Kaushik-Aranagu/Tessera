@@ -327,7 +327,7 @@ struct GalleyShellHost: View {
         .liveScope(link == nil && recipe == nil && cookCover == nil)
         .fullScreenCover(item: $link) { $0.destination }
         .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
-        .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
+        .fullScreenCover(item: $cookCover) { CookEntry(cookID: $0.id) }
         #if DEBUG
             .task { await navigator.walkForStills(room: GalleyRoomContent.room) }
         #endif
@@ -339,6 +339,7 @@ struct GalleyShellHost: View {
         case .recipes: link = .recipes
         case .groceries: link = .groceries
         case .pantry: link = .pantry
+        case .cookTimer: break
         }
     }
 

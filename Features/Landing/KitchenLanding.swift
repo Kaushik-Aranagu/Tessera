@@ -10,6 +10,8 @@ struct GalleyTicket: Identifiable, Equatable {
         case recipes
         case groceries
         case pantry
+        /// Cooking mode (sheet 322): a pan timer's ticket; the step's index, -1 for a timer he spoke.
+        case cookTimer(Int)
     }
 
     enum Ink: Equatable {
@@ -360,7 +362,7 @@ struct KitchenLandingPage: View {
             .toolbar(.hidden, for: .navigationBar)
             // A cover hides the landing: its live drawing waits (sheet 286, live only when seen).
             .liveScope(cookCover == nil && recipe == nil)
-            .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
+            .fullScreenCover(item: $cookCover) { CookEntry(cookID: $0.id) }
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
     }
 
@@ -378,6 +380,7 @@ struct KitchenLandingPage: View {
         case .recipes: open(.recipes)
         case .groceries: open(.groceries)
         case .pantry: open(.pantry)
+        case .cookTimer: break
         }
     }
 

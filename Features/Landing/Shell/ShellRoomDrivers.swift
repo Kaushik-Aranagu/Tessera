@@ -148,6 +148,7 @@ final class GalleyRoomDriver: ShellRoomDriver {
         case .recipes: link = .recipes
         case .groceries: link = .groceries
         case .pantry: link = .pantry
+        case .cookTimer: break
         }
     }
 
@@ -221,7 +222,7 @@ private struct GalleyPresenter: View {
             .accessibilityHidden(true)
             .fullScreenCover(item: $driver.link) { $0.destination }
             .fullScreenCover(item: $driver.recipe) { RecipeView(recipeID: $0.id) }
-            .fullScreenCover(item: $driver.cookCover) { CookClockPage(cookID: $0.id) }
+            .fullScreenCover(item: $driver.cookCover) { CookEntry(cookID: $0.id) }
     }
 }
 

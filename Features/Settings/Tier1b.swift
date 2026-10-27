@@ -11,6 +11,12 @@ enum Tier1b {
     nonisolated static let quietID = "quietHoursV2"
     nonisolated static let kitchenID = "kitchenRoomsV2"
     nonisolated static let depthID = "depthOnWheels"
+    nonisolated static let cookModeID = "galleyCookMode"
+
+    /// Cooking mode (sheet 322): On unless he turned it Off.
+    @MainActor static var cookModeIsOn: Bool {
+        ReviewChoices.shared.value(of: cookModeID) != "Off"
+    }
 
     /// Depth on wheels (Settings > Look): On unless he turned it Off.
     @MainActor static var depthIsOn: Bool {
