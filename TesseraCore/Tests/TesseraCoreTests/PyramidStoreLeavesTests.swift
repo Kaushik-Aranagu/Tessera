@@ -76,7 +76,7 @@ struct PyramidStoreLeavesTests {
         let task = try make(.task, "Lexapro refill")
         try store.set("doneAt", to: .date(at(10, 7)), on: task)
         let note = try make(.note, "wifi")
-        try store.set("body", to: .string("wifi password is tacocat24"), on: note)
+        try store.set("body", to: .text("wifi password is tacocat24"), on: note)
         note.createdAt = at(10, 8)
         let all = leaves()
         let texts = all.map { $0.text }
@@ -111,7 +111,7 @@ struct PyramidStoreLeavesTests {
     @Test func everyLiftShownPassesTheBodyWall() throws {
         // His weigh-in is a private note; a set at that weight may read as his body weight.
         let weighIn = try make(.note, "Weigh-in")
-        try store.set("body", to: .string("82 kg this morning"), on: weighIn)
+        try store.set("body", to: .text("82 kg this morning"), on: weighIn)
         try store.set("isPrivate", to: .bool(true), on: weighIn)
         try workout("Push Day", on: at(10, 6), sets: [(82, 5), (60, 8)])
         let leaf = try #require(leaves().first { $0.kind == "workout" })
@@ -134,7 +134,7 @@ struct PyramidStoreLeavesTests {
         try store.set("doneAt", to: .date(at(10, 15, hour: 9)), on: task)
         _ = try make(.task, "Bins")
         let note = try make(.note, "Trip")
-        try store.set("body", to: .string("Trip packing\nsocks"), on: note)
+        try store.set("body", to: .text("Trip packing\nsocks"), on: note)
         note.createdAt = at(10, 9)
         let cook = try make(.cook, "Weeknight dal")
         try store.set("cookedAt", to: .date(at(10, 12)), on: cook)
