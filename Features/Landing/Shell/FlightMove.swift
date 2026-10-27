@@ -179,14 +179,10 @@ final class FlightRunner {
 
 /// A place steps back while a copy crosses it. Animatable on the flight's progress, so the 4% and 20% edges of the
 /// move are exact whatever the move's own curve.
-struct FlightStepBack: ViewModifier, Animatable {
+@Animatable
+struct FlightStepBack: ViewModifier {
     var progress: Double
-    var steps: Bool
-
-    var animatableData: Double {
-        get { progress }
-        set { progress = newValue }
-    }
+    @AnimatableIgnored var steps: Bool
 
     func body(content: Content) -> some View {
         content.opacity(steps ? FlightMove.placeOpacity(at: progress) : 1)
@@ -194,16 +190,12 @@ struct FlightStepBack: ViewModifier, Animatable {
 }
 
 /// The copy on its own layer, above every place, moving along its route and fading when it has its own ground.
-struct FlightCopy<Content: View>: View, Animatable {
+@Animatable
+struct FlightCopy<Content: View>: View {
     var progress: Double
-    let route: FlightRoute
-    let source: CGRect
-    @ViewBuilder var content: () -> Content
-
-    var animatableData: Double {
-        get { progress }
-        set { progress = newValue }
-    }
+    @AnimatableIgnored let route: FlightRoute
+    @AnimatableIgnored let source: CGRect
+    @AnimatableIgnored @ViewBuilder var content: () -> Content
 
     var body: some View {
         let rect = FlightMove.copyRect(route, at: progress)
