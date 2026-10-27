@@ -44,7 +44,8 @@ struct MemoryPyramidTests {
         #expect(!leaves.contains { $0.text.contains("locker") })
         #expect(!leaves.contains { $0.text.contains("Shoulder rehab") || $0.text.contains("Session notes") })
         #expect(leaves.contains { $0.text == "Private workout" } && leaves.contains { $0.text == "Private note" })
-        #expect(leaves.filter { $0.text == "Private workout" }.allSatisfy(\.stats.isEmpty))
+        let privateWorkouts = leaves.filter { $0.text == "Private workout" }
+        #expect(privateWorkouts.allSatisfy { $0.stats.isEmpty })
         // A leaf's path never says what kind of thing it is.
         let pyramid = build()
         for node in pyramid.nodes.values where node.level == .leaf {
