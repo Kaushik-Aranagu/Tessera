@@ -215,8 +215,30 @@ public struct PyramidDistiller {
         }
     }
 
-    /// The numbers in a text, normalized as a total prints: "1,200" and "1200.0" are both "1200".
+    /// The numbers a gist sentence claims, normalized as a total prints: "1,200" and "1200.0" are both "1200". This
+    /// side reads wide, so a sentence can't carry a number past the check: digits as they draw once folded
+    /// (full-width, circled, other scripts) and number words as the answer check reads them ("twenty", "２０"; input
+    /// hygiene H3). Every quantity `AnswerCheck` reads is read here too.
     nonisolated static func numbers(_ text: String) -> Set<String> {
+        let folded = text.precomposedStringWithCompatibilityMapping
+        var found = digits(folded)
+        for word in folded.lowercased().split(whereSeparator: { !$0.isLetter }) {
+            if let value = AnswerCheck.numberWords[String(word)] {
+                found.insert(PyramidStats.format(value))
+            }
+        }
+        return found
+    }
+
+    /// The numbers a cite or the node's totals hold. This side reads narrow, so it backs nothing it doesn't say in
+    /// digits (QA on #1477): only decimal digits count, in any script, and anything else (a number word, "½", "²",
+    /// "①") is a separator. So "two eggs" never backs a "2", "½" never backs a "1", and "10²" backs "10".
+    nonisolated static func held(_ text: String) -> Set<String> {
+        digits(text)
+    }
+
+    /// Runs of decimal digits, with "," and "." inside a run, read as numbers.
+    nonisolated static func digits(_ text: String) -> Set<String> {
         var found = Set<String>()
         var current = ""
         func flush() {
@@ -227,8 +249,10 @@ public struct PyramidDistiller {
             current = ""
         }
         for character in text {
-            if character.isASCII, character.isNumber {
-                current.append(character)
+            if character.unicodeScalars.count == 1, let scalar = character.unicodeScalars.first,
+               scalar.properties.numericType == .decimal, let digit = character.wholeNumberValue
+            {
+                current.append(String(digit))
             } else if character == "." || character == ",", !current.isEmpty {
                 current.append(character)
             } else {
@@ -244,7 +268,7 @@ public struct PyramidDistiller {
                              level: PyramidNode.Level) -> (sentences: [PyramidSentence], dropped: [PyramidDrop])
     {
         guard let drafts = drafts(from: input) else { return ([], [.unreadable]) }
-        let headNumbers = material.head.reduce(into: Set<String>()) { $0.formUnion(numbers($1.text)) }
+        let headNumbers = material.head.reduce(into: Set<String>()) { $0.formUnion(held($1.text)) }
         let headWalled = material.head.contains { $0.taint != .claudeSafe }
         var byPath: [String: [PackFragment]] = [:]
         for child in material.children {
@@ -256,7 +280,7 @@ public struct PyramidDistiller {
             let text = draft.text.trimmingCharacters(in: .whitespacesAndNewlines)
             let count = text.split { $0 == " " || $0 == "\n" }.count
             let cited = draft.cites.compactMap { byPath[$0] }
-            let backed = cited.joined().reduce(into: headNumbers) { $0.formUnion(numbers($1.text)) }
+            let backed = cited.joined().reduce(into: headNumbers) { $0.formUnion(held($1.text)) }
             func reason() -> PyramidDrop? {
                 if text.isEmpty {
                     return .empty
