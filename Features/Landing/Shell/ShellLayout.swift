@@ -87,6 +87,22 @@ enum ShellLayout {
         }
     }
 
+    /// From this size the caption wraps to two lines (the 15 pt line at Dynamic Type); below it, it fits one line or
+    /// takes a shorter cut.
+    static let captionWrapsFrom = DynamicTypeSize.xxxLarge
+
+    /// The extra height the caption's slot reserves for its second line (0 below `captionWrapsFrom`). Everything
+    /// under the caption sits this much lower, so nothing shifts later and nothing overlaps.
+    static func captionExtra(typeSize: DynamicTypeSize) -> CGFloat {
+        guard typeSize >= captionWrapsFrom else { return 0 }
+        let line = (15 * bodyScale(min(typeSize, .accessibility1)) * 1.3).rounded(.up)
+        return max(0, 2 * line - LandingPlace.caption.frame.height)
+    }
+
+    private static func bodyScale(_ size: DynamicTypeSize) -> CGFloat {
+        size == .xxxLarge ? 1.25 : (size >= .accessibility1 ? 1.4 : 1)
+    }
+
     /// A place's rect on screen (x not centred): its layout frame, y scaled to the screen's height. The action word
     /// grows up from its bottom edge with Dynamic Type, and the Page's viewport stops above whatever the word needs,
     /// so rows always end above it.
@@ -95,6 +111,13 @@ enum ShellLayout {
     {
         var rect = frame(place, in: layout)
         rect.origin.y *= scale
+        let extra = captionExtra(typeSize: typeSize)
+        let below = place != .actionWord && place != .tess && ownFrame(place).minY >= LandingPlace.widget.frame.minY
+        if place == .caption {
+            rect.size.height += extra
+        } else if below {
+            rect.origin.y += extra
+        }
         switch place {
         case .actionWord:
             let slot = actionSlotHeight(typeSize: typeSize)

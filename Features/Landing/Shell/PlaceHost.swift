@@ -121,6 +121,15 @@ private struct PlaceRenderer: View {
                 .padding(.top, 6)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
+        } else if place == .caption, typeSize >= ShellLayout.captionWrapsFrom {
+            // Large sizes: the line wraps to two; the slot reserves the second line (`ShellLayout.captionExtra`).
+            Text(lines.first ?? "")
+                .font(.custom("Figtree", size: 15, relativeTo: .body))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                .frame(width: size.width, height: size.height, alignment: .topLeading)
         } else {
             FitLine(forms: FitLine.cuts(lines.first ?? ""), size: 15, color: Theme.Colors.inkSecondary)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -250,6 +259,9 @@ private struct ShellPage: View {
     let act: (ShellIntent) -> Void
 
     @State private var settled = false
+    /// The rows are taller than the viewport. Only then does a row cross an edge; a page that fits shows every row
+    /// whole (a row near the foot of a short page is never left half faded).
+    @State private var scrolls = false
 
     var body: some View {
         ScrollView {
@@ -261,11 +273,14 @@ private struct ShellPage: View {
                         .animation(rowAnimation(index), value: settled)
                         .accessibilityLabel(row.detail.isEmpty ? row.title : "\(row.title), \(row.detail)")
                         // Sheets 294, 295: a row crossing the top or bottom edge rolls over it.
-                        .edgeRoll(axis: .vertical, preset: .row)
+                        .modifier(PageRowRoll(active: scrolls))
                 }
             }
         }
         .scrollIndicators(.hidden)
+        .onScrollGeometryChange(for: Bool.self) { $0.contentSize.height > $0.containerSize.height + 0.5 } action: {
+            scrolls = $1
+        }
         .onAppear { settled = true }
     }
 
@@ -287,6 +302,19 @@ private struct ShellPage: View {
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
         .contentShape(Rectangle())
+    }
+}
+
+/// A page row's roll over the viewport's edge, only on a page that scrolls.
+private struct PageRowRoll: ViewModifier {
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        if active {
+            content.edgeRoll(axis: .vertical, preset: .row)
+        } else {
+            content
+        }
     }
 }
 

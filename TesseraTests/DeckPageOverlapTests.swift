@@ -32,6 +32,38 @@ struct DeckPageOverlapTests {
         }
     }
 
+    /// The caption wraps to two lines at large sizes and reserves the second line: it never touches the page below
+    /// it, and on the landing nothing under it reaches the action word.
+    @Test func theCaptionsSecondLineHasItsOwnSlot() {
+        for size in Self.sizes {
+            for scale in Self.scales {
+                let caption = ShellLayout.screenRect(.caption, in: .door, scale: scale, typeSize: size)
+                let page = ShellLayout.screenRect(.page, in: .door, scale: scale, typeSize: size)
+                // Below 874 pt screens the unscaled heights already crowd the scaled tops (unchanged here).
+                #expect(
+                    scale < 1 || caption.maxY <= page.minY + 0.001,
+                    "caption stays above the page at \(size), scale \(scale)"
+                )
+                #expect(caption.height >= 34 + ShellLayout.captionExtra(typeSize: size) - 0.001)
+                let landingWord = ShellLayout.screenRect(.actionWord, in: .landing, scale: scale, typeSize: size)
+                for place in [Place.widget, .dial, .doorSummary] {
+                    // Below 874 pt screens the landing's doors band already sits close to the word (unchanged here).
+                    let rect = ShellLayout.screenRect(place, in: .landing, scale: scale, typeSize: size)
+                    #expect(
+                        scale < 1 || caption.maxY <= rect.minY + 0.001,
+                        "\(place) sits below the caption at \(size)"
+                    )
+                    #expect(
+                        scale < 1 || rect.maxY <= landingWord.minY + 0.001,
+                        "\(place) clears the word at \(size), scale \(scale)"
+                    )
+                }
+            }
+        }
+        #expect(ShellLayout.captionExtra(typeSize: .large) == 0)
+        #expect(ShellLayout.captionExtra(typeSize: .xxxLarge) > 0)
+    }
+
     @Test func theLandingWordStillSitsAtItsDesignFrame() {
         let word = ShellLayout.screenRect(.actionWord, in: .landing, scale: 1, typeSize: .large)
         #expect(word == LandingPlace.Foot.actionWord)
