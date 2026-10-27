@@ -33,6 +33,7 @@ over the edge of a drum:
 | Page rows (level 1) | The rows when a door's list turns or scrolls. Built on the board for the Watch's routine list (297). |
 | Switcher word (every landing) | The word under his finger when he drags it across. Built on the board (297): it fades through the edge only, with no lean, because the drag already skews it. |
 | Doors dial (reel) | It already has this: neighbours get smaller and blurred, which is the same roll. The reel's spin uses the same fade. |
+| Every other place | See sheet 298: each kind of place has its own clean exit. |
 | Day strip, week fold | The hours or days scrolling across. |
 | Lookout hours | The hour columns going left. |
 | Log wall | Words leaving the wall on a page change. |

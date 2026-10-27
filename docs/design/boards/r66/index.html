@@ -352,8 +352,9 @@ $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('
 .one .big .bw{font-weight:700;font-size:38px;letter-spacing:-.02em}
 .one .big .bn{font-family:var(--num);font-weight:400;font-size:56px;letter-spacing:-.01em}
 .one .big .strike{position:absolute;left:0;top:55%;height:1.5px;background:var(--ink);width:0}
-.one .mid{height:28px;font-size:20px;font-weight:500;white-space:nowrap;overflow:hidden;max-width:262px;margin-top:6px}
-.one .sml{height:22px;font-size:15px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden;margin-top:6px}
+.one .blk.wait > :not(:first-child){opacity:0}
+.one .mid{height:28px;font-size:20px;font-weight:500;white-space:nowrap;overflow-x:clip;overflow-y:visible;max-width:262px;margin-top:6px}
+.one .sml{height:22px;font-size:15px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow-x:clip;overflow-y:visible;margin-top:6px}
 .one canvas{position:absolute;right:0;top:44px;width:80px;height:80px}
 .apps{position:absolute;left:24px;right:24px;top:640px;height:120px;overflow:hidden;touch-action:none}
 .apps .ar{position:absolute;left:0;right:0;height:40px;display:flex;align-items:center;gap:14px;white-space:nowrap;cursor:pointer;transition:top .32s cubic-bezier(.3,.9,.3,1)}
@@ -1304,8 +1305,9 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 {const st=document.createElement('style');st.textContent=`
 .lnav{position:absolute;right:16px;top:56px;font:500 15px var(--sans);color:var(--ink2);background:none;border:0;min-height:44px;padding:0 8px;cursor:pointer;z-index:6}
 .lband{position:absolute;left:0;right:0;top:106px;height:76px;z-index:6}
-.swx{position:absolute;left:24px;top:0;width:200px;height:76px;touch-action:none;cursor:grab;overflow:hidden}
-.swx .sw{position:absolute;left:0;top:10px;height:56px;line-height:56px;white-space:nowrap;font:300 38px/56px var(--sans);letter-spacing:-.025em;color:var(--ink);font-variation-settings:'wght' 300}
+.swx{position:absolute;left:0;top:0;width:224px;height:76px;touch-action:none;cursor:grab;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 24px);mask-image:linear-gradient(to right,transparent 0,#000 24px)}
+.swx.moving{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 24px,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to right,transparent 0,#000 24px,#000 calc(100% - 26px),transparent)}
+.swx .sw{position:absolute;left:24px;top:10px;height:56px;line-height:56px;white-space:nowrap;font:300 38px/56px var(--sans);letter-spacing:-.025em;color:var(--ink);font-variation-settings:'wght' 300}
 .swx .sw .ch{display:inline-block;white-space:pre;transform-origin:50% 70%;will-change:transform}
 .swx .pk{position:absolute;top:10px;line-height:56px;font:300 38px/56px var(--sans);letter-spacing:-.025em;color:var(--ink2);white-space:nowrap;opacity:.0;filter:blur(1.5px);pointer-events:none}
 .swn{position:absolute;left:228px;right:24px;top:18px;height:52px;overflow:hidden}
@@ -1369,18 +1371,19 @@ function switcherX(host,cfg,onChange){const ax={x:cfg.x||[],y:cfg.y||cfg.x||[]};
    L.forEach((c,i)=>{const j=dir>0?i:L.length-1-i;anim(c,[{transform:'translateX('+(dir*90)+'px) skewX('+(-dir*22)+'deg)',filter:'blur(3px)',opacity:0,fontVariationSettings:"'wght' 800"},{transform:'translateX('+(-dir*4)+'px) skewX('+(dir*4)+'deg)',filter:'blur(0)',opacity:1,fontVariationSettings:"'wght' 700",offset:.55},{transform:'none',filter:'blur(0)',opacity:1,fontVariationSettings:"'wght' 300"}],{duration:720,delay:120+j*22,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'})})}
   else{OL.forEach((c,i)=>{anim(c,[{transform:'perspective(200px) rotateX(0)',opacity:1},{transform:'perspective(200px) translateY('+(-dir*26)+'px) rotateX('+(dir*80)+'deg)',opacity:0,filter:'blur(2px)'}],{duration:300,delay:i*18,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'})});
    L.forEach((c,i)=>{anim(c,[{transform:'perspective(200px) translateY('+(dir*30)+'px) rotateX('+(-dir*85)+'deg)',opacity:0,filter:'blur(2px)',fontVariationSettings:"'wght' 600"},{transform:'perspective(200px) translateY('+(-dir*3)+'px) rotateX('+(dir*8)+'deg)',opacity:1,filter:'blur(0)',offset:.7},{transform:'none',opacity:1,filter:'blur(0)',fontVariationSettings:"'wght' 300"}],{duration:620,delay:110+i*24,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'})})}
+  host.classList.add('moving');clearTimeout(host._mv);host._mv=setTimeout(()=>host.classList.remove('moving'),660+L.length*24);
   setTimeout(()=>oldW.remove(),340+OL.length*24)}
  // drag: the word follows, letters spread and weigh more; the next word shows at the edge
  let x0=null,y0,dx,dy,a;
  host.onpointerdown=e=>{x0=e.clientX;y0=e.clientY;dx=dy=0;a=null;host.setPointerCapture(e.pointerId);e.stopPropagation()};
- host.onpointermove=e=>{if(x0==null)return;dx=(e.clientX-x0)/K;dy=(e.clientY-y0)/K;a=lockAxis(dx,dy,a);if(!a)return;const d=a==='x'?dx:dy,u=Math.min(1,Math.abs(d)/90);
+ host.onpointermove=e=>{if(x0==null)return;dx=(e.clientX-x0)/K;dy=(e.clientY-y0)/K;a=lockAxis(dx,dy,a);if(!a)return;clearTimeout(host._mv);host.classList.add('moving');const d=a==='x'?dx:dy,u=Math.min(1,Math.abs(d)/90);
   sw.style.transform=a==='x'?'translateX('+d*.8+'px) skewX('+(-d*.06)+'deg)':'translateY('+d*.5+'px)';sw.style.letterSpacing=(-.025+u*.08)+'em';sw.style.fontVariationSettings="'wght' "+Math.round(300+u*300);
   const list=ax[a],nx=list[(ix[a]+(d<0?1:-1)+list.length)%list.length];if(list.length>1){pk.textContent=nx.k;pk.style.opacity=(u*.7).toFixed(2);
-   if(a==='x'){pk.style.left=(d<0?200-u*60:-pk.offsetWidth+u*60)+'px';pk.style.top='10px'}else{pk.style.left='0';pk.style.top=(d<0?66-u*30:-46+u*30)+'px'}}};
+   if(a==='x'){pk.style.left=(d<0?224-u*60:24-pk.offsetWidth+u*60)+'px';pk.style.top='10px'}else{pk.style.left='24px';pk.style.top=(d<0?66-u*30:-46+u*30)+'px'}}};
  host.onpointerup=()=>{if(x0==null)return;x0=null;const d=a==='x'?dx:dy;
   if(a&&Math.abs(d)>40){commit(a,d<0?1:-1);return}
   if(!a){commit('x',1);return}
-  if(!RM)sw.animate([{transform:sw.style.transform||'none'},{transform:'none'}],{duration:280,easing:'cubic-bezier(.3,1.4,.4,1)'});sw.style.transform='';sw.style.letterSpacing='';sw.style.fontVariationSettings='';pk.style.opacity=0};
+  if(!RM)sw.animate([{transform:sw.style.transform||'none'},{transform:'none'}],{duration:280,easing:'cubic-bezier(.3,1.4,.4,1)'});sw.style.transform='';sw.style.letterSpacing='';sw.style.fontVariationSettings='';pk.style.opacity=0;host._mv=setTimeout(()=>host.classList.remove('moving'),300)};
  // breath: a light weight wave through the letters, about every 9 s, 1.2 s long
  const br=RM?0:setInterval(()=>{if(x0!=null)return;L.forEach((c,i)=>c.animate([{fontVariationSettings:"'wght' 300"},{fontVariationSettings:"'wght' 520"},{fontVariationSettings:"'wght' 300"}],{duration:700,delay:i*45,easing:'ease-in-out'}))},9000);
  onChange(word(),'x');return ()=>clearInterval(br)}
@@ -1525,8 +1528,8 @@ function widgetV3(el,R,id){const W=R.w,box=h('div','one lw');box.style.zIndex=6;
    dot.animate([{transform:'scale(0)'},{transform:'scale(1.6)',offset:.5},{transform:'scale(0)'}],{duration:260,delay:200,fill:'both'}).onfinish=()=>dot.remove();
    s.animate([{opacity:0,transform:'scale(.06) rotate(-70deg)',filter:'blur(1px)'},{opacity:1,transform:'scale(1.08) rotate(4deg)',filter:'blur(0)',offset:.7},{opacity:1,transform:'none'}],{duration:440,delay:330,fill:'both',easing:'cubic-bezier(.2,.8,.2,1)'})}}
   sv=s;loop=lp;return g}
- let gk=glyph(W[0]);cur=card(0);box.appendChild(cur);requestAnimationFrame(()=>fit(cur));document.fonts&&document.fonts.ready.then(()=>fit(cur));
- const enter=b=>{if(RM)return;const d=(EMIT[id]||(()=>0))(el,W[wi],b,gk,loop)||0;(THEMES[WORDIN[id]||R.theme]||THEMES.wind)([...b.children].slice(1).filter(x=>!(d&&x.classList.contains('big')&&id==='notes')));if(!(id==='routines'&&gk==='bird'))setTimeout(()=>loop&&loop(),d)};
+ let gk=glyph(W[0]);cur=card(0);if(!RM)cur.classList.add('wait');box.appendChild(cur);requestAnimationFrame(()=>fit(cur));document.fonts&&document.fonts.ready.then(()=>fit(cur));
+ const enter=b=>{b.classList.remove('wait');if(RM)return;const d=(EMIT[id]||(()=>0))(el,W[wi],b,gk,loop)||0;(THEMES[WORDIN[id]||R.theme]||THEMES.wind)([...b.children].slice(1).filter(x=>!(d&&x.classList.contains('big')&&id==='notes')));if(!(id==='routines'&&gk==='bird'))setTimeout(()=>loop&&loop(),d)};
  function show(n,ax,sgn){const nb=card(n);box.appendChild(nb);fit(nb);gk=glyph(W[n],sv);if(RM){cur.remove();cur=nb;wi=n;return}
   const m=ax==='x'?360:212;nb.style.transform=ax==='x'?'translateX('+(sgn*m)+'px)':'translateY('+(sgn*m)+'px)';
   const old=cur;requestAnimationFrame(()=>requestAnimationFrame(()=>{nb.style.transition=old.style.transition='transform .38s cubic-bezier(.3,.9,.3,1)';nb.style.transform='none';old.style.transform=ax==='x'?'translateX('+(-sgn*m)+'px)':'translateY('+(-sgn*m)+'px)'}));
@@ -2344,9 +2347,10 @@ function thGalleyHang(byTess){const el=current,tix=el&&el.querySelector('.tix');
  const old=tix.querySelector('.tk.th');if(old)old.remove();
  const tk={id:'dal2',title:'Dal',color:'clay',pages:[{sub:'tomorrow, 40 min',lines:['Soak tonight','Red lentils']}]};
  const e=h('div','tk th');e.innerHTML='<div class="clip"></div><div class="sheet"><div class="face front">'+pageHTML(tk,0)+'</div><div class="face back"></div></div>';
- const tr=thRect(tix);const hang=()=>{e.style.flex='0 0 0px';e.style.opacity=0;e.style.transformOrigin='50% 0';tix.appendChild(e);tix.classList.add('n5');railSway(tix,e,120);if(byTess)e.querySelector('.clip').classList.add('tess');void e.offsetWidth;
+ const tr=thRect(tix);const hang=()=>{e.style.flex='0 0 0px';e.style.opacity=0;e.style.transformOrigin='50% 0';tix.appendChild(e);tix.classList.add('n5');railSway(tix,e,RM?0:500);if(byTess)e.querySelector('.clip').classList.add('tess');void e.offsetWidth;
   e.style.flex='';e.style.opacity='';const k=byTess?1.15:1;
-  if(!RM)e.animate([{transform:'translateY(-34px) rotate(10deg)',opacity:0},{transform:'translateY(0) rotate(-6deg)',opacity:1,offset:.42},{transform:'rotate(3deg)',offset:.64},{transform:'rotate(-1.2deg)',offset:.82},{transform:'none'}],{duration:1150*k,easing:'cubic-bezier(.3,.6,.4,1)'});
+  if(!RM)e.animate([{transform:'translateY(-34px) rotate(10deg)',opacity:0},{transform:'translateY(0) rotate(-6deg)',opacity:1,offset:.42},{transform:'rotate(3deg)',offset:.64},{transform:'rotate(-1.2deg)',offset:.82},{transform:'none'}],{duration:1150*k,delay:380,fill:'backwards',easing:'cubic-bezier(.3,.6,.4,1)'});
+  /* 298: the rail makes room first, with the new ticket held back; it drops in only at its full width, so its words never squeeze or cut */
   setTimeout(()=>thUndo(el,byTess,byTess?'hung Dal for tomorrow.':'Dal, hung for tomorrow.',()=>{e.animate([{transform:'none',opacity:1},{transform:'translateY(-30px) rotate(-4deg)',opacity:0}],{duration:260,easing:'ease-in',fill:'forwards'}).onfinish=()=>{e.style.flex='0 0 0px';setTimeout(()=>{e.remove();tix.classList.remove('n5')},500)}},()=>e.querySelector('.clip').classList.remove('tess')),500)};
  if(byTess)tessHand({x:tr.x+tr.w-70,y:tr.y-6,w:70,h:tr.h},{behind:pass,hold:1200}).then(hang);else hang()}
 function thGalleyDishes(byTess){const el=current;if(!el)return;const t=[...el.querySelectorAll('.tix .tk')].find(k=>/Dishes/.test(k.textContent));if(!t)return;
@@ -2519,5 +2523,15 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.da
     if(O.soft){b.style.filter=e>.05?'blur('+(1.2*e).toFixed(2)+'px)':'';b.style.opacity=String(1-.92*e)}})}))};
  requestAnimationFrame(roll)})();
 
+
+/* 298: words on a ticket never run past the paper's margin. A line that is too wide first loses its letter-spacing,
+   then steps down in size, to 9 pt at the least. */
+(function(){const fit=e=>{const face=e.closest('.face'),k=e.textContent+'|'+(face?face.clientWidth:0);if(e._fitK===k)return;e._fitK=k;e.style.letterSpacing=e.style.fontSize='';
+  const over=()=>e.scrollWidth>e.clientWidth+.5;if(!over())return;e.style.letterSpacing='0';let fs=parseFloat(getComputedStyle(e).fontSize);
+  while(over()&&fs>9){fs-=.5;e.style.fontSize=fs+'px'}};
+ const sweep=()=>document.querySelectorAll('#phone .face .ttk,#phone .face .sub,#phone .face .li').forEach(fit);
+ let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;sweep()})}).observe(document.querySelector('#phone'),{subtree:true,childList:true,characterData:true});sweep();
+ /* a ticket that is still opening has not reached its width yet, so look again while things settle */
+ setInterval(()=>{if(!document.hidden)sweep()},400)})();
 })();
 </script>
