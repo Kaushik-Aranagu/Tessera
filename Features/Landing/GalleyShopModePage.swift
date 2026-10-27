@@ -259,16 +259,24 @@ struct GalleyShopModePage: View {
             try? await Task.sleep(for: .milliseconds(300))
             withAnimation(.easeOut(duration: 0.2)) { faded = true }
             try? await Task.sleep(for: .milliseconds(200))
-            check(id)
+            // The next thing replaces this one in place: no cross-fade (two words never overlap), so the check is
+            // written without an animation and the ticket is whole again at once.
+            check(id, animated: false)
             pen = nil
             faded = false
             penProgress = 0
         }
     }
 
-    private func check(_ id: UUID) {
+    private func check(_ id: UUID, animated: Bool = true) {
         let checked = try? model.engine.perform(CheckListItem(item: id, time: AppClock.now), by: .user)
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        if animated {
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        } else {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { model.touch() }
+        }
         if checked == nil {
             TessVoice.shared.say("Didn't save that. Try again")
         }
