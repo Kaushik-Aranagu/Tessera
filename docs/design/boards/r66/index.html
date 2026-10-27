@@ -1100,7 +1100,7 @@ SCREENS.list={title:'A list',accent:'lists',tess:'Passports are in the blue fold
    if(dx>56||Math.abs(dx)<6){it.d=!it.d;e.classList.toggle('done',it.d);setTimeout(lay,RM?0:1500);receipt(el,it.n+(it.d?', done.':', back on the list.'),()=>{it.d=!it.d;lay()})}};it.e=e;return e});
  function lay(){const open=items.filter(i=>!i.d),done=items.filter(i=>i.d);let y=0;open.forEach(i=>{i.e.style.top=y+'px';i.e.classList.remove('done');y+=40});
   let lab=$('.slab',box);if(!lab){lab=h('div','slab','Done');box.appendChild(lab)}lab.style.top=(y+14)+'px';lab.style.color='var(--ink2)';y+=36;done.forEach(i=>{i.e.style.top=y+'px';i.e.classList.add('done');y+=40});
-  hdr.textContent=open.length?open.length+' of 14 left':'All done'}
+  const was=hdr.textContent;hdr.textContent=open.length?open.length+' of 14 left':'All done';numRoll(hdr,was)} // 314: the count rolls (sheet 313)
  lay();const f=h('button','foot','Add');f.style.color='var(--lists)';el.appendChild(f)}};
 
 /* Weather (243, first cut) */

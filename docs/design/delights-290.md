@@ -190,3 +190,15 @@ No full stops at the end of any of these (sheet 289).
 - For the builders: `Text` with `.contentTransition(.numericText(countsDown: true))` on the number alone, inside an
   `HStack` with the unchanged words, animated through `MotionPolicy`. The same helper fits every "N left" line in the
   app (Lists "6 of 14", Purse "about 2,125 still yours" keeps its "about").
+
+## 14. The list's count rolls too (sheet 314)
+
+- The same counter as §13 now runs on a list's page: "8 of 14 left" becomes "7 of 14 left" with only the 8 moving.
+  Checking a thing drops the new number in from above; Undo raises it back from below, so the direction tells which
+  way the list went. "of 14 left" never moves.
+- The count waits for the row to settle into Done (1.5 s, as before), so the row moves first and the number follows,
+  one thing at a time.
+- Reduce Motion: the number changes in place.
+- Measured on the board (`t58.js`): three things checked and one undone, in paper and black; the count always ends
+  whole and `t45.js` finds no stops.
+- For the builders: the same `numericText` helper as §13; every "N of M" and "N left" line uses it, never a redraw.
