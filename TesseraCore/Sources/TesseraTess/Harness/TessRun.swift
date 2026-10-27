@@ -707,18 +707,23 @@ public final class TessRun {
                 }
             }
             if last.role == .assistant {
-                let uses = last.content.compactMap { piece -> (String, String)? in
-                    if case let .toolUse(id, name, _) = piece {
-                        (id, name)
+                let uses = last.content.compactMap { piece -> (String, String, Data)? in
+                    if case let .toolUse(id, name, input) = piece {
+                        (id, name, input)
                     } else {
                         nil
                     }
                 }
-                state.messages.append(BrainMessage(.user, uses.map { id, name in
+                state.messages.append(BrainMessage(.user, uses.map { id, name, input in
                     if state.doneToolIDs.contains(id), let text = state.toolResults[id] {
                         return .toolResult(id: id, content: text, isError: false)
                     }
-                    if name == TessOpenTool.name || name == "query" || name == TessGuide.name {
+                    if name == TessGuide.name {
+                        // A pure read of what the app is: it runs again rather than reading as interrupted.
+                        let page = TessGuide.run(arguments: input)
+                        return .toolResult(id: id, content: page.text, isError: page.isError)
+                    }
+                    if name == TessOpenTool.name || name == "query" {
                         return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
                     }
                     return .toolResult(

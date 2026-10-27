@@ -100,6 +100,51 @@ struct TessGuideTests {
         #expect(!ToolPicker.pick("plan my week please", frame: frame).tools.contains(TessGuide.name))
     }
 
+    @Test func theGuideNeverCutsALeadingCall() throws {
+        // An ask about a look that is also about the app: the look calls still lead, and the guide comes after them.
+        let frame = ElementLooksTests().deckFrame()
+        let ask = "how do I make the dial denser and what does an index look like"
+        let pick = ToolPicker.pick(ask, frame: frame)
+        if pick.bound == nil, let at = pick.tools.firstIndex(of: TessGuide.name) {
+            let lead = pick.tools.prefix(at)
+            #expect(lead.allSatisfy { pick.matched.contains($0) || LookWords.calls.contains($0) })
+            for call in LookWords.calls where pick.looks {
+                #expect(pick.tools.contains(call), "\(call) in \(pick.tools)")
+            }
+        }
+        // Every call the ask named survives the cut.
+        let named = ToolPicker.pick("how do I start a workout from here", frame: frame)
+        #expect(named.matched.allSatisfy { named.tools.contains($0) })
+    }
+
+    @Test func anInterruptedGuideReadRunsAgainOnResume() async throws {
+        let helper = TessRunTests()
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Say pause on it")]])
+        let sonnet = ScriptedBrain(.sonnet, rounds: [[.text("Say pause on it")]])
+        let r = try helper.rig([.haiku: haiku, .sonnet: sonnet])
+        // Killed after the first read finished and before the guide ran.
+        let input = Data(#"{"path":"/calls/pauseRoutine"}"#.utf8)
+        let first = Data(#"{"path":"/rooms/watch"}"#.utf8)
+        var state = TessRunState(startedAt: .now, askText: "pause routine", aboutIDs: [],
+                                 messages: [BrainMessage(.user, text: "pause routine"),
+                                            BrainMessage(.assistant,
+                                                         [.toolUse(id: "t0", name: TessGuide.name, input: first),
+                                                          .toolUse(id: "t1", name: TessGuide.name, input: input)])])
+        state.doneToolIDs = ["t0"]
+        state.toolResults = ["t0": "Watch (Routines): what each place offers you"]
+        TessRunStore(url: r.url).save(state)
+        await r.run.resumeInterrupted()
+        let sent = try #require((haiku.requestsSeen + sonnet.requestsSeen).first)
+        // A pure read: the page itself, not "interrupted".
+        #expect(sent.messages.last?.content.contains {
+            if case let .toolResult(id, content, false) = $0 {
+                id == "t1" && content.hasPrefix("pauseRoutine:")
+            } else {
+                false
+            }
+        } == true)
+    }
+
     @Test func thePackCarriesTheContentsOnlyWithTheGuide() throws {
         let helper = TessRunTests()
         let r = try helper.rig([:], policy: .strict)

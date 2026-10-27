@@ -26,11 +26,12 @@ the screens and tools are built from. Tess reads it with one tool, `guide(path)`
 Wiring:
 
 - `ToolPicker.pick` offers `guide` on asks about the app or her ("how do I", "what does", "where is", "why did
-  you", `TessGuide.isAbout`). It goes right after the calls he named, so the 12-tool limit never cuts it.
+  you", `TessGuide.isAbout`). It goes right after the calls that lead (the ones he named and the look calls), so
+  it never pushes one of those out of the 12.
 - When the pick offers the guide, the pack carries `TessGuide.contentsLine`: one line saying what each shelf holds
   (tier 1).
-- `TessRun` runs `guide` like `open`: read only, with nothing written. A run interrupted before it ran reads as
-  interrupted, not "nothing was changed".
+- `TessRun` runs `guide` like `open`: a read, nothing written. A run resumed after a kill reads the page again,
+  since it is a pure read of what the app is.
 
 `TessGuideTests` fails if any of these lacks a page: a room, place, call, form, trait or tool. It also fails if a page
 names a path that isn't one, or if a page is clipped. A new call can't ship without a page.

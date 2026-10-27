@@ -89,8 +89,10 @@ public enum ToolPicker {
             tools = ["setLook", "showLooks"] + tools.filter { !LookWords.calls.contains($0) }
         }
         if TessGuide.isAbout(ask) {
-            // How the app or she works: the guide rides right after the calls he named, before the cut.
-            tools.insert(TessGuide.name, at: tools.prefix { named.contains($0) }.count)
+            // How the app or she works: the guide rides right after the calls that lead (the ones he named and the
+            // look calls), so the cut can only drop a shown call or a read, never one of those.
+            let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) }.count
+            tools.insert(TessGuide.name, at: lead)
         }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks)
