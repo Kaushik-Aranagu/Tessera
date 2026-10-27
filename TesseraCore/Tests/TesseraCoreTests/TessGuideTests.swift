@@ -69,8 +69,8 @@ struct TessGuideTests {
         let pause = read("/calls/pauseRoutine")
         #expect(!pause.isError && pause.text.contains("pauseRoutine") && pause.text.contains("Watch"))
         #expect(pause.text.contains("the thing he means by this"))
-        // Money is the phone's alone, and the page says so.
-        #expect(read("/calls/logSpend").text.contains("never Claude"))
+        // Money too, since his Oct 27 pick: any rung may run it, and it lands pending like every change.
+        #expect(read("/calls/logSpend").text.contains("Any rung may run it"))
         #expect(read("/rooms/").text == read("/rooms").text)
     }
 

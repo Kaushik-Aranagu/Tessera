@@ -6,6 +6,7 @@ import Testing
 /// Multi-dish Cook, Part A PR 3: privacy of the objects, the Now line, the Live Activity facts and the model's two
 /// tools.
 @MainActor
+@Suite(.oldWalls)
 struct CookLiveTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine

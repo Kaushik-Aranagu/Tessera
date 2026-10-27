@@ -8,6 +8,7 @@ import Testing
 /// for something Tess does not look up (money, body, sleep, a class outside the allow-list), or it is not a query
 /// (a clarifying question, the Now picker, a join across days, the op log).
 @MainActor
+@Suite(.oldWalls)
 struct QueryEvalTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine

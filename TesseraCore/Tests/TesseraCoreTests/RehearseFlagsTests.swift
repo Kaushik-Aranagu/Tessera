@@ -6,6 +6,7 @@ import Testing
 /// docs/ai/harness/rehearsal.md section 2: a bulk or structural ask is rehearsed on a copy first; a small one and a
 /// bound command never are. And the test world scores "rehearsed, then acted correctly".
 @MainActor
+@Suite(.oldWalls)
 struct RehearseFlagsTests {
     @Test func bulkAndStructuralAsksAreFlaggedAndSmallOnesAreNot() {
         for ask in ["Move all my chores to tomorrow", "move everything to tomorrow",

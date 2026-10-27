@@ -172,7 +172,7 @@ public final class Rehearsal {
                 failed.append(.refused(tool: call.name, line: "A rehearsal doesn't rehearse."))
                 continue
             }
-            if !onDevice, TessTools.tool(named: call.name)?.deviceOnly == true {
+            if !onDevice, ClaudeSees.keepsOnPhone(TessTools.tool(named: call.name)?.deviceOnly == true) {
                 receipts.append(Receipt(tool: call.name, line: "That isn't a call I can make here.", refused: true))
                 failed.append(.moneyOffPhone(call.name))
                 continue

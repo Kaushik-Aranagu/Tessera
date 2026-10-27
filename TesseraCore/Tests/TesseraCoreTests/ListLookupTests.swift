@@ -6,6 +6,7 @@ import Testing
 /// G40 (docs/product/kitchen-test-specs-wall-g40-g43-g44-oct17.md B1): a name that matches two lists asks which, and a
 /// repeat name opens the list that is there.
 @MainActor
+@Suite(.oldWalls)
 struct ListLookupTests {
     let store = ObjectStore.open(inMemory: true)
 

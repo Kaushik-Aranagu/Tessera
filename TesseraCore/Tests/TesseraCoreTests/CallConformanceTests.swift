@@ -5,12 +5,23 @@ import Testing
 
 /// Sheet 288, section 6: Tess's calls inherit one template and pass one suite. Every call on every place in every room
 /// is real, agrees with its tool on money, takes only its tool's arguments, binds from the frame when he needn't say
-/// anything, and a device-only call never reaches Claude. Every Tess tool sits on some place, so none escapes.
+/// anything, and (under the old walls, money kept off Claude) a device-only call never reaches Claude. Every Tess tool
+/// sits on some place, so none escapes.
 @MainActor
 struct CallConformanceTests {
     static let rooms = ["bridge", "log", "lookout", "deck", "galley", "watch", "purse"]
 
     @Test func everyCallOnEveryPlacePassesTheSuite() {
+        passesTheSuite()
+    }
+
+    /// The same suite with money kept off Claude, as before his Oct 27 pick: the wall check runs on every money call.
+    @Test(.oldWalls) func everyCallKeepsMoneyOnThePhoneUnderTheOldWalls() {
+        #expect(!ClaudeSees.moneyWrites)
+        passesTheSuite()
+    }
+
+    func passesTheSuite() {
         var checked = 0
         for room in Self.rooms {
             for place in ElementPlace.allCases {

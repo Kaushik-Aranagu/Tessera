@@ -7,7 +7,8 @@ import Foundation
 /// The wall runs here, at pack time, and trusts no source (Research home-pack-walls W1 to W16, decisions 7:22 and
 /// 7:31 PM PT Oct 16): routine titles and exercise names are his free text, exempt from the engine wall when he
 /// renames them, so the title and every best name go through it. On any hit there is no pack and no call at all; a
-/// partial mask would still leak through the rules line.
+/// partial mask would still leak through the rules line. While Claude sees everything (`ClaudeSees`, his Oct 27 call)
+/// only a key or prompt-steering text is a hit.
 public struct HomeDonePack: Equatable, Sendable {
     /// Why no pack was built.
     public enum Skip: Error, Equatable, Sendable {
@@ -57,7 +58,7 @@ public struct HomeDonePack: Equatable, Sendable {
         guard fact.sets > 0 else { return .failure(.noSets) }
         guard !fact.records.isEmpty || (fact.sinceLastDays ?? 0) >= 4 else { return .failure(.nothingToAdd) }
         guard !([fact.title] + fact.records).contains(where: {
-            isWalled($0, lastWeightKg: lastWeightKg) || PromptSteering.mentions($0)
+            ClaudeSees.blocks($0, walled: isWalled($0, lastWeightKg: lastWeightKg)) || PromptSteering.mentions($0)
         }) else {
             return .failure(.walled)
         }

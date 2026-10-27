@@ -6,6 +6,7 @@ import Testing
 /// The wall on the Add line, the Bar, Siri and tools (Product 8:40 AM PT Oct 17; Kitchen specs #759 A1, A2): it lives
 /// in AddGroceries, so every caller gets it.
 @MainActor
+@Suite(.oldWalls)
 struct GroceriesWallTests {
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]

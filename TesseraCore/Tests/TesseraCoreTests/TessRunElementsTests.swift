@@ -6,6 +6,7 @@ import Testing
 /// `TessRun.ask(_:frame:)`: the frame's fragments instead of "On screen", the picker's tools and rung, a bound short
 /// command with no model at all, a shell call handed to the host, and the new tools over their engine actions.
 @MainActor
+@Suite(.oldWalls)
 struct TessRunElementsTests {
     let helper = TessRunTests()
 
