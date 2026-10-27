@@ -66,7 +66,45 @@ struct DoorsDial: View {
         !reduceMotion && !reduceTransparency && !ProcessInfo.processInfo.isLowPowerModeEnabled
     }
 
+    @Environment(\.doorsForm) private var requestedForm
+    @Environment(\.liveScope) private var isShown
+    /// "and N more" turns the place into the index form until the shell asks for another form.
+    @State private var turnedToIndex = false
+
+    /// The form on screen: the requested one, the index when "and N more" was tapped, and the reel again when the
+    /// form does not fit (a large Dynamic Type size, or doors that cannot be set in 160 pt) so a door is never lost.
+    private var formLayout: DoorFormLayout? {
+        guard style == .landing, !large else { return nil }
+        let form = turnedToIndex && requestedForm == .sentence ? DoorsForm.index : requestedForm
+        guard form != .reel, !doors.isEmpty else { return nil }
+        return DoorForms.fit(form, names: doors.map { ($0.id, $0.name) }, focus: wrapped(focus), scale: scale)
+    }
+
     var body: some View {
+        Group {
+            if let layout = formLayout {
+                DoorsFormView(
+                    doors: doors, layout: layout, isShown: isShown, open: open,
+                    turnTo: { door in
+                        if let index = doors.firstIndex(of: door) {
+                            move(index - wrapped(focus))
+                        }
+                    },
+                    turnBy: { move($0) },
+                    showAll: { turnedToIndex = true }
+                )
+                .frame(width: DoorForms.frame.width, height: DoorForms.frame.height, alignment: .topLeading)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            } else {
+                reelBody
+            }
+        }
+        .onChange(of: requestedForm) { turnedToIndex = false }
+        .tesseraAnimation(isShown ? Theme.Motion.fadeIn : .linear(duration: 0), value: formLayout?.form)
+    }
+
+    @ViewBuilder
+    private var reelBody: some View {
         let count = doors.count
         ZStack(alignment: .leading) {
             if count > 0 {
