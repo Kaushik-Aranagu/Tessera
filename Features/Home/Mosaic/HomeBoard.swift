@@ -124,6 +124,16 @@ enum HomeBoard {
         return line
     }
 
+    /// No full stop on a shown line (Kaushik, Oct 26). The board flips letter by letter, so a trailing "." would arrive
+    /// as a piece of its own and slip past a whole-line check: the stops go before the flap split.
+    static func unstopped(_ segments: [DepartureSegment]) -> [DepartureSegment] {
+        segments.map { segment in
+            var shown = segment
+            shown.text = ShownLine.unstopped(segment.text, between: ", ")
+            return shown
+        }
+    }
+
     private static func line(of notice: HomeNotice) -> BoardLine {
         let target: BoardTarget = switch notice.target {
         case let .room(app): .room(app)
@@ -142,9 +152,9 @@ enum HomeBoard {
                     segments.append(DepartureSegment(text: String(word), kind: kind))
                 }
             }
-            return BoardLine(segments: segments, target: target)
+            return BoardLine(segments: unstopped(segments), target: target)
         }
-        return BoardLine(segments: DepartureLines.segments(of: notice.clause), target: target)
+        return BoardLine(segments: unstopped(DepartureLines.segments(of: notice.clause)), target: target)
     }
 
     /// The three lines at `rotation`: the date; the notice at `rotation` and the one after it (wrapping). A moment's
