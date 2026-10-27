@@ -302,7 +302,8 @@ struct HomeOneThing: View {
     static func bigSize(_ typeSize: DynamicTypeSize) -> CGFloat {
         let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
         let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: 38, compatibleWith: traits)
-        var size = scaled
+        // Never under the sheet's 38 pt, at the small text sizes too.
+        var size = max(scaled, 38)
         while size > 38, bigFont(size).lineHeight > bigSlot {
             size -= 1
         }
