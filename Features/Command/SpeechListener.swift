@@ -1,6 +1,7 @@
 import AVFoundation
 import Observation
 import Speech
+import TesseraTess
 
 /// Tess's ears (docs/design/speak.md, Research's speak-first-use.md). On-device only: `requiresOnDeviceRecognition`
 /// is always set, so the purpose strings stay true, and a language without on-device speech says so instead of
@@ -45,6 +46,9 @@ final class SpeechListener {
 
     /// Called once when listening ends: the transcript, or nil when cancelled or nothing came.
     var onFinish: ((String?) -> Void)?
+    /// What the screen shows right now: it primes the recogniser and pulls the transcript onto real names. The
+    /// caller sets it before `start`; empty means plain dictation.
+    var lexicon = VoiceLexicon()
     /// Whether the last listen ended because no word came in the first 5 s.
     private(set) var endedInSilence = false
 
@@ -128,7 +132,7 @@ final class SpeechListener {
         state = .idle
         let finish = onFinish
         onFinish = nil
-        finish?(send && !words.isEmpty ? words : nil)
+        finish?(send && !words.isEmpty ? lexicon.resolve(words) : nil)
     }
 
     private func begin(with recognizer: SFSpeechRecognizer) throws {
@@ -144,6 +148,7 @@ final class SpeechListener {
         request.shouldReportPartialResults = true
         request.requiresOnDeviceRecognition = true
         request.addsPunctuation = true
+        request.contextualStrings = lexicon.contextualStrings()
         self.request = request
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
