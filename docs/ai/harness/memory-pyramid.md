@@ -85,6 +85,120 @@ night writes every gist bottom up, and one edit stales only its chain's gists.
 - Under strict, every sent request is scanned for a walled leaf's words and for a key shape.
 - Pass line: zoom with gists at least as accurate as flat, with at most 70% of its input tokens.
 
+## P3 simulation (prototype, Oct 27): the backward pass on a made-up year
+
+`scripts/ai/pyramid_sim.py` runs with no model and no API call. It builds a seeded made-up year (workouts, cooks and
+notes, where each month favors one routine and one recipe) and a pyramid over it with the same totals and residuals
+as `MemoryPyramid`. A reader answers about 8 asks a night, and its answers are checked exactly. It counts the nodes
+opened and the tokens read per ask. The asks are: a day's routine or sets, a week's or month's workouts, a month's
+busiest day, a month's most-done routine or most-cooked recipe, and "when did I last do Legs".
+
+Four ways, the same asks:
+- **flat:** every leaf under the asked node, read at once.
+- **static:** the pyramid as P1 builds it. The reader digs when a node lacks the fact.
+- **per-node:** the backward pass. A fact dug for k times at one node is promoted onto that node.
+- **shared:** the backward pass with a weight shared per level. k digs for a kind of fact at a level promote it
+  onto every node of that level, each node's line computed exactly by the engine.
+
+The night pass demotes a line unused for 30 nights and keeps at most 3 promoted kinds per level. From night 30 the
+asks stop covering recipes. Results with seed 1, k = 3 (opens per ask, tokens per ask):
+
+| Nights | flat | static | per-node | shared |
+|---|---|---|---|---|
+| 1 | 1.0, 290 | 14.1, 498 | 14.1, 498 | 10.1, 358 |
+| 2-5 | 1.0, 891 | 6.8, 251 | 6.8, 251 | 1.7, 71 |
+| 6-10 | 1.0, 658 | 7.3, 273 | 5.8, 219 | 1.0, 44 |
+| 11-29 | 1.0, 748 | 7.3, 268 | 4.1, 157 | 1.0, 43 |
+| 30-45 | 1.0, 692 | 5.5, 205 | 1.6, 65 | 1.0, 43 |
+| 46-60 | 1.0, 747 | 5.7, 214 | 1.5, 61 | 1.0, 43 |
+
+Accuracy is 1.0 for every arm, because the reader digs until it finds the answer.
+
+What it shows:
+- **The shared backward pass meets P3's pass line easily.** Opens per ask fall from 10.1 to 1.7 by nights 2-5 and
+  to 1.0 after. Tokens fall to about 6% of flat. Seeds 2-5 give the same shape: shared reaches 1.0 opens by nights
+  6-10 every time.
+- **Sharing per level is what makes it fast.** The per-node arm needs k digs on each month separately, and asks
+  spread over months, so it takes about 30 nights to get close. This is the case for shared weights per level with
+  per-node offsets.
+- **Forgetting works.** The recipe line is demoted 30 nights after the asks stop (the lines after night 60 are
+  month: top routine, root: last done).
+- **k is the learning rate.** k = 1 learns in one night. k = 10 takes 6-10 nights. Neither costs accuracy here,
+  because a promoted line is computed exactly.
+- **Budget is the failure case.** With 1 promoted kind per month, the routine and recipe lines evict each other and
+  opens stay at 2.4 to 2.9 until the recipe asks stop. With a 5-night forget window, per-node keeps losing lines it
+  had earned. Budget and forgetting have to track the size of the ask mix.
+
+What it does not show yet:
+- Real asks are open-ended, not 8 fixed kinds.
+- A promoted line in words, written by a model, can be wrong. Here every line is the engine's exact fact.
+- The learned router and the confidence numbers ("Learned weights" in the design doc) are not in it yet. The next
+  version adds them, and paraphrased asks, so that routing has to be learned rather than read off the dates.
+
+## P3b simulation (prototype, Oct 27): learned routing weights and confidence
+
+`scripts/ai/pyramid_router_sim.py` uses the same made-up year, with no model and no API call. Asks name their time
+the way people do ("Oct", "October 2026", "last month", "3 months ago", "yesterday", "last Tuesday", "2 Oct"), so
+matching the ask's words against node titles is not enough. A router scores each child of a node with weights on
+(ask word, child feature) pairs; the features are the child's title words, its recency rank among its siblings and
+its level. After every answer the true path is known (hindsight), and one cross-entropy step trains the weights
+along it: real backprop on a linear model. Confidence is the router's own probability.
+
+Three ways, the same 20 asks a night:
+- **words:** the router frozen at its start, where only "the same word in the ask and the title" counts.
+- **learned:** the router trained after every ask, walking level by level.
+- **jump:** learned, plus confidence. When every step of the guessed path is at least 0.9 sure, the reader opens
+  the guessed node directly; if it is wrong, it walks as usual.
+
+Nights 21-30 (opens per ask, first try right at every step, found within 5 tries per step):
+
+| Seed | words | learned | jump |
+|---|---|---|---|
+| 1 | 4.9, 48%, 88% | 3.8, 91%, 100% | 2.1 |
+| 2 | 4.7, 57%, 90% | 3.8, 96%, 100% | 1.7 |
+| 3 | 4.9, 52%, 88% | 3.9, 93%, 98% | 1.8 |
+
+What it shows:
+- **The weights learn what words can't.** The strongest pairs after 30 nights are "oct is october", "sep is
+  september" and "nov goes to last year" (a November ask can only mean 2025 on Oct 23). Words alone miss 10-12% of
+  asks entirely; the learned router finds nearly all.
+- **Confidence pays.** Jumping when sure halves the opens again (about 3.8 to about 2). The threshold is the knob:
+  0.7 gives 1.6 opens with more wrong jumps, 0.97 gives 2.5. A wrong jump costs one open, never a wrong answer,
+  because the walk still runs.
+- **About 4,700 pairs are learned for a year of one person's asks.** Small enough to keep on the phone.
+
+Drawbacks it exposes, with the fix for each:
+- **Recency features drift.** "rank1" means last year today and two years ago next January. Rank weights should be
+  relative ("last month" is rank 1 among months), and a weight tied to an absolute year should decay.
+- **Hindsight needs the true path.** Here it is exact. In the app, the path is the node the answer cited, which the
+  cite check (P1b) already enforces; an answer with no cite trains nothing.
+- **Cold start.** Nights 1-5 are no better than words. The shared per-level prior from P3 and a seed set of date
+  phrasings fix this.
+
+### P3b with dates normalized first (`--normalize`)
+
+The input-hygiene plan (docs/ai/harness/input-hygiene.md, stage 5) resolves date words before anything reads them:
+"last month" said on Oct 23 becomes "September 2026", "2 Oct" becomes "Fri, Oct 2, 2026". The same run with that
+normalizer in front of the router:
+
+| Seed | Night 1, words | Nights 21-30, words | Nights 2-5, jump | Nights 21-30, jump | Weights over 0.5 |
+|---|---|---|---|---|---|
+| 1 raw | 65% right, 90% found | 48%, 88% | 3.5 opens | 2.1 opens | 200 |
+| 1 normalized | 95%, 100% | 99%, 100% | 1.2 opens | 1.1 opens | 36 |
+| 2 raw | 35%, 80% | 57%, 90% | 3.5 | 1.7 | 212 |
+| 2 normalized | 100%, 100% | 100%, 100% | 1.1 | 1.0 | 22 |
+| 3 raw | 75%, 85% | 52%, 88% | 3.5 | 1.8 | 194 |
+| 3 normalized | 100%, 100% | 100%, 100% | 1.4 | 1.0 | 39 |
+
+What it shows:
+- **Normalizing beats learning for anything that isn't personal.** Words alone, after the normalizer, are right on
+  95-100% of asks from the first night. Without it, 30 nights of learning reach 91-96%.
+- **Learning on top of clean features can hurt a little at first.** On night 1 the learned router is 80-100% right
+  where words alone are 95-100%: early updates move weights that didn't need moving. The fix is to learn only the
+  residual: train when the words-only route was wrong or unsure, and start the rate low.
+- **What is left to learn is small.** Strong weights drop from about 200 to 22-39. The real work for the router is
+  his own words ("leg day", "the chili one"), not the calendar. The next simulation adds those asks.
+
 ## Beyond the app: memory for anything Tess lives through
 
 Kaushik's follow-up (Oct 27): the goal is the general memory problem for a personal assistant, not only his app
