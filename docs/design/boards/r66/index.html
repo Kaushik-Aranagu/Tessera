@@ -2799,6 +2799,74 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
  window.__morphing=true;const {el,c}=mount(prev.id,prev.params);window.__morphing=false;current=el;cleanup=c;morph(old,el);old.remove();setTimeout(()=>oldC&&oldC(),1200);
  tessCue(SCREENS[prev.id].accent);drawMap()};
 
+/* ---------- 357: Chart room, the experimental room Tess builds by talking (Tess-built rooms, docs/design/tess-built-rooms).
+   It opens as the bare frame: every place of the shell drawn as a dashed outline with its name, nothing in it. Each
+   thing he says lands as a ghost in its place (38% ink) with the 2-second drying line along the place's foot; when the
+   line reaches the end the ghost sets to full ink and that place's outline lets go. Anything that would let the room
+   change his data waits on its own line in wine with Allow. Undo on the receipt walks back one sentence. The sentences
+   here are fixed for the board; on the phone they are whatever he says. Reduce Motion: no line run, it sets in place. */
+{const st=h('style');st.textContent=`
+.chart{background:var(--paper)}
+.ch-pl{position:absolute;border:1px dashed color-mix(in srgb,var(--ink3,var(--ink2)) 70%,transparent);border-radius:12px;transition:border-color .5s,opacity .5s;pointer-events:none}
+.ch-pl i{position:absolute;left:8px;top:5px;font:500 11px/14px var(--sans);font-style:normal;color:var(--ink2);opacity:.7;transition:opacity .4s}
+.ch-pl.set{border-color:transparent}.ch-pl.set i,.ch-pl.ghp i{opacity:0}
+.ch-c{position:absolute;transition:opacity .45s cubic-bezier(.2,.8,.2,1)}
+.ch-c.gh{opacity:.38}
+.ch-dry{position:absolute;height:1px;background:var(--room,var(--ink));transform-origin:0 50%;z-index:7;pointer-events:none}
+.ch-ttl{left:24px;top:54px;font:700 40px/1.1 var(--sans);letter-spacing:-.02em;color:var(--teal);white-space:nowrap}
+.ch-line{left:24px;top:112px;width:354px;font:300 26px/32px var(--sans);color:var(--ink)}
+.ch-key{left:24px;top:196px;width:354px;height:182px;display:grid;grid-template-columns:repeat(4,1fr);align-items:end;padding-bottom:22px}
+.ch-key div{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.ch-key b{font:300 64px/1 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
+.ch-key span{font:600 15px/1.2 var(--sans);color:var(--ink)}
+.ch-key .th b,.ch-key .th span{color:var(--wine)}
+.ch-key .th b{animation:chbreathe 3.6s ease-in-out infinite}
+@keyframes chbreathe{50%{opacity:.6}}
+.ch-cap{left:24px;top:384px;width:354px;font:400 15px/22px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden}
+.ch-heard{left:36px;top:440px;width:330px;font:italic 400 20px/28px Newsreader,serif;color:var(--ink2)}
+.ch-reach{left:24px;top:540px;width:354px;font:500 16px/22px var(--sans);color:var(--wine);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.ch-reach button{font:700 16px var(--sans);color:var(--wine);background:none;border:0;padding:8px 0;cursor:pointer}
+.ch-act{position:absolute;left:24px;bottom:22px;width:240px;height:64px;z-index:6;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:var(--slate)}
+.ch-act .av{display:block;font:600 24px/32px var(--sans);letter-spacing:-.01em;white-space:nowrap}
+.ch-act .ao{display:block;font:500 13px/18px var(--sans);color:var(--ink2);white-space:nowrap}
+.ch-act.water{color:var(--teal)}
+@media (prefers-reduced-motion:reduce){.ch-key .th b{animation:none}}
+`;document.head.appendChild(st)}
+SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for. I’ll build it a piece at a time.',render(el){el.classList.add('chart');el.style.setProperty('--room','var(--slate)');
+ const PL={title:[24,50,260,48,'Title'],line:[24,106,354,76,'Line'],key:[24,196,354,182,'Keystone'],cap:[24,378,354,34,'Caption'],wid:[24,412,354,200,'Widget'],doors:[24,640,354,120,'Doors']};
+ const pls={};Object.entries(PL).forEach(([k,[x,y,w,hh,n]])=>{const p=h('div','ch-pl','<i>'+n+'</i>');p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px';el.appendChild(p);pls[k]=p});
+ const P0=[{n:'Orchid',d:6},{n:'Monstera',d:4},{n:'Fern',d:2},{n:'Basil',d:1}];let plants=P0.map(p=>({...p})),at=0,reach=false,dry=null;
+ const SAY=[
+  {s:'Make this my plant room',fills:['title','line'],r:'Plants, set'},
+  {s:'Put them on the keystone by when I last watered',fills:['key','cap'],r:'Keystone, set'},
+  {s:'Glow the thirstiest one',fills:['key'],r:'Glow, set'},
+  {s:'Let me mark one watered',fills:['wid'],r:'Watered, set',reach:1}];
+ const layer=h('div');el.appendChild(layer);
+ const act=h('button','ch-act');el.appendChild(act);
+ const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
+ function draw(ghost){const t=th();let s='';
+  if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the '+t.n.toLowerCase()+' is thirsty':', all watered')+'</div>';
+  if(at>=2)s+='<div class="ch-c ch-key" data-p="key">'+[...plants].sort((a,b)=>b.d-a.d).map(p=>'<div class="'+(at>=3&&p===t&&p.d>0?'th':'')+'"><b>'+p.d+'</b><span>'+p.n+'</span></div>').join('')+'</div>'+
+   '<div class="ch-c ch-cap" data-p="cap">Days since water'+(at>=3&&t.d>0?', the '+t.n.toLowerCase()+' first':'')+'</div>';
+  if(at>=4&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
+  if(heard)s+='<div class="ch-c ch-heard">“'+heard+'”</div>';
+  layer.innerHTML=s;
+  if(ghost)ghost.forEach(k=>layer.querySelectorAll('[data-p="'+k+'"]').forEach(e=>e.classList.add('gh')));
+  Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));
+  const water=at>=4&&reach&&t.d>0;act.className='ch-act'+(water?' water':'');
+  act.innerHTML=water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.toLowerCase().replace(/^./,c=>c)+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
+ let heard='';
+ function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;at++;draw(S.fills);
+  // the drying line runs along the foot of each place it filled, 2 s, then the ghost sets
+  const lines=S.fills.map(k=>{const [x,y,w,hh]=PL[k];const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
+   if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});return l});
+  dry=setTimeout(()=>{dry=null;lines.forEach(l=>l.remove());heard='';draw();receipt(el,S.r,()=>{at--;if(S.reach)reach=false;heard='';draw()})},2000)}
+ act.onclick=()=>{const t=th();if(at>=4&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
+ layer.onclick=e=>{const b=e.target.closest('[data-a="allow"]');if(!b)return;reach=true;draw()};
+ draw();
+ window.__ch={say,get at(){return at},allow:()=>{reach=true;draw()},plants:()=>plants};
+ return ()=>{clearTimeout(dry)}}};
+
 /* ---------- the map, updated ---------- */
 MAP.length=0;MAP.push(
  {app:'Bridge (Home)',state:'236 with the 283 apps dial',screens:[['home','Home'],['today','Today, from the date'],['settings','Settings'],['layout','Layout mode (from Settings)']],note:'Top lines flip; the mosaic turns; the one thing swipes four ways and strikes on hold; the apps list scrolls.'},
@@ -2808,6 +2876,7 @@ MAP.length=0;MAP.push(
  {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
+MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered.'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
 
 /* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.
