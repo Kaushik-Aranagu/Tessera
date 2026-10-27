@@ -89,9 +89,7 @@ public enum TessAskRouter {
         if ClassResolver.app(for: classDef) == .money {
             return true
         }
-        let blocked: [SystemCatalog.Key] = [.pool, .spend, .inflow, .poolMove, .rateNote, .sleepNight, .stepsDay,
-                                            .restingHeartRate, .meProfile, .event, .heldNotice, .tessTurn, .tessCall,
-                                            .tessSent, .tessWaiting, .belief]
+        let blocked = ClassPolicy.unnameableKeys
         return blocked.contains { key in classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false }
     }
 }
