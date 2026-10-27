@@ -288,18 +288,20 @@ struct GalleyCookModePage: View {
                     section("Timers") {
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(data.timers) { timer in
-                                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                    Text(timer.time)
-                                        .font(GalleyPaper.number(26, weight: .bold))
-                                        .monospacedDigit()
-                                        .foregroundStyle(timer.ready ? GalleyPaper.wine : GalleyPaper.ink)
-                                        .contentTransition(.numericText(countsDown: true))
-                                    Text(timer.label)
-                                        .font(GalleyPaper.plex(.regular, 18))
-                                        .foregroundStyle(GalleyPaper.inkSecondary)
-                                        .lineLimit(1)
+                                // Sheet 346: a started timer rolls up from 0:00; tapping a running one adds a minute.
+                                Button { addMinute(session, timerID: timer.id) } label: {
+                                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                        RollingTimerTime(seconds: timer.seconds, ready: timer.ready)
+                                        Text(timer.label)
+                                            .font(GalleyPaper.plex(.regular, 18))
+                                            .foregroundStyle(GalleyPaper.inkSecondary)
+                                            .lineLimit(1)
+                                    }
+                                    .contentShape(Rectangle())
                                 }
+                                .buttonStyle(.plain)
                                 .accessibilityElement(children: .combine)
+                                .accessibilityHint(timer.ready ? "" : "Adds a minute")
                             }
                             if let start = data.start {
                                 Button { startTimer(session, facts: facts) } label: {
@@ -364,6 +366,16 @@ struct GalleyCookModePage: View {
                 }
             }
         }
+    }
+
+    /// Tapping a running timer adds a minute (sheet 346): its own timer restarts with a minute more left, never a
+    /// second
+    /// one, and only the minute digit rolls on.
+    private func addMinute(_ session: CookClockSession, timerID: String) {
+        guard let line = session.timers.first(where: { $0.id.uuidString == timerID }) else { return }
+        let left = line.remaining(at: AppClock.now)
+        guard left > 0 else { return }
+        session.extend(line, minutes: left / 60 + 1)
     }
 
     private func startTimer(_ session: CookClockSession, facts: GalleyCookFacts) {
@@ -452,5 +464,40 @@ struct CookEntry: View {
         } else {
             CookClockPage(cookID: cookID)
         }
+    }
+}
+
+/// A timer's time in the big numerals (sheet 346). When the timer first appears its digits roll up from 0:00 to its
+/// length,
+/// each digit on its own; after that it follows the real time, so adding a minute rolls only the digits that change.
+/// Reduce Motion: the time simply appears.
+struct RollingTimerTime: View {
+    let seconds: Int
+    let ready: Bool
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// nil follows the real time; a value is the roll in progress.
+    @State private var rolling: Int?
+
+    private var shown: Int {
+        rolling ?? seconds
+    }
+
+    var body: some View {
+        Text(ready ? "Ready" : GalleyCookWords.clock(TimeInterval(shown)))
+            .font(GalleyPaper.number(26, weight: .bold))
+            .monospacedDigit()
+            .foregroundStyle(ready ? GalleyPaper.wine : GalleyPaper.ink)
+            .contentTransition(.numericText(value: Double(shown)))
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: shown)
+            .task {
+                guard !reduceMotion, !ready else { return }
+                let target = seconds
+                rolling = 0
+                try? await Task.sleep(for: .milliseconds(30))
+                rolling = target
+                try? await Task.sleep(for: .milliseconds(550))
+                rolling = nil
+            }
     }
 }

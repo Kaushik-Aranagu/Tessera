@@ -57,6 +57,7 @@ struct GalleyCookModeTests {
         #expect(screen.doneWhen == "Turn it when it lets go of the pan")
         #expect(screen.needs.map(\.name) == ["Chicken thighs", "Cumin"] && screen.needs.first?.amount == "1 lb")
         #expect(screen.timers.map(\.time) == ["2:47"] && screen.timers.first?.ready == false)
+        #expect(screen.timers.first?.seconds == 167)
         #expect(screen.start == nil)
         #expect(screen.verb == "Next" && screen.object == "Soften the onion" && !screen.hold)
         #expect(screen.rail.map(\.label) == ["Char the peppers", "Brown the chicken", "Soften the onion"])

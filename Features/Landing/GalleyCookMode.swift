@@ -177,6 +177,8 @@ struct GalleyCookScreen: Equatable {
         /// "2:47", or "Ready".
         let time: String
         let ready: Bool
+        /// Whole seconds left (0 once ready), for the digits that roll (sheet 346).
+        var seconds = 0
     }
 
     /// "Tacos for 2".
@@ -218,14 +220,15 @@ struct GalleyCookScreen: Equatable {
             other.timer.map { timer -> (Int, TimerRow) in
                 let left = timer.left(at: facts.now)
                 return (other.index, TimerRow(id: timer.id, label: timer.label.isEmpty ? other.short : timer.label,
-                                              time: left > 0 ? GalleyCookWords.clock(left) : "Ready", ready: left <= 0))
+                                              time: left > 0 ? GalleyCookWords.clock(left) : "Ready", ready: left <= 0,
+                                              seconds: Int(left.rounded(.up))))
             }
         }
         .sorted { $0.0 < $1.0 }.map(\.1)
         rows += facts.spoken.map { timer in
             let left = timer.left(at: facts.now)
             return TimerRow(id: timer.id, label: timer.label, time: left > 0 ? GalleyCookWords.clock(left) : "Ready",
-                            ready: left <= 0)
+                            ready: left <= 0, seconds: Int(left.rounded(.up)))
         }
         timers = Array(rows.prefix(3))
         if step.timer == nil, let pan = step.panMinutes {
