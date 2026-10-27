@@ -105,6 +105,16 @@ struct GalleyModeRail: View {
     let items: [GalleyRailItem]
     var tint: Color = GalleyPaper.ochre
     var tap: (Int) -> Void
+    /// The steps already done when the rail appeared keep a plain strike; one finished while it shows is struck by the
+    /// pen (sheet 350).
+    @State private var doneAtStart: Set<Int>
+
+    init(items: [GalleyRailItem], tint: Color = GalleyPaper.ochre, tap: @escaping (Int) -> Void) {
+        self.items = items
+        self.tint = tint
+        self.tap = tap
+        _doneAtStart = State(initialValue: Set(items.filter(\.done).map(\.id)))
+    }
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 2) {
@@ -129,7 +139,7 @@ struct GalleyModeRail: View {
                             // A done step: ink 2 with a 1 pt line through it (sheet 341).
                             .overlay {
                                 if item.done {
-                                    Rectangle().frame(height: 1).offset(y: 1)
+                                    GalleyRailStrike(pen: !doneAtStart.contains(item.id))
                                 }
                             }
                     }
@@ -145,6 +155,28 @@ struct GalleyModeRail: View {
             }
         }
         .frame(maxWidth: 150, alignment: .trailing)
+    }
+}
+
+/// Sheet 350: the step just finished is struck by the shopping pen: a 1.5 pt line drawn left to right in 320 ms after a
+/// 100 ms delay, inside the word's box, and it stays. Reduce Motion: the strike is simply there. Earlier done steps
+/// keep a plain 1 pt line.
+private struct GalleyRailStrike: View {
+    let pen: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var progress: CGFloat = 0
+
+    var body: some View {
+        if pen {
+            GalleyPenStroke(progress: reduceMotion ? 1 : progress)
+                .stroke(style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                .onAppear {
+                    guard !reduceMotion else { return }
+                    withAnimation(.timingCurve(0.3, 0.7, 0.3, 1, duration: 0.32).delay(0.1)) { progress = 1 }
+                }
+        } else {
+            Rectangle().frame(height: 1).offset(y: 1)
+        }
     }
 }
 
