@@ -20,7 +20,7 @@ struct RoutineRunTests {
                     beat(1, "Shoulders", 120, move: true), beat(1, "Neck", 120, move: true), beat(2, "Read", 900),
                     beat(3, "Journal", 300), beat(4, "Lights", 60)],
             steps: [.init(id: 0, title: "Tidy", minutes: 5, beats: [0]),
-                    .init(id: 1, title: "Stretch", minutes: 6, beats: [1, 2, 3]),
+                    .init(id: 1, title: "Stretch", minutes: 6, beats: [1, 2, 3], breath: true),
                     .init(id: 2, title: "Read", minutes: 15, beats: [4]),
                     .init(id: 3, title: "Journal", minutes: 5, beats: [5]),
                     .init(id: 4, title: "Lights", minutes: 1, beats: [6])]
@@ -161,5 +161,31 @@ struct RoutineReadingTests {
         #expect(RoutineReading.label(last: 212, minutes: 20) == "to about page\u{00A0}226")
         #expect(RoutineReading.receipt(title: "Read", last: 212, spent: 600) == "Read, tended, about page\u{00A0}219")
         #expect(!RoutineReading.receipt(title: "Read", last: 212, spent: 0).hasSuffix("."))
+    }
+}
+
+@MainActor
+struct RoutineBreathSlotTests {
+    private let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
+
+    /// Sheet 347: the guide shows only on a step that has the flag, and every other step still says so ("guided" is
+    /// false)
+    /// so the page keeps the slot empty and the time never moves.
+    @Test func onlyAFlaggedStepShowsTheBreathGuide() {
+        func beat(_ step: Int, _ title: String, breath: String?) -> RoutineModeRun.Beat {
+            RoutineModeRun.Beat(step: step, title: title, cue: nil, breath: breath, seconds: 60, isMove: false)
+        }
+        var run = RoutineModeRun(
+            beats: [beat(0, "Tidy", breath: "in"), beat(1, "Stretch", breath: "in")],
+            steps: [.init(id: 0, title: "Tidy", minutes: 1, beats: [0]),
+                    .init(id: 1, title: "Stretch", minutes: 1, beats: [1], breath: true)]
+        )
+        run.start(at: t0)
+        // Tidy has a stray breath word on its beat but the step is not flagged: no guide, slot empty.
+        let tidy = RoutineScreen(run, name: "Evening", totalMinutes: 2, now: t0)
+        #expect(tidy.breath == nil && !tidy.guided)
+        run.next(now: t0.addingTimeInterval(1))
+        let stretch = RoutineScreen(run, name: "Evening", totalMinutes: 2, now: t0.addingTimeInterval(1))
+        #expect(stretch.guided && stretch.breath == "breathe in")
     }
 }

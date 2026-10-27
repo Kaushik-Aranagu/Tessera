@@ -124,18 +124,23 @@ struct RoutineModePage: View {
                         .lineLimit(2)
                         .padding(.top, 2)
                 }
-                if let breath = data.breath {
-                    Text(breath)
-                        .font(.custom("Figtree", fixedSize: 20).weight(.medium))
-                        .foregroundStyle(soft)
-                        // The letters widen on the in-breath (4 s) and close up on the out-breath (6 s).
-                        .tracking(reduceMotion ? 0 : (breath == "breathe in" ? 5 : 0))
-                        .animation(
-                            reduceMotion ? nil : .easeInOut(duration: breath == "breathe in" ? 4 : 6),
-                            value: breath
-                        )
-                        .padding(.top, 14)
+                // The breath guide lives in a 30 pt slot that every step keeps, so the time is in the same place on
+                // each (sheet 347); the guide itself is only on the steps that ask for it.
+                ZStack(alignment: .leading) {
+                    if let breath = data.breath {
+                        Text(breath)
+                            .font(.custom("Figtree", fixedSize: 20).weight(.medium))
+                            .foregroundStyle(soft)
+                            // The letters widen on the in-breath (4 s) and close up on the out-breath (6 s).
+                            .tracking(reduceMotion ? 0 : (breath == "breathe in" ? 5 : 0))
+                            .animation(
+                                reduceMotion ? nil : .easeInOut(duration: breath == "breathe in" ? 4 : 6),
+                                value: breath
+                            )
+                    }
                 }
+                .frame(height: 30, alignment: .leading)
+                .padding(.top, 14)
                 Text(GalleyCookWords.clock(TimeInterval(data.secondsLeft)))
                     .font(.custom("Outfit", fixedSize: 96).weight(.light))
                     .monospacedDigit()

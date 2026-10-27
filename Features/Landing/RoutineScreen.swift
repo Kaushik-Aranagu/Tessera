@@ -26,6 +26,8 @@ struct RoutineScreen: Equatable {
     var cue: String?
     /// "breathe in" or "breathe out" (words only), nil when the move has none.
     var breath: String?
+    /// Sheet 347: the step has the breath guide; the slot is kept (empty) when it does not, so the time never moves.
+    var guided = false
     var secondsLeft = 0
     var moves: [MoveRow] = []
     var rail: [GalleyRailItem] = []
@@ -84,6 +86,7 @@ struct RoutineScreen: Equatable {
         move = beat.title
         cue = beat.cue
         secondsLeft = Int(run.secondsLeft(at: now).rounded(.up))
+        guided = step.breath
         breath = run.breath(at: now).map { "breathe \($0)" }
         if beat.isMove {
             moves = step.beats.enumerated().map { offset, beatIndex in

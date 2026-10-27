@@ -21,6 +21,9 @@ struct RoutineModeRun: Equatable {
         let title: String
         let minutes: Int
         let beats: [Int]
+        /// Sheet 347: this step has the breath guide (its own setting, or any of its moves). A routine turns it on for
+        /// any step it likes; the other steps leave the guide's slot empty so the time stays in one place.
+        var breath = false
     }
 
     let beats: [Beat]
@@ -58,7 +61,8 @@ struct RoutineModeRun: Equatable {
                                       breath: move.breath ?? step.breath, seconds: max(move.seconds, 1), isMove: true))
                 }
             }
-            steps.append(Step(id: number, title: step.title, minutes: step.minutes, beats: mine))
+            let guided = step.breath != nil || step.moves.contains { $0.breath != nil }
+            steps.append(Step(id: number, title: step.title, minutes: step.minutes, beats: mine, breath: guided))
         }
         self.beats = beats
         self.steps = steps
@@ -192,7 +196,7 @@ struct RoutineModeRun: Equatable {
     /// The breath the guide shows now: "in" for 4 s, then "out" for 6 s, for a move that asks for both; a move that
     /// asks for one keeps it. Nothing when the move has no breath. Words only.
     func breath(at now: Date) -> String? {
-        guard let beat, let breath = beat.breath?.lowercased() else { return nil }
+        guard let beat, steps[beat.step].breath, let breath = beat.breath?.lowercased() else { return nil }
         switch breath {
         case "in", "out": return breath
         default:
