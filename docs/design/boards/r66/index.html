@@ -1587,7 +1587,11 @@ SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortil
  function tear(){if(RM)return paint();const g=P.cloneNode(true);g.classList.add('tk-torn');P.after(g);if(navigator.vibrate)try{navigator.vibrate([4,40,10])}catch(e){}
   g.animate([{transform:'none',opacity:1},{transform:'translate(-18px,-70px) rotate(-5deg)',opacity:0}],{duration:440,easing:'cubic-bezier(.5,0,.75,.3)',fill:'forwards'}).onfinish=()=>g.remove();
   paint();P.animate([{transform:'translateY(-40px)',opacity:0},{transform:'translateY(-40px)',opacity:1,offset:.01},{transform:'translateY(4px)',offset:.75},{transform:'none'}],{duration:560,delay:220,easing:'steps(6)',fill:'backwards'})}
- function skip(){const j=nextJ(S.a);if(j<0)return;const q=AIS[S.a].it.splice(j,1)[0];AIS[S.a].it.push(q);receipt(el,q[0]+', later in this aisle');paint()}
+ /* 339: "not here" moves the item to the end of the aisle, and you see it go: the rows of In this aisle slide to their new
+    places (FLIP, 340 ms) and the skipped row lifts out and settles in at the end once the others have moved up, so rows never cross. */
+ function skip(){const j=nextJ(S.a);if(j<0)return;const rows=()=>[...P.querySelectorAll('[data-a^="it"]')].map(r=>[r.querySelector('.tn').textContent,r]);const was=new Map(rows().map(([n,r])=>[n,r.getBoundingClientRect().top]));
+  const q=AIS[S.a].it.splice(j,1)[0];AIS[S.a].it.push(q);receipt(el,q[0]+', later in this aisle');paint();if(RM)return;
+  rows().forEach(([n,r])=>{const t=was.get(n);if(t==null)return;const dy=(t-r.getBoundingClientRect().top)/K;if(Math.abs(dy)<1)return;if(n===q[0])return r.animate([{opacity:0,transform:'translateY(-6px)'},{opacity:0,transform:'translateY(-6px)',offset:.5},{opacity:1,transform:'none'}],{duration:440,easing:'cubic-bezier(.2,.8,.2,1)'});r.animate([{transform:'translateY('+dy+'px)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)'})})}
  paint();window.__sh.got=got;return null}};
 
 

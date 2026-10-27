@@ -311,3 +311,13 @@ When the rest ends (timer out, tap, or Start now), the board is wiped clean inst
 - Reduce Motion: no wipe, the next lift simply appears.
 - On the phone: snapshot the rest layer into an image at end of rest and mask it with the moving band, so the live lift layer underneath keeps updating.
 - Test: t67 paper and black green; pwp.js freezes the clock mid-wipe (WP1.png: next lift on the left, rest board on the right, haze at the edge).
+
+## Sheet 339: "not here" shows where the item went
+
+Tapping "not here, ask me later" in shopping mode moves the item to the end of its aisle, and the list shows the move instead of jumping.
+
+- The rows of "In this aisle" slide up to their new places, 340 ms, cubic-bezier(.2,.8,.2,1) (FLIP from their old positions).
+- The skipped row lifts out (hidden, 6 pt up) and settles into the last place once the others have moved, 440 ms, fading in over the second half. Rows never cross or overlap.
+- The receipt line still says "Limes, later in this aisle" with no undo (it is not a loss).
+- Reduce Motion: the list simply reorders.
+- Test: t67 paper and black green; psk.js order goes Limes, Cilantro, Peppers to Cilantro, Peppers, Limes with three row animations.

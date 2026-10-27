@@ -1,0 +1,12 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
+await pg.evaluate(()=>go('shop'));await pg.waitForTimeout(900);
+await pg.evaluate(()=>document.querySelector('[data-a="skip"]').closest('[data-a]'));
+const r=await pg.evaluate(()=>{const n=[...document.querySelectorAll('[data-a^="it"] .tn')].map(x=>x.textContent);return n});
+await pg.evaluate(()=>{const pad=document.querySelector('.tk-pad');const t=document.querySelector('[data-a="skip"]').getBoundingClientRect();for(const ty of ['pointerdown','pointerup'])pad.dispatchEvent(new PointerEvent(ty,{clientX:t.x+5,clientY:t.y+5,bubbles:true,pointerId:1}))});
+await pg.waitForTimeout(20);const an=await pg.evaluate(()=>document.getAnimations().length);
+await pg.evaluate(()=>document.getAnimations().forEach(a=>{a.pause();a.currentTime=150}));await pg.screenshot({path:'SK1.png'});
+await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));
+const r2=await pg.evaluate(()=>[...document.querySelectorAll('[data-a^="it"] .tn')].map(x=>x.textContent));
+console.log(r,r2,'anims',an,errs);await b.close()})();
