@@ -17,12 +17,34 @@ struct GalleyShopModePage: View {
     @State private var penProgress: CGFloat = 0
     @State private var faded = false
     @State private var cue = HapticCue()
+    /// The last Pay (sheet 334): the old ticket tears off, then the paid ticket prints in.
+    @State private var tearing = false
+    @State private var paidCount: Int?
+    @State private var paidOffset: CGFloat = GalleyTearOff.from
 
     var body: some View {
         let _ = model.revision
         let facts = Self.facts(model: model, trip: trip, pushed: pushed)
         let index = facts.aisles.isEmpty ? 0 : min(max(focus, 0), facts.aisles.count - 1)
         let data = GalleyShopScreen(facts, aisle: index)
+        ZStack {
+            ticket(facts: facts, index: index, data: data)
+                .rotationEffect(.degrees(tearing ? GalleyTearOff.angle : 0), anchor: .topLeading)
+                .offset(x: tearing ? GalleyTearOff.liftX : 0, y: tearing ? GalleyTearOff.liftY : 0)
+                .opacity(tearing ? 0 : 1)
+                .animation(reduceMotion ? nil : .easeIn(duration: GalleyTearOff.fade), value: tearing)
+                .allowsHitTesting(!tearing)
+            if let count = paidCount {
+                paid(count)
+                    .offset(y: paidOffset)
+                    .transition(.identity)
+            }
+        }
+        .onAppear(perform: begin)
+        .tesseraFeedback(cue)
+    }
+
+    private func ticket(facts: GalleyShopFacts, index: Int, data: GalleyShopScreen) -> some View {
         GalleyModeScreen(room: "Galley", topRight: data.topRight, back: { dismiss() }, verb: { got(facts, index) }) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(data.aisle.isEmpty ? "Groceries" : data.aisle)
@@ -110,8 +132,49 @@ struct GalleyShopModePage: View {
                 }
             }
         }
-        .onAppear(perform: begin)
-        .tesseraFeedback(cue)
+    }
+
+    /// The paid ticket: what was bought, and where it went.
+    private func paid(_ count: Int) -> some View {
+        GalleyModeScreen(room: "Galley", topRight: "Paid", back: { dismiss() }, verb: { dismiss() }) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Paid")
+                    .font(GalleyPaper.plex(.bold, 64))
+                    .foregroundStyle(GalleyPaper.olive)
+                    .padding(.top, 40)
+                Text(count == 1 ? "1 thing, put away in the Pantry" : "\(count) things, put away in the Pantry")
+                    .font(GalleyPaper.plex(.medium, 22))
+                    .foregroundStyle(GalleyPaper.ink)
+            }
+        } thumb: {
+            VStack(alignment: .leading, spacing: 0) {
+                GalleyModeReceipt()
+                GalleyModeVerb(word: "Done", tint: GalleyPaper.olive) { dismiss() }
+            }
+        }
+    }
+
+    /// The old ticket lifts away and fades; after 220 ms the paid ticket prints in with an overshoot and a double buzz.
+    private func tearOff(count: Int) async {
+        guard !reduceMotion else {
+            tearing = true
+            paidOffset = 0
+            paidCount = count
+            cue.play(.done)
+            return
+        }
+        tearing = true
+        try? await Task.sleep(for: .milliseconds(Int(GalleyTearOff.delay * 1000)))
+        paidOffset = GalleyTearOff.from
+        paidCount = count
+        cue.play(.done)
+        try? await Task.sleep(for: .milliseconds(100))
+        cue.play(.done)
+        let step = GalleyTearOff.print / Double(GalleyTearOff.steps.count)
+        for offset in GalleyTearOff.steps {
+            paidOffset = offset
+            try? await Task.sleep(for: .milliseconds(Int(step * 1000)))
+        }
     }
 
     /// Opens the shop the first time (Pay finishes it).
@@ -208,7 +271,8 @@ struct GalleyShopModePage: View {
         }
         model.touch()
         TessVoice.shared.say(outcome.line, undo: record, holds: .seconds(10))
-        dismiss()
+        let count = basket.count
+        Task { await tearOff(count: count) }
     }
 
     // MARK: Facts

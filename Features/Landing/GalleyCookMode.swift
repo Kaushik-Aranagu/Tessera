@@ -118,6 +118,30 @@ enum GalleyCookWords {
         return capital(words.prefix(10).joined(separator: " "))
     }
 
+    /// Sheet 333: what the ticket printer feeds when a pan timer hits zero: "Chicken ready, off the heat". The food is
+    /// named from the timer ("Brown the chicken" reads "Chicken"); a timer with no name reads "Timer".
+    static func readyLine(label: String) -> String {
+        let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
+        var food = trimmed.isEmpty ? "Timer" : trimmed
+        let lower = food.lowercased()
+        for lead in [
+            "brown the ",
+            "sear the ",
+            "char the ",
+            "soften the ",
+            "cook the ",
+            "fry the ",
+            "bake the ",
+            "roast the ",
+        ]
+            where lower.hasPrefix(lead)
+        {
+            food = String(food.dropFirst(lead.count))
+            break
+        }
+        return "\(capital(food)) ready, off the heat"
+    }
+
     static func capital(_ text: String) -> String {
         guard let first = text.first else { return text }
         return first.uppercased() + text.dropFirst()

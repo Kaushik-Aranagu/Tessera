@@ -11,6 +11,8 @@ enum GalleyPaper {
     static let ochre = Color(hex: 0x93611A)
     static let olive = Color(hex: 0x5E6B1F)
     static let wine = Color(hex: 0x9A2541)
+    /// The ready line the printer feeds (sheet 333): clear of Tess's Ember by far (ΔE76 49 or more).
+    static let printed = Color(hex: 0x8C2F39)
 
     static func plex(_ weight: Weight, _ size: CGFloat) -> Font {
         .custom(weight.face, fixedSize: size)
@@ -293,4 +295,33 @@ struct GalleyPenStroke: Shape {
         path.addLine(to: ends.end)
         return path.trimmedPath(from: 0, to: min(max(progress, 0), 1))
     }
+}
+
+/// The ticket printer's feed (sheet 333): the paper drops 30 pt with a 4 pt overshoot, in five steps, then settles.
+enum GalleyPrinter {
+    static let drop: CGFloat = 30
+    static let overshoot: CGFloat = 4
+
+    /// Five even steps to 34 pt, then back to 30 (the settle).
+    static let feedSteps: [CGFloat] = {
+        let top = drop + overshoot
+        return (1 ... 5).map { top * CGFloat($0) / 5 } + [drop]
+    }()
+}
+
+/// Shopping's last Pay (sheet 334): the old ticket lifts 18 pt left and 70 pt up at -5 degrees from its top-left and
+/// fades over 440 ms; after 220 ms the paid ticket prints in from 40 pt up with a 4 pt overshoot, in six steps over
+/// 560 ms, with a double buzz. Reduce Motion is a plain swap.
+enum GalleyTearOff {
+    static let liftX: CGFloat = -18
+    static let liftY: CGFloat = -70
+    static let angle: Double = -5
+    static let fade: TimeInterval = 0.44
+    static let delay: TimeInterval = 0.22
+    static let print: TimeInterval = 0.56
+    static let from: CGFloat = -40
+    static let overshoot: CGFloat = 4
+
+    /// Six even steps from 40 pt above to 4 pt past home, then the settle at 0.
+    static let steps: [CGFloat] = (1 ... 6).map { from + (0 - from + overshoot) * CGFloat($0) / 6 } + [0]
 }

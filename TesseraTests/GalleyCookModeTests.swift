@@ -159,3 +159,57 @@ struct GalleyPenStrokeTests {
         #expect(GalleyPenStroke(progress: 0.5).animatableData == 0.5)
     }
 }
+
+struct GalleyPrinterTests {
+    /// Sheet 333: the ticket printer feeds 30 pt with a 4 pt overshoot in five steps, then settles.
+    @Test func thePaperFeedsInFiveStepsWithAnOvershoot() {
+        let steps = GalleyPrinter.feedSteps
+        #expect(steps.count == 6 && steps[4] == 34 && steps.last == 30)
+        #expect(zip(steps, steps.dropFirst()).prefix(4).allSatisfy { $0.0 < $0.1 })
+    }
+
+    @Test func theReadyLineNamesTheFoodFromTheTimer() {
+        #expect(GalleyCookWords.readyLine(label: "Chicken") == "Chicken ready, off the heat")
+        #expect(GalleyCookWords.readyLine(label: "Brown the chicken") == "Chicken ready, off the heat")
+        #expect(GalleyCookWords.readyLine(label: "") == "Timer ready, off the heat")
+        #expect(!GalleyCookWords.readyLine(label: "Rice").hasSuffix("."))
+    }
+
+    /// The printed colour stays clear of Tess's Ember (FF5A26 and FF6B3D): ΔE76 of 25 or more, as the colour roles say.
+    @Test func thePrintedColourStaysClearOfEmber() {
+        func lab(_ hex: UInt32) -> (Double, Double, Double) {
+            func linear(_ value: UInt32) -> Double {
+                let c = Double(value) / 255
+                return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+            }
+            let r = linear((hex >> 16) & 255), g = linear((hex >> 8) & 255), b = linear(hex & 255)
+            func f(_ t: Double) -> Double {
+                t > 0.008856 ? cbrt(t) : 7.787 * t + 16.0 / 116
+            }
+            let x = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047)
+            let y = f(0.2126 * r + 0.7152 * g + 0.0722 * b)
+            let z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883)
+            return (116 * y - 16, 500 * (x - y), 200 * (y - z))
+        }
+        let printed = lab(0x8C2F39)
+        for ember: UInt32 in [0xFF5A26, 0xFF6B3D] {
+            let other = lab(ember)
+            let distance =
+                ((printed.0 - other.0) * (printed.0 - other.0) + (printed.1 - other.1) * (printed.1 - other.1)
+                        + (printed.2 - other.2) * (printed.2 - other.2)).squareRoot()
+            #expect(distance >= 25)
+        }
+    }
+}
+
+struct GalleyTearOffTests {
+    /// Sheet 334: six even steps from 40 pt up to a 4 pt overshoot, then the settle at home.
+    @Test func thePaidTicketPrintsInInSixStepsWithAnOvershoot() {
+        let steps = GalleyTearOff.steps
+        #expect(steps.count == 7 && steps[5] == 4 && steps.last == 0)
+        #expect(zip(steps, steps.dropFirst()).prefix(5).allSatisfy { $0.0 < $0.1 })
+        #expect(steps[0] > GalleyTearOff.from)
+        #expect(GalleyTearOff.liftX == -18 && GalleyTearOff.liftY == -70 && GalleyTearOff.angle == -5)
+        #expect(GalleyTearOff.delay < GalleyTearOff.fade)
+    }
+}
