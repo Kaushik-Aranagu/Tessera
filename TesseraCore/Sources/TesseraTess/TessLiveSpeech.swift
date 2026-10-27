@@ -42,6 +42,18 @@ public final class TessLiveSpeech: @unchecked Sendable {
         }
     }
 
+    /// Fetches Apple's on-device speech model for this language if it isn't installed, so the next listen streams.
+    /// The system downloads it; no audio or text is involved. Safe to call on every launch; it returns at once when
+    /// the model is there or the language is unsupported.
+    public static func installModelIfNeeded(locale: Locale = .current) async {
+        guard SpeechTranscriber.isAvailable,
+              let supported = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else { return }
+        let transcriber = SpeechTranscriber(locale: supported, transcriptionOptions: [],
+                                            reportingOptions: [.volatileResults], attributeOptions: [])
+        guard let request = try? await AssetInventory.assetInstallationRequest(supporting: [transcriber]) else { return }
+        try? await request.downloadAndInstall()
+    }
+
     /// Primes the model with the names on screen. Safe to skip; a failure only costs the priming.
     public func prime(with strings: [String]) async {
         guard !strings.isEmpty else { return }

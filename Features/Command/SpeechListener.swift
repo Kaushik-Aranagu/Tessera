@@ -104,6 +104,7 @@ final class SpeechListener {
             state = .idle
             return .speechOff
         }
+        defer { Task.detached(priority: .utility) { await TessLiveSpeech.installModelIfNeeded() } }
         if let streaming = await TessLiveSpeech(onWords: { [weak self] words in
             Task { @MainActor in self?.hear(words) }
         }) {
