@@ -1416,6 +1416,53 @@ SCREENS.groceries={title:'Groceries',accent:'kitchen',tess:'Four of these are fo
  GET.forEach((g,i)=>{const r=h('div','krow','<span>'+g+'</span><span>'+(i<4?'for tacos':'')+'</span>');r.style.cursor='pointer';r.onclick=()=>{GET=GET.filter(x=>x!==g);receipt(el,g+', got it.',()=>{GET.splice(i,0,g)});r.remove();const e=tix.children[0];if(e){e._refresh()}};box.appendChild(r)});kfoot(el,'Got it all',()=>{GET=GET.slice(4);back()})}};
 SCREENS.pantry={title:'Pantry',accent:'kitchen',tess:'Rice goes out today.',render(el){khead(el);kback(el);passCenter(el,PLACES.map(([n,c,s])=>({id:'pl'+n,title:n,color:'teal',pages:[{lines:[c+' things',s]}]})),()=>{});const box=lowerBox(el);const t=h('div','','Pantry');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);PLACES.forEach(([n,c,s])=>box.appendChild(h('div','krow','<span>'+n+'</span><span>'+c+', '+s+'</span>')));kfoot(el,'Add a thing',()=>receipt(el,'Say it or type it. Tess puts it in the right place.'))}};
 SCREENS.leftovers={title:'Leftovers',accent:'kitchen',tess:'The rice is from Thursday.',render(el){khead(el);kback(el);passCenter(el,LEFT.map(([n,d,s])=>({id:'lf'+n,title:n,color:d==='today'?'wine':'teal',pages:[{lines:[d,s]}]})).concat([dishT()]),openT);const box=lowerBox(el);const t=h('div','','Leftovers');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);LEFT.forEach(([n,d,s])=>box.appendChild(h('div','krow','<span'+(d==='today'?' style="color:var(--wine)"':'')+'>'+n+'</span><span>'+d+', '+s+'</span>')));kfoot(el,'Eat it',()=>receipt(el,'Rice, eaten.'))}};
+/* ---------- 323 Routine mode (Watch, from Begin). The woodland stays as the keystone, untouched; the mode lives in
+   the places around it. The sentence place leads one step at a time at an unhurried pace: a stretch is its moves,
+   each with a cue and a soft countdown; the dial is the evening's steps with their minutes; the summary is the
+   focused step's moves. Next tends the step (its name turns green on the dial); Not tonight skips it and nothing
+   is lost, the routine's streak is kept. */
+SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, then the book. No rush.',render(el){
+ const ST=[{k:'Tidy',m:10,mv:[['Counter','3','min','Clear it, wipe it'],['Sink','5','min','Dishes in the rack'],['Floor','2','min','Shoes by the door']]},
+  {k:'Stretch',m:9,mv:[['Hamstrings','90','s','Soft knees, reach long'],['Hips','120','s','Knee over ankle, breathe out'],['Back','120','s','Round, then arch, slowly'],['Neck','90','s','Ear to shoulder, both sides'],['Breathe','120','s','In for four, out for six']]},
+  {k:'Read',m:20,mv:[['The Overstory','20','min','Page 212, chapter nine']]},
+  {k:'Journal',m:2,mv:[['One line','2','min','What went right today']]},
+  {k:'Lights',m:1,mv:[['Phone away','1','min','Lights out at 10:30']]}];
+ const S={i:0,j:0,left:0,done:new Set(),skip:new Set(),fin:0,pause:0};window.__rt={S,ST};
+ const secs=mv=>mv[2]==='min'?+mv[1]*60:+mv[1],mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+ const tended=()=>S.done.size,minsLeft=()=>ST.filter((_,i)=>!S.done.has(i)&&!S.skip.has(i)).reduce((a,x)=>a+x.m,0);
+ let H={},blk;
+ function start(i){S.i=i;S.j=0;S.left=secs(ST[i].mv[0])}
+ start(0);
+ function card(){if(S.fin)return {hdr:'Evening',big:'Tended',mid:tended()+' of '+ST.length+' steps'+(S.skip.size?', '+S.skip.size+' for tomorrow':''),sml:'Six days in a row now'};
+  const s=ST[S.i],mv=s.mv[S.j];if(S.done.has(S.i))return {hdr:s.k+', tended',big:s.k,mid:'Turn the dial for what is left',sml:minsLeft()+' min to go tonight'};
+  return {hdr:s.k+(s.mv.length>1?', '+(S.j+1)+' of '+s.mv.length:''),big:mv[0],mid:mv[3],sml:(S.pause?'Paused, ':'')+mm(S.left)+(s.mv[S.j+1]?', then '+s.mv[S.j+1][0].toLowerCase():', then '+(ST[S.i+1]?ST[S.i+1].k.toLowerCase():'bed'))}}
+ function paint(){const c=card(),key=c.hdr+c.big;
+  if(blk._key!==key){blk.innerHTML='<div class="hdr" style="color:var(--routines)">'+c.hdr+'</div><div class="big"><span class="bw" style="font-weight:700;font-size:40px;letter-spacing:-.02em;color:var(--routines)">'+c.big+'</span></div><div class="mid">'+c.mid+'</div><div class="sml">'+smlH(c.sml)+'</div>';
+   if(blk._key&&!RM)[...blk.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(10px) scaleY(.6)',transformOrigin:'0 100%'},{opacity:1,transform:'translateY(-1px) scaleY(1.04)',offset:.7},{opacity:1,transform:'none'}],{duration:620,delay:i*90,easing:'cubic-bezier(.2,.8,.3,1)',fill:'backwards'}));blk._key=key;[...blk.children].forEach(fitLine)}
+  else{const sm=blk.querySelector('.sml'),o=sm.querySelector('.o'),m=/^(Paused, )?(\d+:\d\d)/.exec(c.sml);if(o&&m&&sm.textContent.replace(o.textContent,'')===c.sml.replace(m[2],'')){const w=o.textContent;if(w!==m[2]){o.textContent=m[2];numRoll(o,w)}}else sm.innerHTML=smlH(c.sml)}
+  function smlH(t){return t.replace(/(\d+:\d\d)/,'<span class="o" style="font-family:var(--num);font-variant-numeric:tabular-nums">$1</span>')}
+  if(H.band)H.band.innerHTML='<div class="ln">'+(S.fin?'Evening tended':tended()+' of '+ST.length+' tended')+'</div><div class="ln">'+(S.fin?'Lights out at 10:30':'about '+minsLeft()+' min to bed')+'</div>';
+  const dh=el.querySelector('.dial');if(dh)[...dh.children].forEach((d,i)=>{const b=d.querySelector('span');if(b)b.style.color=S.done.has(i)?'var(--green)':S.skip.has(i)?'var(--slate)':'';const c=d.querySelector('i');const v=S.done.has(i)||S.skip.has(i)?'':ST[i].m+'m';if(c&&c.textContent!==v)c.textContent=v});
+  if(H.act)H.act.retarget(S.fin?['back to the Watch','','','back to the Watch']:[S.done.has(S.i)?'the next step':ST[S.i].mv[S.j+1]?ST[S.i].mv[S.j+1][0].toLowerCase()+' next':ST[S.i].k.toLowerCase()+', tended',S.pause?'go on from '+mm(S.left):'this step, nothing is lost',ST[S.i].k.toLowerCase()+', the streak is kept','the evening, '+tended()+' of '+ST.length],0);
+  if(H.sum){const kk=(H.dial?H.dial.focus:0)+'|'+S.j+'|'+S.done.size;if(H.sum._k!==kk){H.sum._k=kk;sumSet(H.sum,lg(H.dial?H.dial.focus:0),'routines',el)}}}
+ const lg=i=>{const s=ST[i];return sum(s.k+', '+(S.done.has(i)?'tended':S.skip.has(i)?'tomorrow':s.m+' min'),s.mv.slice(0,3).map(([n,v,u],j)=>{const t=n+' '+o(v)+un(u);return i===S.i&&j<S.j?'<span style="color:var(--green)">'+t+'</span>':i===S.i&&j===S.j?'<span style="color:var(--routines)">'+t+'</span>':t}),s.mv.length>3?'And '+s.mv.slice(3).map(x=>x[0].toLowerCase()).join(', '):s.mv[0][3])};
+ function nextStep(){let n=-1;for(let k=1;k<=ST.length;k++){const q=(S.i+k)%ST.length;if(!S.done.has(q)&&!S.skip.has(q)){n=q;break}}if(n<0){S.fin=1;paint();return}turnTo(n)}
+ function next(){if(S.fin)return back();const s=ST[S.i];if(S.done.has(S.i))return nextStep();
+  if(s.mv[S.j+1]){S.j++;S.left=secs(s.mv[S.j]);paint();return}
+  const was=S.i;S.done.add(S.i);receipt(el,s.k+', tended',()=>{S.done.delete(was);S.fin=0;turnTo(was);paint()});paint();setTimeout(nextStep,RM?0:700)}
+ function turnTo(n){if(!H.dial)return;let off=n-H.dial.focus;const N=ST.length;if(off>N/2)off-=N;if(off<-N/2)off+=N;if(off)H.dial.turn(off);else{start(n);paint()}}
+ const R=landingV3(el,{name:'Evening',color:'var(--routines)',theme:'grow',
+  widget:()=>{const b=h('div','one lw mode');b.style.zIndex=6;blk=h('div','blk');b.appendChild(blk);b.onclick=()=>next();return {box:b,start:()=>{},stop:()=>{}}},
+  keystone:k=>{const c=h('div','lclip');c.style.cssText+='left:0;width:402px';c.innerHTML='<iframe title="Woodland" scrolling="no" src="watch.html?embed=1&look='+(phone.dataset.look==='black'?'black':'paper')+'"></iframe>';c.firstChild.style.left='0';k.appendChild(c);return null},
+  caption:'Tap the step when it is done',
+  doors:ST.map((s,i)=>({k:s.k,n:s.m+'m',sum:()=>lg(i)})),
+  acts:[{v:'Next',o:'',f:next},{v:'Pause',o:'',f:()=>{S.pause=!S.pause;paint()}},{v:'Not tonight',o:'',f:()=>{const i=S.i;S.skip.add(i);receipt(el,ST[i].k+', tomorrow',()=>{S.skip.delete(i);S.fin=0;turnTo(i);paint()});nextStep()}},
+   {v:'Finish',o:'',hold:1,f:()=>{if(S.fin)return back();S.fin=1;paint()}}],
+  ready:x=>{H=x;const od=x.dial.turn;x.dial.turn=s=>{od(s);if(x.dial.focus!==S.i)start(x.dial.focus);paint()};paint();
+   const iv=setInterval(()=>{if(!document.contains(el)||S.fin||S.pause||S.done.has(S.i))return;if(S.left>0){S.left--;if(!S.left){const s=ST[S.i];if(s.mv[S.j+1]){S.j++;S.left=secs(s.mv[S.j])}}paint()}},1000);
+   window.__rt.fast=n=>{S.left=Math.max(1,S.left-n)};return ()=>clearInterval(iv)}});
+ return R}};
+
 /* ---------- 322 Cooking mode (Galley). Same places as the landing. The rail holds the step you are on as a big ticket
    and one ticket per pan timer; timers run side by side and print their time left. The sentence place is the step in
    a few words, big enough to read from the stove; the dial is the steps; the summary is what that step needs, with
@@ -1945,7 +1992,7 @@ SCREENS.routines={title:'Routines',accent:'routines',tess:'Journal has been dry 
    {k:'Mind',go:['sheaf',{mode:0,open:'Mind'}],sum:()=>sum('Journal, Read',[wine('Journal, dry since Saturday'),grn('Read, in fruit'),'Read tonight at 9'])},
    {k:'Home',go:['sheaf',{mode:0,open:'Home'}],sum:()=>sum('Water, Lunch, Tidy, Backup',[grn('Water, done today'),'Tidy tonight',slt('Backup ran at 4 am')])},
    {k:'Weekly',sum:()=>sum('Swim, Badminton, Call family',['Badminton Wednesday','Swim Thursday','Call family Sunday'])}],
-  acts:[{v:'Plant',o:'a new routine',f:e=>receipt(e,'Tap open ground in the woodland to plant.')},{v:'Water',o:'Journal, one line',f:e=>receipt(e,'Journal, watered.')},{v:'Pause',o:'today, nothing is lost',f:e=>receipt(e,'Paused for today.')}]})}};
+  acts:[{v:'Begin',o:'the evening, 5 steps',hold:1,f:()=>go('tend')},{v:'Plant',o:'a new routine',f:e=>receipt(e,'Tap open ground in the woodland to plant.')},{v:'Water',o:'Journal, one line',f:e=>receipt(e,'Journal, watered.')},{v:'Pause',o:'today, nothing is lost',f:e=>receipt(e,'Paused for today.')}]})}};
 
 /* ---------- Purse (Money) ---------- */
 SCREENS.money={title:'Money',accent:'purse',tess:'2,125 still yours. Closing at 179 after rent.',render(el){

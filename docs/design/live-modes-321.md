@@ -65,3 +65,24 @@ Both start from the Galley's action word: Cook (Tacos, 25 min) and Shop (the lis
   stays above the action, shopping takes produce off and turns to Dairy, no full stops, no page errors.
 - For the builders: timers are end dates (`Date`), shown with `Text(timerInterval:)`; the Live Activity holds the
   soonest timer. Aisle order is a field on each pantry place; the store order is learned from the order you tap Got.
+
+## Sheet 323: routine mode (Watch)
+
+Reached by holding Begin on the Watch ("the evening, 5 steps"). The woodland stays as the keystone, untouched (the
+scene is locked); the mode lives in the places around it.
+
+| Place | Job in the mode |
+|---|---|
+| Title, band | "Evening"; "1 of 5 tended", "about 32 min to bed" |
+| Keystone | The woodland, as on the landing |
+| Caption | "Tap the step when it is done" |
+| Sentence place | One move at a time at an unhurried pace: "Stretch, 2 of 5", "Hips" big in the Watch colour, the cue ("Knee over ankle, breathe out"), and a soft countdown in the number face that rolls digit by digit ("1:58, then back"). Lines grow up from the ground the way the Watch's summary does. When a move's time runs out the next move comes by itself; a tap moves on early |
+| Dial | The evening's steps (Tidy, Stretch, Read, Journal, Lights) with their minutes; a tended one turns green, one left for tomorrow turns slate |
+| Summary | The focused step's moves with their times; done moves green, the one you are on in the Watch colour |
+| Action | Next; swipe for Pause, Not tonight (skips the step; the streak is kept and nothing is lost), Finish (hold). Undo 10 s |
+| Finish | "Tended, 5 of 5 steps", "Six days in a row now" |
+
+- Board check `t65.js` (paper and black): opens on Tidy, tending Tidy turns to Stretch, the countdown runs, the next
+  move comes by itself, no full stops, no page errors.
+- For the builders: `RoutineSession` (@Observable) with step and move end dates; the Live Activity shows the move
+  and its time left. Skipping never breaks a streak (the "nothing is lost" rule).
