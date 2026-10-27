@@ -19,6 +19,8 @@ struct GalleyShopModePage: View {
     @State private var cue = HapticCue()
     /// The last Pay (sheet 334): the old ticket tears off, then the paid ticket prints in.
     @State private var tearing = false
+    /// Sheet 342: "Everything for the tacos" in the top right for 2.2 s when tonight's dish becomes covered.
+    @State private var celebrating = false
     /// The ticket as it was when Pay was pressed: the copy that lifts away (the live one is already empty).
     @State private var frozen: (facts: GalleyShopFacts, index: Int)?
     /// Whether the new thing has arrived (sheet 332): false at the swap, then each block comes in from 30 pt right.
@@ -55,6 +57,15 @@ struct GalleyShopModePage: View {
         }
         // The layer behind the paper is paper, never white: nothing flashes at the edges while the ticket lifts.
         .background(GalleyPaper.sheet.ignoresSafeArea())
+        .onChange(of: Self.facts(model: model, trip: trip, pushed: pushed).tonightCovered) { old, now in
+            // Only on the change from not covered to covered; it goes back to the count after 2.2 s.
+            guard now, !old else { return }
+            celebrating = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(2200))
+                celebrating = false
+            }
+        }
         .onAppear(perform: begin)
         .tesseraFeedback(cue)
         #if DEBUG
@@ -86,7 +97,10 @@ struct GalleyShopModePage: View {
     }
 
     private func ticket(facts: GalleyShopFacts, index: Int, data: GalleyShopScreen) -> some View {
-        GalleyModeScreen(room: "Galley", topRight: data.topRight, back: { dismiss() }, verb: { got(facts, index) }) {
+        GalleyModeScreen(room: "Galley", topRight: celebrating ? (facts.coveredLine ?? data.topRight) : data.topRight,
+                         topRightEmphasis: celebrating ? GalleyPaper.olive : nil, back: { dismiss() },
+                         verb: { got(facts, index) })
+        {
             VStack(alignment: .leading, spacing: 0) {
                 Text(data.aisle.isEmpty ? "Groceries" : data.aisle)
                     .font(GalleyPaper.plex(.bold, 26))

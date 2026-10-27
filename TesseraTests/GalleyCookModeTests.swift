@@ -255,3 +255,19 @@ struct GalleyNotHereTests {
         #expect(GalleyNotHere.plan(rows: rows, moving: "z").final.map(\.id) == ["a", "b", "c", "x"])
     }
 }
+
+struct GalleyCoveredTests {
+    /// Sheet 342: covered only when a planned dish has things on the list and every one is in the basket.
+    @Test func tonightIsCoveredWhenEverythingIsGot() {
+        var facts = GalleyShopFacts()
+        #expect(!facts.tonightCovered && facts.coveredLine == nil)
+        facts.tonight = "Tacos"
+        #expect(!facts.tonightCovered)
+        facts.tonightLines = ["Onions", "Limes"]
+        facts.tonightGot = [0]
+        #expect(!facts.tonightCovered)
+        facts.tonightGot = [0, 1]
+        #expect(facts.tonightCovered && facts.coveredLine == "Everything for the tacos")
+        #expect(!(facts.coveredLine ?? "").hasSuffix("."))
+    }
+}

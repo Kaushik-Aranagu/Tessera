@@ -218,6 +218,8 @@ struct GalleyModeReceipt: View {
 struct GalleyModeScreen<Content: View, Thumb: View>: View {
     let room: String
     let topRight: String
+    /// The top right line, bold in this colour for a moment ("Everything for the tacos"); nil is the quiet count.
+    var topRightEmphasis: Color?
     var back: () -> Void
     var verb: () -> Void
     @ViewBuilder var content: Content
@@ -239,8 +241,8 @@ struct GalleyModeScreen<Content: View, Thumb: View>: View {
                     .accessibilityLabel("Back to \(room)")
                     Spacer()
                     Text(topRight)
-                        .font(GalleyPaper.plex(.medium, 16))
-                        .foregroundStyle(GalleyPaper.inkSecondary)
+                        .font(GalleyPaper.plex(topRightEmphasis == nil ? .medium : .bold, 16))
+                        .foregroundStyle(topRightEmphasis ?? GalleyPaper.inkSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
