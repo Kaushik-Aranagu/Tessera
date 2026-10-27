@@ -80,7 +80,8 @@ night writes every gist bottom up, and one edit stales only its chain's gists.
   the month that led the year). The node is given, not found, so this scores what a node holds; finding it is P2.
 - Each question is asked three ways: the leaves themselves (flat), one zoom, and one zoom with gists.
 - Spend goes through the Door and the runners' one ledger (`~/Library/Application Support/TessEval/ledger.json`),
-  with the live runner's allowance: the smaller of $50 and $100 minus the phone's month, minus what runners spent.
+  under the smaller of $50 and $100 minus the phone's month and the simulator's reserved $20, minus what runners
+  spent.
 - Under strict, every sent request is scanned for a walled leaf's words and for a key shape.
 - Pass line: zoom with gists at least as accurate as flat, with at most 70% of its input tokens.
 

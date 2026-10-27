@@ -5,10 +5,9 @@
 #   scripts/ai/pyramid-score.sh [--policy strict|lab] [--months N] [--phone-spent DOLLARS] [--out DIR] [--dry]
 #
 # --dry answers with a scripted brain: nothing leaves the Mac and nothing is spent. Without it this SPENDS MONEY on the
-# Claude API, from the key in the Mac keychain (the key is never printed or written). The allowance is the live
-# runner's: the smaller of $50 and ($100 minus --phone-spent), minus what the runners spent this month in
-# ~/Library/Application Support/TessEval/ledger.json, which this run adds to. Run it after a live runner run, not
-# beside one.
+# Claude API, from the key in the Mac keychain (the key is never printed or written). The allowance is the smaller of
+# $50 and ($100 minus --phone-spent minus the simulator's reserved $20), minus what the runners spent this month in
+# ~/Library/Application Support/TessEval/ledger.json, which this run adds to under its lock.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"

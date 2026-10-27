@@ -12,10 +12,12 @@ import Testing
 ///
 /// Walls, the same as the live runner's: a test store in memory, never his; the key is read from the Mac keychain by
 /// the Claude brain and never printed or written; the month's allowance is the smaller of $50 and $100 minus what the
-/// phone spent, minus what the runners spent this month in `TessEvalLedger`. The test store's ledger starts
+/// phone spent and the simulator's reserved $20, minus what the runners spent this month in `TessEvalLedger`. The test store's ledger starts
 /// with everything above the allowance already spent, so the Door refuses a call past it before it is sent.
 @MainActor
 struct PyramidLiveScoreTests {
+    static let simulatorReserveDollars = 20.0
+
     struct Answer: Codable {
         var arm: String
         var answer: String
@@ -82,7 +84,8 @@ struct PyramidLiveScoreTests {
             try #require(phone != nil, "a live run needs --phone-spent (what the phone spent this month)")
         }
         let runnersSpent = dry ? 0 : TessEvalLedger.read()[monthKey] ?? 0
-        let ceiling = min(50.0, 100.0 - (phone ?? 0))
+        // $20 stays reserved for the simulator's own test allowance, so all spend together stays under $100.
+        let ceiling = min(50.0, 100.0 - (phone ?? 0) - Self.simulatorReserveDollars)
         let allowance = max(0, Int64(ceiling * 1_000_000_000) - runnersSpent)
         if !dry {
             try #require(allowance > 0, "the month's allowance for the runners is used up")
