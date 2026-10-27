@@ -864,7 +864,8 @@ extension AppModel {
     var asksClaude: Bool {
         guard !Self.isDemo else { return false }
         let source = isSample ? (claudeOwner ?? self) : self
-        guard source.settingsAreReal || source.isSample else { return false }
+        guard source.settingsAreReal || source.isSample || TestStoreGate.allowsClaude(source.store)
+        else { return false }
         return SettingsStore(engine: source.engine).read().sendsMissesToClaude
     }
 }
