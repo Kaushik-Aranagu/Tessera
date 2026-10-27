@@ -221,3 +221,11 @@ carries over.
 
 For the builders: each mode is a full-screen cover over the room (`.fullScreenCover`), with no system chrome but the
 status bar. The landing stays underneath, so Back is the room. The Live Activity (sheet 326) is unchanged.
+
+## Sheet 330: a mode grows out of the keystone
+
+Starting a mode opens the room's keystone to the whole screen. The blackboard, the ticket or the dusk sky grows
+from the 354 x 182 slot at y 196 to full bleed in 560 ms, on a soft spring (cubic-bezier .22, .9, .24, 1). It
+starts a touch brighter and settles. The thing you were looking at becomes the place you work in. The rest of the
+landing steps back the usual way. With Reduce Motion it's a plain cut. For the builders: a `matchedGeometryEffect`
+from the keystone to the cover's background, with content fading in after 200 ms.

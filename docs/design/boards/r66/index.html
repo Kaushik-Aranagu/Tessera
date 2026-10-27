@@ -1302,6 +1302,10 @@ SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 to
  const d1=h('div','tdoor','<b>This week</b><span><span style="color:var(--training)">3</span> of 6 done. <span style="color:var(--teal)">Pull A</span> tomorrow.</span>');d1.style.top='570px';el.appendChild(d1);
  const d2=h('div','tdoor','<b>Library</b><span>28 workouts in 6 kinds. <span style="color:var(--gold)">New: hill sprints.</span></span>');d2.style.top='644px';el.appendChild(d2);
  const f=h('button','foot','Start Push A');f.style.color='var(--training)';f.onclick=()=>go('workout');el.appendChild(f);return stop}};
+/* 330: a mode grows out of the room's keystone. The board, the ticket or the dusk opens from the 354 x 182 slot at
+   196 to the whole screen (560 ms, a soft spring), so the thing you were looking at becomes the place you work in;
+   the rest of the landing steps back as it does on any move. Reduce Motion: a plain cut. */
+function growFromKey(els){if(RM||!window.__morphing)return;els.filter(Boolean).forEach((e,i)=>e.animate([{clipPath:'inset(196px 24px 496px 24px round 2px)',filter:'brightness(1.08)'},{clipPath:'inset(0px 0px 0px 0px round 0px)',filter:'none'}],{duration:560,delay:i*20,easing:'cubic-bezier(.22,.9,.24,1)',fill:'backwards'}))}
 /* ---------- 327 Workout mode, the whole board (his 2:59 AM note: "all of them need improvement"). The landing's
    places are gone for the length of a workout: the whole screen is the Deck's blackboard, and everything on it is in
    chalk, sized for a glance from the bench. One thing at a time, top to bottom: the lift, the weight huge, the bar
@@ -1336,7 +1340,7 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
  const PH={45:92,35:80,25:66,10:50,5:38,2.5:30},PW={45:17,35:15,25:13,10:10,5:8,2.5:6};
  function bar(w,y){const cx=201,ps=perSide(w);ln(24,y,378,y,.5,4);ln(cx-88,y,cx+88,y,.75,5);[-1,1].forEach(sd=>{let x=cx+sd*90;ln(x,y-16,x,y+16,.85,4);x+=sd*5;ps.forEach(p=>{const hh=PH[p],ww=PW[p];g.fillStyle='rgba('+W+',.16)';g.fillRect(sd>0?x:x-ww,y-hh/2,ww,hh);g.strokeStyle='rgba('+W+',.9)';g.lineWidth=2.4;g.strokeRect(sd>0?x:x-ww,y-hh/2,ww,hh);x+=sd*(ww+3)})});return ps}
  function stack(w,y){const sel=Math.min(12,Math.max(1,Math.round(w/10)));for(let k=1;k<=12;k++){const yy=y-60+k*9;const on=k===sel;g.strokeStyle='rgba('+(on?W:D)+','+(on?.95:.35)+')';g.lineWidth=on?3:1.6;g.strokeRect(120,yy,110,5)}ln(116,y-60+sel*9+2,96,y-60+sel*9+2,.9,3);T('pin',60,y-60+sel*9+9,20,.8,D)}
- const HIT={};
+ const HIT={};growFromKey([cv]);
  function draw(){g.clearRect(0,0,402,874);g.drawImage(bg,0,0);const l=L(),st=next(l),d=S.done[S.li];
   // top line
   T('Deck',24,62,19,.6,D);HIT.back=[0,40,90,34];T(mmss(Math.floor((Date.now()-S.t0)/1000)),378,62,22,.95,W,'r');T(S.phase==='done'?'saved':'done about '+clock(new Date(Date.now()+secsLeft()*1000)),378,84,15,.6,D,'r');
@@ -1466,7 +1470,7 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
  const S={i:0,j:0,left:ST[0].mv[0][1],done:new Set(),skip:new Set(),fin:0,pause:0,b0:Date.now()};window.__rt={S,ST};
  const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),minsLeft=()=>ST.filter((_,i)=>!S.done.has(i)&&!S.skip.has(i)).reduce((a,x)=>a+x.m,0);
  const clock=d=>(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0');
- el.innerHTML='<div class="dk-sky"></div><div class="dk-paper"></div><div class="dk-pad"></div>';const P=el.querySelector('.dk-paper'),sky=el.querySelector('.dk-sky'),pad=el.querySelector('.dk-pad');
+ el.innerHTML='<div class="dk-sky"></div><div class="dk-paper"></div><div class="dk-pad"></div>';const P=el.querySelector('.dk-paper'),sky=el.querySelector('.dk-sky'),pad=el.querySelector('.dk-pad');growFromKey([sky,P]);
  let x0=null,y0;pad.onpointerdown=e=>{const [x,y]=localXY(e,pad);x0=x;y0=y;pad.setPointerCapture(e.pointerId)};
  pad.onpointerup=e=>{if(x0==null)return;const [x,y]=localXY(e,pad);const dy=y-y0;x0=null;if(dy<-60)return next();pad.style.pointerEvents='none';const t=document.elementFromPoint(e.clientX,e.clientY);pad.style.pointerEvents='';const a=t&&t.closest('[data-a]');if(!a)return;const v=a.dataset.a;
   if(v==='back')return back();if(v==='next')return next();if(v==='pause'){S.pause=!S.pause;return paint(1)}if(v==='skip'){S.skip.add(S.i);receipt(el,ST[S.i].k+', tomorrow, the streak is kept');return step()}if(v.startsWith('st')){go2(+v.slice(2))}};
@@ -1497,8 +1501,8 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
    when it is done, what it needs with dotted leaders to the amount, the timers. The bottom is the thumb's: the verb,
    and the steps (or aisles) down the right edge. Swipe up anywhere for the next one. The paper stays paper in the black
    look too, the way a real ticket would. */
-function ticketScreen(el,o){el.classList.add('fullticket');el.innerHTML='<div class="tk-rail"><i></i></div><div class="tk-paper"></div><div class="tk-pad"></div>';
- const paper=el.querySelector('.tk-paper'),pad=el.querySelector('.tk-pad');let x0=null,y0;
+function ticketScreen(el,o){el.classList.add('fullticket');el.innerHTML='<div class="tk-bg"></div><div class="tk-rail"><i></i></div><div class="tk-paper"></div><div class="tk-pad"></div>';
+ const paper=el.querySelector('.tk-paper'),pad=el.querySelector('.tk-pad');let x0=null,y0;growFromKey([el.querySelector('.tk-bg'),el.querySelector('.tk-rail'),paper]);el.style.setProperty('--g',1);
  pad.onpointerdown=e=>{const [x,y]=localXY(e,pad);x0=x;y0=y;pad.setPointerCapture(e.pointerId)};
  pad.onpointerup=e=>{if(x0==null)return;const [x,y]=localXY(e,pad);const dx=x-x0,dy=y-y0;x0=null;if(dy<-60&&Math.abs(dy)>Math.abs(dx))return o.up();
   pad.style.pointerEvents='none';const t=document.elementFromPoint(e.clientX,e.clientY);pad.style.pointerEvents='';const a=t&&t.closest('[data-a]');if(a)o.tap(a.dataset.a,a)};
@@ -1630,11 +1634,12 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .lockscr .la3{font-size:15px;color:rgba(243,241,234,.72);margin-top:8px;height:20px;white-space:nowrap;overflow:hidden}
 .lockscr .lk-tabs{position:absolute;left:24px;right:24px;top:762px;display:flex;justify-content:space-between;font-size:14px;color:rgba(243,241,234,.5)}
 .lockscr .lk-tabs span{cursor:pointer}.lockscr .lk-tabs span.on{color:#f3f1ea}
-.fullboard{background:#16191b!important}
+.fullboard{background:var(--p-bg)!important}
 .fullboard canvas.fb{position:absolute;left:0;top:0;width:402px;height:874px}
 .fullboard .fbpad{position:absolute;inset:0;z-index:5;touch-action:none;cursor:pointer}
 .fullboard .receipt{color:#e8e8e2;top:704px!important;bottom:auto!important}
-.fullticket{background:#F3ECDD!important;color:#2B2620;--ink:#2B2620;--ink2:#6A6155;--tk:#93611A}
+.fullticket{background:var(--p-bg)!important;color:#2B2620;--ink:#2B2620;--ink2:#6A6155;--tk:#93611A}
+.fullticket .tk-bg{position:absolute;inset:0;background:#F3ECDD}
 .fullticket .tk-rail{position:absolute;left:0;right:0;top:50px;height:8px;background:linear-gradient(#b9b9b9,#8d8d8d);box-shadow:0 2px 3px rgba(0,0,0,.18)}
 .fullticket .tk-rail i{position:absolute;left:50%;top:-4px;width:34px;height:18px;margin-left:-17px;background:#6f6f6f;border-radius:2px}
 .fullticket .tk-paper{position:absolute;left:24px;right:24px;top:70px;bottom:0;font-family:'IBM Plex Sans Condensed',sans-serif}
@@ -1673,7 +1678,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .tk-verb{position:absolute;left:0;bottom:62px;font-size:44px;font-weight:700;color:var(--tk);line-height:48px}
 .tk-sub{position:absolute;left:0;bottom:40px;font-size:14px;color:var(--ink2)}
 .fullticket .receipt{top:auto;bottom:118px!important;left:24px;right:140px;color:var(--ink2)}
-.fulldusk{background:#1c1626!important;color:#F4EEF2;--ink:#F4EEF2;--ink2:rgba(244,238,242,.68);--rt:#F0B9DD}
+.fulldusk{background:var(--p-bg)!important;color:#F4EEF2;--ink:#F4EEF2;--ink2:rgba(244,238,242,.68);--rt:#F0B9DD}
 .fulldusk .dk-sky{position:absolute;inset:0;--n:0;background:linear-gradient(180deg,color-mix(in srgb,#2a2140 calc(100% - var(--n)*40%),#0c0b14) 0%,color-mix(in srgb,#5b3a62 calc(100% - var(--n)*70%),#151224) 55%,color-mix(in srgb,#c98472 calc(100% - var(--n)*85%),#1d1830) 100%);transition:background 2s}
 .fulldusk .dk-paper{position:absolute;left:24px;right:24px;top:52px;bottom:0;font-family:var(--sans)}
 .fulldusk .dk-pad{position:absolute;inset:0;z-index:5;touch-action:none;cursor:pointer}
