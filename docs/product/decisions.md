@@ -1239,3 +1239,11 @@ Kaushik: "I don't want any privacy-related restrictions on the what Claude can b
 2. UNCHANGED: the Claude key and key-shaped text never leave the phone; the walls on backups, logs, widgets, notifications, Live Activity, Lock Screen and the screen itself (private items still read "Private ..." on screen and in widgets); the in-app cap and the asking-Claude switch behavior.
 3. Money write tools by Claude (LogSpend, LogShopTotal, SkipShopTotal, EditSpend and pool actions offered to the model) are PENDING his decision; until he says, they stay not offered (6:20 PM Oct 19 stands for the write side only).
 4. Docs: lines elsewhere that say a thing "never reaches Claude" are stale for the send side. Ops amends them in the docs PR with this entry as the source; the key rule and the screen/backup/log/widget wall wording stay.
+
+## 12:28 PM Oct 27: Claude may propose money changes (Kaushik, decision card in the AI layer thread, 19:28 UTC Oct 27)
+
+The card asked: "Should Claude also be allowed to make money changes, not just see money?" He picked "Claude can write money too" ("Money tools are offered to Claude as well; each change still lands as a ghost row with Undo").
+1. Money tools are offered to Claude as they exist; today that is logSpend, and the rest (LogShopTotal, SkipShopTotal, EditSpend and the pool actions) have no tool yet. This SUPERSEDES item 3 of the 11:59 AM Oct 27 entry and the "Money actions are NOT offered to the model" ruling of 6:20 PM Oct 19 (write side). Code: #1488.
+2. Every money change from Claude lands pending as a ghost row with the 10 s Undo, worded "Reversed". It is never applied silently.
+3. UNCHANGED: room agents still have no money tools. The Claude key, the in-app cap, the asking-Claude switch and the backup, log, widget, notification and screen walls are as in the 11:59 AM Oct 27 entry.
+4. Docs: lines that say money actions are "never offered" to Claude are stale. Ops amended the living ones in the docs PR that carries this entry.
