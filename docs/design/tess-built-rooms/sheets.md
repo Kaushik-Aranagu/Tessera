@@ -91,7 +91,7 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 ## Sheet 364: the room stays live
 
 - A room built by talking holds no copies of his data. Its parts are bound to his plants, so when one changes, the room re-ranks by itself, and that move is the proof
-- Watered the orchid: its 6 rolls down to 0 (one step every 40 to 60 ms), and it walks to the end of the row while the others close up. The wine glow hands over to the monstera only once the move has settled (the last 28% of the 520 ms), with one light haptic tick. The name in the line and in the caption ("the monstera is thirsty", "the monstera first") rises 0.4 em into place after 180 ms
+- Watered the orchid: its 6 rolls down to 0 (the whole roll takes about 400 ms, never faster than 40 ms a step), and it walks to the end of the row while the others close up. The wine glow hands over to the monstera only once the move has settled (the last 28% of the 520 ms), with one light haptic tick. The name in the line and in the caption ("the monstera is thirsty", "the monstera first") rises 0.4 em into place after 180 ms
 - The action word moves on to "Watered the monstera". The receipt reads "Orchid, watered" with Undo, and Undo plays the same move backwards (the number rolls back up to 6 and the orchid takes the glow again)
 - When all four are watered, the line reads "4 plants, all watered", the caption is just "Days since water", nothing glows, and the action word goes back to "Say anything else"
 - It works the same in every way from sheet 363. In the one-number way the monstera's 4 grows out of the side list into the big spot, and the orchid's 0 shrinks into the list's end
