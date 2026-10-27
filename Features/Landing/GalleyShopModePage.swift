@@ -12,6 +12,11 @@ struct GalleyShopModePage: View {
     @State private var pushed: [String] = []
     @State private var focus = 0
     @State private var trip = ShopTrip()
+    /// "Got" in flight (sheet 332): the pen stroke through the thing, then the words fade, then the check is written.
+    @State private var pen: String?
+    @State private var penProgress: CGFloat = 0
+    @State private var faded = false
+    @State private var cue = HapticCue()
 
     var body: some View {
         let _ = model.revision
@@ -41,10 +46,17 @@ struct GalleyShopModePage: View {
                         .foregroundStyle(GalleyPaper.ink)
                         .lineLimit(2)
                         .minimumScaleFactor(0.5)
+                        .opacity(faded ? 0.15 : 1)
+                        .overlay {
+                            if pen != nil {
+                                GalleyPenStroke(progress: penProgress)
+                                    .stroke(GalleyPaper.ink, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                            }
+                        }
                         .padding(.top, 18)
                     if let amount = data.amount {
                         Text(amount)
-                            .font(GalleyPaper.number(34))
+                            .font(GalleyPaper.number(34, weight: .regular))
                             .foregroundStyle(GalleyPaper.ochre)
                     }
                     if let why = data.why {
@@ -98,6 +110,17 @@ struct GalleyShopModePage: View {
                 }
             }
         }
+        .onAppear(perform: begin)
+        .tesseraFeedback(cue)
+    }
+
+    /// Opens the shop the first time (Pay finishes it).
+    private func begin() {
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        if groceries.shop(in: model.engine)?.state != .running {
+            _ = try? model.engine.perform(StartShop(), by: .user)
+            model.touch()
+        }
     }
 
     private func label(_ title: String, @ViewBuilder _ body: () -> some View) -> some View {
@@ -135,9 +158,31 @@ struct GalleyShopModePage: View {
 
     // MARK: Doing
 
+    /// Got: a pen stroke through the thing (300 ms), the words fade, then the check is written. Under Reduce Motion
+    /// there is no stroke: it is checked at once. One haptic for the move.
     private func got(_ facts: GalleyShopFacts, _ index: Int) {
-        guard facts.aisles.indices.contains(index), let item = facts.aisles[index].items.first,
+        guard pen == nil, facts.aisles.indices.contains(index), let item = facts.aisles[index].items.first,
               let id = UUID(uuidString: item.id) else { return }
+        guard !reduceMotion else {
+            check(id)
+            return
+        }
+        pen = item.id
+        penProgress = 0
+        cue.play(.done)
+        withAnimation(.easeInOut(duration: 0.3)) { penProgress = 1 }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation(.easeOut(duration: 0.2)) { faded = true }
+            try? await Task.sleep(for: .milliseconds(200))
+            check(id)
+            pen = nil
+            faded = false
+            penProgress = 0
+        }
+    }
+
+    private func check(_ id: UUID) {
         let checked = try? model.engine.perform(CheckListItem(item: id, time: AppClock.now), by: .user)
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
         if checked == nil {

@@ -89,11 +89,11 @@ struct GalleyShopScreen: Equatable {
         let current = facts.aisles[index]
         aisle = current.name
         spot = GalleyCues.aisleSpot(current.name)
-        thing = first.name
+        thing = GalleyCookWords.capital(first.name)
         amount = first.amount
         why = first.why
         tip = GalleyCues.pick(first.name)
-        object = first.name
+        object = GalleyCookWords.capital(first.name)
         inAisle = (current.items.map { Line(id: $0.id, name: $0.name, amount: $0.amount, struck: false) }
             + current.got.map { Line(id: $0.id, name: $0.name, amount: $0.amount, struck: true) })
         if facts.aisles.indices.contains(index + 1) {

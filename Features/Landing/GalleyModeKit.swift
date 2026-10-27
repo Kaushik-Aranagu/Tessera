@@ -264,3 +264,31 @@ struct GalleyModeScreen<Content: View, Thumb: View>: View {
         .preferredColorScheme(.light)
     }
 }
+
+/// Sheet 332: "Got" draws a pen stroke through the line from left to right at a slight angle, 300 ms, then the words
+/// fade. The stroke is a trimmed path, so it is drawn by animating `progress` from 0 to 1.
+struct GalleyPenStroke: Shape {
+    /// How far across the stroke is drawn, 0 to 1.
+    var progress: CGFloat
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    /// Left edge a little low, right edge a little high: a slight angle, like a hand.
+    static func ends(in rect: CGRect) -> (start: CGPoint, end: CGPoint) {
+        (
+            CGPoint(x: rect.minX, y: rect.minY + rect.height * 0.62),
+            CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.5)
+        )
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let ends = Self.ends(in: rect)
+        var path = Path()
+        path.move(to: ends.start)
+        path.addLine(to: ends.end)
+        return path.trimmedPath(from: 0, to: min(max(progress, 0), 1))
+    }
+}

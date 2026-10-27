@@ -145,3 +145,13 @@ struct GalleyCuesTests {
         #expect(GalleyCues.pick("Foil") == nil)
     }
 }
+
+struct GalleyPenStrokeTests {
+    /// Sheet 332: the stroke runs left to right at a slight angle (the right end a little higher).
+    @Test func theStrokeRunsLeftToRightAtASlightAngle() {
+        let ends = GalleyPenStroke.ends(in: CGRect(x: 0, y: 0, width: 200, height: 80))
+        #expect(ends.start.x == 0 && ends.end.x == 200)
+        #expect(ends.end.y < ends.start.y && ends.start.y - ends.end.y < 20)
+        #expect(GalleyPenStroke(progress: 0.5).animatableData == 0.5)
+    }
+}
