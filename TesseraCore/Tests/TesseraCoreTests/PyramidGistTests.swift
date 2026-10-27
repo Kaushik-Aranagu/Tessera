@@ -66,6 +66,22 @@ struct PyramidGistTests {
         #expect(PyramidDistiller.numbers("1,200 kg on Oct 3, then 62.5.") == ["1200", "3", "62.5"])
     }
 
+    /// Input hygiene H3: one way of reading numbers. A gist can't slip a number past its cites as a word or in
+    /// digits that only look like ASCII, and every quantity the answer check reads is read here too.
+    @Test func everyNumberAGistWritesIsRead() {
+        #expect(PyramidDistiller.numbers("twenty sets, then three more") == ["20", "3"])
+        #expect(PyramidDistiller.numbers("２０ sets on ⑫ days") == ["20", "12"])
+        #expect(PyramidDistiller.numbers("\u{0662}\u{0660} sets") == ["20"])
+        #expect(PyramidDistiller.numbers("Bench 80 kg x5") == ["80", "5"])
+        #expect(PyramidDistiller.numbers("often, attend, tension") == [])
+        let vectors = ["Bench 80 kg x5", "twenty workouts", "1,200 kg lifted", "62.5 kg on Oct 3", "$40 at 6:30 pm",
+                       "three meals and 2 notes", "２０ sets", "up 4 from last week", "ran 5 km in 25 minutes"]
+        for vector in vectors {
+            let quantities = Set(AnswerCheck.claims(in: vector).map { PyramidStats.format($0.value) })
+            #expect(quantities.isSubset(of: PyramidDistiller.numbers(vector)), "\(vector)")
+        }
+    }
+
     // MARK: Walls
 
     @Test func strictNeverSendsAWalledLine() async throws {

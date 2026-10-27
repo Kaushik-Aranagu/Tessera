@@ -215,7 +215,10 @@ public struct PyramidDistiller {
         }
     }
 
-    /// The numbers in a text, normalized as a total prints: "1,200" and "1200.0" are both "1200".
+    /// The numbers in a text, normalized as a total prints: "1,200" and "1200.0" are both "1200". Digits are read as
+    /// they draw (full-width, circled and other scripts' digits too) and number words as the answer check reads them,
+    /// so a gist can't carry a number its cites don't hold by writing "twenty" or "２０" (input-hygiene H3). Every
+    /// quantity `AnswerCheck` reads is read here too.
     nonisolated static func numbers(_ text: String) -> Set<String> {
         var found = Set<String>()
         var current = ""
@@ -226,9 +229,13 @@ public struct PyramidDistiller {
             }
             current = ""
         }
-        for character in text {
-            if character.isASCII, character.isNumber {
-                current.append(character)
+        let folded = text.precomposedStringWithCompatibilityMapping
+        for character in folded {
+            if character.isNumber, let digit = character.wholeNumberValue, (0 ... 9).contains(digit),
+               character.unicodeScalars.count == 1,
+               character.unicodeScalars.first?.properties.numericType == .decimal
+            {
+                current.append(String(digit))
             } else if character == "." || character == ",", !current.isEmpty {
                 current.append(character)
             } else {
@@ -236,6 +243,11 @@ public struct PyramidDistiller {
             }
         }
         flush()
+        for word in folded.lowercased().split(whereSeparator: { !$0.isLetter }) {
+            if let value = AnswerCheck.numberWords[String(word)] {
+                found.insert(PyramidStats.format(value))
+            }
+        }
         return found
     }
 
