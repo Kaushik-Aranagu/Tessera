@@ -183,9 +183,12 @@ struct RoutineModePage: View {
                     }
                     .buttonStyle(.plain)
                     if !data.finished {
-                        HStack(spacing: 22) {
-                            small(data.pauseWord, color: soft) { pauseOrResume() }
-                            small("Not tonight", color: soft) { notTonight() }
+                        // Two short rows, so no word ever wraps beside the steps down the right edge.
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack(spacing: 22) {
+                                small(data.pauseWord, color: soft) { pauseOrResume() }
+                                small("Not tonight", color: soft) { notTonight() }
+                            }
                             small("Finish, hold", color: soft, hold: true) { finish() }
                         }
                     }
@@ -201,6 +204,8 @@ struct RoutineModePage: View {
         Text(word)
             .font(.custom("Figtree", fixedSize: 17).weight(.semibold))
             .foregroundStyle(color)
+            .lineLimit(1)
+            .fixedSize()
             .frame(minHeight: 36)
             .contentShape(Rectangle())
             .onTapGesture {
