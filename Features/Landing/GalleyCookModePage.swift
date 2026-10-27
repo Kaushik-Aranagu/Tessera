@@ -8,12 +8,12 @@ struct GalleyCookModePage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var session: CookClockSession?
     @State private var navigator = ShellNavigator(root: .landing(GalleyCookContent.room))
 
     var body: some View {
         ZStack {
-            Theme.Colors.page.ignoresSafeArea()
             if let session {
                 modeView(session)
             }
@@ -67,7 +67,7 @@ struct GalleyCookModePage: View {
     }
 
     private func advance(_ session: CookClockSession) {
-        withTesseraAnimation(Theme.Motion.house) { _ = session.next() }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = session.next() }
     }
 
     /// Starts the step's pan timer, or gives a running one a minute more.

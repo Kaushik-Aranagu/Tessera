@@ -8,6 +8,7 @@ struct GalleyShopModePage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var navigator = ShellNavigator(root: .landing(GalleyShopContent.room))
     @State private var pushed: [String] = []
     @State private var trip = ShopTrip()
@@ -17,7 +18,6 @@ struct GalleyShopModePage: View {
         let facts = Self.facts(model: model, trip: trip, pushed: pushed)
         let focus = facts.aisles.isEmpty ? 0 : min(max(navigator.state.dialFocus, 0), facts.aisles.count - 1)
         ZStack {
-            Theme.Colors.page.ignoresSafeArea()
             ShellView(room: GalleyShopContent(facts: facts), navigator: navigator, accent: LandingAccent.kitchen) {
                 handle($0, facts: facts, aisle: focus)
             }
@@ -44,7 +44,7 @@ struct GalleyShopModePage: View {
             case "got": got(facts.aisles[aisle].items.first)
             case "nothere":
                 if let first = facts.aisles[aisle].items.first {
-                    withTesseraAnimation(Theme.Motion.house) { pushed.append(first.id) }
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pushed.append(first.id) }
                 }
             case "pay": pay()
             default: break
@@ -57,7 +57,7 @@ struct GalleyShopModePage: View {
     private func got(_ item: GalleyShopFacts.Item?) {
         guard let item, let id = UUID(uuidString: item.id) else { return }
         let checked = try? model.engine.perform(CheckListItem(item: id, time: AppClock.now), by: .user)
-        withTesseraAnimation(Theme.Motion.house) { model.touch() }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
         if checked == nil {
             TessVoice.shared.say("Didn't save that. Try again")
         }
