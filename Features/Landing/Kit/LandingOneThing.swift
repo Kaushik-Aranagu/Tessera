@@ -42,30 +42,20 @@ struct LandingOneThing<Item: Identifiable & Equatable, Content: View>: View {
                 .onEnded { value in
                     let flick = abs(value.predictedEndTranslation.height) > 500 * 0.3
                     var delta = 0
-                    if value.translation.height < -40 || (flick && value.translation.height < -12) {
-                        delta = 1
-                    }
-                    if value.translation.height > 40 || (flick && value.translation.height > 12) {
-                        delta = -1
-                    }
+                    if value.translation.height < -40 || (flick && value.translation.height < -12) { delta = 1 }
+                    if value.translation.height > 40 || (flick && value.translation.height > 12) { delta = -1 }
                     let next = index + delta
                     withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                         drag = 0
-                        if items.indices.contains(next), delta != 0 {
-                            index = next
-                        }
+                        if items.indices.contains(next), delta != 0 { index = next }
                     }
-                    if delta != 0, items.indices.contains(next) {
-                        cue.play(.pageTurn)
-                    }
+                    if delta != 0, items.indices.contains(next) { cue.play(.pageTurn) }
                 }
         )
         .tesseraFeedback(cue)
         .accessibilityAdjustableAction { direction in
             let next = index + (direction == .increment ? 1 : -1)
-            if items.indices.contains(next) {
-                index = next
-            }
+            if items.indices.contains(next) { index = next }
         }
     }
 

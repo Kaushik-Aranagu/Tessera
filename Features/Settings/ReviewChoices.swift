@@ -367,10 +367,7 @@ final class ReviewChoices {
                needsClaude: true, readiness: .live),
         // Harness H3: Tess answers open questions and makes small changes with tools, streamed. Off (or Tess asks
         // Claude Off) leaves only the phone's own model, with no tools.
-        Choice(id: "tessAsks",
-               name: "Ask Tess anything",
-               values: ["Off", "On"],
-               defaultValue: "On",
+        Choice(id: "tessAsks", name: "Ask Tess anything", values: ["Off", "On"], defaultValue: "On",
                says: ["Off": "Tess answers only with the phone's own model, and makes no changes by asking.",
                       "On": "Ask Tess a question or for a small change; Claude may answer, and changes wait for your OK."],
                needsClaude: true, readiness: .live),

@@ -48,10 +48,8 @@ struct LayoutPlace: Identifiable, Equatable {
     }
 
     /// The pane's rect: 2 pt in from the place's frame on every side, so every seam reads as a 4 pt gap, except where
-    /// the contract's frames sit 4 pt apart already (Switcher's right and Needs' left take 0 pt) or 2 pt apart (the
-    /// Door
-    /// summary's right and the Dial's left take 1 pt; the dial is on the right since Oct 26). Design 283: frames stay
-    /// as
+    /// the contract's frames sit 4 pt apart already (Switcher's right and Needs' left take 0 pt) or 2 pt apart (the Door
+    /// summary's right and the Dial's left take 1 pt; the dial is on the right since Oct 26). Design 283: frames stay as
     /// the contract has them, the insets differ.
     var paneFrame: CGRect {
         let inset = LayoutPlaces.inset
