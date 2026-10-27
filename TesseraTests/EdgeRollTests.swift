@@ -80,4 +80,38 @@ struct EdgeRollTests {
         #expect(EdgeRoll.tiltSign(side: .leading, axis: .horizontal)
             == -EdgeRoll.tiltSign(side: .trailing, axis: .horizontal))
     }
+
+    @Test func theThreePresetsHaveTheirOwnDepthLeanAndShrink() {
+        let card = EdgeRoll.look(overflow: 0.75, preset: .card)
+        #expect(EdgeRoll.Preset.card.depth == 28)
+        #expect(abs(card.tilt - 16) < 1e-9 && abs(card.scale - 0.96) < 1e-9)
+        #expect(abs(card.blur - 1.2) < 1e-9 && abs(card.opacity - 0.08) < 1e-9)
+
+        // Rows: 18 pt, 10 degrees, 3%; the mask is the fade, so no blur and the row's own opacity is untouched.
+        let row = EdgeRoll.look(overflow: 0.75, preset: .row)
+        #expect(EdgeRoll.Preset.row.depth == 18)
+        #expect(abs(row.tilt - 10) < 1e-9 && abs(row.scale - 0.97) < 1e-9)
+        #expect(row.blur == 0 && row.opacity == 1)
+
+        // The switcher word: a 22 pt fade only.
+        let word = EdgeRoll.look(overflow: 0.75, preset: .word)
+        #expect(EdgeRoll.Preset.word.depth == 22)
+        #expect(word == .rest)
+    }
+
+    @Test func eachPresetsFadeUsesItsOwnDepth() throws {
+        for preset in [EdgeRoll.Preset.card, .row, .word] {
+            let stops = try #require(EdgeRoll.fade(childMin: -40, childMax: 60, clipMin: 0, clipMax: 100,
+                                                   depth: preset.depth))
+            let opaque = try #require(stops.first { $0.opacity == 1 })
+            #expect(abs(opaque.location - (preset.depth + 40) / 100) < 1e-9)
+        }
+    }
+
+    @Test func rowsAndWordsKeepTheirOpacityUnderReduceMotionOnlyAsACrossfade() {
+        for preset in [EdgeRoll.Preset.row, .word] {
+            let look = EdgeRoll.look(overflow: 0.5, preset: preset, reduceMotion: true)
+            #expect(look.tilt == 0 && look.scale == 1 && look.blur == 0)
+        }
+    }
 }
