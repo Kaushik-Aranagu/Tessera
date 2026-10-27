@@ -388,12 +388,12 @@ const ROOMS={training:{n:'Training',fact:'Push A at 6:30 pm, bench first'},kitch
 const APPS=['training','kitchen','routines','notes','lists','money','weather'];
 // notices: one highlighted part per notice, and it is a door
 const NOTICES=[
- {pre:'',hi:'Bench',post:', 185 for 5 again.',room:'training'},
- {pre:'',hi:'Rice',post:' goes out today.',room:'pantry',acc:'kitchen'},
- {pre:'Rain from ',hi:'7 PM',post:'.',room:'weather',acc:'rain'},
- {pre:'',hi:'Packing',post:', 6 of 14.',room:'list',acc:'lists'},
- {pre:'Stretch at ',hi:'8 pm',post:'.',room:'routine',acc:'routines'},
- {pre:'',hi:'Rent',post:' is due Friday.',room:'money'}];
+ {pre:'',hi:'Bench',post:', 185 for 5 again',room:'training'},
+ {pre:'',hi:'Rice',post:' goes out today',room:'pantry',acc:'kitchen'},
+ {pre:'Rain from ',hi:'7 PM',post:'',room:'weather',acc:'rain'},
+ {pre:'',hi:'Packing',post:', 6 of 14',room:'list',acc:'lists'},
+ {pre:'Stretch at ',hi:'8 pm',post:'',room:'routine',acc:'routines'},
+ {pre:'',hi:'Rent',post:' is due Friday',room:'money'}];
 const ONE=[
  {room:'training',hdr:'Training',big:'6:30',bigUnit:'pm',num:true,mid:'Push A, bench first',sml:'Bench best 205 lb, three weeks ago',sign:'barbell',go:'training'},
  {room:'kitchen',hdr:'Kitchen',big:'4 to get',mid:'Tortillas, cilantro, limes',sml:'For tacos tonight, on the way home',sign:'bag',go:'pantry'},
@@ -2514,7 +2514,8 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.da
  const blockOf=n=>{let e=n.parentElement;while(e&&e!==phone&&getComputedStyle(e).display.startsWith('inline'))e=e.parentElement;return e};
  const lastText=e=>{const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT,{acceptNode:t=>t.nodeValue.trim()?1:3});let l=null,t;while(t=w.nextNode())l=t;return l};
  function sweep(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const hits=[];let t;
-  while(t=w.nextNode()){const v=t.nodeValue;if(!/[^.]\.\s*$/.test(v))continue;const p=t.parentElement;if(!p||p.closest(KEEP))continue;const b=blockOf(t);if(b&&lastText(b)===t)hits.push(t)}
+  while(t=w.nextNode()){const v=t.nodeValue;if(!/(^|[^.])\.\s*$/.test(v))continue;const p=t.parentElement;if(!p||p.closest(KEEP))continue;const b=blockOf(t);if(b&&lastText(b)===t)hits.push(t)}
+  /* 301: a line drawn a letter at a time (the departure board) ends on a lone '.', so a full stop alone in its node goes too */
   hits.forEach(t=>{t.nodeValue=t.nodeValue.replace(/\.(\s*)$/,'$1')})}
  let q=0;const mo=new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;mo.disconnect();sweep(phone);mo.observe(phone,{subtree:true,childList:true,characterData:true})})});
  sweep(phone);mo.observe(phone,{subtree:true,childList:true,characterData:true})})();

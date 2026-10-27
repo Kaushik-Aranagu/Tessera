@@ -191,3 +191,6 @@ Replaces the v7 bubbles.
   summaries, rows, receipts, the Undo line ("Tess logged yesterday's walk, 32 min  Undo") and Tess's spoken
   line. Full stops stay only inside notes and documents (note bodies, the Log's text and Tess's kept notes). Inside
   a line, a full stop between two sentences is fine, but prefer a comma.
+- **Strip the stop at the source (sheet 301).** The departure board draws its rows a letter at a time, so a stop left
+  in the data flaps in as a lone "." that a line-end check on whole strings misses. Notice data carries no stop, and
+  the check also catches a stop alone at the end of a line. Board test `t45.js` samples every page and fails on any.
