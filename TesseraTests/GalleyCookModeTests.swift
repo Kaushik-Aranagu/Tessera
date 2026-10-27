@@ -14,6 +14,7 @@ struct GalleyCookModeTests {
         facts.current = current
         facts.now = now
         facts.minutesIn = 6
+        facts.eatAt = "6:35"
         facts.minutesLeft = 19
         facts.steps = [
             .init(index: 0, short: "Char the peppers", how: "Until blistered", ingredients: ["Peppers 2"],
@@ -47,8 +48,8 @@ struct GalleyCookModeTests {
 
     @Test func theWholeScreenReadsTopToBottom() {
         let screen = GalleyCookScreen(facts())
-        #expect(screen.title == "Tacos for 2" && screen.topRight == "6 min in")
-        #expect(screen.number == "2" && screen.heat == "Medium high")
+        #expect(screen.title == "Tacos for 2" && screen.topRight == "6 min in, eat about 6:35")
+        #expect(screen.number == "2" && screen.of == "of 3" && screen.heat == "Medium high")
         #expect(screen.instruction == "Brown the chicken in the oil" && screen.how == "Cumin and salt")
         var dup = facts()
         dup.steps[1] = .init(index: 1, short: "Heat the oven", how: "To 425°F", line: "Heat the oven to 425°F")
@@ -72,7 +73,7 @@ struct GalleyCookModeTests {
         facts.steps[1].timer = .init(id: "u", label: "Chicken", endsAt: now.addingTimeInterval(-5))
         let screen = GalleyCookScreen(facts)
         #expect(screen.timers.first?.time == "Ready" && screen.timers.first?.ready == true)
-        #expect(screen.verb == "Finish" && screen.hold && screen.object == "Tacos")
+        #expect(screen.verb == "Serve" && screen.hold && screen.object == "Tacos")
     }
 
     @Test func noShownLineEndsWithAFullStop() {
@@ -138,6 +139,9 @@ struct GalleyCuesTests {
         #expect(GalleyCues.heat("Chop the onion.") == nil)
         #expect(GalleyCues.doneness("Brown the chicken.") == "Turn it when it lets go of the pan")
         #expect(GalleyCues.doneness("Chop the onion.") == nil)
+        #expect(GalleyCues.doneness("Heat the oven to 425°F.") == "Ready when the oven reaches 425°F")
+        #expect(GalleyCues.heatNote("Brown the chicken in the oil.") == "a spoon of oil")
+        #expect(GalleyCues.heatNote("Chop the onion.") == nil)
     }
 
     @Test func aislesAndPicks() {
@@ -165,6 +169,7 @@ struct GalleyPrinterTests {
     @Test func thePaperFeedsInFiveStepsWithAnOvershoot() {
         let steps = GalleyPrinter.feedSteps
         #expect(steps.count == 6 && steps[4] == 34 && steps.last == 30)
+        #expect(GalleyPrinter.stepMilliseconds * 5 == 520)
         #expect(zip(steps, steps.dropFirst()).prefix(4).allSatisfy { $0.0 < $0.1 })
     }
 
@@ -211,5 +216,25 @@ struct GalleyTearOffTests {
         #expect(steps[0] > GalleyTearOff.from)
         #expect(GalleyTearOff.liftX == -18 && GalleyTearOff.liftY == -70 && GalleyTearOff.angle == -5)
         #expect(GalleyTearOff.delay < GalleyTearOff.fade)
+    }
+}
+
+struct GalleySpikeTests {
+    /// Sheet 337: eight even steps to the whole summary; the ticket narrows to .18 x .06 and rises 24 pt.
+    @Test func theSummaryPrintsDownInEightSteps() {
+        #expect(GalleySpike.reveal.count == 8 && GalleySpike.reveal.last == 1 && GalleySpike.reveal.first == 0.125)
+        #expect(GalleySpike.scaleX == 0.18 && GalleySpike.scaleY == 0.06 && GalleySpike.rise == 24)
+        #expect(GalleySpike.printDelay < GalleySpike.fade)
+    }
+
+    @Test func theEatSummarySaysWhatWasCooked() {
+        var facts = GalleyCookFacts()
+        facts.recipe = "Tacos"
+        facts.serves = 2
+        facts.minutesIn = 38
+        facts.steps = [.init(index: 0, short: "Char", how: ""), .init(index: 1, short: "Serve", how: "")]
+        let eat = GalleyCookEat(facts)
+        #expect(eat.title == "Eat" && eat.dish == "Tacos for 2" && eat.detail == "Cooked in 38 min, 2 steps")
+        #expect(!eat.detail.hasSuffix("."))
     }
 }

@@ -36,6 +36,8 @@ struct GalleyCookFacts: Equatable {
         var line = ""
         /// The heat for the step ("Medium high"), from its words or its verb; nil when unknown.
         var heat: String?
+        /// What goes in the pan, under the heat: "a spoon of oil".
+        var heatNote: String?
         /// What tells you it is done ("Turn it when it lets go of the pan"); nil when unknown.
         var cue: String?
         /// The pan time the step names, in minutes, nil when it has none.
@@ -53,8 +55,11 @@ struct GalleyCookFacts: Equatable {
     var steps: [Step] = []
     /// The step he is on.
     var current = 0
+    /// Minutes since this cook was opened (it counts from 0 for the session).
     var minutesIn = 0
     var minutesLeft = 0
+    /// When it will be eaten, "6:35", from the plan's minutes left; nil when unknown.
+    var eatAt: String?
     var now = Date()
     /// Timers that belong to no step (he said "bread, 8 minutes").
     var spoken: [Timer] = []
@@ -179,7 +184,10 @@ struct GalleyCookScreen: Equatable {
     /// Top right: "6 min in".
     var topRight = ""
     var number = ""
+    /// "of 5", small beside the number.
+    var of = ""
     var heat: String?
+    var heatNote: String?
     /// The instruction, 46 pt, up to two lines.
     var instruction = ""
     var how = ""
@@ -195,10 +203,12 @@ struct GalleyCookScreen: Equatable {
 
     init(_ facts: GalleyCookFacts) {
         title = facts.serves.map { "\(facts.recipe) for \($0)" } ?? facts.recipe
-        topRight = facts.minutesIn <= 0 ? "Just started" : "\(facts.minutesIn) min in"
+        topRight = "\(max(facts.minutesIn, 0)) min in" + (facts.eatAt.map { ", eat about \($0)" } ?? "")
         guard let step = facts.step else { return }
         number = "\(step.index + 1)"
+        of = "of \(facts.steps.count)"
         heat = step.heat
+        heatNote = step.heatNote
         instruction = step.line.isEmpty ? step.short : step.line
         // The instruction line already says what follows its few words: never say it twice.
         how = instruction.lowercased().contains(step.how.lowercased()) ? "" : step.how
@@ -222,7 +232,7 @@ struct GalleyCookScreen: Equatable {
             start = "Start \(GalleyCookWords.minutes(pan))"
         }
         if facts.isLast {
-            verb = "Finish"
+            verb = "Serve"
             object = facts.recipe
             hold = true
         } else {
@@ -235,5 +245,20 @@ struct GalleyCookScreen: Equatable {
                 return left > 0 ? GalleyCookWords.clock(left) : "Ready"
             }, current: other.index == facts.current, done: other.index < facts.current)
         }
+    }
+}
+
+/// The "Eat" summary that prints after the last Serve (sheet 337).
+struct GalleyCookEat: Equatable {
+    var title = "Eat"
+    var dish = ""
+    /// "Cooked in 38 min, 5 steps".
+    var detail = ""
+
+    init(_ facts: GalleyCookFacts) {
+        dish = facts.serves.map { "\(facts.recipe) for \($0)" } ?? facts.recipe
+        let minutes = max(facts.minutesIn, 0)
+        let steps = facts.steps.count
+        detail = "Cooked in \(minutes) min, \(steps) \(steps == 1 ? "step" : "steps")"
     }
 }

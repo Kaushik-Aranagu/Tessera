@@ -302,11 +302,18 @@ enum GalleyPrinter {
     static let drop: CGFloat = 30
     static let overshoot: CGFloat = 4
 
-    /// Five even steps to 34 pt, then back to 30 (the settle).
+    /// Five even steps to 34 pt over 520 ms (104 ms each), then back to 30 (the settle).
     static let feedSteps: [CGFloat] = {
         let top = drop + overshoot
         return (1 ... 5).map { top * CGFloat($0) / 5 } + [drop]
     }()
+
+    static let stepMilliseconds = 104
+    static let settleMilliseconds = 60
+    /// The alert's own line (sheet 333): 20 pt bold caps on a 28 pt line, a 1.5 pt dashed rule under it.
+    static let lineHeight: CGFloat = 28
+    static let textSize: CGFloat = 20
+    static let ruleWidth: CGFloat = 1.5
 }
 
 /// Shopping's last Pay (sheet 334): the old ticket lifts 18 pt left and 70 pt up at -5 degrees from its top-left and
@@ -324,4 +331,20 @@ enum GalleyTearOff {
 
     /// Six even steps from 40 pt above to 4 pt past home, then the settle at 0.
     static let steps: [CGFloat] = (1 ... 6).map { from + (0 - from + overshoot) * CGFloat($0) / 6 } + [0]
+}
+
+/// Cooking's last Serve (sheet 337): the finished ticket is pulled up into the rail clip (it narrows to .18 wide and
+/// .06 tall toward the clip at top centre, rises 24 pt and fades over 400 ms, easing in), and from 300 ms in the Eat
+/// summary prints down out of the same rail, revealed top to bottom in eight steps over 620 ms. A plain swap under
+/// Reduce Motion.
+enum GalleySpike {
+    static let scaleX: CGFloat = 0.18
+    static let scaleY: CGFloat = 0.06
+    static let rise: CGFloat = 24
+    static let fade: TimeInterval = 0.4
+    static let printDelay: TimeInterval = 0.3
+    static let printSteps = 8
+    static let printDuration: TimeInterval = 0.62
+    /// The fraction of the summary revealed after each step.
+    static let reveal: [CGFloat] = (1 ... printSteps).map { CGFloat($0) / CGFloat(printSteps) }
 }
