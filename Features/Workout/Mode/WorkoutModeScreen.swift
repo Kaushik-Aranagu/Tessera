@@ -158,6 +158,8 @@ struct WorkoutModeScreen: View {
         Group {
             if let plates = model.plates {
                 PlateBar(load: plates, inventory: state.inventory)
+            } else if state.current.isWarmUp {
+                Color.clear
             } else {
                 Text("Pin on the stack").font(Chalk.font(20)).foregroundStyle(Chalk.quiet)
                     .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)

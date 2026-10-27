@@ -33,29 +33,32 @@ struct LedgerModeHistory: ModeHistory {
     }
 }
 
-/// One warm-up set: weight in the display unit.
-struct WarmUpStep: Equatable, Sendable {
-    var weight: Double
-    var reps: Int
+/// The routine's warm-up (Core #1463): a timed block before the first lift ("Rower", 8 minutes, a line), not sets.
+struct WarmUpPlan: Equatable, Sendable {
+    var name: String
+    var minutes: Int
+    var note: String?
 }
 
-/// The routine's warm-up. Core's #1463 adds the real one (`setWarmUp`); this seam is swapped for it after the merge.
+/// Where the warm-up comes from: Core's `TrainingStats.warmUp(of:)` in the app, nothing in tests.
 protocol WarmUpSource {
-    func warmUp(for workout: UUID, unit: MassUnit) -> [WarmUpStep]
+    func warmUp(for workout: ObjectRecord, in model: AppModel) -> WarmUpPlan?
 }
 
 /// No warm-up: the mode starts on the first lift.
 struct NoWarmUp: WarmUpSource {
-    func warmUp(for _: UUID, unit _: MassUnit) -> [WarmUpStep] {
-        []
+    func warmUp(for _: ObjectRecord, in _: AppModel) -> WarmUpPlan? {
+        nil
     }
 }
 
-/// Sample values behind the seam until #1463 merges: the bar, then the bar and a plate each side.
-struct SampleWarmUp: WarmUpSource {
-    func warmUp(for _: UUID, unit: MassUnit) -> [WarmUpStep] {
-        unit == .pounds ? [WarmUpStep(weight: 45, reps: 10), WarmUpStep(weight: 95, reps: 5)]
-            : [WarmUpStep(weight: 20, reps: 10), WarmUpStep(weight: 40, reps: 5)]
+/// Core's answer: the routine the workout came from, through `TrainingStats.warmUp(of:)` (nil for none or a private
+/// routine).
+struct CoreWarmUp: WarmUpSource {
+    func warmUp(for workout: ObjectRecord, in model: AppModel) -> WarmUpPlan? {
+        guard let routine = model.store.linkedObjects("routine", of: workout).first else { return nil }
+        let stats = TrainingStats(store: model.store, classes: model.classes)
+        return stats.warmUp(of: routine).map { WarmUpPlan(name: $0.name, minutes: $0.minutes, note: $0.note) }
     }
 }
 
@@ -66,15 +69,14 @@ extension WorkoutModeState {
     /// Builds the mode from a live workout: a lift per entry, sets from the plan and last time's prefill, history from
     /// the ledger, the warm-up from the routine. Private workouts read "Private workout" in the title.
     @MainActor
-    static func make(from session: WorkoutSession, warmUp source: some WarmUpSource = NoWarmUp(),
+    static func make(from session: WorkoutSession, warmUp source: some WarmUpSource = CoreWarmUp(),
                      unit: MassUnit = Format.unit) -> WorkoutModeState
     {
         let history = LedgerModeHistory(ledger: session.ledger, workoutID: session.workout.id)
         var lifts: [Lift] = []
-        let warm = source.warmUp(for: session.workout.id, unit: unit)
-        if !warm.isEmpty {
-            lifts.append(Lift(id: "warmup", name: "Warm up", restSeconds: warmUpRestSeconds,
-                              sets: warm.map { PlannedSet(weight: $0.weight, reps: $0.reps) }, isWarmUp: true))
+        if let warm = source.warmUp(for: session.workout, in: session.model) {
+            lifts.append(Lift(id: "warmup", name: "Warm up", equipment: .stack, restSeconds: warmUpRestSeconds,
+                              sets: [PlannedSet(weight: 0, reps: 0)], isWarmUp: true, warmUp: warm))
         }
         for entry in session.entries {
             guard let exercise = session.exerciseClass(of: entry) else { continue }

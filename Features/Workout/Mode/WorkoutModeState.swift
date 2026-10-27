@@ -69,6 +69,8 @@ struct WorkoutModeState: Equatable {
         var sets: [PlannedSet]
         var history = LiftHistory()
         var isWarmUp = false
+        /// The timed warm-up this lift stands for: minutes, no weight or reps.
+        var warmUp: WarmUpPlan?
 
         var setsLeft: Int {
             sets.count { $0.done == nil }
@@ -327,7 +329,7 @@ struct WorkoutModeState: Equatable {
         var remaining = lifts.reduce(0) { $0 + $1.setsLeft }
         for lift in lifts where lift.setsLeft > 0 {
             for _ in 0 ..< lift.setsLeft {
-                seconds += setSeconds
+                seconds += lift.warmUp.map { Double($0.minutes * 60) } ?? setSeconds
                 remaining -= 1
                 if remaining > 0 {
                     seconds += Double(lift.restSeconds)

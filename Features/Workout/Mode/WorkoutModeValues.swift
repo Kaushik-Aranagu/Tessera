@@ -61,6 +61,12 @@ extension WorkoutModeState {
             )
         }
         let lift = current
+        if let warm = lift.warmUp, lift.nextIndex != nil {
+            return Scoreboard(
+                header: "WARM UP", trailing: "", main: "\(warm.minutes)", unit: "min", multiplier: "",
+                info1: warm.name, info2: warm.note ?? "", isRest: false
+            )
+        }
         guard let index = lift.nextIndex else {
             return Scoreboard(
                 header: lift.name.uppercased(),

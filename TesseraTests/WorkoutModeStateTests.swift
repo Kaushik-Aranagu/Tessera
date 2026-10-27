@@ -378,15 +378,38 @@ struct WorkoutModeStateTests {
     }
 }
 
-@Suite("Workout mode: warm-up seam")
-struct WarmUpSeamTests {
-    @Test("The sample warm-up is the bar then a plate each side, in either unit")
-    func sample() {
-        let lb = SampleWarmUp().warmUp(for: UUID(), unit: .pounds)
-        #expect(lb.map(\.weight) == [45, 95])
-        let kg = SampleWarmUp().warmUp(for: UUID(), unit: .kilograms)
-        #expect(kg.map(\.weight) == [20, 40])
-        #expect(NoWarmUp().warmUp(for: UUID(), unit: .pounds).isEmpty)
+@Suite("Workout mode: warm-up")
+struct WarmUpModeTests {
+    let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
+
+    func state() -> WorkoutModeState {
+        WorkoutModeState(title: "Push A", unit: .pounds, startedAt: t0, lifts: [
+            .init(id: "w", name: "Warm up", equipment: .stack, restSeconds: 30,
+                  sets: [.init(weight: 0, reps: 0)], isWarmUp: true,
+                  warmUp: WarmUpPlan(name: "Rower", minutes: 8, note: "Keep it easy")),
+            .init(id: "b", name: "Bench press", restSeconds: 150, sets: [.init(weight: 185, reps: 5)]),
+        ])
+    }
+
+    @Test("The warm-up reads as minutes on the scoreboard, with its note")
+    func scoreboard() {
+        let board = state().scoreboard(at: t0)
+        #expect(board.header == "WARM UP")
+        #expect(board.main == "8" && board.unit == "min")
+        #expect(board.info1 == "Rower" && board.info2 == "Keep it easy")
+    }
+
+    @Test("Done about counts the warm-up's minutes")
+    func doneAbout() {
+        var lone = state()
+        lone.setSeconds = 40
+        // warm-up 480 + 30 rest, bench 40 and no rest after the last set
+        #expect(lone.doneAbout(at: t0) == t0.addingTimeInterval(550))
+    }
+
+    @Test("No warm-up source gives no warm-up lift")
+    func none() {
+        #expect(!state().lifts[1].isWarmUp)
     }
 }
 

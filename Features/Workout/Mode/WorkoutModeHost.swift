@@ -40,7 +40,7 @@ struct WorkoutModeHost: View {
         }
         .onAppear {
             if state == nil {
-                state = WorkoutModeState.make(from: session, warmUp: SampleWarmUp())
+                state = WorkoutModeState.make(from: session, warmUp: CoreWarmUp())
             }
         }
     }
