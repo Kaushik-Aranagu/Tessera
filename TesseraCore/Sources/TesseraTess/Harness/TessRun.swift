@@ -332,11 +332,16 @@ public final class TessRun {
         for (index, object) in about.enumerated() where !object.isDeleted {
             let handle = "o\(index + 1)"
             handles[handle] = object.id
-            let shown = ObjectPrivacy.shownLabel(of: object, in: store, classes: classes)
+            // Under lab (his Oct 27 call: Claude sees everything) a private thing goes by its own words, not its label,
+            // tainted so strict would drop it.
+            let label = ObjectPrivacy.shownLabel(of: object, in: store, classes: classes)
+            let lab = door.policy() == .lab && ClaudeSees.everything
+            let shown = (lab ? nil : label)
                 ?? TessAskRouter.shownSentence(object, in: store, classes: classes, calendar: calendar)
                 ?? (object.title.isEmpty ? "an object" : object.title)
             // Money, health, body, calorie and calendar things go to Claude only under lab mode.
-            let taint: Taint = TessAskRouter.isUnnameable(object, classes: classes) ? .deviceOnly : .claudeSafe
+            let hidden = TessAskRouter.isUnnameable(object, classes: classes) || (lab && label != nil)
+            let taint: Taint = hidden ? .deviceOnly : .claudeSafe
             fragments.append(PackFragment("[\(handle)] \(shown)", taint: taint))
         }
         let specs = pick.map { Self.toolSpecs(only: $0.tools) }

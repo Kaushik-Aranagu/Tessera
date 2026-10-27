@@ -108,7 +108,7 @@ final class HomeStub: URLProtocol, @unchecked Sendable {
 
 /// Home's done job (board 0al): asked once per finish, behind the switch and the 80% step-aside, every slot through
 /// TessLineCheck, the rules words standing whenever anything fails.
-@Suite(.serialized) @MainActor
+@Suite(.oldWalls, .serialized) @MainActor
 struct HomeDoneWordingTests {
     static var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)

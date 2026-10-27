@@ -5,6 +5,7 @@ import Testing
 /// TessLineCheck (board 0t): every vector in docs/ai/line-check-vectors.md (L1 to L54) and the rows of
 /// docs/research/fixtures/home-done-job.md (HD1 to HD24) that the checker or the done pack decide. Ids are in the
 /// test arguments.
+@Suite(.oldWalls)
 struct TessLineCheckTests {
     static var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)

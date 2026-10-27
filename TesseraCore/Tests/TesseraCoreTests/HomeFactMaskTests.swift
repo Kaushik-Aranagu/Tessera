@@ -5,6 +5,7 @@ import Testing
 /// Home's fact builders never print a private routine's or workout's raw title (they make the hero text and its
 /// "Opens ..." hint): "Private workout" for a private one, the title as it is for a plain one.
 @MainActor
+@Suite(.oldWalls)
 struct HomeFactMaskTests {
     static let ended = HomeDonePackTests.ended
 

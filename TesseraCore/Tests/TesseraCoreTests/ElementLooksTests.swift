@@ -14,6 +14,7 @@ final class StageLog {
 }
 
 @MainActor
+@Suite(.oldWalls)
 struct ElementLooksTests {
     let now = Date(timeIntervalSince1970: 1_793_000_000)
 

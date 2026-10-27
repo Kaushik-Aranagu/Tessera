@@ -91,7 +91,7 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
 
 /// Recipe links (Design 32 `link-fetch-us.md`, docs/research/recipe-link-fetch.md): the four test hosts, the line
 /// table, L3 behind the switch and the cap, and the safety rules.
-@Suite(.serialized) @MainActor
+@Suite(.oldWalls, .serialized) @MainActor
 struct RecipeLinkTests {
     /// Built from pieces: a key shape never sits in a source file.
     static let fakeKey = ["sk", "ant", "TEST", "link"].joined(separator: "-")

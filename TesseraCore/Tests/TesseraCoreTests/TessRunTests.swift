@@ -5,6 +5,7 @@ import Testing
 
 /// Harness H3: the Tess loop. Fake brains only; no network, no real clock deciding order.
 @MainActor
+@Suite(.oldWalls)
 struct TessRunTests {
     func tempURL() throws -> URL {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

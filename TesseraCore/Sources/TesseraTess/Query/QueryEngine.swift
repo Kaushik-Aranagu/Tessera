@@ -274,11 +274,12 @@ public enum QueryEngine {
         }
     }
 
-    /// A class reached by a classRef step reads as no value when its name is private.
+    /// A class reached by a classRef step reads as no value when its name is private (unless Claude sees everything).
     private static func visible(classDef: ClassDef?, _ context: Context) -> [Value] {
         guard let classDef else { return [] }
         let last = BodyWeight.lastKg(in: context.store)
-        return ObjectPrivacy.isPrivateTitle(classDef.name, lastWeightKg: last) ? [] : [.classDef(classDef)]
+        let walled = ObjectPrivacy.isPrivateTitle(classDef.name, lastWeightKg: last)
+        return ClaudeSees.blocks(classDef.name, walled: walled) ? [] : [.classDef(classDef)]
     }
 
     private static func convert(_ field: FieldValue) -> Value {

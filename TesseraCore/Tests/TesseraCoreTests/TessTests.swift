@@ -7,6 +7,7 @@ import FoundationModels
 import Testing
 
 @MainActor
+@Suite(.oldWalls)
 struct TessTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]

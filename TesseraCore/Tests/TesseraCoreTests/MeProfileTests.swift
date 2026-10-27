@@ -6,6 +6,7 @@ import Testing
 
 /// Height, birth year and sex; the weight he types or Health gives; calories as an estimate.
 @MainActor
+@Suite(.oldWalls)
 struct MeProfileTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine
@@ -112,6 +113,7 @@ struct MeProfileTests {
     }
 }
 
+@Suite(.oldWalls)
 struct CaloriesTests {
     @Test func theEstimateIsMetTimesKilogramsTimesHoursRoundedToTen() {
         // 6.0 x 80 kg x 1 h = 480.
@@ -144,6 +146,7 @@ struct CaloriesTests {
 }
 
 @MainActor
+@Suite(.oldWalls)
 struct WorkoutCaloriesTests {
     @Test func aFinishedWorkoutAndItsExercisesGetAnEstimate() throws {
         let store = ObjectStore.open(inMemory: true)

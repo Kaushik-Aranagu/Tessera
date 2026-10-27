@@ -4,6 +4,7 @@ import Testing
 
 /// The Pantry by places (design item 118).
 @MainActor
+@Suite(.oldWalls)
 struct PantryPlacesTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine

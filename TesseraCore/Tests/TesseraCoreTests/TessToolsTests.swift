@@ -5,6 +5,7 @@ import Testing
 
 /// Tess model layer T2: the shared, name-resolving tools.
 @MainActor
+@Suite(.oldWalls)
 struct TessToolsTests {
     func call(_ name: String, _ json: String, _ engine: ActionEngine) throws -> [OpRecord] {
         try TessTools.run(name, arguments: Data(json.utf8), engine: engine)

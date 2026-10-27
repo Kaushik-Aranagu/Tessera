@@ -160,6 +160,7 @@ extension TessResult {
 /// Injection 3: the C9 allowlist is built from his free text, so a walled name or one that talks to a model is never
 /// in it (docs/ai/injection-audit.md gap 3).
 @MainActor
+@Suite(.oldWalls)
 struct LineCheckNamesTests {
     func verdict(_ line: String, names: [String], title: String? = nil) -> TessLineCheck.Verdict {
         TessLineCheck.check(line, slot: .context, numbers: [], names: names, rulesLine: nil, isDone: false,

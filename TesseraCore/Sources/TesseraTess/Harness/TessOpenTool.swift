@@ -59,7 +59,8 @@ public enum TessOpenTool {
             if TessAskRouter.isUnnameable(record, classes: classes), policy == .strict {
                 return "on this phone only"
             }
-            return ObjectPrivacy.shownLabel(of: record, in: store, classes: classes)
+            // Under lab a private thing reads by its own words (his Oct 27 call: Claude sees everything).
+            return ClaudeSees.label(of: record, in: store, classes: classes, strict: policy == .strict)
                 ?? TessAskRouter.shownSentence(record, in: store, classes: classes, calendar: calendar)
                 ?? (record.title.isEmpty ? record.classDef?.name ?? "an object" : record.title)
         }

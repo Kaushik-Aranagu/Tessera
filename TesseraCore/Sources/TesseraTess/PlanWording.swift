@@ -35,7 +35,8 @@ public struct PlanPack: Sendable, Equatable {
     /// A title with a secret word, money or a body fact never goes to Claude (QA A4, Research 138 W7 and 139): a task
     /// goes as "task" and an event as "busy", with its kind and times only.
     /// The Home pack's wall (QA audit of d6fd9ca): health, money, places, care and people words too, so "Physio at 5"
-    /// or "Pay Dr Lee" goes as "task".
+    /// or "Pay Dr Lee" goes as "task". While Claude sees everything (`ClaudeSees`) only a key-shaped title or a label
+    /// the phone already shows in place of a title does.
     static let privateLabels: Set<String> = Set([
         "Private recipe", "Private task", "Private note", "Private item", "Private memory",
         ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
@@ -44,7 +45,8 @@ public struct PlanPack: Sendable, Equatable {
     static func isPrivate(_ title: String, lastWeightKg: Double?) -> Bool {
         // A walled thing already shows as its label ("Private recipe"): the label is no title to send (KC13).
         privateLabels.contains(title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) ||
-            SecretWords.mentions(title) || HomeDonePack.isWalled(title, lastWeightKg: lastWeightKg)
+            ClaudeSees.blocks(title, walled: SecretWords.mentions(title)
+                || HomeDonePack.isWalled(title, lastWeightKg: lastWeightKg))
     }
 
     static func packTitle(_ block: DayPlan.Block, includesEventTitles: Bool, lastWeightKg: Double?) -> String {
