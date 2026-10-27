@@ -15,7 +15,7 @@ the ones that fail. The full design, with prior art and the diagram, is the "Tes
   - a residual per child: what is true of that child and not its siblings (`most sets (42)`). Strict has its own
     set, computed over only the siblings and totals it can see, so a walled sibling never shapes what it reads;
   - a hash of everything under it, so an edit marks only its own chain of ancestors stale;
-  - later, a gist in words with a cite for every sentence (P1b, from a model, checked against its children).
+  - a gist in words with a cite for every sentence (P1b, from a model, checked against its children).
 - **Reading.** `zoom(path)` returns the title, the totals, then the children ranked by how much they stand out,
   within 1,200 characters. A day lists its leaves word for word.
 - **Walls.** A leaf's path is a short fingerprint of its id (`leaf-3fa2c1d0`). It never names its kind, and it is
@@ -50,6 +50,31 @@ a deleted workout, a reversed spend or a forgotten line.
 - strict reads every node exactly as it would if the walled leaves had never happened, and a leaf's name is a
   fingerprint, never a count.
 
+## P1b (built, scripted): gists in words
+
+`PyramidDistiller` (Pyramid/PyramidGist.swift) writes a node's gist through the Door: Haiku, effort low, one strict
+tool `writeGist` whose cites can only name the children it was shown.
+
+- **What the model sees** is decided by the Door's policy. It gets the node's totals, then each child it may see with
+  that child's totals, residual lines and its own fresh gist, or a day's leaves word for word. Each line goes as a
+  fragment with its taint, so the Door filters it too. Under strict a walled child, total or line is never sent.
+- **The check** keeps a sentence only when it has a cite, every cite is a child it was shown, every number in it
+  appears in its cited children's lines or the node's own totals, and it fits the level's word budget (a day 60, a
+  week 120, higher levels 200). Anything else is dropped and counted by reason, never patched.
+- **Kept apart by policy.** Lab and strict gists are separate, and a sentence that rests on anything walled is
+  `deviceOnly`. Strict reads only strict gists.
+- **Stale is exact.** A gist keeps its node's hash. `stale(in:policy:)` lists the nodes to rewrite, lowest level
+  first, so `refresh` writes each node after its children and reads their new gists.
+- `zoom` shows a fresh gist as "In short:" under the title.
+
+`PyramidGistTests` runs all of it with a scripted brain, no paid call: the check drops each kind of bad sentence,
+strict never sends a walled line (and its material is identical to a pyramid built without the walled leaves), a
+night writes every gist bottom up, and one edit stales only its chain's gists.
+
+**The live score (queued, waits for his go):** on the Mac with his key, refresh the test world's pyramid with Haiku
+under strict, then ask the test-world questions at three depths through zoom and through flat recall. Record
+accuracy, input tokens and the drop counts by reason. Pass line as in P1b below.
+
 ## Beyond the app: memory for anything Tess lives through
 
 Kaushik's follow-up (Oct 27): the goal is the general memory problem for a personal assistant, not only his app
@@ -71,9 +96,9 @@ records. The app is the first step and the proof, because its numbers are exact 
 
 Each has a pass line set before it runs. A failure gets written up here too.
 
-1. **P1b: gists in words.**
-   - Haiku writes each node's gist and residual lines from its children, with cites. The night pass drops any
-     sentence its cites don't support.
+1. **P1b: gists in words.** Built and dry-run with a scripted brain (above); the live score is next.
+   - Haiku writes each node's gist from its children, with cites. The check drops any sentence its cites don't
+     support.
    - Pass: on test-world questions at three depths (a detail, a trend, a pattern across days), the pyramid is as
      accurate as flat recall with at least 30% fewer input tokens. Run once with residuals and once without.
 2. **P2: wire it in.**

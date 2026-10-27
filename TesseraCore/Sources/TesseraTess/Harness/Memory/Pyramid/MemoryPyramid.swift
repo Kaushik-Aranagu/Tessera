@@ -271,23 +271,33 @@ public struct MemoryPyramid: Sendable {
 
     // MARK: Reading
 
-    /// One node as Tess reads it: its title, its totals, then each child with what sets it apart, best first. Under
-    /// strict, money, body and calendar things are not there at all: no total, no residual, no leaf, no path, no count.
-    public func zoom(_ path: String, policy: DoorPolicy) -> (text: String, isError: Bool) {
+    /// One node as Tess reads it: its title, its gist when a fresh one was written under this policy, its totals, then
+    /// each child with what sets it apart, best first. Under strict, money, body and calendar things are not there at
+    /// all: no total, no residual, no leaf, no path, no count.
+    public func zoom(_ path: String, policy: DoorPolicy,
+                     gists: PyramidGists = PyramidGists()) -> (text: String, isError: Bool)
+    {
         let key = path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
         func visible(_ path: String) -> Bool {
             policy == .lab || (nodes[path]?.safeLeaves ?? 0) > 0
         }
         guard let node = nodes[key], visible(key) else { return ("Nothing there.", true) }
+        func allows(_ taint: Taint) -> Bool {
+            policy == .lab || taint == .claudeSafe
+        }
         func allowed(_ line: PyramidLine) -> Bool {
-            policy == .lab || line.taint == .claudeSafe
+            allows(line.taint)
         }
         if let text = node.text {
             return (text.text, false)
         }
         var lines = ["\(node.title) (\(node.path))"]
+        let gist = (gists.fresh(key, policy: policy, in: self)?.sentences ?? []).filter { allows($0.taint) }
+        if !gist.isEmpty {
+            lines.append("In short: " + gist.map(\.text).joined(separator: " "))
+        }
         let totals = PyramidStats.shown.compactMap { shown -> String? in
-            guard let value = shown.value(node.stats), allowed(PyramidLine(text: "", taint: shown.taint)) else {
+            guard let value = shown.value(node.stats), allows(shown.taint) else {
                 return nil
             }
             return "\(shown.label) \(PyramidStats.format(value))"
