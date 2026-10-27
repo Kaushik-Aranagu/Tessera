@@ -146,3 +146,16 @@ No full stops at the end of any of these (sheet 289).
   sits in the gap between the ticks and the lifts (baseline 334, 17 pt), and Tess's hand covers that gap only.
 - For the builders: a `Canvas` overlay on the board fed by the write progress, spawning a speck every 6% of the line,
   at most 12.
+
+## 11. The zero notch, a new detail (sheet 306)
+
+| Move (sheet 287) | The detail | Haptic | Where |
+|---|---|---|---|
+| Dial turns past its last door back to the first | **The zero notch.** The usual detent (3 pt past and back in 280 ms) clicks twice as deep, 6 pt, and settles in 380 ms, like a dial passing its zero mark. He can feel he has gone all the way round without looking. | rigid, medium, once, instead of the selection tick | on the board (306) |
+
+- Only on the wrap, in either direction, and only for dials with three doors or more.
+- Measured on the board (`t50.js`): Galley and Deck dials, five turns each; the fifth (back to the first door) is the
+  deep one.
+- Reduce Motion: no detent at all, as before.
+- For the builders: `DoorsDial` knows when its index wraps; pass `.wrap` to `MotionPolicy.delight(.detent)` and to
+  `TesseraHaptics.play`.

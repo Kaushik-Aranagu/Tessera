@@ -299,7 +299,10 @@ function dial(host,items,opts){let f=opts.start||0;const n=items.length,S=opts.s
  function draw(){els.forEach((d,i)=>{const o=rel(i),it=items[i];d.innerHTML=opts.label(it,o===0);
   d.style.transform='translateY('+((o+1)*S)+'px)'+(o?' scale(.66)':'');d.style.opacity=Math.abs(o)>1?0:o?.6:1;d.style.pointerEvents=Math.abs(o)>1?'none':'auto';
   d.style.filter=o&&!RM?'blur('+(opts.blur??1.8)+'px)':'none';d.style.color=o?'var(--ink2)':(it.color||'var(--room)')});opts.change&&opts.change(items[f],f)}
- function turn(s){f=((f+s)%n+n)%n;draw();/* 290: a detent, the focus word settles a hair past and back */if(!RM&&s&&els[f])els[f].animate([{translate:'0 '+(s>0?3:-3)+'px'},{translate:'0 0'}],{duration:280,easing:'cubic-bezier(.3,1.7,.5,1)',composite:'add'})}
+ function turn(s){const raw=f+s,wrap=n>2&&(raw>=n||raw<0);f=((raw)%n+n)%n;draw();
+  /* 290: a detent, the focus word settles a hair past and back. 306: passing the zero notch (the last door back to the
+     first) clicks twice as deep and a little slower, so he can feel he has gone all the way round without looking */
+  if(!RM&&s&&els[f]){const k=wrap?2:1;els[f].animate([{translate:'0 '+((s>0?3:-3)*k)+'px'},{translate:'0 0'}],{duration:wrap?380:280,easing:'cubic-bezier(.3,1.7,.5,1)',composite:'add'})}}
  let y0=null,acc=0;host.addEventListener('pointerdown',e=>{y0=e.clientY;acc=0});
  host.addEventListener('pointermove',e=>{if(y0==null)return;const dy=(e.clientY-y0)/K;if(Math.abs(dy-acc)>S*.6){turn(dy-acc<0?1:-1);acc=dy}});
  host.addEventListener('pointerup',()=>{y0=null});
