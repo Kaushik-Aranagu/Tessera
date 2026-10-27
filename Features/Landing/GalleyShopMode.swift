@@ -105,10 +105,12 @@ struct GalleyShopContent: RoomContent {
     private func widget(aisle index: Int) -> SlotContent? {
         guard facts.aisles.indices.contains(index), let first = facts.aisles[index].items.first else { return nil }
         let aisle = facts.aisles[index]
+        // The scoreboard (sheet 325): the aisle on the top line with where it is at the right edge, the thing in big
+        // words, how to pick it (else its amount), and why it is on the list (else what comes after it).
         let item = WidgetItem(id: "shop.\(first.id)", header: GalleyShopWords.header(facts, aisle: index),
-                              big: first.name, middle: first.amount ?? "",
-                              small: first.why ?? GalleyShopWords.after(aisle),
-                              bigColor: accent, strikeable: false)
+                              big: first.name, middle: GalleyCues.pick(first.name) ?? first.amount ?? "",
+                              small: first.why ?? GalleyShopWords.after(aisle), bigColor: accent, strikeable: false,
+                              face: .galley, trailing: GalleyCues.aisleSpot(aisle.name))
         return SlotContent(id: ContentID("galley.shop.widget.\(first.id)"), kind: .widget, payload: .widget([item]))
     }
 
@@ -151,7 +153,8 @@ struct GalleyShopContent: RoomContent {
         }
         if let tonight = facts.tonight {
             out.append(GalleyTicket(id: "shop.tonight", title: "Tonight", sub: tonight,
-                                    lines: facts.tonightLines, big: false, ink: .dinner, opens: .recipes))
+                                    lines: facts.tonightLines, big: false, ink: .dinner, opens: .recipes,
+                                    struck: facts.tonightGot))
         }
         return out
     }

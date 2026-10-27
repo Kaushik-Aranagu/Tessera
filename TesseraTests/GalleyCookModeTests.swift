@@ -49,8 +49,9 @@ struct GalleyCookModeTests {
         #expect(GalleyCookWords.clock(3905) == "1:05:05")
         let facts = facts()
         #expect(GalleyCookWords.band(facts) == ["6 min in", "3 steps, about 19 min to eat"])
-        #expect(GalleyCookWords.header(facts) == "Step 2 of 3, 2:47 left")
-        #expect(GalleyCookWords.header(self.facts(timer: false)) == "Step 2 of 3")
+        #expect(GalleyCookWords.header(facts) == "Step 2 of 3")
+        #expect(GalleyCookWords.timerLine(facts) == "2:47 left on chicken")
+        #expect(GalleyCookWords.timerLine(self.facts(timer: false)) == nil)
         #expect(GalleyCookWords.after(facts) == "Next, soften the onion")
     }
 
@@ -61,8 +62,9 @@ struct GalleyCookModeTests {
         guard case let .title(title, _)? = screen[.title]?.payload else { throw Failure.none }
         #expect(title == "Tacos")
         guard case let .widget(items)? = screen[.widget]?.payload else { throw Failure.none }
-        #expect(items.first?.big == "Brown the chicken")
-        #expect(items.first?.header == "Step 2 of 3, 2:47 left")
+        #expect(items.first?.big == "Brown the chicken" && items.first?.trailing == "Medium high")
+        #expect(items.first?.middle == "Turn it when it lets go of the pan")
+        #expect(items.first?.header == "Step 2 of 3" && items.first?.small == "2:47 left on chicken")
         guard case let .dial(doors)? = screen[.dial]?.payload else { throw Failure.none }
         #expect(doors.map(\.name) == ["Char the peppers", "Brown the chicken", "Soften the onion"])
         #expect(doors[1].count == "2:47" && doors[0].count == nil)
@@ -89,9 +91,11 @@ struct GalleyCookModeTests {
         var facts = facts()
         facts.steps[0].timer = .init(id: "u", label: "Peppers", endsAt: now.addingTimeInterval(-5))
         let tickets = GalleyCookContent.tickets(facts)
-        #expect(tickets.map(\.id) == ["cook.step", "cook.timer.0"])
-        #expect(tickets[0].big && tickets[0].sub == "2:47 left")
-        #expect(tickets[1].sub == "Ready" && tickets[1].ink == .runsOut)
+        // The big ticket is the next step to prep; each running timer prints its time large.
+        #expect(tickets.map(\.id) == ["cook.step", "cook.timer.0", "cook.timer.1"])
+        #expect(tickets[0].big && tickets[0].title == "Get ready" && tickets[0].sub == "Soften the onion")
+        #expect(tickets[1].time == "Ready" && tickets[1].ink == .runsOut)
+        #expect(tickets[2].time == "2:47" && tickets[2].ink == .toGet)
     }
 
     private enum Failure: Error { case none }
@@ -147,6 +151,25 @@ struct GalleyShopModeTests {
     }
 
     private enum Failure: Error { case none }
+}
+
+struct GalleyCuesTests {
+    @Test func heatAndDoneness() {
+        #expect(GalleyCues.heat("Brown the chicken over medium-high heat for 5 minutes.") == "Medium high")
+        #expect(GalleyCues.heat("Simmer until thick.") == "Low")
+        #expect(GalleyCues.heat("Chop the onion.") == nil)
+        #expect(GalleyCues.doneness("Brown the chicken.") == "Turn it when it lets go of the pan")
+        #expect(GalleyCues.doneness("Chop the onion.") == nil)
+    }
+
+    @Test func aislesAndPicks() {
+        #expect(GalleyCues.aisleSpot("Produce") == "Right by the doors")
+        #expect(GalleyCues.aisleSpot("Dairy and eggs") == "Along the back wall")
+        #expect(GalleyCues.aisleSpot("Mystery") == nil)
+        #expect(GalleyCues.pick("Avocados") == "Pick ones that give a little")
+        #expect(GalleyCues.pick("Whole milk") == "The date furthest out is at the back")
+        #expect(GalleyCues.pick("Foil") == nil)
+    }
 }
 
 struct GalleyCuesTests {

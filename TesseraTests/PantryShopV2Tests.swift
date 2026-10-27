@@ -23,8 +23,9 @@ struct PantryShopV2Tests {
 
     @Test func theTwoSwitchesSitOnTheirOwnPage() throws {
         let page = try #require(ReviewChoices.facetPages().first { $0.word == "Kitchen v2" })
-        // The Kitchen rooms switch (231 to 233) and the link reader join them to keep six a page elsewhere.
-        #expect(page.rows.map(\.id) == ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch"])
+        // The Kitchen rooms switch (231 to 233), the link reader and the cooking and shopping modes (322) join them.
+        #expect(page.rows.map(\.id)
+            == ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch", "galleyCookMode", "galleyShopMode"])
     }
 
     @Test func gotAndLeftReadAsOneSentence() {

@@ -115,6 +115,19 @@ struct GalleyShopModePage: View {
         let front = KitchenFront(model: model, now: AppClock.now)
         if let meal = front.tonight {
             facts.tonight = NotesLandingPage.short(meal.title)
+            // Tonight's things on the list; the ones in the basket are struck off as they go in.
+            let all = groceries.list.map { list -> [(item: ListContents.Item, done: Bool)] in
+                let contents = ListContents(store: model.store, classes: model.classes)
+                return contents.sections(of: list).flatMap(\.items).map { ($0, $0.isDone) }
+            } ?? []
+            let mine = all.filter { entry in
+                ShopTrip.recipeNames(groceries.recipes(for: entry.item.object).map(\.title), lastWeightKg: weight)
+                    .contains { $0 == meal.title }
+            }
+            facts.tonightLines = mine.map {
+                trip.label(for: $0.item, name: GroceriesCopy.name($0.item), lastWeightKg: weight)
+            }
+            facts.tonightGot = Set(mine.indices.filter { mine[$0].done })
         }
         return facts
     }
