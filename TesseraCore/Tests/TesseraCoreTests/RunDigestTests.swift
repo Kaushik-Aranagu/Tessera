@@ -91,7 +91,8 @@ struct RunDigestTests {
         var book = ProcedureBook()
         let learned = book.learn(digest)
         #expect(!learned && book.records.isEmpty)
-        #expect(RunDigest.knownTools.isSuperset(of: ["recall", "open", "remember", "notebook", "ask_agent", "query"]))
+        let harness: Set = ["recall", "open", "remember", "notebook", "ask_agent", "query", "guide"]
+        #expect(RunDigest.knownTools.isSuperset(of: harness))
     }
 
     @Test func runsAddUpOnTheirDayAndStrictSkipsDeviceOnlyOnes() {

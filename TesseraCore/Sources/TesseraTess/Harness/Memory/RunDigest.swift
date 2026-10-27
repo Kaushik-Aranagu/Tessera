@@ -49,13 +49,13 @@ public struct RunDigest: Sendable, Equatable, Codable {
     /// steered or made-up name never becomes a path, a leaf or a hint (QA on #1474).
     public static let unknownTool = "unknown"
 
-    /// Every tool a run can call: the Tess tools, the harness's (open, recall, remember, notebook, ask_agent, web) and
-    /// the shell calls.
+    /// Every tool a run can call: the Tess tools, the harness's (open, recall, remember, notebook, ask_agent, guide,
+    /// web) and the shell calls.
     @MainActor
     public static var knownTools: Set<String> {
         AgentSpec.knownTools.union(TessRecallTools.names).union(ElementCatalog.shellCalls)
             .union(TessRun.shellSpecs().map(\.name))
-            .union([TessOpenTool.name, AgentNotebook.name, TessRun.askAgent])
+            .union([TessOpenTool.name, AgentNotebook.name, TessRun.askAgent, TessGuide.name])
     }
 
     /// The digest of one run, or nil when the trace holds none of its spans.
