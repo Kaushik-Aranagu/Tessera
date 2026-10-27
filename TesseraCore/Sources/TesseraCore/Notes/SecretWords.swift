@@ -11,10 +11,12 @@ public enum SecretWords {
     public static let words: Set<String> = ["password", "passwords", "passcode", "passcodes", "pin", "pins", "code", "codes",
                                      "combo", "combination", "passphrase", "pw", "pwd"]
 
-    /// The words of a line, lowercased, punctuation off, ":" kept as its own word.
+    /// The words of a line, lowercased, punctuation off, ":" kept as its own word. Read from the canonical form, so a
+    /// zero-width space, full-width letters or curly quotes never hide a secret word (input-hygiene H1).
     static func tokens(_ text: String) -> [String] {
         // Any whitespace, newlines included: a secret word that starts a line is its own word (Research 137 PL2).
-        text.lowercased().replacingOccurrences(of: ":", with: " : ").split(whereSeparator: \.isWhitespace)
+        CanonicalText.of(text).lowercased().replacingOccurrences(of: ":", with: " : ")
+            .split(whereSeparator: \.isWhitespace)
             .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".,!?;'\"()")) }
             .filter { !$0.isEmpty }
     }
