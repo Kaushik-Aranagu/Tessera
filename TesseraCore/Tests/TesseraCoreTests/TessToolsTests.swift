@@ -20,7 +20,7 @@ struct TessToolsTests {
                                               "setServeTime", "checkListItem", "startWorkout", "startCooking",
                                               "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine",
                                               "plantRoutine",
-                                              "pauseRoutine"])
+                                              "pauseRoutine", "rehearse"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
@@ -195,7 +195,8 @@ struct TessToolsTests {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
         // Claude's list: every tool but the device-only ones (logSpend is money).
-        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" })
+        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" }
+            && !tools.contains { $0["name"] as? String == "rehearse" })
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {
                 #expect(schema["additionalProperties"] as? Bool == false, "\(path) must be closed")
@@ -207,6 +208,18 @@ struct TessToolsTests {
             }
             if let items = schema["items"] as? [String: Any] {
                 check(items, path: path + "[]")
+            }
+            for branch in schema["anyOf"] as? [[String: Any]] ?? [] {
+                check(branch, path: path + "|")
+            }
+            // The API refuses a schema whose enum holds a value the declared type doesn't allow (a nullable choice is
+            // an anyOf of the choice and null, never a type union).
+            if let values = schema["enum"] as? [Any] {
+                let declared = (schema["type"] as? [String]) ?? [schema["type"] as? String ?? "string"]
+                for value in values {
+                    let kind = value is NSNull ? "null" : value is String ? "string" : "other"
+                    #expect(declared.contains(kind), "\(path) enum value \(value) does not fit \(declared)")
+                }
             }
         }
         for tool in tools {
@@ -242,5 +255,27 @@ struct TessToolsTests {
         _ = before
         let shop = try call("startShop", "{}", engine)
         #expect(shop.first?.action == "startShop")
+    }
+}
+
+extension TessToolsTests {
+    /// The API's strict-tool limits (live run, Oct 27): at most 20 strict tools, 16 union parameters, and a grammar
+    /// that
+    /// stays small enough. The request keeps the first tools that fit under a safe budget strict and sends the rest
+    /// plain.
+    @Test func strictToolsStayUnderTheApiBudget() throws {
+        let tools = try TessTools.claudeTools.map {
+            try ToolSpec(name: $0.name, description: $0.description,
+                         schema: JSONSerialization.data(withJSONObject: $0.input.json), strict: true)
+        }
+        let request = BrainRequest(messages: [BrainMessage(.user, text: "hi")], tools: tools)
+        let data = try ClaudeBrain.body(for: request, model: .haiku, stream: false)
+        let body = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let sent = try #require(body["tools"] as? [[String: Any]])
+        let strict = sent.filter { $0["strict"] as? Bool == true }
+        #expect(strict.count <= ClaudeBrain.maxStrictTools && !strict.isEmpty)
+        let unions = strict.reduce(0) { $0 + ClaudeBrain.unionCount(in: $1["input_schema"] as Any) }
+        #expect(unions <= ClaudeBrain.maxStrictUnions)
+        #expect(sent.count == tools.count)
     }
 }

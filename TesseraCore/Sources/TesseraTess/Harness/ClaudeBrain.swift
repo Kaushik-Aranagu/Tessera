@@ -14,6 +14,23 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     }
 
     public static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    /// The most tools the API accepts as strict in one request.
+    static let maxStrictTools = 10
+    /// The most union-typed parameters (type arrays or anyOf) the API accepts across the strict tools of a request.
+    static let maxStrictUnions = 8
+
+    static func unionCount(in schema: Any) -> Int {
+        guard let object = schema as? [String: Any] else { return 0 }
+        var count = (object["type"] is [Any] || object["anyOf"] != nil) ? 1 : 0
+        for value in object.values {
+            if let nested = value as? [String: Any] {
+                count += unionCount(in: nested)
+            } else if let list = value as? [[String: Any]] {
+                count += list.reduce(0) { $0 + unionCount(in: $1) }
+            }
+        }
+        return count
+    }
 
     public let model: Model
     fileprivate let keys: any TessKeychain
@@ -119,13 +136,22 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             return ["role": message.role.rawValue, "content": content]
         }
         if !request.tools.isEmpty {
+            // The API takes at most 20 strict tools and 16 union-typed parameters across them (a 400 beyond that): the
+            // first tools that fit stay strict, the rest are plain and Tess checks their arguments itself.
+            var strictLeft = Self.maxStrictTools
+            var unionsLeft = Self.maxStrictUnions
             body["tools"] = try request.tools.map { tool -> [String: Any] in
                 var item: [String: Any] = try [
                     "name": tool.name, "description": tool.description,
                     "input_schema": JSONSerialization.jsonObject(with: tool.schema),
                 ]
-                if tool.strict {
-                    item["strict"] = true
+                if tool.strict, strictLeft > 0 {
+                    let unions = Self.unionCount(in: item["input_schema"] as Any)
+                    if unions <= unionsLeft {
+                        item["strict"] = true
+                        strictLeft -= 1
+                        unionsLeft -= unions
+                    }
                 }
                 if stream {
                     item["eager_input_streaming"] = true

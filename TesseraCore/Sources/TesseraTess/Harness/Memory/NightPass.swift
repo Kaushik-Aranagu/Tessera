@@ -53,12 +53,15 @@ public struct NightPass: Sendable {
         public var at: Date
         /// The agent room it belongs to (`AgentSpec.room`): "training", "today".
         public var room: String
+        /// The objects it was read from (a cook and its recipe): the summary's cite index keeps them (H8).
+        public var cites: [UUID]
 
-        public init(kind: String, name: String, at: Date, room: String) {
+        public init(kind: String, name: String, at: Date, room: String, cites: [UUID] = []) {
             self.kind = kind
             self.name = name
             self.at = at
             self.room = room
+            self.cites = cites
         }
     }
 

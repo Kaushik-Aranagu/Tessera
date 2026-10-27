@@ -52,7 +52,7 @@ public enum TessTools {
          createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking,
          logSpend,
          pinNote, rainAlert, restDay, tendRoutine,
-         plantRoutine, pauseRoutine]
+         plantRoutine, pauseRoutine, rehearse]
     }
 
     /// The tools Claude may be given: everything but the device-only ones (money).
@@ -598,8 +598,22 @@ public indirect enum TessSchema: Sendable {
                 "properties": Dictionary(uniqueKeysWithValues: properties.map { ($0.0, $0.1.json) }),
                 "required": properties.map(\.0),
             ]
-        case let .nullable(inner):
-            inner.json.merging(["type": [inner.json["type"] as? String ?? "string", "null"]]) { _, new in new }
+        case let .nullable(inner): Self.nullable(inner.json)
         }
+    }
+
+    /// A nullable schema: the type takes null. A choice can't be a type union with an enum (the API refuses "Enum
+    /// value does not match declared type"), so it is one of its choices or null.
+    private static func nullable(_ inner: [String: Any]) -> [String: Any] {
+        if inner["enum"] != nil {
+            var choice = inner
+            let description = choice.removeValue(forKey: "description")
+            var json: [String: Any] = ["anyOf": [choice, ["type": "null"]]]
+            json["description"] = description
+            return json
+        }
+        var json = inner
+        json["type"] = [inner["type"] as? String ?? "string", "null"]
+        return json
     }
 }
