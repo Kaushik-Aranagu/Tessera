@@ -201,6 +201,7 @@ private struct ShellSceneKeystone: View {
         LandingKeystone(label: label) {
             scene(key)
         }
+        .recordsModeKeystoneFrame()
         .overlay(alignment: .topLeading) {
             if ShellProbe.enabled {
                 Text(token)
