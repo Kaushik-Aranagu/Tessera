@@ -323,6 +323,9 @@ struct GalleyCookModePage: View {
                                     } else {
                                         setOut.insert(key)
                                         cue.play(.selection)
+                                        // Sheet 355: every strike carries a 10 s Undo that lifts the pen.
+                                        TessVoice.shared.say("\(need.name), set out", holds: .seconds(10),
+                                                             takeBack: { setOut.remove(key) })
                                     }
                                 }
                             }
@@ -407,7 +410,16 @@ struct GalleyCookModePage: View {
                 Task { await serve(facts) }
             }
         } else {
-            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = session.next() }
+            // Sheet 355: Next is a step done, with a 10 s Undo that goes back to it.
+            let done = session.steps.indices.contains(session.current)
+                ? GalleyCookWords.short(session.steps[session.current].text) : nil
+            var moved = false
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { moved = session.next() }
+            if moved, let done {
+                TessVoice.shared.say("\(done), done", holds: .seconds(10), takeBack: {
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = session.back() }
+                })
+            }
         }
     }
 

@@ -33,4 +33,18 @@ final class LiveModesUndoUITests: SimulatorOnlyTestCase {
         undo.tap()
         XCTAssertTrue(undo.waitForNonExistence(timeout: 5), "Undo took the tap and the receipt went")
     }
+
+    func testUndoTakesATapInCookingMode() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openCook", "Paprika chicken"]
+        app.launch()
+        let next = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Next")).firstMatch
+        XCTAssertTrue(next.waitForExistence(timeout: 25), "Cooking mode is open\n\(app.debugDescription)")
+        next.tap()
+        let undo = app.buttons.matching(identifier: "Undo").firstMatch
+        XCTAssertTrue(undo.waitForExistence(timeout: 5) && undo.isHittable,
+                      "Undo can be tapped\n\(app.debugDescription)")
+        undo.tap()
+        XCTAssertTrue(undo.waitForNonExistence(timeout: 5), "Undo took the tap and the receipt went")
+    }
 }

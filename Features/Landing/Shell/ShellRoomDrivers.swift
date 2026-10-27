@@ -306,8 +306,19 @@ final class WatchRoomDriver: ShellRoomDriver {
                 opened = Opened(id: uuid)
             }
         case let .notNow(id):
+            // Sheet 355: "not now" hides it for today and carries a 10 s Undo that brings it back where it was.
             let name = facts?.trees.first { $0.id.uuidString == id }?.name ?? "It"
-            TessVoice.shared.say("\(name) can wait")
+            if let uuid = UUID(uuidString: id) {
+                let today = TesseraDay().today(AppClock.now)
+                RoutinesNotNow.set(uuid, on: today, hidden: true)
+                model?.touch()
+                TessVoice.shared.say("\(name) can wait", holds: .seconds(10), takeBack: { [weak self] in
+                    RoutinesNotNow.set(uuid, on: today, hidden: false)
+                    self?.model?.touch()
+                })
+            } else {
+                TessVoice.shared.say("\(name) can wait")
+            }
         case .back:
             return false
         case let .openDoor(id):
