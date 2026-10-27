@@ -438,6 +438,7 @@ final class ReviewChoices {
         ("Kitchen v2", ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
+        ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
         // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
         ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
