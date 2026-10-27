@@ -369,3 +369,13 @@ When a pan timer runs out while the phone is locked, the cooking Live Activity s
 - Reduce Motion: no swell; the words change.
 - Private stays as it is (workouts only). Cooking has nothing private to hide.
 - Test: t67 paper and black green; plk.js still clean; plr.js sets the chicken timer to 1 s and reads "Ready, off the heat" with "Chicken ready" in the island (LR1.png).
+
+## Sheet 345: Felt corrects the board in chalk
+
+When "How did it feel" changes the next set's weight, the rest board corrects itself the way you would by hand.
+
+- The old weight stays, greyed (45%), and a chalk line strikes through it left to right in 280 ms. The new weight and reps are then written on after it in the accent chalk over 420 ms: "~~185~~ 190 lb × 5". The plates line under it updates to the new weight.
+- Changing your mind is not cumulative. Easy, then Hard, then Right always works from the weight the set had when the rest began (185 → 190 → 180 → 185). Back at the original weight, the strike goes away.
+- The strike is only shown when the next set is the same lift. It clears when the rest ends.
+- Reduce Motion: the struck and new numbers simply appear.
+- Test: t67 paper and black green; pfx.js taps Easy, Hard, Right, Easy and reads 190 / 180 / 185 / 190 with the strike from 185 (FX1.png).

@@ -1359,7 +1359,10 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   if(S.phase==='rest'){const nl=LIFTS[S.pending??S.li],ns=next(nl);
    T('Rest',24,170,26,.75,D);if(S.pr){const tx='new best, est. '+S.pr.v+' lb',w=T(tx,0,0,24,0),e=RM?1:Math.min(1,(performance.now()-S.pr.t0)/720);g.save();g.beginPath();g.rect(378-w-4,140,(w+8)*e,44);g.clip();T(tx,378,170,24,.97,ACC,'r');g.restore()}T(mmss(S.rest),20,330,178,.97);
    const n=Math.ceil(S.rest/10),N=Math.ceil(S.restOf/10);for(let k=0;k<N;k++){const x=28+k*21+Math.floor(k/5)*10;g.strokeStyle='rgba('+(k<n?W:D)+','+(k<n?.9:.1)+')';g.lineWidth=3.4;g.lineCap='round';g.beginPath();g.moveTo(x,410);g.lineTo(x+4+noise(k,7)*3,362);g.stroke()}
-   if(ns){T('Then '+nl.name.toLowerCase(),24,470,28,.92);T(ns.u?ns.w+' min':ns.w+' lb × '+ns.r,24,506,26,.8,D);if(nl.kind==='bar')T('each side '+perSide(ns.w).join(' + '),24,538,22,.7,D)}
+   if(ns){T('Then '+nl.name.toLowerCase(),24,470,28,.92);
+    /* 345: Felt changes the next weight the way you would on a board: the old number is struck through and the new one written after it */
+    if(S.fix&&!ns.u&&S.fix.li===LIFTS.indexOf(nl)){const e=RM?9:(performance.now()-S.fix.t0)/1000,fw=T(String(S.fix.from),24,506,26,.45,D),e1=Math.min(1,e/.28);ln(22,497,22+(fw+4)*e1,495,.85,2.4);const tx=ns.w+' lb × '+ns.r,w2=T(tx,0,0,26,0),e2=Math.max(0,Math.min(1,(e-.3)/.42));g.save();g.beginPath();g.rect(24+fw+12,470,(w2+4)*e2,50);g.clip();T(tx,24+fw+12,506,26,.95,ACC);g.restore()}
+    else T(ns.u?ns.w+' min':ns.w+' lb × '+ns.r,24,506,26,.8,D);if(nl.kind==='bar')T('each side '+perSide(ns.w).join(' + '),24,538,22,.7,D)}
    const lastSet=S.log[S.log.length-1];if(lastSet&&lastSet.r){T('How did it feel',24,610,22,.7,D);let x=24;HIT.feel=[];['Easy','Right','Hard'].forEach(v=>{const on=S.feel===v;const w=T(v,x,656,40,on?1:.55,on?ACC:W);HIT.feel.push([v,x-6,620,w+12,50]);x+=w+34})}
    T('Start now',24,790,34,.95,ACC);T('swipe up',24,816,15,.5,D);HIT.done=[0,740,250,874];HIT.lifts=[];return}
   // the lift
@@ -1401,14 +1404,14 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   if(S.phase==='rest'&&y>140&&y<420){S.rest=0;endRest()}};
  function pick(n){if(S.phase==='rest')S.pending=n;else S.li=n;pulse()}
  function setFeel(v){S.feel=v;const last=S.log[S.log.length-1];if(last)last.feel=v;const l=LIFTS[last.li],i=last.li;
-  if(last.r&&S.done[i]<l.sets.length){const d=v==='Easy'?5:v==='Hard'?-5:0;if(d){l.sets.slice(S.done[i]).forEach(x=>x.w+=d);receipt(el,(d>0?'Up':'Down')+' 5 lb for the next set')}}pulse()}
+  if(last.r&&S.done[i]<l.sets.length){const d=v==='Easy'?5:v==='Hard'?-5:0;if(S.f0==null)S.f0=l.sets[S.done[i]].w;const fe=()=>{const now=l.sets[S.done[i]].w;S.fix=now!==S.f0?{from:S.f0,li:i,t0:performance.now()}:null};const off=S.f0-l.sets[S.done[i]].w;l.sets.slice(S.done[i]).forEach(x=>x.w+=off+d);fe();if(d)receipt(el,(d>0?'Up':'Down')+' 5 lb for the next set')}pulse()}
  function log(){const l=L(),st=next(l);if(S.phase==='done')return back();if(S.phase==='rest'){S.rest=0;endRest();return}
   if(!st){const n=LIFTS.findIndex(x=>left(x));if(n>=0)pick(n);return}
-  S.done[S.li]++;S.log.push({li:S.li,...st});S.feel=null;S.pr=null;if(st.r&&l.best){const v=e1(st.w,st.r);if(v>Math.max(e1(...l.best),l.newBest||0)){l.newBest=v;S.pr={v,t0:performance.now()};if(navigator.vibrate)try{navigator.vibrate([6,50,6,50,12])}catch(e){}}}pulse();dust(el,{x:20,y:180,w:340,h:150},{x:120,y:900},{n:46,c:'rgb(236,236,230)',c0:'rgba(236,236,230,.9)',size:2,dur:700,spread:220,drop:1});
+  S.done[S.li]++;S.log.push({li:S.li,...st});S.feel=null;S.pr=null;S.fix=null;S.f0=null;if(st.r&&l.best){const v=e1(st.w,st.r);if(v>Math.max(e1(...l.best),l.newBest||0)){l.newBest=v;S.pr={v,t0:performance.now()};if(navigator.vibrate)try{navigator.vibrate([6,50,6,50,12])}catch(e){}}}pulse();dust(el,{x:20,y:180,w:340,h:150},{x:120,y:900},{n:46,c:'rgb(236,236,230)',c0:'rgba(236,236,230,.9)',size:2,dur:700,spread:220,drop:1});
   const li=S.li;receipt(el,l.name+', '+(st.u?st.w+' min':st.w+' × '+st.r)+', logged',()=>{S.done[li]--;S.log.pop();S.phase='lift';S.rest=0;S.pending=null});
   if(!LIFTS.some(x=>left(x)))return finish();
   S.phase='rest';S.restOf=S.rest=l.rest;S.pending=left(l)?null:LIFTS.findIndex(x=>left(x))}
- function endRest(){wipe();S.phase='lift';S.pr=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
+ function endRest(){wipe();S.phase='lift';S.pr=null;S.fix=null;S.f0=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
  function finish(){S.phase='done';pulse()}
  const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest()}},1000);
  Object.assign(window.__wo,{tickRest:n=>{S.rest=Math.max(1,S.rest-n+1)},finish:()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()},feel:setFeel,log,pick});
