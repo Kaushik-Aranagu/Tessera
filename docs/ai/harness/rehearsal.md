@@ -33,6 +33,17 @@ commits it for real or drops it.
 
 Rehearsals have a budget: at most 3 per ask, each under 2 s on the phone. Past that she asks him instead of guessing.
 
+**Wired (AI lane, `RehearseFlags`):** the picker reads his words, with no model. These asks are flagged:
+- **Bulk:** a count over 3 of a counted thing ("my 5 tasks", "six sets"). Also "everything", or "all", "every",
+  "each" or "rest" followed by my, the or of, or by a counted word.
+- **Structural:** a reshape word (reorder, rearrange, restructure, regroup, reorganize, shuffle, merge). Also a shape
+  word (plan, program, split, routine, slots, sections) said together with a change word (move, swap, add, remove...).
+
+A flagged pick (`Pick.rehearse`, `Pick.count`) puts `rehearse` first in its tools. Its pack adds one line that holds
+nothing of his: "This ask changes many things. Rehearse first: call rehearse with the calls you would make ...". The
+line rides only when the phone has the tool. Look asks, bound commands and money asks are never flagged; money is the
+phone's own rung with its one call.
+
 ## 3. Data: a copy of his store, in memory
 
 **Engine (Core):**
@@ -60,6 +71,22 @@ Rehearsals have a budget: at most 3 per ask, each under 2 s on the phone. Past t
 It writes nothing, so it doesn't count against the ghost budget, but it does count as a round. Then she calls the
 same tools for real, or says what went wrong and what she would do instead.
 
+**How each rung reads it (AI lane, wired):**
+- Core's `rehearse` tool is `deviceOnly`, because its full text can hold money, body and private values. `TessRun`
+  runs it itself, with one `Rehearsal` per ask, so the ask's 3 tries are shared across rounds.
+- **The phone's own model** reads `Result.text` whole: the receipts, the diff and the checks.
+- **A Claude rung** reads `RehearseFlags.forClaude`: the result's fragments as the Door's policy allows, and never the
+  receipts.
+  - Under strict, a money, body or private line stays on the phone, and she hears how many were held back.
+  - The last line is "All checks passed.", or "Checks failed: change nothing, and tell him why."
+- **Out of time:** a try that passes `Rehearsal.seconds` (2 s) returns `overBudget`. She then hears "That took too
+  long to try. Change nothing and ask him first", gets no more tries, and every write for the rest of the ask is
+  refused with the same line. A slow rehearsal proves nothing, so she never acts unrehearsed.
+- A money call inside a rehearsal on a Claude rung still fails its check (`moneyOffPhone`). The rehearsal itself writes
+  nothing, so it isn't a ghost and doesn't use the ghost budget.
+- The spec Claude sees takes the tool's own input: `calls`, an array of `{name, arguments}` with the arguments as
+  JSON text, and `expecting`, the count he named or null. Its description is `RehearseFlags.description`.
+
 ## 4. Looks: the quiet stage (sheet 287, section 5)
 
 **UI (Builder A, with the shell):**
@@ -78,10 +105,17 @@ same tools for real, or says what went wrong and what she would do instead.
 - **touch:** every target at least 44 pt.
 - **calm:** the move ends within 1 s, and a Reduce Motion version exists.
 
+**`tryLook` (AI lane):** on an open look ask the model gets `tryLook` before `setLook`.
+- `tryLook` stages one form or trait value and returns only the flags: "Tried, not shown: the dial fails fits. Try
+  another, or tell him why", or "... it passes every check. setLook shows it".
+- It is not a shell call: nothing reaches the host, and nothing is kept.
+- She gets at most 3 tries per ask (`TessRun.maxTries`); a fourth is refused with "That's 3 tries for this ask".
+- A look that passed in this run goes straight to the shell when she sets it, so it isn't staged twice.
+
 **Wired today (AI lane):** the host gives `TessRun.stage` a closure that stages one `LookChange`. When the model
 picks a form or value with `setLook`, `TessRun` first checks the change against the place's own list. Then it stages
 the change, and hands the intent to the shell only if every flag passes. Otherwise the model hears the failed checks,
-for example "The dial fails fits, touch.", and tries the next form or tells him why. His look stays. Only the flags
+for example "the dial fails fits, touch", and tries the next form or tells him why. His look stays. Only the flags
 reach the model, never a picture or an item name. A bound change ("the doors as an index") is his own choice, like his
 hand, so it isn't staged.
 
@@ -90,8 +124,9 @@ hand, so it isn't staged.
 1. **Core:** `ObjectStore.fork()`, `Rehearsal` with the diff and the engine checks, the `rehearse` tool, and its
    tests. A rehearsal must leave the real store byte for byte unchanged, and fire no observer.
 2. **AI lane (this thread):** the stage gate on `setLook` is done (`TessRun.stage`, `StageReport`). Still to do:
-   when she rehearses data (the picker flags bulk and structural asks), the `rehearse` spec, the diff as fragments
-   with taint, and test-world cases scored on "rehearsed, then acted correctly".
+   when she rehearses data (done: `RehearseFlags`), `tryLook` (done), and test-world cases scored on "rehearsed,
+   then acted correctly" (done: `WorldKind.rehearse`; a case's `order` must come in that order). The `rehearse`
+   spec and the Claude route through the Door are done too (`TessRun.rehearsed`).
 3. **Builder A:** `ShellStage.render(screen:looks:) -> StageReport`, wired to `TessRun.stage`, and the
    `RenderedItem` preference on each place's item views, after the sheet 287 forms exist.
 4. **Later:** a vision check of the rendered image on the phone's own model, and rebuilding code on the Mac or an

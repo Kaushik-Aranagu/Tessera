@@ -124,7 +124,8 @@ public enum ObjectPrivacy {
             return flagged ? bookLabel : nil
         }
         // A workout or routine (OL01): its own title, its flag, or the routine a workout was made from.
-        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by words,
+        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by
+        // words,
         // through the title and the routine link (decided Oct 22).
         if isA(.routine) || isA(.workout) {
             let routine = isA(.workout) ? store.linkedObjects("routine", of: object).first : nil
@@ -160,6 +161,24 @@ public enum ObjectPrivacy {
             return "Private item"
         }
         return isA(.list) ? "Private list" : nil
+    }
+
+    /// What a rehearsal needs to say a copy's labels without walking the copy: the real store's private labels.
+    public struct ForkLabels {
+        let base: PrivateWords.ForkBase
+
+        /// Read once from the real store (warm in the app), then reused by every try of the run.
+        @MainActor
+        public init(real store: ObjectStore) {
+            base = PrivateWords.forkBase(of: store)
+        }
+
+        /// The label a thing shows in the copy, or nil when it is plain. `touched` are the ids the rehearsal
+        /// changed; every other thing keeps the real store's label.
+        @MainActor
+        public func label(of object: ObjectRecord, in copy: ObjectStore, touched: Set<UUID>) -> String? {
+            PrivateWords.forkLabel(of: object, in: copy, base: base, touched: touched)
+        }
     }
 
     /// The one check for a title or a word he typed (G105): a secret word, money, a body fact, a medicine, a doctor's
