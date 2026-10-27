@@ -70,6 +70,22 @@ struct FeltRelativeTests {
         #expect(state.current.sets.map(\.weight) == [185, 190, 185])
     }
 
+    @Test("Taking Felt back restores the weights from the start of the rest and clears the word")
+    func undoFelt() {
+        var state = resting()
+        state.apply(felt: .easy)
+        let taken = state.undoFelt()
+        #expect(taken)
+        #expect(state.current.sets.map(\.weight) == [185, 185, 185])
+        #expect(state.current.sets[0].done?.felt == nil)
+        #expect(state.restNextChange == nil)
+        var idle = WorkoutModeState(title: "A", unit: .pounds, startedAt: start, lifts: [
+            .init(id: "x", name: "X", restSeconds: 60, sets: [.init(weight: 1, reps: 1)]),
+        ])
+        let idleResult = idle.undoFelt()
+        #expect(!idleResult)
+    }
+
     @Test("Weights never go under zero")
     func floor() {
         var state = resting(weight: 2)

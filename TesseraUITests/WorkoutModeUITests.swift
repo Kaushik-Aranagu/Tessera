@@ -126,6 +126,41 @@ final class WorkoutModeUITests: SimulatorOnlyTestCase {
         }
     }
 
+    /// The Undo receipt takes a plain tap (sheet 354: it must sit above the touch surface): log a set, tap Undo, and
+    /// the
+    /// rest screen is gone and the set is back to do.
+    func testUndoReceiptTakesAPlainTapAndTakesTheSetBack() {
+        let app = launch()
+        let verb = element(app, "mode.verb")
+        XCTAssertEqual(verb.label, "Done", "A set to do")
+        verb.tap()
+        XCTAssertTrue(element(app, "mode.howFelt").waitForExistence(timeout: 5), "The rest asks how it felt")
+        let undo = element(app, "mode.undo")
+        XCTAssertTrue(undo.waitForExistence(timeout: 3), "The receipt offers Undo")
+        XCTAssertTrue(undo.isHittable, "Undo can be tapped: nothing sits above it")
+        undo.tap()
+        XCTAssertTrue(element(app, "mode.lift").waitForExistence(timeout: 5), "Back on the set")
+        XCTAssertFalse(element(app, "mode.howFelt").exists, "The rest is gone")
+        XCTAssertEqual(element(app, "mode.verb").label, "Done", "The set is to do again")
+        XCTAssertEqual(element(app, "mode.receipt").label, "Taken back")
+    }
+
+    /// The Felt receipt has Undo too: it puts the next weight back.
+    func testFeltReceiptUndoPutsTheWeightBack() {
+        let app = launch()
+        element(app, "mode.verb").tap()
+        XCTAssertTrue(element(app, "mode.howFelt").waitForExistence(timeout: 5))
+        let before = element(app, "mode.restNext").label
+        element(app, "mode.felt.easy").tap()
+        XCTAssertTrue(element(app, "mode.receipt").label.hasPrefix("Easy"), "The receipt names the word")
+        let undo = element(app, "mode.undo")
+        XCTAssertTrue(undo.waitForExistence(timeout: 3), "Felt can be taken back")
+        XCTAssertTrue(undo.isHittable)
+        undo.tap()
+        XCTAssertEqual(element(app, "mode.receipt").label, "Felt taken back")
+        XCTAssertEqual(element(app, "mode.restNext").label, before, "The next weight is back")
+    }
+
     private func attach(_ app: XCUIApplication, _ name: String) {
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = name

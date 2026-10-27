@@ -178,10 +178,18 @@ struct WorkoutModeState: Equatable {
     // MARK: Moves
 
     /// The dial picks the lift to do next.
+    /// During a rest it only queues the lift (it takes effect when the rest ends, through the auto-turn).
     mutating func select(lift index: Int) {
         guard lifts.indices.contains(index), !isDone else { return }
-        focus = index
+        if case .rest = phase {
+            queuedFocus = index
+        } else {
+            focus = index
+        }
     }
+
+    /// The lift picked during a rest, to turn to when the rest ends.
+    private(set) var queuedFocus: Int?
 
     /// Dragging the weight: `steps` of 5 lb (2.5 kg) on the sets left of the focused lift, never under zero.
     /// Returns whether anything changed (the light tick fires on a change).
@@ -233,6 +241,7 @@ struct WorkoutModeState: Equatable {
     mutating func undo(at now: Date) -> Bool {
         guard canUndo(at: now), let target = undoable else { return false }
         lifts[target.lift].sets[target.set].done = nil
+        queuedFocus = nil
         focus = target.lift
         phase = .set
         finishedAt = nil
@@ -287,6 +296,22 @@ struct WorkoutModeState: Equatable {
         )
     }
 
+    /// Takes a Felt answer back: the sets left return to their weights at the start of the rest, and the word comes off
+    /// the set you logged.
+    @discardableResult
+    mutating func undoFelt() -> Bool {
+        guard case let .rest(_, _, lift) = phase, let baseline = restBaseline else { return false }
+        for index in lifts[lift].sets.indices
+            where lifts[lift].sets[index].done == nil && baseline.indices.contains(index)
+        {
+            lifts[lift].sets[index].weight = baseline[index]
+        }
+        if let last = lifts[lift].sets.lastIndex(where: { $0.done != nil }) {
+            lifts[lift].sets[last].done?.felt = nil
+        }
+        return true
+    }
+
     /// Lighter: two steps (10 lb, 5 kg) off the sets left of the focused lift.
     @discardableResult
     mutating func lighter() -> Receipt? {
@@ -330,6 +355,13 @@ struct WorkoutModeState: Equatable {
     }
 
     private mutating func turnAfterRest(from lift: Int) {
+        if let queued = queuedFocus {
+            queuedFocus = nil
+            if lifts.indices.contains(queued), !lifts[queued].isComplete {
+                focus = queued
+                return
+            }
+        }
         guard lifts[lift].isComplete else { focus = lift; return }
         let order = Array(lifts.indices)
         focus = (order.drop { $0 <= lift } + order.prefix { $0 <= lift }).first { !lifts[$0].isComplete } ?? lift
@@ -340,6 +372,7 @@ struct WorkoutModeState: Equatable {
         phase = .done
         finishedAt = now
         undoable = nil
+        queuedFocus = nil
     }
 
     // MARK: Time

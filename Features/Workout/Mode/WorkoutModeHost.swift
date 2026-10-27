@@ -64,6 +64,10 @@ struct WorkoutModeHost: View {
             close: { model.isWorkoutPresented = false },
             logged: { liftID, weight, reps in log(liftID: liftID, weight: weight, reps: reps) },
             finished: { session.finish() },
+            undone: {
+                session.undoLastSet()
+                RestActivityController.shared.update(for: session)
+            },
             changed: { state in publish(state) }
         )
     }

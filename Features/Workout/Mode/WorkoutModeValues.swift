@@ -111,6 +111,10 @@ extension WorkoutModeState {
 
     /// The next set to do after a rest: the same lift while it has sets, else the next lift with sets left.
     func nextUp(after liftIndex: Int) -> (lift: Lift, set: PlannedSet)? {
+        // A lift picked during the rest is what comes next.
+        if let queued = queuedFocus, lifts.indices.contains(queued), let index = lifts[queued].nextIndex {
+            return (lifts[queued], lifts[queued].sets[index])
+        }
         if let index = lifts[liftIndex].nextIndex {
             return (lifts[liftIndex], lifts[liftIndex].sets[index])
         }
@@ -257,6 +261,12 @@ extension WorkoutModeState {
     }
 
     // MARK: Finish
+
+    /// "Finished, 41 min, 12 sets": the part of the Done line that stays still while the total counts up.
+    func finishHead(at now: Date) -> String {
+        let minutes = Int((elapsed(at: now) / 60).rounded())
+        return "Finished, \(minutes) min, \(setsDone) \(setsDone == 1 ? "set" : "sets")"
+    }
 
     /// "Finished, 41 min, 12 sets, about 9,795 lb"; compares with the last same workout when it is known.
     func finishLine(at now: Date, lastVolume: Double? = nil) -> String {

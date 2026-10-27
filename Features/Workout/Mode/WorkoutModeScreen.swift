@@ -6,6 +6,8 @@ struct WorkoutModeActions {
     /// A set was logged: the lift's id, its weight and reps.
     var logged: (_ liftID: String, _ weight: Double, _ reps: Int) -> Void = { _, _, _ in }
     var finished: () -> Void = {}
+    /// The last logged set was taken back (Undo, 10 s).
+    var undone: () -> Void = {}
     /// The state changed (Live Activity, resume).
     var changed: (WorkoutModeState) -> Void = { _ in }
 }
@@ -23,6 +25,9 @@ struct WorkoutModeScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var cue = HapticCue()
     @State private var receipt: String?
+    /// What the receipt's Undo takes back, and until when (10 s).
+    @State private var undoKind: UndoKind?
+    @State private var undoDeadline = Date.distantPast
     @State private var dragSteps = 0
     @State private var dust = 0
     @State private var finishHold = false
@@ -31,12 +36,21 @@ struct WorkoutModeScreen: View {
     /// Sheet 338: the rest board as it was, wiped off by the eraser band when the rest ends.
     @State private var wipeImage: Image?
     @State private var wipeTime = 0.0
+    @State private var wipeDirection = EraserBand.Direction.leftToRight
     @State private var middleSize = CGSize.zero
+    /// Sheet 348: the set just logged waits for its tick until the rest ends, then it is drawn on.
+    @State private var tickLift: String?
+    @State private var tickSet = 0
+    @State private var tickValue = 1.0
     @Environment(\.displayScale) private var displayScale
     @Environment(\.dynamicTypeSize) private var typeSize
     /// Slot heights follow the type they hold (the lines themselves stay one line, shrunk to fit).
     @ScaledMetric(relativeTo: .callout) private var line = 26.0
     @ScaledMetric(relativeTo: .title) private var title = 40.0
+
+    private enum UndoKind {
+        case set, felt
+    }
 
     private static let slate = Color(hex: 0x1F2524)
     private let dragStep: CGFloat = 26
@@ -107,13 +121,7 @@ struct WorkoutModeScreen: View {
                         .frame(width: 190, alignment: .trailing)
                         .offset(x: proxy.size.width - 44 - 190, y: listTop)
                 }
-                Text(receipt ?? " ")
-                    .font(Chalk.font(20, relativeTo: .callout))
-                    .foregroundStyle(Chalk.quiet)
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                    .frame(height: line * 1.1, alignment: .leading)
-                    .accessibilityIdentifier("mode.receipt")
-                    .accessibilityHidden(receipt == nil)
+                receiptRow(now: now)
                     .offset(y: Spot.receipt * scale)
                 Button(action: { verb(now) }) {
                     Text(verbWord(board)).font(Chalk.font(44, relativeTo: .largeTitle)).foregroundStyle(Chalk.blue)
@@ -135,6 +143,50 @@ struct WorkoutModeScreen: View {
             .tesseraAnimation(value: receipt)
         }
         .ignoresSafeArea()
+    }
+
+    /// The receipt just above the thumb zone: what was done, and Undo while it can be taken back (10 s). It is above
+    /// the
+    /// swipe surface in the stack, and Undo is a Button, so a plain tap reaches it.
+    private func receiptRow(now: Date) -> some View {
+        HStack(spacing: 14) {
+            Text(receipt ?? " ")
+                .font(Chalk.font(20, relativeTo: .callout))
+                .foregroundStyle(Chalk.quiet)
+                .lineLimit(1).minimumScaleFactor(0.6)
+                .accessibilityIdentifier("mode.receipt")
+                .accessibilityHidden(receipt == nil)
+            if let kind = undoKind, now < undoDeadline, kind != .set || state.canUndo(at: now) {
+                Button(action: { undoReceipt(now) }) {
+                    Text("Undo").font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.blue)
+                        .frame(minWidth: 64, minHeight: 44)
+                }
+                .accessibilityIdentifier("mode.undo")
+                .accessibilityHint("Takes it back")
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(height: 44, alignment: .leading)
+    }
+
+    private func undoReceipt(_ now: Date) {
+        guard let kind = undoKind else { return }
+        switch kind {
+        case .set:
+            if state.undo(at: now) {
+                tickLift = nil
+                tickValue = 1
+                receipt = "Taken back"
+                actions.undone()
+            }
+        case .felt:
+            if state.undoFelt() {
+                receipt = "Felt taken back"
+            }
+        }
+        undoKind = nil
+        cue.play(.undo)
+        actions.changed(state)
     }
 
     /// The lifts list shows at default type and not in a rest or Done; it is the first thing larger type drops.
@@ -200,7 +252,7 @@ struct WorkoutModeScreen: View {
         .onGeometryChange(for: CGSize.self) { $0.size } action: { middleSize = $0 }
         .overlay(alignment: .topLeading) {
             if let wipeImage {
-                AnimatedEraserWipe(snapshot: wipeImage, time: wipeTime)
+                AnimatedEraserWipe(snapshot: wipeImage, time: wipeTime, direction: wipeDirection)
             }
         }
     }
@@ -270,7 +322,8 @@ struct WorkoutModeScreen: View {
             ForEach(Array(zip(model.chips, rows)), id: \.0.id) { chip, row in
                 HStack(spacing: 4) {
                     if chip.state == .done {
-                        Image(systemName: "checkmark").font(.system(size: 14, weight: .bold))
+                        // The set you just did gets its tick drawn on as the rest ends; the slot is always there.
+                        DrawnTick(progress: tickProgress(forSet: chip.id))
                     }
                     Text(chip.text + (row.felt.isEmpty ? "" : " \(row.felt.lowercased())"))
                 }
@@ -417,9 +470,13 @@ struct WorkoutModeScreen: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(board.main).font(Chalk.numerals(150)).foregroundStyle(Chalk.white).lineLimit(1).minimumScaleFactor(0.4)
                 .frame(height: 124, alignment: .leading)
-            Text(state.finishLine(at: AppClock.now)).font(Chalk.font(26, relativeTo: .title3))
+            // Minutes and sets stay still; the total counts up (sheet 349).
+            Text(state.finishHead(at: AppClock.now)).font(Chalk.font(26, relativeTo: .title3))
                 .foregroundStyle(Chalk.white)
-                .lineLimit(2).minimumScaleFactor(0.6).frame(height: 64, alignment: .leading)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(height: line * 1.3, alignment: .leading)
+            CountUpRow(final: (state.volume / 5).rounded() * 5, unit: state.unit.symbol)
+                .frame(height: 56, alignment: .leading)
+                .accessibilityIdentifier("mode.doneTotal")
             // The session's real new bests, from the ledger's best per lift; else steady work.
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(state.doneBestLines.prefix(3).enumerated()), id: \.offset) { _, bestLine in
@@ -445,9 +502,7 @@ struct WorkoutModeScreen: View {
         VStack(alignment: .trailing, spacing: 0) {
             ForEach(Array(state.lifts.enumerated()), id: \.element.id) { index, lift in
                 Button {
-                    state.select(lift: index)
-                    cue.play(.selection)
-                    actions.changed(state)
+                    changeLift(to: index, direction: .forTap(from: state.focus, to: index))
                 } label: {
                     HStack(spacing: 6) {
                         if lift.isComplete {
@@ -491,10 +546,7 @@ struct WorkoutModeScreen: View {
                 if abs(dy) > abs(dx), dy < -80 {
                     verb(AppClock.now)
                 } else if abs(dx) > abs(dy), abs(dx) > 70 {
-                    let next = state.focus + (dx < 0 ? 1 : -1)
-                    state.select(lift: next)
-                    cue.play(.selection)
-                    actions.changed(state)
+                    changeLift(to: state.focus + (dx < 0 ? 1 : -1), direction: .forSwipe(dx: dx))
                 }
             }
     }
@@ -507,6 +559,7 @@ struct WorkoutModeScreen: View {
         }
         if case .rest = state.phase {
             wipeRestBoard(now)
+            drawTick()
             withTesseraAnimation(reduceMotion: reduceMotion) { state.endRest(at: now) }
             actions.changed(state)
             return
@@ -515,6 +568,15 @@ struct WorkoutModeScreen: View {
         guard let index = state.current.nextIndex else { return }
         let planned = state.current.sets[index]
         withTesseraAnimation(reduceMotion: reduceMotion) { _ = state.logSet(at: now) }
+        tickLift = liftID
+        tickSet = index
+        tickValue = 0
+        receipt = "\(PlateLoad.number(planned.weight)) \u{00D7} \(planned.reps) logged"
+        undoKind = .set
+        undoDeadline = now.addingTimeInterval(WorkoutModeState.undoWindow)
+        if state.isDone {
+            drawTick()
+        }
         cue.play(state.isDone ? .done : .setLogged)
         dust += 1
         actions.logged(liftID, planned.weight, planned.reps)
@@ -524,10 +586,29 @@ struct WorkoutModeScreen: View {
         }
     }
 
+    /// Changing lift in the lift phase wipes the board with the eraser (a swipe left sweeps right to left, a tap on a
+    /// later
+    /// lift the same, an earlier one the other way). During a rest it only queues the lift: no wipe, it turns when the
+    /// rest ends.
+    private func changeLift(to index: Int, direction: EraserBand.Direction) {
+        guard state.lifts.indices.contains(index), !state.isDone else { return }
+        if case .rest = state.phase {
+            state.select(lift: index)
+        } else {
+            guard index != state.focus else { return }
+            wipeBoard(AppClock.now, direction: direction)
+            state.select(lift: index)
+        }
+        cue.play(.selection)
+        actions.changed(state)
+    }
+
     private func applyFelt(_ felt: WorkoutModeState.Felt) {
         guard let result = state.apply(felt: felt) else { return }
         cue.play(.selection)
         receipt = result.text
+        undoKind = .felt
+        undoDeadline = AppClock.now.addingTimeInterval(WorkoutModeState.undoWindow)
         actions.changed(state)
     }
 
@@ -542,7 +623,15 @@ struct WorkoutModeScreen: View {
     /// is
     /// already live behind it. Called just before the rest ends. Reduce Motion: a plain swap (nothing is made).
     private func wipeRestBoard(_ now: Date) {
-        guard !reduceMotion, case .rest = state.phase, middleSize.width > 0, middleSize.height > 0 else { return }
+        guard case .rest = state.phase else { return }
+        wipeBoard(now, direction: .leftToRight)
+    }
+
+    /// Wipes the board as it is now off with the eraser, in `direction`, revealing what the state changes to behind it
+    /// (called just before the change). Reduce Motion: nothing is made, the swap is plain.
+    private func wipeBoard(_ now: Date, direction: EraserBand.Direction) {
+        guard !reduceMotion, middleSize.width > 0, middleSize.height > 0 else { return }
+        wipeDirection = direction
         let board = state.scoreboard(at: now)
         let layer = middle(board: board, now: now)
             .frame(width: middleSize.width, height: middleSize.height, alignment: .topLeading)
@@ -559,9 +648,29 @@ struct WorkoutModeScreen: View {
         }
     }
 
+    /// The drawn fraction of the tick on a done set: 1 for any set but the one waiting for its tick.
+    private func tickProgress(forSet index: Int) -> Double {
+        tickLift == state.current.id && tickSet == index ? tickValue : 1
+    }
+
+    /// The rest ended: 380 ms on, the waiting tick is drawn over 260 ms (the eraser passes as it lands). Reduce Motion:
+    /// it appears without being drawn.
+    private func drawTick() {
+        guard tickLift != nil, tickValue < 1 else { return }
+        guard !reduceMotion else {
+            tickValue = 1
+            return
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(TickDraw.delay))
+            withAnimation(.linear(duration: TickDraw.duration)) { tickValue = 1 }
+        }
+    }
+
     private func tick(_ now: Date) {
         if case let .rest(endsAt, _, _) = state.phase, endsAt <= now {
             wipeRestBoard(now)
+            drawTick()
         }
         let before = state.phase
         state.tick(at: now)
