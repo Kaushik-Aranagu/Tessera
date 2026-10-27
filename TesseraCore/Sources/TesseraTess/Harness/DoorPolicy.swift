@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 /// What may go to Claude (harness H1b).
 public enum Taint: Sendable, Equatable {
@@ -12,10 +13,19 @@ public enum Taint: Sendable, Equatable {
 public struct PackFragment: Sendable, Equatable {
     public var text: String
     public var taint: Taint
+    /// Where the text came from (input-hygiene H4). Most of a pack is the app's own; a page is packed with
+    /// `PackFragment.page`.
+    public var source: Provenance
 
-    public init(_ text: String, taint: Taint = .claudeSafe) {
+    public init(_ text: String, taint: Taint = .claudeSafe, source: Provenance = .app) {
         self.text = text
         self.taint = taint
+        self.source = source
+    }
+
+    /// Third-party text as its labeled data block. It keeps the taint the caller gives it.
+    public static func page(_ untrusted: Untrusted, taint: Taint = .claudeSafe) -> PackFragment {
+        PackFragment(untrusted.packed(), taint: taint, source: untrusted.source)
     }
 }
 
