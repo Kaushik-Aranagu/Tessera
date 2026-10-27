@@ -21,6 +21,11 @@ struct HomeBoardTests {
         #expect(HomeBoard.cut(line("Supercalifragilisticexpialidocious")).segments.first?.text.isEmpty == false)
     }
 
+    @Test func theFirstDrawCutsForTheNarrowestBoardSoNothingClips() {
+        let cut = HomeBoard.cut(line("Stretch & mobility at 12:05 pm"), width: HomeBoard.firstDrawWidth)
+        #expect(HomeBoard.fits(cut, width: HomeBoard.firstDrawWidth))
+    }
+
     @Test func aCutNeverEndsOnAStopWord() {
         let cut = HomeBoard.cut(line("Stretch and mobility at the climbing gym tonight"), width: 270)
         #expect(!HomeBoard.endsOnStopWord(cut.segments.map(\.text).joined(separator: " ")))

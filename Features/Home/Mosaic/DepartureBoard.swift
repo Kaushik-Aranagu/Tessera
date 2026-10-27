@@ -10,23 +10,10 @@ enum DepartureSteps {
     static let flipMS = 70
     static let delayMS = 14
 
-    /// The letters shown from `old` to `new`: forward along the strip, at most nine, skipping evenly. A character
-    /// that is not on the strip lands at once.
+    /// The letters shown from `old` to `new`: one flip, straight to the new letter. A changing line only ever shows
+    /// the letters of the two words, never a scramble of other glyphs on the way (Design's review of sheet 324).
     static func sequence(from old: Character, to new: Character) -> [Character] {
-        guard old != new else { return [] }
-        guard let b = strip.firstIndex(of: new) else { return [new] }
-        let a = strip.firstIndex(of: old) ?? 0
-        var remaining = (b - a + strip.count) % strip.count
-        let skip = max(1, Int((Double(remaining) / Double(maxSteps)).rounded(.up)))
-        var at = a
-        var out: [Character] = []
-        while remaining > 0 {
-            let move = min(skip, remaining)
-            at = (at + move) % strip.count
-            remaining -= move
-            out.append(strip[at])
-        }
-        return out
+        old == new ? [] : [new]
     }
 
     /// The line as letters: the runs joined by one space cell each (an app word never runs into the next word).

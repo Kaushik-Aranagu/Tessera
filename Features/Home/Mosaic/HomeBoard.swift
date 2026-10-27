@@ -44,6 +44,8 @@ enum HomeBoard {
     static let rotationSeconds: Double = 6
     static let maxNotices = 6
     static let defaultWidth: CGFloat = 340
+    /// The Bridge board row's width: the narrowest board, used until a row is measured.
+    static let firstDrawWidth: CGFloat = 238
     /// The room the top-left Settings word takes from the date's row, plus a gap, so the date never runs into it.
     static let settingsReserve: CGFloat = 104
 
