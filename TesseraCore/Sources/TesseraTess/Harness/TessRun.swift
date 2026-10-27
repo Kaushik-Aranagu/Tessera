@@ -690,7 +690,10 @@ public final class TessRun {
         }
         let unoffered = asked.calls.map(\.name).filter { !offered.contains($0) || $0 == RehearseFlags.tool }
         guard unoffered.isEmpty else {
-            return ("Only calls offered here can be rehearsed, not \(unoffered.joined(separator: ", "))", true)
+            // Only a name Tess has is read back: a made-up one is the model's own words (H5).
+            let named = unoffered.filter { TessTools.tool(named: $0) != nil || ElementCatalog.shellCalls.contains($0) }
+            let which = named.isEmpty ? "" : ", not \(named.joined(separator: ", "))"
+            return ("Only calls offered here can be rehearsed\(which)", true)
         }
         let current: Rehearsal
         if let kept = rehearsal, kept.runID == runID {
