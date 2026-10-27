@@ -34,6 +34,9 @@ struct WorkoutModeScreen: View {
     @State private var middleSize = CGSize.zero
     @Environment(\.displayScale) private var displayScale
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// Slot heights follow the type they hold (the lines themselves stay one line, shrunk to fit).
+    @ScaledMetric(relativeTo: .callout) private var line = 26.0
+    @ScaledMetric(relativeTo: .title) private var title = 40.0
 
     private static let slate = Color(hex: 0x1F2524)
     private let dragStep: CGFloat = 26
@@ -71,26 +74,34 @@ struct WorkoutModeScreen: View {
         static let verbBaseline: CGFloat = 790
         static let verbHeight: CGFloat = 56
         static let row: CGFloat = 26
+        /// The title (44 pt target) and the hold-to-finish words (44 pt target) under it.
+        static let top: CGFloat = 92
+    }
+
+    private static var windowTopInset: CGFloat {
+        UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
+            .first(where: \.isKeyWindow)?.safeAreaInsets.top ?? 0
     }
 
     private func content(now: Date) -> some View {
         let board = state.scoreboard(at: now)
         return GeometryReader { proxy in
             let scale = proxy.size.height / Spot.designHeight
-            let inset = proxy.safeAreaInsets
+            // The window's own inset covers a cover that reports none to its content.
+            let inset = max(proxy.safeAreaInsets.top, Self.windowTopInset)
             let listTop = Spot.list * scale
             ZStack(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: 0) {
-                    top(now: now).frame(height: 64)
+                    top(now: now).frame(height: Spot.top)
                     ViewThatFits(in: .vertical) {
                         middle(board: board, now: now, level: 0)
                         middle(board: board, now: now, level: 1)
                         middle(board: board, now: now, level: 2)
                         middle(board: board, now: now, level: 3)
                     }
-                    .frame(maxHeight: max(listTop - inset.top - 64 - 8, 0), alignment: .top)
+                    .frame(maxHeight: max(listTop - inset - Spot.top - 8, 0), alignment: .top)
                 }
-                .padding(.top, inset.top)
+                .padding(.top, inset)
                 if showsLifts(board) {
                     steps()
                         .frame(width: 190, alignment: .trailing)
@@ -100,7 +111,7 @@ struct WorkoutModeScreen: View {
                     .font(Chalk.font(20, relativeTo: .callout))
                     .foregroundStyle(Chalk.quiet)
                     .lineLimit(1).minimumScaleFactor(0.6)
-                    .frame(height: 28, alignment: .leading)
+                    .frame(height: line * 1.1, alignment: .leading)
                     .accessibilityIdentifier("mode.receipt")
                     .accessibilityHidden(receipt == nil)
                     .offset(y: Spot.receipt * scale)
@@ -177,7 +188,7 @@ struct WorkoutModeScreen: View {
                 }
             }
             .lineLimit(1).minimumScaleFactor(0.7)
-            .frame(height: 24)
+            .frame(height: line * 0.95)
             if board.isRest {
                 restBody(board: board, now: now)
             } else if state.isDone {
@@ -200,7 +211,7 @@ struct WorkoutModeScreen: View {
         let model = state.board(at: now)
         return VStack(alignment: .leading, spacing: 6) {
             Text(lift.name).font(Chalk.font(34, relativeTo: .title)).foregroundStyle(Chalk.white)
-                .lineLimit(1).minimumScaleFactor(0.5).frame(height: 40, alignment: .leading)
+                .lineLimit(1).minimumScaleFactor(0.5).frame(height: title, alignment: .leading)
                 .accessibilityIdentifier("mode.lift")
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(board.main).font(Chalk.numerals(170)).foregroundStyle(Chalk.white)
@@ -249,7 +260,7 @@ struct WorkoutModeScreen: View {
         .frame(height: 76)
         Text(model.plates.map { $0.line.prefix(1).uppercased() + $0.line.dropFirst() } ?? " ")
             .font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.white)
-            .lineLimit(1).minimumScaleFactor(0.6).frame(height: 26, alignment: .leading)
+            .lineLimit(1).minimumScaleFactor(0.6).frame(height: line, alignment: .leading)
             .accessibilityIdentifier("mode.platesLine")
     }
 
@@ -270,7 +281,7 @@ struct WorkoutModeScreen: View {
             }
             Spacer(minLength: 0)
         }
-        .frame(height: 32)
+        .frame(height: line * 1.25)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mode.chips")
     }
@@ -281,12 +292,12 @@ struct WorkoutModeScreen: View {
         return VStack(alignment: .leading, spacing: 2) {
             if level < 2 {
                 Text(board.info2).font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
-                    .lineLimit(1).minimumScaleFactor(0.6).frame(height: 26, alignment: .leading)
+                    .lineLimit(1).minimumScaleFactor(0.6).frame(height: line, alignment: .leading)
                     .accessibilityIdentifier("mode.lastTime")
             }
             if level < 1 {
                 Text(estimate).font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
-                    .lineLimit(1).frame(height: 26, alignment: .leading)
+                    .lineLimit(1).frame(height: line, alignment: .leading)
                     .accessibilityIdentifier("mode.estimate")
             }
         }
@@ -306,13 +317,13 @@ struct WorkoutModeScreen: View {
                 .accessibilityIdentifier("mode.restTime")
             chalkStrokes(now: now).accessibilityIdentifier("mode.strokes")
             Text(board.info1).font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.white)
-                .lineLimit(1).minimumScaleFactor(0.6).frame(height: 30, alignment: .leading)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(height: line * 1.15, alignment: .leading)
                 .accessibilityIdentifier("mode.restNext")
             Text(model.loadNext ?? " ").font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
-                .lineLimit(1).minimumScaleFactor(0.6).frame(height: 26, alignment: .leading)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(height: line, alignment: .leading)
                 .accessibilityIdentifier("mode.loadNext")
             Text("How did it feel").font(Chalk.font(40, relativeTo: .title)).foregroundStyle(Chalk.blue)
-                .lineLimit(1).minimumScaleFactor(0.6).frame(height: 46, alignment: .leading)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(height: title * 1.15, alignment: .leading)
                 .accessibilityIdentifier("mode.howFelt")
             HStack(spacing: 10) {
                 ForEach(WorkoutModeState.Felt.allCases, id: \.self) { felt in
@@ -394,9 +405,9 @@ struct WorkoutModeScreen: View {
                 .lineLimit(2).minimumScaleFactor(0.6).frame(height: 64, alignment: .leading)
             // The session's real new bests, from the ledger's best per lift; else steady work.
             VStack(alignment: .leading, spacing: 2) {
-                ForEach(Array(state.doneBestLines.prefix(3).enumerated()), id: \.offset) { _, line in
-                    Text(line).font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.blue)
-                        .lineLimit(1).minimumScaleFactor(0.6).frame(height: 30, alignment: .leading)
+                ForEach(Array(state.doneBestLines.prefix(3).enumerated()), id: \.offset) { _, bestLine in
+                    Text(bestLine).font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.blue)
+                        .lineLimit(1).minimumScaleFactor(0.6).frame(height: line * 1.15, alignment: .leading)
                 }
             }
             .accessibilityIdentifier("mode.doneBests")

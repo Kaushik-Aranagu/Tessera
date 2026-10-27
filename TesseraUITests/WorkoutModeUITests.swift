@@ -21,15 +21,17 @@ final class WorkoutModeUITests: SimulatorOnlyTestCase {
     }
 
     /// Holding Start (500 ms) opens the mode.
-    private func holdStart(_ app: XCUIApplication) throws {
+    private func holdStart(_ app: XCUIApplication) {
         let foot = app.descendants(matching: .any).matching(
             NSPredicate(format: "label BEGINSWITH 'Start, ' OR label BEGINSWITH 'Pick up, '")
         ).firstMatch
         XCTAssertTrue(foot.waitForExistence(timeout: 10), "The foot carries Start")
-        // The demo day is mid-workout ("Pick up", a tap that needs a live session the demo does not hold), so the hold
-        // on Start can only be driven when the demo offers Start.
-        try XCTSkipUnless(foot.label.hasPrefix("Start, "), "The demo is mid-workout: no Start to hold")
-        foot.press(forDuration: 0.9)
+        // Start needs the 500 ms hold; Pick up (a workout already under way) is a plain tap.
+        if foot.label.hasPrefix("Start, ") {
+            foot.press(forDuration: 0.9)
+        } else {
+            foot.tap()
+        }
         XCTAssertTrue(app.descendants(matching: .any)["mode.verb"].waitForExistence(timeout: 10), "The mode opened")
     }
 
@@ -73,9 +75,9 @@ final class WorkoutModeUITests: SimulatorOnlyTestCase {
     ]
 
     /// Holding Start on the Deck opens the mode (when the demo offers Start).
-    func testHoldStartOpensTheMode() throws {
+    func testHoldStartOpensTheMode() {
         let app = launch(direct: false)
-        try holdStart(app)
+        holdStart(app)
     }
 
     /// Plain taps reach the controls: the verb logs the set, the rest asks how it felt, Easy leaves a receipt.
