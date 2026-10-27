@@ -43,7 +43,7 @@ Haptics use the iOS feedback names. One haptic per move at most, and none while 
 | Log: a word sets in the wall (`add`) | **The wall makes room.** The neighbouring words shuffle 1 pt aside and back as the new word presses in. | none | builders |
 | Log: a list item checked | **The tick is drawn**, not shown: one stroke, 160 ms, slightly heavier at its start. The line through the words follows once the pen lifts; unchecking lets the ink fade back to the faint mark. | rigid, light | on the board (300) |
 | Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | builders |
-| Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | builders |
+| Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | on the board (302) |
 | Shape mode (sheet 287) | **The places loosen.** Each outline breathes once, 1.006 in scale, as the screen goes into shape mode. | soft | on the board (291) |
 | Paper to black (`appLook`) | **Ink goes last.** The ground changes first and the type follows 60 ms later, as if the ink were catching up. The old ink keeps its own colours while it leaves, and the page never replays its arrivals for a look change. | none | on the board (299) |
 
@@ -94,3 +94,13 @@ No full stops at the end of any of these (sheet 289).
 - Reduce Motion: the tick and the line appear at once.
 - For the builders: a `Path` with `.trim(from: 0, to: progress)` animated by `withTesseraAnimation(.tick)`, plus a
   short heavier `Path` for the start. The strikethrough waits for the trim's completion.
+
+## 7. The pull resists, as built (sheet 302)
+
+- The back pull lets go at 80 pt. From 72 to 80 pt the page answers at 70%, so the loosening and the nav word's
+  growth slow just before the commit. Past 80 it follows the finger again, 2.4 pt behind.
+- Letting go short of 80 settles back as before; the resistance never moves the commit point.
+- Measured on the board (`t46.js`): the nav word grows 0.006 per 4 pt before 72, 0.004 per 4 pt from 72 to 80, and
+  0.006 again past 80.
+- For the builders: map the drag translation through the same curve before it drives the pull effect, and play the
+  soft haptic once as it crosses 80. Reduce Motion: no pull effect at all, so there is nothing to resist.

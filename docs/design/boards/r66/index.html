@@ -250,7 +250,11 @@ let ex=null;phone.addEventListener('pointerdown',e=>{const r=phone.getBoundingCl
 const backFx=p=>{if(!current)return;[...current.children].forEach(c=>{if(c.classList.contains('sbar'))return;const nav=c.querySelector&&c.querySelector('.lnav,.backw');
  if(p&&!c._bf)c._bf=[c.style.filter,c.style.opacity];if(!p&&!c._bf)return;c.style.transition=p?'none':'filter .28s,opacity .28s';c.style.filter=p?'blur('+(p*2.4).toFixed(2)+'px)':c._bf[0];c.style.opacity=p?(1-p*.4).toFixed(3):c._bf[1];if(!p)c._bf=null;
  if(nav){nav.style.transition=p?'none':'transform .3s cubic-bezier(.2,.8,.2,1)';nav.style.transform=p?'scale('+(1+p*.18).toFixed(3)+')':'';nav.style.transformOrigin='100% 50%'}})};
-phone.addEventListener('pointermove',e=>{if(ex==null||!current)return;const dx=Math.max(0,(e.clientX-ex)/K);backFx(Math.min(1,dx/120))},true);
+/* 290, built in 302: the pull resists at the end. The last 8 pt before it lets go (72 to 80) moves the page 30% less,
+   so the moment it commits is felt; past 80 it follows the finger again, 2.4 pt behind. */
+const pullEff=dx=>dx<=72?dx:dx<=80?72+(dx-72)*.7:dx-2.4;
+phone.addEventListener('pointermove',e=>{if(ex==null||!current)return;const dx=Math.max(0,(e.clientX-ex)/K);
+ backFx(Math.min(1,pullEff(dx)/120))},true);
 phone.addEventListener('pointerup',e=>{if(ex==null)return;const dx=(e.clientX-ex)/K;ex=null;backFx(0);if(dx>80)back()},true);
 
 /* the doorway (206): a wave of room-colored tiles spreads from the touch; each tile flips and lands as the new page */
