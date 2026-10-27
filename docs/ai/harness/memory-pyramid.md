@@ -285,6 +285,12 @@ Each has a pass line set before it runs. A failure gets written up here too.
    - Replay test-world asks over ten simulated nights.
    - Pass: descents per ask fall at least 30% by night 5, with no loss of accuracy. If the top fills with trivia,
      raise k.
+   - **P3 shared promotion (Swift, built):** `PyramidPromotions` counts what readers had to dig for, by level and
+     fact (`busiest:<total>`, `top:<kind>`, `last:<kind>`). After k digs (3) the fact shows on every node of that
+     level, each node's line computed exactly by `MemoryPyramid.factLine`, right after the totals in `zoom`. A line
+     unused for 30 days goes, and a level keeps 3, freshest first. Under strict a fact line is computed as if the
+     walled leaves never happened; under lab a line that read one is `deviceOnly`. Only fact keys (a total or a leaf
+     kind, letters only) and level names are stored.
    - **P3b (Swift, built):** `PyramidAsk` resolves an ask's dates first ("last month" on Oct 23 reads "September
      2026") and drops stop words. `PyramidRouter` scores each child by weights on (ask word, child feature) pairs,
      starting from words alone, and learns only the residual from cited answers: a step the words already get right
@@ -295,6 +301,23 @@ Each has a pass line set before it runs. A failure gets written up here too.
      private title or a private word teaches nothing, key-shaped pieces are dropped, and a word walled later is
      dropped at night. The router's file is excluded from backups and its keys are never logged.
 4. **P4: more axes and more sources.**
+   - **Topic axis (Swift, built; simulated in `scripts/ai/pyramid_topic_sim.py`, #1480):** `TopicTree` files free-text
+     leaves by their words. A node past 24 children splits by 2-means. Sibling holders merge when asks keep using both
+     or their keys converge, and only into at most half of the split size. A node left with one child collapses.
+     Leaves settle into the holder they fit a word better. At most 3 structural changes a night, all logged. `find` is
+     an exact index: it opens every child holding a matching leaf, so keys rank and never hide. `TopicMemory` keeps
+     one tree per policy, and the strict one is built only from claude-safe leaves. Each night starts with a prune,
+     outside the cap: a leaf deleted, or walled after it was filed, leaves the trees that may no longer see it, and an
+     emptied holder goes; a leaf plain again is filed again. The trees store node and leaf ids, never a word.
+   - **Offline check on LoCoMo (`scripts/ai/pyramid_locomo_check.py`, no model):** each chat turn is a leaf and BM25
+     reads at every level, so it is a floor for lexical routing. Over 1531 questions (category 5 left out), opening
+     the 3 best sessions and then ranking their turns beats flat recall@10 (0.589 against 0.563) while scoring about
+     95 items a question against 602. A topic tree grown over the turns by `TopicTree`'s rules, opening its 6 best
+     holders, matches flat (0.559) at 183. The union of both reaches 87% of the evidence and helps multi-hop most
+     (0.277 against 0.255). Every arm is weak on multi-hop and inference (about 0.26 at 10): that is where model
+     gists and lateral links must earn their cost in the paid run. A chat's sessions are its natural first axis;
+     the topic axis is for leaves with no session. Run with `--sessions 3` (the default); `--sessions 5` gives
+     session 0.588 and topic 0.568 at 10.
    - Add class, entity and room, plus lateral links. Then conversation turns and told lines as free-text leaves,
      with topic and entity learned from their words.
    - Pass: cross-context questions are answered with cites from two axes, and the pyramid beats flat recall on
