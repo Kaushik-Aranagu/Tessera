@@ -41,8 +41,27 @@ enum GalleyCues {
         case "rest": "Leave it be so the juices settle"
         case "season": "Taste, then add a pinch more"
         case "serve": "Plate it while it is hot"
+        case "heat", "preheat": temperature(in: step).map { "Ready when the oven reaches \($0)" }
         default: nil
         }
+    }
+
+    /// What goes in the pan, under the heat: "a spoon of oil", "a knob of butter"; nil when the step names neither.
+    static func heatNote(_ step: String) -> String? {
+        let lower = step.lowercased()
+        if lower.contains("oil") {
+            return "a spoon of oil"
+        }
+        if lower.contains("butter") {
+            return "a knob of butter"
+        }
+        return nil
+    }
+
+    /// "425°F" from "Heat the oven to 425°F" (also "220°C"); nil when the step names none.
+    private static func temperature(in step: String) -> String? {
+        let match = step.firstMatch(of: /(\d{2,3})\s?°\s?([FC])/)
+        return match.map { "\($0.1)°\($0.2)" }
     }
 
     private static func firstVerb(_ lower: String) -> String {

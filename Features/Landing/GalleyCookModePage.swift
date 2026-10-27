@@ -12,6 +12,8 @@ struct GalleyCookModePage: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var session: CookClockSession?
+    /// When the mode was opened: the top line counts minutes from here.
+    @State private var opened = AppClock.now
     /// Sheet 333: the ticket printer. Timers already printed, the line on the ticket now, and how far the paper has
     /// fed.
     @State private var printedTimers: Set<String> = []
@@ -48,7 +50,7 @@ struct GalleyCookModePage: View {
     }
 
     private func screen(_ session: CookClockSession, now: Date) -> some View {
-        let facts = Self.facts(session: session, model: model, now: now)
+        let facts = Self.facts(session: session, model: model, now: now, opened: opened)
         let data = GalleyCookScreen(facts)
         return VStack(spacing: 0) {
             printer
@@ -56,22 +58,26 @@ struct GalleyCookModePage: View {
         }
     }
 
-    /// The paper has fed `feed` points: the printed line sits in the space it freed, over a dashed tear line.
+    /// The paper has fed `feed` points: the alert sits in the space it freed, on a 28 pt line with a dashed rule under
+    /// it, and pushes the ticket down by its height. Its text is always 20 pt: the feed clips it, never shrinks it.
     private var printer: some View {
         ZStack(alignment: .bottom) {
             if let line = printedLine {
-                VStack(spacing: 2) {
+                VStack(spacing: 0) {
                     Text(line)
-                        .font(GalleyPaper.plex(.bold, 20))
+                        .font(GalleyPaper.plex(.bold, GalleyPrinter.textSize))
                         .textCase(.uppercase)
-                        .tracking(20 * 0.04)
+                        .tracking(GalleyPrinter.textSize * 0.06)
                         .foregroundStyle(GalleyPaper.printed)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                        .fixedSize()
+                        .frame(height: GalleyPrinter.lineHeight)
                     PrinterTear()
-                        .stroke(GalleyPaper.printed.opacity(0.7), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                        .frame(height: 1)
+                        .stroke(GalleyPaper.printed.opacity(0.5),
+                                style: StrokeStyle(lineWidth: GalleyPrinter.ruleWidth, dash: [6, 4]))
+                        .frame(height: GalleyPrinter.ruleWidth)
                 }
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, 24)
                 .contentShape(Rectangle())
                 .onTapGesture { clearPrinted() }
@@ -80,7 +86,7 @@ struct GalleyCookModePage: View {
                 .accessibilityHint("Clears it")
             }
         }
-        .frame(height: feed)
+        .frame(height: feed, alignment: .bottom)
         .clipped()
         .background(GalleyPaper.sheet)
     }
@@ -102,9 +108,11 @@ struct GalleyCookModePage: View {
             feed = GalleyPrinter.drop
             return
         }
-        for offset in GalleyPrinter.feedSteps {
+        for (index, offset) in GalleyPrinter.feedSteps.enumerated() {
             feed = offset
-            try? await Task.sleep(for: .milliseconds(45))
+            let last = index == GalleyPrinter.feedSteps.count - 1
+            try? await Task
+                .sleep(for: .milliseconds(last ? GalleyPrinter.settleMilliseconds : GalleyPrinter.stepMilliseconds))
         }
     }
 
@@ -128,18 +136,33 @@ struct GalleyCookModePage: View {
                     .minimumScaleFactor(0.6)
                     .padding(.top, 4)
                 HStack(alignment: .firstTextBaseline) {
-                    Text(data.number)
-                        .font(GalleyPaper.number(104))
-                        .foregroundStyle(Color(hex: 0x9C4B2C))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(data.number)
+                            .font(GalleyPaper.number(104))
+                            .foregroundStyle(GalleyPaper.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                        Text(data.of)
+                            .font(GalleyPaper.plex(.medium, 20))
+                            .foregroundStyle(GalleyPaper.inkSecondary)
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 12)
                     if let heat = data.heat {
-                        Text(heat)
-                            .font(GalleyPaper.plex(.medium, 18))
-                            .foregroundStyle(GalleyPaper.ochre)
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 150, alignment: .trailing)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(heat)
+                                .font(GalleyPaper.plex(.bold, 18))
+                                .textCase(.uppercase)
+                                .tracking(18 * 0.06)
+                                .foregroundStyle(GalleyPaper.ochre)
+                            if let note = data.heatNote {
+                                Text(note)
+                                    .font(GalleyPaper.plex(.regular, 17))
+                                    .foregroundStyle(GalleyPaper.inkSecondary)
+                            }
+                        }
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 170, alignment: .trailing)
                     }
                 }
                 .frame(height: 112)
@@ -279,16 +302,19 @@ struct GalleyCookModePage: View {
     /// The mode's facts from the cook session: the steps in a few words, their ingredients and pan times, and the
     /// timers. A private recipe shows its label and no ingredient names.
     @MainActor
-    static func facts(session: CookClockSession, model: AppModel, now: Date) -> GalleyCookFacts {
+    static func facts(session: CookClockSession, model: AppModel, now: Date, opened: Date) -> GalleyCookFacts {
         var facts = GalleyCookFacts()
         facts.recipe = session.isPrivate ? "Private recipe" : session.recipeName
         facts.serves = session.serves
         facts.current = session.current
         facts.now = now
         facts.minutesLeft = Int(session.minutesLeft(at: now).rounded())
-        let cook = model.store.object(id: session.cookID)
-        let began = cook.flatMap { model.store.value("startedAt", of: $0)?.dateValue } ?? cook?.createdAt ?? now
-        facts.minutesIn = max(0, Int(now.timeIntervalSince(began) / 60))
+        // The count starts at 0 when the mode is opened; the plan's minutes left say when it is eaten.
+        facts.minutesIn = max(0, Int(now.timeIntervalSince(opened) / 60))
+        facts.eatAt = facts.minutesLeft > 0
+            ? HouseTime.clock(now.addingTimeInterval(TimeInterval(facts.minutesLeft) * 60)).split(separator: " ").first
+            .map(String.init)
+            : nil
         let book = RecipeBook(store: model.store, classes: model.classes)
         let lines = model.store.object(id: session.recipeID).map { book.lines(of: $0) } ?? []
         facts.steps = session.steps.enumerated().map { index, step in
@@ -304,7 +330,7 @@ struct GalleyCookModePage: View {
                                         ingredients: used.map(ledger),
                                         needs: used.map(need),
                                         line: GalleyCookWords.line(text),
-                                        heat: GalleyCues.heat(text),
+                                        heat: GalleyCues.heat(text), heatNote: GalleyCues.heatNote(text),
                                         cue: GalleyCues.doneness(text),
                                         panMinutes: step.timers.first.map(\.lowerBound), timer: timer)
         }
