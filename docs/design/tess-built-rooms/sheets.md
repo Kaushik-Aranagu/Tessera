@@ -13,3 +13,12 @@ The design and its reasons are on the Tess-built rooms page (`index.html` here; 
 - The keystone here is four Outfit numerals (days since water) over the plant names; the thirstiest one is wine and breathes slowly. It is a last-time number, not a streak
 - Reduce Motion: the drying line is drawn whole and nothing breathes; the change still waits 2 s before it sets
 - Probe: `docs/design/boards/r66/pch.js` (4 sentences, ghosts then set, every part inside its place, Allow, Watered, Undo)
+
+## Sheet 358: the scaffolding comes down
+
+- When a place sets, its dashed outline doesn't just vanish. It drops 6 pt, shrinks to 98.5% and fades out over 380 ms (cubic-bezier .4,0,.6,1), like scaffolding lowered off a finished wall
+- Places that set together go top to bottom, 1 ms of delay for every 4 pt down the screen (the title first, the keystone about 36 ms later), so a two-place change reads as one motion
+- Undo runs the same move in reverse: the outline rises back into place as the part leaves
+- Reduce Motion: the outline only fades, 200 ms
+- Builder A: the same transition on `SlotKind.parts` places, through `MotionPolicy`
+- Probe: `docs/design/boards/r66/psc.js`

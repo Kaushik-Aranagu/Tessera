@@ -2807,9 +2807,10 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
    here are fixed for the board; on the phone they are whatever he says. Reduce Motion: no line run, it sets in place. */
 {const st=h('style');st.textContent=`
 .chart{background:var(--paper)}
-.ch-pl{position:absolute;border:1px dashed color-mix(in srgb,var(--ink3,var(--ink2)) 70%,transparent);border-radius:12px;transition:border-color .5s,opacity .5s;pointer-events:none}
+.ch-pl{position:absolute;border:1px dashed color-mix(in srgb,var(--ink3,var(--ink2)) 70%,transparent);border-radius:12px;transition:opacity .38s var(--d,0s) cubic-bezier(.4,0,.6,1),transform .38s var(--d,0s) cubic-bezier(.4,0,.6,1);pointer-events:none}
 .ch-pl i{position:absolute;left:8px;top:5px;font:500 11px/14px var(--sans);font-style:normal;color:var(--ink2);opacity:.7;transition:opacity .4s}
-.ch-pl.set{border-color:transparent}.ch-pl.set i,.ch-pl.ghp i{opacity:0}
+/* 358: when a place sets, its scaffolding comes down: the dashed outline drops 6 pt and lets go; Undo puts it back up */
+.ch-pl.set{opacity:0;transform:translateY(6px) scale(.985)}.ch-pl.set i,.ch-pl.ghp i{opacity:0}
 .ch-c{position:absolute;transition:opacity .45s cubic-bezier(.2,.8,.2,1)}
 .ch-c.gh{opacity:.38}
 .ch-dry{position:absolute;height:1px;background:var(--room,var(--ink));transform-origin:0 50%;z-index:7;pointer-events:none}
@@ -2830,11 +2831,11 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-act .av{display:block;font:600 24px/32px var(--sans);letter-spacing:-.01em;white-space:nowrap}
 .ch-act .ao{display:block;font:500 13px/18px var(--sans);color:var(--ink2);white-space:nowrap}
 .ch-act.water{color:var(--teal)}
-@media (prefers-reduced-motion:reduce){.ch-key .th b{animation:none}}
+@media (prefers-reduced-motion:reduce){.ch-key .th b{animation:none}.ch-pl{transition:opacity .2s}.ch-pl.set{transform:none}}
 `;document.head.appendChild(st)}
 SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for. I’ll build it a piece at a time.',render(el){el.classList.add('chart');el.style.setProperty('--room','var(--slate)');
  const PL={title:[24,50,260,48,'Title'],line:[24,106,354,76,'Line'],key:[24,196,354,182,'Keystone'],cap:[24,378,354,34,'Caption'],wid:[24,412,354,200,'Widget'],doors:[24,640,354,120,'Doors']};
- const pls={};Object.entries(PL).forEach(([k,[x,y,w,hh,n]])=>{const p=h('div','ch-pl','<i>'+n+'</i>');p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px';el.appendChild(p);pls[k]=p});
+ const pls={};Object.entries(PL).forEach(([k,[x,y,w,hh,n]])=>{const p=h('div','ch-pl','<i>'+n+'</i>');p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px;--d:'+Math.round((y-50)/4)+'ms';el.appendChild(p);pls[k]=p});
  const P0=[{n:'Orchid',d:6},{n:'Monstera',d:4},{n:'Fern',d:2},{n:'Basil',d:1}];let plants=P0.map(p=>({...p})),at=0,reach=false,dry=null;
  const SAY=[
   {s:'Make this my plant room',fills:['title','line'],r:'Plants, set'},
