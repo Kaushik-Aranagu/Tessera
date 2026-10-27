@@ -375,6 +375,11 @@ final class ReviewChoices {
                says: ["On": "Shop opens the Galley with the aisle you are in, the next thing and a dial of aisles.",
                       "Off": "Get opens Groceries as before."],
                readiness: .live),
+        // Sheet 329: the Watch's routine mode (the whole evening, a dusk that darkens), On by default.
+        Choice(id: "routineMode", name: "Routine mode", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "Hold Begin on the Watch to take a routine one move at a time, with a dusk that darkens.",
+                      "Off": "The Watch has no Begin."],
+               readiness: .live),
         // Kaushik, Oct 23: any wheel blurs the rows away from its focus; this switch turns it off.
         Choice(id: "depthOnWheels", name: "Depth on wheels", values: ["On", "Off"], defaultValue: "On",
                says: ["On": "Rows a little way from the focus of a wheel go softly out of focus.",
@@ -440,7 +445,7 @@ final class ReviewChoices {
         ),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
-        ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
+        ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks", "routineMode"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),

@@ -90,6 +90,8 @@ struct GalleyRailItem: Identifiable, Equatable {
     var detail: String?
     var current = false
     var done = false
+    /// The mode's own colour for it (routine mode: tended green, left for tomorrow slate), else the rail's.
+    var color: Color?
 }
 
 /// The steps down the right edge above Tess; tap one to jump. Short names, never cut: a name that is too wide steps
@@ -115,8 +117,8 @@ struct GalleyModeRail: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
-                    .foregroundStyle(item.current ? tint : item.done ? GalleyPaper.inkSecondary.opacity(0.7)
-                        : GalleyPaper.inkSecondary)
+                    .foregroundStyle(item.color ?? (item.current ? tint : item.done
+                            ? GalleyPaper.inkSecondary.opacity(0.7) : GalleyPaper.inkSecondary))
                     .frame(minHeight: 30, alignment: .trailing)
                     .contentShape(Rectangle())
                 }
