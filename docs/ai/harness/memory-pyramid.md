@@ -199,6 +199,59 @@ What it shows:
 - **What is left to learn is small.** Strong weights drop from about 200 to 22-39. The real work for the router is
   his own words ("leg day", "the chili one"), not the calendar. The next simulation adds those asks.
 
+## P4 simulation (prototype, Oct 27): a topic axis that grows, splits and merges
+
+`scripts/ai/pyramid_topic_sim.py` runs with no model and no API call. Free-text leaves (things he told Tess, notes,
+turns) arrive 12 a night about 14 made-up topics that start, run and fade, each with 3 subtopics, with some words
+shared between topics. There are no dates to file them by, so the tree grows its own shape. A node's key is the words
+that set its leaves apart, counted exactly. The rules come from "Learned weights" in the design doc:
+
+- **Split** a node past 24 children in two by 2-means over its children's words. Both halves start with the parent's
+  key (Net2Net), so nothing reads differently at the moment of the split.
+- **Merge** two siblings that the same asks keep using, or whose keys converge, if together they hold at most 12
+  (hysteresis: well under the split line). **Collapse** a node left with one child.
+- **Settle** up to 20 leaves a night into the holder whose key they clearly share more words with: one k-means step
+  across the tree.
+- At most 3 structural changes a night, each logged so it can be undone.
+
+The reader goes from the root down and keeps a leaf that shares two words with the ask, the same rule flat uses.
+Results with seed 1 over nights 46-60 (opens, tokens, recall per ask), from these two commands:
+
+```
+python3 scripts/ai/pyramid_topic_sim.py --key 12
+python3 scripts/ai/pyramid_topic_sim.py --key 12 --reader index
+```
+
+(The script's default key is 6 words; the table uses 12.)
+
+| Reader | flat | grow | merge | churn | settle |
+|---|---|---|---|---|---|
+| key (top 12 words shown, beam 2) | 1.0, 9681, 0.89 | 2.5, 472, 0.43 | 2.1, 386, 0.33 | 2.2, 384, 0.35 | |
+| index (exact, never hides) | 1.0, 9681, 0.89 | 6.2, 1307, 0.89 | 5.9, 1358, 0.89 | 5.5, 1280, 0.89 | 5.0, 1095, 0.89 |
+
+What it shows:
+
+- **A reader that routes by shown keys loses what it can't see.** Recall falls from 0.86 to 0.33-0.43 by nights 46-60
+  with 12-word keys (0.24-0.46 with 6, 0.52-0.68 with 24), and a wider beam doesn't help. So the topic axis must route
+  by an exact index (which children hold a matching leaf) and use keys and weights only to rank. This is the same rule
+  as the time axis: weights rank, they never hide.
+- **The index reader's recall equals flat's by construction, not by measurement**: it opens every child holding a
+  matching leaf. What is measured is its cost: about 12% of flat's tokens by night 60 across seeds 1-5 (settle:
+  1095-1184 tokens against flat's 9676-9684). The index lookup itself (which children hold a match) is not counted in
+  opens or tokens; on the phone it is a local search that never goes in a pack.
+- **Scatter is the cost.** Opens grow to 5-6 a night because a split cuts a subtopic across holders and new leaves land
+  on either side. Settling leaves back is the fix that works: 9-20% fewer tokens than split-only on every seed (QA
+  reproduced 10-16% on seeds 1-3). Judging fit by affinity (`--fit affinity`: how many of a holder's other leaves hold
+  each of the leaf's words) instead of shared key words does a little better on 4 seeds of 5 (1075-1152 tokens) and
+  moves a misfiled leaf even when a small holder's key happens to list its words; the Swift `TopicTree` uses it. Merge
+  alone does little here, because hysteresis blocks merging two big halves, which is its job.
+- **No flips in this world**, even with no hysteresis and no cap (churn makes 3-4 times as many merges, and no split
+  was undone within 10 nights). Changes stay near one a night. Hysteresis and the cap are kept as guards; this world
+  doesn't stress them. A world where asks swing between a topic and its subtopics would.
+
+What it does not show yet: real words (here every topic's words are distinct syllables), a model writing the keys or
+gists, and a merge driven by asks that use both halves.
+
 ## Beyond the app: memory for anything Tess lives through
 
 Kaushik's follow-up (Oct 27): the goal is the general memory problem for a personal assistant, not only his app
