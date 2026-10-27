@@ -422,9 +422,13 @@ struct WorkoutModeScreen: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(board.main).font(Chalk.numerals(150)).foregroundStyle(Chalk.white).lineLimit(1).minimumScaleFactor(0.4)
                 .frame(height: 124, alignment: .leading)
-            Text(state.finishLine(at: AppClock.now)).font(Chalk.font(26, relativeTo: .title3))
+            // Minutes and sets stay still; the total counts up (sheet 349).
+            Text(state.finishHead(at: AppClock.now)).font(Chalk.font(26, relativeTo: .title3))
                 .foregroundStyle(Chalk.white)
-                .lineLimit(2).minimumScaleFactor(0.6).frame(height: 64, alignment: .leading)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(height: line * 1.3, alignment: .leading)
+            CountUpRow(final: (state.volume / 5).rounded() * 5, unit: state.unit.symbol)
+                .frame(height: 56, alignment: .leading)
+                .accessibilityIdentifier("mode.doneTotal")
             // The session's real new bests, from the ledger's best per lift; else steady work.
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(state.doneBestLines.prefix(3).enumerated()), id: \.offset) { _, bestLine in

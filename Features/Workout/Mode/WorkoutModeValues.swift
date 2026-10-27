@@ -258,6 +258,12 @@ extension WorkoutModeState {
 
     // MARK: Finish
 
+    /// "Finished, 41 min, 12 sets": the part of the Done line that stays still while the total counts up.
+    func finishHead(at now: Date) -> String {
+        let minutes = Int((elapsed(at: now) / 60).rounded())
+        return "Finished, \(minutes) min, \(setsDone) \(setsDone == 1 ? "set" : "sets")"
+    }
+
     /// "Finished, 41 min, 12 sets, about 9,795 lb"; compares with the last same workout when it is known.
     func finishLine(at now: Date, lastVolume: Double? = nil) -> String {
         let minutes = Int((elapsed(at: now) / 60).rounded())
