@@ -8,8 +8,8 @@ import Foundation
 // This slice is the time axis, built from plain leaves so the test world can drive it before the store does. The
 // words (a gist per node) come in a later slice from a model; everything here is exact and deterministic.
 
-/// One thing that happened, word for word: a set of lifts, a meal, a spend. A private thing's `text` is its shown
-/// label, never its title.
+/// One thing that happened, word for word: a set of lifts, a meal, a spend. A private thing is `deviceOnly`; its `text`
+/// is its own words while Claude sees everything (`ClaudeSees`), its shown label otherwise.
 public struct PyramidLeaf: Sendable, Equatable {
     public var id: String
     public var at: Date
