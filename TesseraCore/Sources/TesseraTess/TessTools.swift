@@ -602,14 +602,18 @@ public indirect enum TessSchema: Sendable {
         }
     }
 
-    /// A nullable schema: the type takes null, and a choice lists null among its values too, or the API refuses it
-    /// ("Enum value does not match declared type").
+    /// A nullable schema: the type takes null. A choice can't be a type union with an enum (the API refuses "Enum
+    /// value does not match declared type"), so it is one of its choices or null.
     private static func nullable(_ inner: [String: Any]) -> [String: Any] {
+        if inner["enum"] != nil {
+            var choice = inner
+            let description = choice.removeValue(forKey: "description")
+            var json: [String: Any] = ["anyOf": [choice, ["type": "null"]]]
+            json["description"] = description
+            return json
+        }
         var json = inner
         json["type"] = [inner["type"] as? String ?? "string", "null"]
-        if let values = inner["enum"] as? [Any] {
-            json["enum"] = values + [NSNull()]
-        }
         return json
     }
 }
