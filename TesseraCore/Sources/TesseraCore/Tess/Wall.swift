@@ -20,7 +20,8 @@ public struct WallReasons: OptionSet, Sendable, Hashable {
     public static let calories = WallReasons(rawValue: 1 << 4)
     /// A title only private things use (title words, a doctor's name, a medicine), as `ObjectPrivacy` reads titles.
     public static let privateTitle = WallReasons(rawValue: 1 << 5)
-    /// A word of a private thing in the store.
+    /// A private word (`ObjectPrivacy.containsPrivateWord`): `isPrivateTitle` on the whole line and on each word,
+    /// with the store's last weigh-in.
     public static let privateWord = WallReasons(rawValue: 1 << 6)
 
     /// Never kept, logged or sent, under either policy.
