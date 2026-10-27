@@ -80,6 +80,13 @@ enum FlightMove {
         return restOpacity + (1 - restOpacity) * ((t - returnStart) / (1 - returnStart))
     }
 
+    /// The landing place's own content fades in underneath the copy over the last 20% of the move. The landing never
+    /// steps back: its opacity as a place stays 1, and only this content arrives.
+    static func landingContentOpacity(at t: Double) -> Double {
+        let t = min(max(t, 0), 1)
+        return t < returnStart ? 0 : (t - returnStart) / (1 - returnStart)
+    }
+
     /// The copy's opacity: a word is opaque throughout; a copy with its own ground stays opaque until it is clear of
     /// its source, then fades over the rest of the move (the landing takes over from it).
     static func copyOpacity(_ route: FlightRoute, source: CGRect, at t: Double) -> Double {
@@ -172,14 +179,10 @@ final class FlightRunner {
 
 /// A place steps back while a copy crosses it. Animatable on the flight's progress, so the 4% and 20% edges of the
 /// move are exact whatever the move's own curve.
-struct FlightStepBack: ViewModifier, Animatable {
+@Animatable
+struct FlightStepBack: ViewModifier {
     var progress: Double
-    var steps: Bool
-
-    var animatableData: Double {
-        get { progress }
-        set { progress = newValue }
-    }
+    @AnimatableIgnored var steps: Bool
 
     func body(content: Content) -> some View {
         content.opacity(steps ? FlightMove.placeOpacity(at: progress) : 1)
@@ -187,16 +190,12 @@ struct FlightStepBack: ViewModifier, Animatable {
 }
 
 /// The copy on its own layer, above every place, moving along its route and fading when it has its own ground.
-struct FlightCopy<Content: View>: View, Animatable {
+@Animatable
+struct FlightCopy<Content: View>: View {
     var progress: Double
-    let route: FlightRoute
-    let source: CGRect
-    @ViewBuilder var content: () -> Content
-
-    var animatableData: Double {
-        get { progress }
-        set { progress = newValue }
-    }
+    @AnimatableIgnored let route: FlightRoute
+    @AnimatableIgnored let source: CGRect
+    @AnimatableIgnored @ViewBuilder var content: () -> Content
 
     var body: some View {
         let rect = FlightMove.copyRect(route, at: progress)
@@ -210,6 +209,11 @@ struct FlightCopy<Content: View>: View, Animatable {
 }
 
 extension View {
+    /// The landing place's arriving content: hidden until the last 20% of the flight, then fading in under the copy.
+    func flightArrival(_ place: Place, runner: FlightRunner) -> some View {
+        opacity(runner.route?.landing == place ? FlightMove.landingContentOpacity(at: runner.progress) : 1)
+    }
+
     /// Steps this place back while the runner's copy crosses it (never the place it lands in).
     func flightStepBack(_ place: Place, runner: FlightRunner) -> some View {
         modifier(FlightStepBack(progress: runner.progress, steps: runner.crossed.contains(place)))
