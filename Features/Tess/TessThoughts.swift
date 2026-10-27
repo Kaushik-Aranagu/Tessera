@@ -10,7 +10,7 @@ enum TessThoughts {
             lines.append(facts.caption(for: .day))
         }
         if asksClaude {
-            lines.append("I can plan the rest of the day if you like.")
+            lines.append("I can plan the rest of the day if you like")
         }
         return lines
     }

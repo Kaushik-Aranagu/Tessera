@@ -66,31 +66,31 @@ struct NotesListsLandingTests {
         try seedThree()
         let facts = notes.facts()
         let subtitle = LandingSentences.notesSubtitle(hasNotes: facts.hasNotes, top: facts.topNames)
-        #expect(subtitle.text == "Landlord and Squat day come up most." && subtitle.key == "Landlord")
+        #expect(subtitle.text == "Landlord and Squat day come up most" && subtitle.key == "Landlord")
         let about = try #require(LandingSentences.youWriteAbout(facts.topNames))
-        #expect(about.text == "You write about Landlord, Squat day, and Trip.")
+        #expect(about.text == "You write about Landlord, Squat day, and Trip")
         for text in [subtitle.text, about.text] {
             #expect(text.allSatisfy { !$0.isNumber })
         }
     }
 
     @Test func everyNotesTemplate() {
-        #expect(LandingSentences.notesSubtitle(hasNotes: false, top: []).text == "A place for loose thoughts.")
-        #expect(LandingSentences.notesSubtitle(hasNotes: true, top: []).text == "Your notes are on their own.")
-        #expect(LandingSentences.notesSubtitle(hasNotes: true, top: ["Landlord"]).text == "Landlord comes up most.")
-        #expect(LandingSentences.youWriteAbout(["A", "B"])?.text == "You write about A and B.")
-        #expect(LandingSentences.youWriteAbout(["A"])?.text == "You write about A.")
-        #expect(LandingSentences.youWriteAbout(["A", "B", "C", "D", "E"])?.text == "You write about A, B, C, and D.")
+        #expect(LandingSentences.notesSubtitle(hasNotes: false, top: []).text == "A place for loose thoughts")
+        #expect(LandingSentences.notesSubtitle(hasNotes: true, top: []).text == "Your notes are on their own")
+        #expect(LandingSentences.notesSubtitle(hasNotes: true, top: ["Landlord"]).text == "Landlord comes up most")
+        #expect(LandingSentences.youWriteAbout(["A", "B"])?.text == "You write about A and B")
+        #expect(LandingSentences.youWriteAbout(["A"])?.text == "You write about A")
+        #expect(LandingSentences.youWriteAbout(["A", "B", "C", "D", "E"])?.text == "You write about A, B, C, and D")
         #expect(LandingSentences.youWriteAbout([]) == nil)
         #expect(LandingSentences.noThingCalled("Lando")
-            .text == "No thing called \"Lando\". Return writes it as a note.")
-        #expect(LandingSentences.noteOpen(title: "Heat", isPrivate: false).text == "Heat is open.")
-        #expect(LandingSentences.noteOpen(title: "Heat", isPrivate: true).text == "Private note is open.")
-        #expect(LandingSentences.notThingYet("Zed").text == "@Zed is not a thing yet.")
-        #expect(LandingSentences.newNotes(count: 1, about: ["Landlord"]).text == "A new note about Landlord.")
-        #expect(LandingSentences.newNotes(count: 1, about: ["A", "B", "C"]).text == "A new note about A and B.")
-        #expect(LandingSentences.newNotes(count: 3, about: ["A", "B"]).text == "New notes about A and B.")
-        #expect(LandingSentences.newNotes(count: 1, about: []).text == "A new loose note.")
+            .text == "No thing called \"Lando\". Return writes it as a note")
+        #expect(LandingSentences.noteOpen(title: "Heat", isPrivate: false).text == "Heat is open")
+        #expect(LandingSentences.noteOpen(title: "Heat", isPrivate: true).text == "Private note is open")
+        #expect(LandingSentences.notThingYet("Zed").text == "@Zed is not a thing yet")
+        #expect(LandingSentences.newNotes(count: 1, about: ["Landlord"]).text == "A new note about Landlord")
+        #expect(LandingSentences.newNotes(count: 1, about: ["A", "B", "C"]).text == "A new note about A and B")
+        #expect(LandingSentences.newNotes(count: 3, about: ["A", "B"]).text == "New notes about A and B")
+        #expect(LandingSentences.newNotes(count: 1, about: []).text == "A new loose note")
     }
 
     @Test func aPrivateNoteNeverLeavesTheNotesFileExceptAsHasPrivate() throws {
@@ -143,7 +143,7 @@ struct NotesListsLandingTests {
         try note("squat day was heavy", on: 20)
         let withSuggest = notes.facts(.init(linkSuggest: true, now: at(22), calendar: calendar))
         let first = try #require(withSuggest.margin.first)
-        #expect(first.sentence.text == "Your note from Tue names Squat day." && first.action == "Link them")
+        #expect(first.sentence.text == "Your note from Tue names Squat day" && first.action == "Link them")
         #expect(first.kind == .waiting)
         let off = notes.facts(.init(linkSuggest: false, now: at(22), calendar: calendar))
         #expect(off.margin.isEmpty)
@@ -152,7 +152,7 @@ struct NotesListsLandingTests {
     @Test func anUnknownAtWordSaysMakeItAThing() throws {
         try note("Ask @Zebra about it")
         let line = try #require(notes.facts().margin.first)
-        #expect(line.sentence.text == "@Zebra is not a thing yet." && line.action == "Make it a thing")
+        #expect(line.sentence.text == "@Zebra is not a thing yet" && line.action == "Make it a thing")
     }
 
     @Test func newNotesAreTheLastLinesAndWaitingComesFirst() throws {
@@ -179,13 +179,13 @@ struct NotesListsLandingTests {
         let facts = notes.facts()
         #expect(facts.things.isEmpty)
         #expect(LandingSentences.notesSubtitle(hasNotes: true, top: facts.topNames)
-            .text == "Your notes are on their own.")
+            .text == "Your notes are on their own")
     }
 
     @Test func noNotesAtAllReadsTheEmptyLine() {
         let facts = notes.facts()
         #expect(!facts.hasNotes && facts.things.isEmpty && facts.margin.isEmpty && facts.book == nil)
-        #expect(LandingSentences.notesSubtitle(hasNotes: facts.hasNotes, top: []).text == "A place for loose thoughts.")
+        #expect(LandingSentences.notesSubtitle(hasNotes: facts.hasNotes, top: []).text == "A place for loose thoughts")
     }
 
     // MARK: Lists
@@ -214,7 +214,7 @@ struct NotesListsLandingTests {
         let packing = try list("Packing, Lisbon", items: (1 ... 24).map { "Item \($0)" }, done: 18)
         try engine.perform(StartListRun(list: packing.id), by: .user)
         let lead = try #require(lists.facts().lead)
-        #expect(lead.sentence.text == "Packing, Lisbon is running, 6 left." && lead.sentence.key == "Packing, Lisbon")
+        #expect(lead.sentence.text == "Packing, Lisbon is running, 6 left" && lead.sentence.key == "Packing, Lisbon")
         #expect(lead.leftOf == "6 left of 24" && lead.left == 6 && lead.total == 24)
         #expect(lead.nextItems == ["Item 19", "Item 20", "Item 21", "Item 22"])
     }
@@ -234,14 +234,14 @@ struct NotesListsLandingTests {
         _ = touched
         // Nothing running, switch off: last touched.
         #expect(try #require(lists.facts(.init(now: at(22), calendar: calendar)).lead).sentence.text
-            == "Movies is the one you touched last.")
+            == "Movies is the one you touched last")
         // The due switch on: the list due soonest.
         let byDue = try #require(lists.facts(.init(leadByDue: true, now: at(22), calendar: calendar)).lead)
-        #expect(byDue.sentence.text == "Trip is due tomorrow.")
+        #expect(byDue.sentence.text == "Trip is due tomorrow")
         // A run beats both.
         try engine.perform(StartListRun(list: old.id), by: .user)
         let running = try #require(lists.facts(.init(leadByDue: true, now: at(22), calendar: calendar)).lead)
-        #expect(running.sentence.text == "Chores is running, 1 left.")
+        #expect(running.sentence.text == "Chores is running, 1 left")
     }
 
     @Test func dueItemsAreThisWeekSoonestFirstAndMaskedWhenWalled() throws {
@@ -266,7 +266,7 @@ struct NotesListsLandingTests {
     @Test func noListsReadsTheStartLine() {
         let facts = lists.facts()
         #expect(facts.lead == nil && facts.others.isEmpty && facts.margin.isEmpty)
-        #expect(facts.subtitle.text == "Start one with a few words.")
+        #expect(facts.subtitle.text == "Start one with a few words")
     }
 
     @Test func groceriesFillsAndSaysWhatIsNewFromARecipe() throws {
@@ -288,7 +288,7 @@ struct NotesListsLandingTests {
         let row = try #require(facts.others.first { $0.name == "Groceries" })
         #expect(row.total == 9 && row.done == 3 && abs(row.fill - 1.0 / 3.0) < 0.001)
         #expect(row.line == "6 to get, new from Tacos")
-        #expect(facts.margin.first?.sentence.text == "Groceries has 6 new, from Tacos.")
+        #expect(facts.margin.first?.sentence.text == "Groceries has 6 new, from Tacos")
     }
 
     @Test func fillIsZeroWithNothingDoneAndOneWhenAllDoneAndSays() throws {
@@ -311,7 +311,7 @@ struct NotesListsLandingTests {
         try store.set("notes", to: .richText("due: " + at(23).formatted(.iso8601)), on: passport.object)
         try list("Movies", items: ["Dune"])
         let facts = lists.facts(.init(now: at(22), calendar: calendar))
-        #expect(facts.margin.first?.sentence.text == "Passport is due tomorrow on Packing.")
+        #expect(facts.margin.first?.sentence.text == "Passport is due tomorrow on Packing")
         #expect(facts.margin.first?.kind == .waiting)
         #expect(!facts.margin.contains { $0.sentence.text.lowercased().contains("late") })
         let other = try #require(facts.others.first { $0.name == "Packing" })
@@ -332,7 +332,7 @@ struct NotesListsLandingTests {
         try engine.perform(StartListRun(list: secret.id), by: .user)
         let facts = lists.facts()
         let lead = try #require(facts.lead)
-        #expect(lead.sentence.text == "Private list is running, 6 left." && lead.leftOf == "6 left of 24", "\(lead)")
+        #expect(lead.sentence.text == "Private list is running, 6 left" && lead.leftOf == "6 left of 24", "\(lead)")
         #expect(lead.nextItems.allSatisfy { $0 == "Private item" })
         let every = ([lead.sentence.text] + lead.nextItems + facts.margin.map(\.sentence.text)).joined(separator: " ")
         #expect(!every.lowercased().contains("ozempic"))
@@ -393,7 +393,7 @@ struct NotesListsLandingTests {
         try list("Movies", items: ["Dune"])
         let line = try #require(lists.facts(.init(now: at(22), calendar: calendar)).margin.first)
         #expect(line.list == packing.id && line.item == item.id)
-        #expect(line.sentence.text == "Private item is due tomorrow on Packing.")
+        #expect(line.sentence.text == "Private item is due tomorrow on Packing")
         #expect(!String(describing: line).lowercased().contains("ozempic"))
     }
 

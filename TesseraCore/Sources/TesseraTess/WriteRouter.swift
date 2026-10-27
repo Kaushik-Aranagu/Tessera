@@ -119,19 +119,19 @@ public struct WriteRouter {
             return Candidate(
                 app: .money,
                 action: "logInflow",
-                receipt: "Money in, logged.",
+                receipt: "Money in, logged",
                 confidence: 1,
                 isWalled: true,
                 parse: parse
             )
         case .poolMove:
-            return Candidate(app: .money, action: "logMove", receipt: "Money moved.", confidence: 1, isWalled: true,
+            return Candidate(app: .money, action: "logMove", receipt: "Money moved", confidence: 1, isWalled: true,
                              parse: parse)
         case .shopTotal, .skipShopTotal:
-            return Candidate(app: .money, action: "logShopTotal", receipt: "Groceries total, logged.", confidence: 1,
+            return Candidate(app: .money, action: "logShopTotal", receipt: "Groceries total, logged", confidence: 1,
                              isWalled: true, parse: parse)
         case .privateNote, .note:
-            return Candidate(app: .notes, action: "createNote", receipt: "Private note, kept.", confidence: 1,
+            return Candidate(app: .notes, action: "createNote", receipt: "Private note, kept", confidence: 1,
                              isWalled: true, parse: parse)
         default:
             return nil
@@ -143,14 +143,14 @@ public struct WriteRouter {
     }
 
     private func privateNote(_ phrase: String) -> Candidate {
-        Candidate(app: .notes, action: "createNote", receipt: "Private note, kept.", confidence: 1, isWalled: true,
+        Candidate(app: .notes, action: "createNote", receipt: "Private note, kept", confidence: 1, isWalled: true,
                   parse: .privateNote(body: phrase, remembered: false))
     }
 
     private func explicitNote(_ phrase: String) -> Candidate? {
         guard let match = phrase.firstMatch(of: /^(?i)note[:\s]\s*(.+)$/) else { return nil }
         let body = String(match.1)
-        return Candidate(app: .notes, action: "createNote", receipt: "Noted.", confidence: 1, isWalled: false,
+        return Candidate(app: .notes, action: "createNote", receipt: "Noted", confidence: 1, isWalled: false,
                          parse: .note(body: body))
     }
 
@@ -158,40 +158,40 @@ public struct WriteRouter {
         switch parse {
         case let .lift(exercise, _, _, _, _):
             let strong = text.firstMatch(of: /\d\s*[x×]\s*\d|\bfor\s+\d/) != nil
-            return [Candidate(app: .training, action: "logExercise", receipt: "\(Self.short(exercise.name)), logged.",
+            return [Candidate(app: .training, action: "logExercise", receipt: "\(Self.short(exercise.name)), logged",
                               confidence: strong ? 0.9 : 0.7, isWalled: false, parse: parse)]
         case let .groceries(lines):
             let explicit = text.firstMatch(of: /^(?:buy|get|grab|pick up|add)\b/) != nil
             return [Candidate(app: .kitchen, action: "addGroceries",
-                              receipt: lines.count == 1 ? "On Groceries." : "\(lines.count) things on Groceries.",
+                              receipt: lines.count == 1 ? "On Groceries" : "\(lines.count) things on Groceries",
                               confidence: explicit ? 0.95 : 0.6, isWalled: false, parse: parse)]
         case .cook:
-            return [Candidate(app: .kitchen, action: "createTask", receipt: "Cooking, planned.", confidence: 0.95,
+            return [Candidate(app: .kitchen, action: "createTask", receipt: "Cooking, planned", confidence: 0.95,
                               isWalled: false, parse: parse)]
         case .timer:
-            return [Candidate(app: .kitchen, action: "startKitchenTimer", receipt: "Timer, started.", confidence: 0.95,
+            return [Candidate(app: .kitchen, action: "startKitchenTimer", receipt: "Timer, started", confidence: 0.95,
                               isWalled: false, parse: parse)]
         case .recipe:
-            return [Candidate(app: .kitchen, action: "createRecipe", receipt: "Recipe, saved.", confidence: 0.95,
+            return [Candidate(app: .kitchen, action: "createRecipe", receipt: "Recipe, saved", confidence: 0.95,
                               isWalled: false, parse: parse)]
         case .shop:
-            return [Candidate(app: .kitchen, action: "startShop", receipt: "Shopping.", confidence: 0.95,
+            return [Candidate(app: .kitchen, action: "startShop", receipt: "Shopping", confidence: 0.95,
                               isWalled: false, parse: parse)]
         case .list, .copyList:
-            return [Candidate(app: .lists, action: "createList", receipt: "List, made.", confidence: 0.95,
+            return [Candidate(app: .lists, action: "createList", receipt: "List, made", confidence: 0.95,
                               isWalled: false, parse: parse)]
         case let .spend(_, note, _):
             let verb = text.firstMatch(of: /^(?:spent|spend|paid)\b/) != nil
             return [Candidate(app: .money, action: "logSpend", receipt: spendReceipt(note),
                               confidence: verb ? 0.95 : 0.7, isWalled: false, parse: parse)]
         case .inflow:
-            return [Candidate(app: .money, action: "logInflow", receipt: "Money in, logged.", confidence: 0.95,
+            return [Candidate(app: .money, action: "logInflow", receipt: "Money in, logged", confidence: 0.95,
                               isWalled: false, parse: parse)]
         case .poolMove:
             return [Candidate(
                 app: .money,
                 action: "logMove",
-                receipt: "Money moved.",
+                receipt: "Money moved",
                 confidence: 0.95,
                 isWalled: false,
                 parse: parse
@@ -208,7 +208,7 @@ public struct WriteRouter {
         let weight = BodyWeight.lastKg(in: engine.store)
         let plain = !word.isEmpty && !ObjectPrivacy.containsPrivateWord(word, in: engine.store)
             && !PrivateFacts.isWalled(word, lastWeightKg: weight) && !SecretWords.mentions(word)
-        return plain ? word.prefix(1).uppercased() + word.dropFirst() + ", logged." : "Spend, logged."
+        return plain ? word.prefix(1).uppercased() + word.dropFirst() + ", logged" : "Spend, logged"
     }
 
     static func short(_ name: String) -> String {

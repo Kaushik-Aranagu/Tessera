@@ -61,7 +61,7 @@ public enum HomeNotices {
             let sameTime = entry.notice.time.map { abs($0.timeIntervalSince(next.start)) < 60 } ?? false
             return (sameTime && entry.notice.clause.app == next.app) || entry.notice.text.hasPrefix(next.title)
         }) {
-            let text = "\(next.title) at \(HouseTime.clock(next.start, calendar: calendar))."
+            let text = "\(next.title) at \(HouseTime.clock(next.start, calendar: calendar))"
             let clause = HomeSentence.Clause(
                 app: next.app, sentence: LandingSentence(text: text, key: next.app == nil ? nil : next.title),
                 opens: .app(next.app ?? .notes), time: next.start
@@ -71,7 +71,7 @@ public enum HomeNotices {
         }
         // The next turn of the sun.
         if let sun = nextSun(facts) {
-            let text = "\(sun.name) at \(HouseTime.clock(sun.time, calendar: calendar))."
+            let text = "\(sun.name) at \(HouseTime.clock(sun.time, calendar: calendar))"
             notices.append((HomeNotice(clause: HomeSentence.Clause(
                 app: nil, sentence: LandingSentence(text: text, key: nil), opens: .app(.notes), time: sun.time
             ), time: sun.time, target: .weather), 8))
@@ -80,10 +80,10 @@ public enum HomeNotices {
         let timed = ahead.filter { $0.notice.time != nil }.sorted { ($0.notice.time ?? now) < ($1.notice.time ?? now) }
         let untimed = ahead.filter { $0.notice.time == nil }.sorted { $0.order < $1.order }
         let behind = notices.filter { ($0.notice.time ?? now) < now }.sorted { $0.order < $1.order }
-        // Several private things all read "Private.": one is enough, the rest say nothing new.
+        // Several private things all read "Private": one is enough, the rest say nothing new.
         var seenPrivate = false
         let ordered = (timed + untimed + behind).map(\.notice).filter { notice in
-            guard notice.text == "Private." else { return true }
+            guard notice.text == "Private" else { return true }
             defer { seenPrivate = true }
             return !seenPrivate
         }
@@ -108,9 +108,9 @@ public enum HomeNotices {
         }
         // Groceries with no dish: "4 to get" reads "Groceries, 4 to get."
         if line.app == .kitchen, text.hasSuffix(" to get"), text.first?.isNumber == true {
-            return "Groceries, \(text)."
+            return "Groceries, \(text)"
         }
-        return text + "."
+        return text
     }
 
     private static func notice(_ text: String, line: AppSummaryLine) -> HomeNotice {

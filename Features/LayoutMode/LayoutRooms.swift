@@ -64,7 +64,7 @@ enum LayoutRoom: Int, CaseIterable, Identifiable {
             return own
         }
         if emptyPlaces.contains(place) || (self == .bridge && ["Switcher", "Needs"].contains(place)) {
-            return "Nothing on this screen. The place is kept so nothing moves into it."
+            return "Nothing on this screen. The place is kept so nothing moves into it"
         }
         return "Same as every screen"
     }

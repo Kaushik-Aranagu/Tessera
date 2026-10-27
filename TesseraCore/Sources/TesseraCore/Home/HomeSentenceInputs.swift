@@ -69,13 +69,13 @@ public extension HomeSentence {
                                   since: notes.notes().map(\.createdAt).max())
         }
         let lists = ListsLanding(engine: engine).facts(.init(now: now, calendar: calendar))
-        if let lead = lists.lead, !lead.sentence.text.hasSuffix("touched last.") {
+        if let lead = lists.lead, !lead.sentence.text.hasSuffix("touched last") {
             inputs.lists = Clause(app: .lists, sentence: lead.sentence, opens: .object(lead.list), since: now)
         }
         if let routines {
             let top = routines.facts.top.sentence
             let isLive = routines.facts.top.step != nil
-            let line = isLive ? top : routines.facts.lines.first.map { LandingSentence(text: $0 + ".", key: nil) }
+            let line = isLive ? top : routines.facts.lines.first.map { LandingSentence(text: $0, key: nil) }
             if let line {
                 inputs.routines = Clause(app: .routines, sentence: line, opens: .app(.routines),
                                          time: isLive ? now : routines.nextUsualStart)

@@ -82,24 +82,24 @@ enum GroceriesWall {
                 // A key never stays visible, even when the add fails (QA on #769).
                 let kept = (split.kept + split.walled.filter { $0.reason != .key }.map(\.line)).joined(separator: ", ")
                 // The walled siblings still get their line after the failure (Kitchen on #791).
-                let voice = ["Didn't save that. Try again.", spoken(split.walled)].compactMap(\.self)
-                    .joined(separator: " ")
+                let voice = ["Didn't save that. Try again", spoken(split.walled)].compactMap(\.self)
+                    .joined(separator: ". ")
                 return AddOutcome(draft: kept, voice: voice, undo: nil)
             }
             record = added
         }
         // Kept rows keep their receipt and UNDO; the wall's line follows them (Design on #782). UNDO takes back only
         // what was written, so a walled line was never in it.
-        let receipt = record?.receipt.map { $0.hasSuffix(".") ? $0 : $0 + "." }
-        let voice = [receipt, spoken(split.walled)].compactMap(\.self).joined(separator: " ")
+        let receipt = record?.receipt.map(\.self)
+        let voice = [receipt, spoken(split.walled)].compactMap(\.self).joined(separator: ". ")
         return AddOutcome(draft: heldDraft(split.walled), voice: voice.isEmpty ? nil : voice, undo: record)
     }
 
     /// The line beside the held draft; none of them offers UNDO, since nothing was written.
     static func line(_ reason: Reason) -> String {
         switch reason {
-        case .money: "That stays on this phone."
-        case .secret: "That one stays out of Groceries."
+        case .money: "That stays on this phone"
+        case .secret: "That one stays out of Groceries"
         case .key: claudeKeyLine
         }
     }

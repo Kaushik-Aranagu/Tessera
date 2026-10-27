@@ -113,7 +113,7 @@ public struct ResetList: EngineAction {
     @MainActor
     static func receipt(for list: UUID, unchecked: Int, in store: ObjectStore) -> String {
         let name = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "The list"
-        return unchecked == 0 ? "\(name), nothing to reset." : "\(name), reset"
+        return unchecked == 0 ? "\(name), nothing to reset" : "\(name), reset"
     }
 }
 

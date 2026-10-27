@@ -80,7 +80,7 @@ struct WatchLandingTests {
     @Test func emptyWoodlandIsAQuietDay() {
         let items = WatchWords.widget(RoutinesWoodlandFacts(trees: []), wine: .red)
         #expect(items.map(\.big) == ["Quiet day"])
-        #expect(WatchWords.restCaption(hasTrees: false).last == "Nothing planted yet.")
+        #expect(WatchWords.restCaption(hasTrees: false).last == "Nothing planted yet")
     }
 
     @Test func privateRoutinesStayPrivateInTheWidget() {

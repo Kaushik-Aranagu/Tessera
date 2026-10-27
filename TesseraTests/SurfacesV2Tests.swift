@@ -30,16 +30,16 @@ struct SurfacesV2Tests {
 
     @Test func offClearsTheSnapshotAndTheFlag() throws {
         let defaults = try #require(UserDefaults(suiteName: "SurfacesV2Tests.\(UUID().uuidString)"))
-        SurfacesSnapshot.store([clause("training", "Push A today.", key: "Push A")], on: true, now: noon, in: defaults)
+        SurfacesSnapshot.store([clause("training", "Push A today", key: "Push A")], on: true, now: noon, in: defaults)
         #expect(SurfacesSnapshot.read(from: defaults)?.clauses.count == 1)
-        SurfacesSnapshot.store([clause("training", "Push A today.")], on: false, now: noon, in: defaults)
+        SurfacesSnapshot.store([clause("training", "Push A today")], on: false, now: noon, in: defaults)
         #expect(SurfacesSnapshot.read(from: defaults) == nil)
         #expect(defaults.data(forKey: SurfacesV2.snapshotKey) == nil)
     }
 
     @Test func aSnapshotWithoutTheFlagIsNotRead() throws {
         let defaults = try #require(UserDefaults(suiteName: "SurfacesV2Tests.\(UUID().uuidString)"))
-        defaults.set(SurfacesSnapshot(written: noon, clauses: [clause("notes", "A new loose note.")]).encoded(),
+        defaults.set(SurfacesSnapshot(written: noon, clauses: [clause("notes", "A new loose note")]).encoded(),
                      forKey: SurfacesV2.snapshotKey)
         #expect(SurfacesSnapshot.read(from: defaults) == nil)
     }
@@ -47,41 +47,41 @@ struct SurfacesV2Tests {
     // MARK: the clause line
 
     @Test func keyWordIsItsOwnRun() {
-        let runs = SurfaceLine.runs(clause("training", "Push A today, about 45 min.", key: "Push A"))
-        #expect(runs == [.init(text: "Push A", isKey: true), .init(text: " today, about 45 min.", isKey: false)])
-        let mid = SurfaceLine.runs(clause("kitchen", "Tacos tonight.", key: "tonight"))
-        #expect(mid.map(\.text) == ["Tacos ", "tonight", "."])
+        let runs = SurfaceLine.runs(clause("training", "Push A today, about 45 min", key: "Push A"))
+        #expect(runs == [.init(text: "Push A", isKey: true), .init(text: " today, about 45 min", isKey: false)])
+        let mid = SurfaceLine.runs(clause("kitchen", "Tacos tonight", key: "tonight"))
+        #expect(mid.map(\.text) == ["Tacos ", "tonight"])
         #expect(mid[1].isKey)
-        #expect(SurfaceLine.runs(clause("notes", "A new loose note.")) == [.init(
-            text: "A new loose note.",
+        #expect(SurfaceLine.runs(clause("notes", "A new loose note")) == [.init(
+            text: "A new loose note",
             isKey: false
         )])
     }
 
     @Test func aBadKeyRangeFallsBackToPlain() {
-        var bad = clause("lists", "Short.")
+        var bad = clause("lists", "Short")
         bad.keyFrom = 3
         bad.keyTo = 99
-        #expect(SurfaceLine.runs(bad) == [.init(text: "Short.", isKey: false)])
+        #expect(SurfaceLine.runs(bad) == [.init(text: "Short", isKey: false)])
     }
 
     @Test func keyRangesCountUTF16() {
-        let line = clause("kitchen", "Crème brûlée tonight.", key: "tonight")
+        let line = clause("kitchen", "Crème brûlée tonight", key: "tonight")
         #expect(SurfaceLine.runs(line).first(where: \.isKey)?.text == "tonight")
     }
 
     @Test func nextIsTheEarliestTimedClauseAhead() {
-        let soon = clause("training", "Push A today.", at: noon.addingTimeInterval(3600))
-        let later = clause("kitchen", "Tacos tonight.", at: noon.addingTimeInterval(7200))
-        let untimed = clause("notes", "A new loose note.")
+        let soon = clause("training", "Push A today", at: noon.addingTimeInterval(3600))
+        let later = clause("kitchen", "Tacos tonight", at: noon.addingTimeInterval(7200))
+        let untimed = clause("notes", "A new loose note")
         let day = [untimed, later, soon]
-        #expect(SurfaceLine.next(day, now: noon)?.text == "Push A today.")
-        #expect(SurfaceLine.next(day, now: noon.addingTimeInterval(5000))?.text == "Tacos tonight.")
+        #expect(SurfaceLine.next(day, now: noon)?.text == "Push A today")
+        #expect(SurfaceLine.next(day, now: noon.addingTimeInterval(5000))?.text == "Tacos tonight")
         // Past every time: the untimed one.
-        #expect(SurfaceLine.next(day, now: noon.addingTimeInterval(9000))?.text == "A new loose note.")
+        #expect(SurfaceLine.next(day, now: noon.addingTimeInterval(9000))?.text == "A new loose note")
         #expect(SurfaceLine.next([], now: noon) == nil)
         // A clause stays next for a few minutes after its time.
-        #expect(SurfaceLine.next([soon], now: noon.addingTimeInterval(3600 + 300))?.text == "Push A today.")
+        #expect(SurfaceLine.next([soon], now: noon.addingTimeInterval(3600 + 300))?.text == "Push A today")
     }
 
     @Test func theInlineLineIsTheTimeAndTheKeyWord() throws {
@@ -94,9 +94,9 @@ struct SurfacesV2Tests {
             hour: 18,
             minute: 10
         )))
-        #expect(SurfaceLine.inline(clause("training", "Push A today.", key: "Push A", at: six), calendar: calendar)
+        #expect(SurfaceLine.inline(clause("training", "Push A today", key: "Push A", at: six), calendar: calendar)
             == "6:10 pm Push A")
-        #expect(SurfaceLine.inline(clause("notes", "A new loose note."), calendar: calendar) == "A new loose note.")
+        #expect(SurfaceLine.inline(clause("notes", "A new loose note"), calendar: calendar) == "A new loose note")
     }
 
     @Test func faceChangesAtEachLaterClauseTime() {
@@ -125,21 +125,21 @@ struct SurfacesV2Tests {
     // MARK: the walls
 
     @Test func moneyIsDueWordsOnly() {
-        #expect(!SurfacesSnapshot.isWalled(clause("money", "Rent is due Friday.", key: "Friday")))
-        #expect(SurfacesSnapshot.isWalled(clause("money", "Rent of $1,800 is due Friday.")))
-        #expect(SurfacesSnapshot.isWalled(clause("money", "Rent is due on the 3rd.")))
+        #expect(!SurfacesSnapshot.isWalled(clause("money", "Rent is due Friday", key: "Friday")))
+        #expect(SurfacesSnapshot.isWalled(clause("money", "Rent of $1,800 is due Friday")))
+        #expect(SurfacesSnapshot.isWalled(clause("money", "Rent is due on the 3rd")))
     }
 
     @Test func bodyHealthAndCaloriesNeverLeave() {
-        #expect(SurfacesSnapshot.isWalled(clause("training", "Body weight is down.")))
-        #expect(SurfacesSnapshot.isWalled(clause("kitchen", "Dinner is 640 kcal.")))
-        #expect(SurfacesSnapshot.isWalled(clause("notes", "Resting heart rate note.")))
-        #expect(!SurfacesSnapshot.isWalled(clause("training", "Push A today. Bench opens at 82.5.")))
+        #expect(SurfacesSnapshot.isWalled(clause("training", "Body weight is down")))
+        #expect(SurfacesSnapshot.isWalled(clause("kitchen", "Dinner is 640 kcal")))
+        #expect(SurfacesSnapshot.isWalled(clause("notes", "Resting heart rate note")))
+        #expect(!SurfacesSnapshot.isWalled(clause("training", "Push A today. Bench opens at 82.5")))
         let kept = SurfacesSnapshot.scrubbed([
-            clause("kitchen", "Dinner is 640 kcal."),
-            clause("kitchen", "Tacos tonight."),
+            clause("kitchen", "Dinner is 640 kcal"),
+            clause("kitchen", "Tacos tonight"),
         ])
-        #expect(kept.map(\.text) == ["Tacos tonight."])
+        #expect(kept.map(\.text) == ["Tacos tonight"])
     }
 
     @Test func aPrivateNameIsMasked() {
@@ -167,12 +167,12 @@ struct SurfacesV2Tests {
                 startedAt: noon.addingTimeInterval(-90)
             ),
         ]
-        let state = try #require(CookFace.state(timers: timers, nextStep: "Fold in the cheese.", isPrivate: false,
+        let state = try #require(CookFace.state(timers: timers, nextStep: "Fold in the cheese", isPrivate: false,
                                                 appNow: noon, realNow: noon))
         #expect(state.timerLabel == "Beans")
         #expect(state.others == 2)
         #expect(state.plusWord == "+2")
-        #expect(state.nextStep == "Fold in the cheese.")
+        #expect(state.nextStep == "Fold in the cheese")
         #expect(CookFace.state(timers: [], nextStep: nil, isPrivate: false, appNow: noon, realNow: noon) == nil)
     }
 
@@ -195,7 +195,7 @@ struct SurfacesV2Tests {
     }
 
     @Test func nextStepIsOneShortLineWithoutEllipsis() {
-        #expect(CookFace.shortStep("Fold in the cheese. Then rest it.") == "Fold in the cheese.")
+        #expect(CookFace.shortStep("Fold in the cheese. Then rest it") == "Fold in the cheese")
         let long = "Stir the onions slowly over a low heat until they are soft and golden brown, then add the garlic and the spices"
         let short = CookFace.shortStep(long)
         #expect(short.count <= 80)

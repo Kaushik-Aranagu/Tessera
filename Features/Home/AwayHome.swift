@@ -27,10 +27,10 @@ struct AwayWord: View {
 
     private func set(_ on: Bool) {
         guard let record = try? model.engine.perform(SetAway(occasion: occasion.id, on: on), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         model.touch()
-        TessVoice.shared.say(on ? "Home is quiet for the trip." : "Home as usual.", undo: record)
+        TessVoice.shared.say(on ? "Home is quiet for the trip" : "Home as usual", undo: record)
     }
 }

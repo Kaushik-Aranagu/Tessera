@@ -233,6 +233,6 @@ enum PageTurnPreviewCopy {
     }
 
     /// The mini page and the next one (sheet 93's sample).
-    static let pages = [["Groceries, 24 to get.", "Lists, 3 open."],
-                        ["Recipes, 12 kept.", "Pantry, 9 running low."]]
+    static let pages = [["Groceries, 24 to get", "Lists, 3 open"],
+                        ["Recipes, 12 kept", "Pantry, 9 running low"]]
 }

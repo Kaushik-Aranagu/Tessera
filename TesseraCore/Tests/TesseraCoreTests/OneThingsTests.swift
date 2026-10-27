@@ -84,7 +84,7 @@ struct OneThingsTests {
         let thing = try #require(things(at(12)).first { $0.kind == .task })
         #expect(thing.big == "Pack the charger" && thing.mid == "Today at 3 pm" && thing
             .small.isEmpty)
-        #expect(thing.done == .task(made.id) && thing.accent == .ink && thing.undoLine == "Pack the charger, done.")
+        #expect(thing.done == .task(made.id) && thing.accent == .ink && thing.undoLine == "Pack the charger, done")
         // Doing it through the engine is the one op, and one Undo.
         let result = try engine.perform(SetTaskDone(task: made.id), by: .user)
         #expect(engine.store.value("isDone", of: made) == .bool(true))
@@ -92,7 +92,7 @@ struct OneThingsTests {
         #expect(engine.store.value("isDone", of: made) != .bool(true))
         _ = try engine.perform(CreateTask(title: "Lexapro refill", startsAt: at(13)), by: .user)
         let hidden = try #require(things(at(12)).first { $0.kind == .task })
-        #expect(hidden.big == "Private" && hidden.isPrivate && hidden.undoLine == "Private, done.")
+        #expect(hidden.big == "Private" && hidden.isPrivate && hidden.undoLine == "Private, done")
     }
 
     @Test func aListReadsDoneOfTotalAndWhatIsNext() throws {
@@ -119,7 +119,7 @@ struct OneThingsTests {
         let mom = OneThingBirthday(name: "Mom", month: 10, day: 25, year: 1966)
         let thing = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
         #expect(thing.big == "Sunday" && thing.mid == "Mom turns 60" && thing.midKeyword == "Mom")
-        #expect(thing.small == "Three days." && thing.accent == .birthday)
+        #expect(thing.small == "Three days" && thing.accent == .birthday)
         let today = OneThingBirthday(name: "Sam", month: 10, day: 22, note: "A call at lunch")
         let now = try #require(things(at(12), birthdays: [today]).first { $0.kind == .birthday })
         #expect(now.big == "Today" && now.mid == "Sam's birthday" && now.small == "A call at lunch")

@@ -42,13 +42,13 @@ public enum Describe {
     private static func taskSentence(_ task: ObjectRecord, in store: ObjectStore, calendar: Calendar) -> String {
         let title = clean(task.title, fallback: "Task")
         if store.value("isDone", of: task) == .bool(true) {
-            return "\(title), done."
+            return "\(title), done"
         }
         let due = store.value("due", of: task)?.dateValue ?? store.value("startsAt", of: task)?.dateValue
         if let due {
-            return "\(title), due \(TesseraDay.weekdayName(of: due, calendar: calendar))."
+            return "\(title), due \(TesseraDay.weekdayName(of: due, calendar: calendar))"
         }
-        return "\(title), still to do."
+        return "\(title), still to do"
     }
 
     private static func workoutSentence(_ workout: ObjectRecord, in store: ObjectStore,
@@ -60,8 +60,8 @@ public enum Describe {
             return ObjectPrivacy.routineLabel
         }
         let title = clean(routine?.title ?? workout.title, fallback: "Workout")
-        guard store.value("startedAt", of: workout)?.dateValue != nil else { return "\(title), planned." }
-        guard store.value("endedAt", of: workout)?.dateValue != nil else { return "\(title), under way." }
+        guard store.value("startedAt", of: workout)?.dateValue != nil else { return "\(title), planned" }
+        guard store.value("endedAt", of: workout)?.dateValue != nil else { return "\(title), under way" }
         let ledger = TrainingLedger(store: store, classes: classes)
         var exercises = 0, sets = 0
         for entry in workout.orderedChildren where !entry.isDeleted {
@@ -71,7 +71,7 @@ public enum Describe {
                 sets += counted
             }
         }
-        return "\(title), \(count(exercises, "exercise")), \(count(sets, "set"))."
+        return "\(title), \(count(exercises, "exercise")), \(count(sets, "set"))"
     }
 
     private static func itemSentence(_ item: ObjectRecord, in store: ObjectStore,
@@ -79,12 +79,12 @@ public enum Describe {
     {
         let name = clean(item.title, fallback: "Item")
         let done = store.value("isDone", of: item) == .bool(true) ? ", done" : ""
-        guard let list = item.parent, !list.isDeleted else { return "\(name)\(done)." }
+        guard let list = item.parent, !list.isDeleted else { return "\(name)\(done)" }
         // A private list makes its items private (shownLabel above); a name that only reads private here masks too.
         if ObjectPrivacy.isPrivateWord(list.title, in: store) {
             return "Private item"
         }
-        return "\(name) on \(clean(list.title, fallback: "a list"))\(done)."
+        return "\(name) on \(clean(list.title, fallback: "a list"))\(done)"
     }
 
     private static func recipeSentence(_ recipe: ObjectRecord, in store: ObjectStore) -> String {
@@ -95,7 +95,7 @@ public enum Describe {
         if let total = store.number("totalMinutes", of: recipe), total >= 1, total < 100_000 {
             parts.append(HouseTime.minutes(Int(total)))
         }
-        return parts.joined(separator: ", ") + "."
+        return parts.joined(separator: ", ")
     }
 
     // MARK: Story
@@ -128,7 +128,7 @@ public enum Describe {
     /// The one private rule for a sentence, a story and a count: the object is private by its label, or it is a workout
     /// of a private routine (even when its own title is plain).
     public static func isPrivate(_ object: ObjectRecord, in store: ObjectStore,
-                          classes: [SystemCatalog.Key: ClassDef]) -> Bool
+                                 classes: [SystemCatalog.Key: ClassDef]) -> Bool
     {
         if ObjectPrivacy.shownLabel(of: object, in: store, classes: classes) != nil {
             return true
@@ -167,9 +167,9 @@ public enum Describe {
             for op in ops.reversed() {
                 switch op {
                 case .create:
-                    lines.append(.init(time: record.createdAt, text: "Made \(day(record.createdAt))."))
+                    lines.append(.init(time: record.createdAt, text: "Made \(day(record.createdAt))"))
                 case .setTitle where !creating:
-                    lines.append(.init(time: record.createdAt, text: "Renamed \(day(record.createdAt))."))
+                    lines.append(.init(time: record.createdAt, text: "Renamed \(day(record.createdAt))"))
                 case let .setValue(_, field, _, new) where !creating:
                     if let text = valueLine(key: keys[field], new: new, object: object, engine: engine,
                                             day: day, at: record.createdAt)
@@ -179,13 +179,13 @@ public enum Describe {
                 case let .setLinks(_, _, old, new):
                     for target in new where !old.contains(target) {
                         if let name = linkName(target, engine: engine) {
-                            lines.append(.init(time: record.createdAt, text: "Linked to \(name)."))
+                            lines.append(.init(time: record.createdAt, text: "Linked to \(name)"))
                         }
                     }
                 case .softDelete:
-                    lines.append(.init(time: record.createdAt, text: "Deleted."))
+                    lines.append(.init(time: record.createdAt, text: "Deleted"))
                 case .restore:
-                    lines.append(.init(time: record.createdAt, text: "Restored."))
+                    lines.append(.init(time: record.createdAt, text: "Restored"))
                 default: break
                 }
             }
@@ -203,16 +203,16 @@ public enum Describe {
         case "isDone":
             guard let done = new.map({ $0 == .bool(true) }) else { return nil }
             if done {
-                return isItem ? "Checked off \(day(time))." : "Done \(day(time))."
+                return isItem ? "Checked off \(day(time))" : "Done \(day(time))"
             }
-            return isItem ? "Unchecked \(day(time))." : "Reopened \(day(time))."
+            return isItem ? "Unchecked \(day(time))" : "Reopened \(day(time))"
         case "startsAt", "due", "dueAt", "scheduledFor":
-            guard let date = new?.dateValue else { return "Date cleared \(day(time))." }
-            return "Moved to \(day(date))."
+            guard let date = new?.dateValue else { return "Date cleared \(day(time))" }
+            return "Moved to \(day(date))"
         case "startedAt":
-            return new == nil ? nil : "Started \(day(time))."
+            return new == nil ? nil : "Started \(day(time))"
         case "endedAt":
-            return new == nil ? nil : "Finished \(day(time))."
+            return new == nil ? nil : "Finished \(day(time))"
         default:
             return nil
         }

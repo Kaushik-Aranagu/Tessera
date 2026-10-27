@@ -19,10 +19,13 @@ enum LandingSection: Int, CaseIterable {
     /// Bottom: the one action word on the left, Tess on the right.
     case foot
 
-    var order: Int { rawValue }
+    var order: Int {
+        rawValue
+    }
 }
 
-/// The Home arrival effect on a section (sheet 213, Home 236): the section rises 10 pt out of a slightly smaller size, sections 80 ms apart, 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade, no blur,
+/// The Home arrival effect on a section (sheet 213, Home 236): the section rises 10 pt out of a slightly smaller size,
+/// sections 80 ms apart, 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade, no blur,
 /// no rise, no scale. Never blocks a tap.
 struct LandingArrival: ViewModifier {
     let section: LandingSection

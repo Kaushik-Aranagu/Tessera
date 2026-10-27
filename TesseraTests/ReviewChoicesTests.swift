@@ -40,7 +40,7 @@ struct ReviewChoicesTests {
         choices.step(pageTurn, forward: false)
         #expect(choices.value(of: pageTurn) == "Rotate")
         #expect(choices.beforeAfter(pageTurn, before: "Today")
-            == "Before: Pages change as they do now. Now: Pages rotate on their edge.")
+            == "Before: Pages change as they do now. Now: Pages rotate on their edge")
         choices.resetAll([pageTurn])
         #expect(choices.value(of: pageTurn) == "Today")
         #expect(defaults.string(forKey: "review.pageTurn") == nil)

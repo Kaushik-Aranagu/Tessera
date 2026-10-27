@@ -6,7 +6,7 @@ import SwiftUI
 enum SettingsV2 {
     static let choiceID = "settingsV2"
 
-    static let sentence = "How Tessera works for you."
+    static let sentence = "How Tessera works for you"
     static let title = "Settings"
 
     @MainActor static var isOn: Bool {

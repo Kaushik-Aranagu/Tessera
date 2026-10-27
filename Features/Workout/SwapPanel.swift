@@ -18,7 +18,7 @@ struct SwapPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if options.isEmpty {
-                Text("Nothing else in the library moves like \(current.lowercased()).")
+                Text("Nothing else in the library moves like \(current.lowercased())")
                     .font(Theme.voice)
                     .foregroundStyle(Paint.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -38,7 +38,7 @@ struct SwapPanel: View {
                 }
             }
             if options.contains(where: \.isEstimate) {
-                Text("≈ is an estimate. \(shortName) stays in the plan.")
+                Text("≈ is an estimate. \(shortName) stays in the plan")
                     .font(Theme.voice(size: 18))
                     .foregroundStyle(Paint.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -119,7 +119,7 @@ struct TopSetCheckLine: View {
 
     /// The accepted line, thing first (receipts-thing-first.md RC11): "Sets 2 to 4, 85 kg.".
     static func acceptedLine(weight: Double, fromSet: Int, toSet: Int) -> String {
-        "Sets \(fromSet) to \(toSet), \(Format.mass(weight))."
+        "Sets \(fromSet) to \(toSet), \(Format.mass(weight))"
     }
 
     var onAccept: () -> Void
@@ -134,7 +134,9 @@ struct TopSetCheckLine: View {
             : "That was heavy. Drop to \(weight) for the rest?"
         Button(action: onAccept) {
             VStack(alignment: .leading, spacing: 2) {
-                TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion || check.isAccepted)) { context in
+                LiveClock(LiveFeatures.swapPanel, minimumInterval: 1 / 20,
+                          paused: reduceMotion || check.isAccepted)
+                { context in
                     let breath = (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * 2 * .pi) + 1) / 2
                     Text(text)
                         .font(Theme.voice)

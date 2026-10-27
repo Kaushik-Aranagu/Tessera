@@ -15,23 +15,23 @@ public enum TrainingSentences {
 
     /// L2.
     public static func running(routine: String, done: Int, total: Int) -> String {
-        "\(routine) is running. \(done) of \(total) sets."
+        "\(routine) is running. \(done) of \(total) sets"
     }
 
     /// L3.
     public static func finished(routine: String, minutes: Int) -> String {
-        "\(routine) done, \(HouseTime.minutes(minutes))."
+        "\(routine) done, \(HouseTime.minutes(minutes))"
     }
 
-    public static let restDay = "Rest day."
-    public static let noPlan = "No plan yet."
-    public static let privateToday = "A private workout today."
+    public static let restDay = "Rest day"
+    public static let noPlan = "No plan yet"
+    public static let privateToday = "A private workout today"
 
     // MARK: Strength (S1 to S5)
 
     /// S1: "Your best Bench is about 93 kg for 1, on Oct 6."
     public static func best(_ best: TrainingStats.Best, unit: MassUnit, calendar: Calendar = .current) -> String {
-        "Your best \(best.exercise) is about \(StatsMass.estimate(kg: best.e1RM, unit: unit)) for 1, on \(day(best.date, calendar))."
+        "Your best \(best.exercise) is about \(StatsMass.estimate(kg: best.e1RM, unit: unit)) for 1, on \(day(best.date, calendar))"
     }
 
     /// S2 to S5 for one lift, or nil when there is nothing to claim.
@@ -41,11 +41,11 @@ public enum TrainingSentences {
         switch line.change {
         case let .up(steps):
             let amount = Double(steps) * StatsMass.step(unit)
-            return "\(line.exercise) is up \(StatsMass.trimmed(amount)) \(unit == .kilograms ? "kg" : "lb") in \(range.word)."
-        case .steady: return "\(line.exercise) is steady."
-        case .holding: return "\(line.exercise) is holding near its best."
+            return "\(line.exercise) is up \(StatsMass.trimmed(amount)) \(unit == .kilograms ? "kg" : "lb") in \(range.word)"
+        case .steady: return "\(line.exercise) is steady"
+        case .holding: return "\(line.exercise) is holding near its best"
         case .first:
-            return "First number for \(line.exercise): about \(StatsMass.estimate(kg: line.nowKg ?? 0, unit: unit)) for 1."
+            return "First number for \(line.exercise): about \(StatsMass.estimate(kg: line.nowKg ?? 0, unit: unit)) for 1"
         case .none: return nil
         }
     }
@@ -70,27 +70,27 @@ public enum TrainingSentences {
     public static func volume(_ row: TrainingStats.MuscleRow) -> String {
         let sets = setsText(row.sets)
         switch row.band {
-        case .below: return "\(row.name) \(sets) sets this week, toward a usual \(Int(TrainingStats.Volume.minTarget))."
+        case .below: return "\(row.name) \(sets) sets this week, toward a usual \(Int(TrainingStats.Volume.minTarget))"
         case .within:
             let low = Int(TrainingStats.Volume.minTarget), high = Int(TrainingStats.Volume.maxTarget)
-            return "\(row.name) \(sets) sets this week, in its usual \(low) to \(high)."
-        case .above: return "\(row.name) \(sets) sets this week."
+            return "\(row.name) \(sets) sets this week, in its usual \(low) to \(high)"
+        case .above: return "\(row.name) \(sets) sets this week"
         }
     }
 
     /// S7.
     public static func sessions(_ count: Int, usual: Int) -> String {
-        "\(count) \(count == 1 ? "session" : "sessions") this week. Usual \(usual)."
+        "\(count) \(count == 1 ? "session" : "sessions") this week. Usual \(usual)"
     }
 
     /// S8, only for a finished run of 3 weeks or more.
     public static func bestRun(_ weeks: Int?) -> String? {
         guard let weeks, weeks >= 3 else { return nil }
-        return "Best run: \(weeks) weeks in a row."
+        return "Best run: \(weeks) weeks in a row"
     }
 
     /// S9, only behind the light-weeks switch.
-    public static let lighterWeek = "A lighter week."
+    public static let lighterWeek = "A lighter week"
 
     // MARK: Balance (S10, S11)
 
@@ -98,16 +98,16 @@ public enum TrainingSentences {
         var lines: [String] = []
         if balance.pull > 0, balance.push > 0 {
             if balance.isPushPullEven {
-                lines.append("Push and pull are even.")
+                lines.append("Push and pull are even")
             } else {
-                lines.append(balance.pull > balance.push ? "Pull is a little ahead of push."
-                    : "Push is a little ahead of pull.")
+                lines.append(balance.pull > balance.push ? "Pull is a little ahead of push"
+                    : "Push is a little ahead of pull")
             }
         }
         if balance.isUpperLowerEven {
-            lines.append("Upper and lower are even.")
+            lines.append("Upper and lower are even")
         } else {
-            lines.append(balance.upperShare > 0.5 ? "Upper gets more of your sets." : "Lower gets more of your sets.")
+            lines.append(balance.upperShare > 0.5 ? "Upper gets more of your sets" : "Lower gets more of your sets")
         }
         return lines
     }

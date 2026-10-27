@@ -15,7 +15,7 @@ struct ClaudeKeyQuestionTests {
         #expect(ClaudeKeyQuestionCopy.question == "Use the Claude key still on this phone?")
         #expect([ClaudeKeyQuestionCopy.yes, ClaudeKeyQuestionCopy.no, ClaudeKeyQuestionCopy.later]
             == ["Yes", "No", "Later"])
-        #expect(ClaudeKeyQuestionCopy.yesReceipt == "Using the Claude key.")
+        #expect(ClaudeKeyQuestionCopy.yesReceipt == "Using the Claude key")
     }
 
     @Test func keyQuestionIsAbsentWithoutAKey() {

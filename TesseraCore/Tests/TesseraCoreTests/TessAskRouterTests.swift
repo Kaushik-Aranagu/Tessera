@@ -31,10 +31,10 @@ struct TessAskRouterTests {
     @Test func aPlainTaskIsAnsweredOnThePhoneAndOnlySendsItsShownTextWhenAsksClaudeIsOn() throws {
         let task = try engine.perform(CreateTask(title: "Mail forms"), by: .user).output
         let off = route(task, claude: false)
-        #expect(off.phoneAnswer == "Mail forms, still to do." && off.claudeText == nil)
+        #expect(off.phoneAnswer == "Mail forms, still to do" && off.claudeText == nil)
         #expect(off.actions == [.markTaskDone(task.id)])
         let on = route(task, claude: true)
-        #expect(on.phoneAnswer == off.phoneAnswer && on.claudeText == "Mail forms, still to do.")
+        #expect(on.phoneAnswer == off.phoneAnswer && on.claudeText == "Mail forms, still to do")
     }
 
     @Test func moneyHealthBodyAndCalendarObjectsAlwaysStayOnThePhone() throws {
@@ -45,7 +45,7 @@ struct TessAskRouterTests {
         for object in objects {
             for claude in [false, true] {
                 let ask = route(object, claude: claude)
-                #expect(ask.phoneAnswer == "That stays on this phone." && ask.claudeText == nil && ask.actions.isEmpty,
+                #expect(ask.phoneAnswer == "That stays on this phone" && ask.claudeText == nil && ask.actions.isEmpty,
                         "\(object.classDef?.name ?? "?") claude=\(claude)")
             }
         }
@@ -54,7 +54,7 @@ struct TessAskRouterTests {
     @Test func privateAndWalledThingsAreAnsweredByTheirLabelAndNeverSent() throws {
         let secret = try engine.perform(CreateTask(title: "Lexapro refill"), by: .user).output
         let ask = route(secret, claude: true)
-        #expect(ask.phoneAnswer == "Private task." && ask.claudeText == nil && ask.actions.isEmpty)
+        #expect(ask.phoneAnswer == "Private task" && ask.claudeText == nil && ask.actions.isEmpty)
         let routine = try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user).output
         #expect(route(routine, claude: true).claudeText == nil)
         let note = try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user).output
@@ -108,9 +108,9 @@ struct TessAskRouterTests {
         let plain = try #require(entries.first { $0.id == task.record.id })
         #expect(plain.undoWord == "Undo" && !plain.isMoney)
         // The system's own housekeeping is not in the log; an undo goes through the op log with its own word.
-        #expect(TessRoomLog.undo(plain, engine: engine) == .putBack(line: "Put back."))
+        #expect(TessRoomLog.undo(plain, engine: engine) == .putBack(line: "Put back"))
         #expect(task.output.isDeleted)
-        #expect(TessRoomLog.undo(money, engine: engine) == .putBack(line: "Reversed."))
+        #expect(TessRoomLog.undo(money, engine: engine) == .putBack(line: "Reversed"))
         // Yesterday's changes are not today's.
         let tomorrow = TessRoomLog.today(engine: engine, now: now.addingTimeInterval(2 * 86400), calendar: calendar)
         #expect(tomorrow.isEmpty)

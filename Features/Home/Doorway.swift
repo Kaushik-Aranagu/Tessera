@@ -144,7 +144,7 @@ struct DoorwayOverlay: View {
     var body: some View {
         GeometryReader { geometry in
             if doorway.run != nil {
-                TimelineView(.animation) { context in
+                LiveClock(LiveFeatures.doorway, minimumInterval: nil) { context in
                     Canvas { canvas, size in
                         draw(&canvas, size: size, now: context.date)
                     }

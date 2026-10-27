@@ -73,7 +73,7 @@ struct ListsShelfPage: View {
                 }
                 .padding(.top, Theme.Spacing.xxl)
                 if shelf.rows.allSatisfy(\.isGroceries) {
-                    Text("No other lists yet.")
+                    Text("No other lists yet")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .padding(.top, Theme.Spacing.xxl)
@@ -346,7 +346,7 @@ private struct ListPage: View {
             // A cleared run (Design on #806); .done is for finishing.
             .tesseraFeedback(.aisleCleared, trigger: reset)
         } else {
-            Text("List gone.")
+            Text("List gone")
                 .font(Theme.voice)
                 .foregroundStyle(Theme.Colors.context)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -402,7 +402,7 @@ private struct ListPage: View {
     private func remove(_ item: ListContents.Item, from list: String) -> Bool {
         let thing = rows.maskedLabel(for: item, name: item.text, lastWeightKg: BodyWeight.lastKg(in: model.store))
         guard let record = try? model.engine.perform(DeleteObject(object: item.id), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return false
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
@@ -556,7 +556,7 @@ extension ListPage {
               ListContents(store: model.store, classes: model.classes).isPickOne(list) != isOn else { return }
         guard let record = try? model.engine.perform(SetListPickOne(list: listID, on: isOn), by: .user).record
         else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
@@ -603,7 +603,7 @@ extension ListPage {
     private func finishRun(name: String) {
         guard let result = try? model.engine.perform(FinishListRun(list: listID, time: AppClock.now), by: .user)
         else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
@@ -641,7 +641,7 @@ extension ListPage {
     private func putAwayRun(name: String) {
         guard let result = try? model.engine.perform(PutAwayListRun(list: listID, time: AppClock.now), by: .user)
         else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
@@ -684,7 +684,7 @@ extension ListPage {
         guard let list = model.store.object(id: listID), now.isReusable(list) == was else { return }
         guard let record = try? model.engine.perform(SetListReusable(list: listID, reusable: isOn), by: .user).record
         else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
@@ -720,7 +720,7 @@ extension ListPage {
             guard let record = try? model.engine.perform(ResetList(list: listID, time: AppClock.now), by: .user)
                 .record
             else {
-                TessVoice.shared.say("Didn't save that. Try again.")
+                TessVoice.shared.say("Didn't save that. Try again")
                 return
             }
             withTesseraAnimation(reduceMotion ? Theme.Motion.house : .smooth(duration: 0.48),
@@ -759,7 +759,7 @@ extension ListPage {
                 }
             }
             // A reusable list's fold resets rather than clears: "4 done. Hold to reset." (10.4).
-            (Text("\(done.count)").fontWeight(.semibold) + Text(reusable ? " done. Hold to reset." : " done"))
+            (Text("\(done.count)").fontWeight(.semibold) + Text(reusable ? " done. Hold to reset" : " done"))
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 .contentTransition(.numericText(value: Double(done.count)))
@@ -781,7 +781,7 @@ extension ListPage {
     private func clear(_ count: Int) {
         guard let record = try? model.engine.perform(ClearDoneItems(list: listID), by: .user).record else {
             // A refused clear says so; the fold and its items stay (QA on #806).
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         model.touch()

@@ -25,21 +25,21 @@ struct LandingTests {
 
     @Test func trainingSentenceHoldsTheOneNumberInsideIt() {
         let full = LandingSentences.training(session: "Push A", minutes: 45, opener: ("Bench", "82.5"))
-        #expect(full.text == "Push A today, about 45 min. Bench opens at 82.5." && full.key == "Push A")
-        #expect(LandingSentences.training(session: "Push A", minutes: nil, opener: nil).text == "Push A today.")
+        #expect(full.text == "Push A today, about 45 min. Bench opens at 82.5" && full.key == "Push A")
+        #expect(LandingSentences.training(session: "Push A", minutes: nil, opener: nil).text == "Push A today")
         #expect(LandingSentences.training(session: "Push A", minutes: 45, opener: nil).text
-            == "Push A today, about 45 min.")
-        #expect(LandingSentences.training(session: nil, minutes: nil, opener: nil).text == "Nothing planned today.")
+            == "Push A today, about 45 min")
+        #expect(LandingSentences.training(session: nil, minutes: nil, opener: nil).text == "Nothing planned today")
     }
 
     @Test func kitchenSentenceAndTheCookingLine() {
         let full = LandingSentences.kitchen(dish: "Tacos", start: "6:05", shortOf: "Lemon")
-        #expect(full.text == "Tacos tonight, start at 6:05. Lemon is short." && full.key == "Tacos")
-        #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: nil).text == "Tacos tonight.")
-        #expect(LandingSentences.kitchen(dish: nil, start: nil, shortOf: nil).text == "Nothing planned for tonight.")
-        #expect(LandingSentences.cooking(dish: "Tacos", minutesLeft: 8) == "Cooking tacos, 8 min left.")
-        #expect(LandingSentences.cooking(dish: "BLT", minutesLeft: nil) == "Cooking BLT.")
-        #expect(LandingSentences.cooking(dish: "Pad Thai", minutesLeft: 0) == "Cooking pad Thai.")
+        #expect(full.text == "Tacos tonight, start at 6:05. Lemon is short" && full.key == "Tacos")
+        #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: nil).text == "Tacos tonight")
+        #expect(LandingSentences.kitchen(dish: nil, start: nil, shortOf: nil).text == "Nothing planned for tonight")
+        #expect(LandingSentences.cooking(dish: "Tacos", minutesLeft: 8) == "Cooking tacos, 8 min left")
+        #expect(LandingSentences.cooking(dish: "BLT", minutesLeft: nil) == "Cooking BLT")
+        #expect(LandingSentences.cooking(dish: "Pad Thai", minutesLeft: 0) == "Cooking pad Thai")
         #expect(LandingSentences.toGet(7) == "7 to get" && LandingSentences.toGet(0) == nil)
         #expect(LandingSentences.covers(dinners: 4) == "covers 4 dinners")
         #expect(LandingSentences.covers(dinners: 1) == "covers 1 dinner" && LandingSentences.covers(dinners: 0) == nil)
@@ -48,18 +48,18 @@ struct LandingTests {
     @Test func moneySentenceIsClausesNeverFigures() {
         let full = LandingSentences.money(nothingLate: true, due: ("Rent", "Friday"),
                                           trend: "October is running a little under September")
-        #expect(full.text == "Nothing is late. Rent is due Friday, and October is running a little under September.")
+        #expect(full.text == "Nothing is late. Rent is due Friday, and October is running a little under September")
         #expect(LandingSentences.money(nothingLate: true, due: ("Rent", "Friday"), trend: nil).text
-            == "Nothing is late. Rent is due Friday.")
+            == "Nothing is late. Rent is due Friday")
         #expect(LandingSentences.money(nothingLate: false, due: nil, trend: "October is running well over September")
-            .text == "October is running well over September.")
+            .text == "October is running well over September")
         // A late bill is the waiting band's to say: no sentence about it here.
         #expect(!LandingSentences.money(nothingLate: false, due: ("Rent", "Friday"), trend: nil).text.contains("late"))
-        #expect(LandingSentences.money(nothingLate: false, due: nil, trend: nil).text == "Nothing to report.")
+        #expect(LandingSentences.money(nothingLate: false, due: nil, trend: nil).text == "Nothing to report")
     }
 
     @Test func notesListsAndRoutinesWords() {
-        #expect(LandingSentences.notesPrompt.text == "Search or write. @ links a thing.")
+        #expect(LandingSentences.notesPrompt.text == "Search or write. @ links a thing")
         #expect(LandingSentences.leftOf(left: 6, total: 24) == "6 left of 24")
         #expect(LandingSentences.leftOf(left: 25, total: 24) == nil && LandingSentences
             .leftOf(left: 0, total: 0) == nil)
@@ -252,18 +252,18 @@ struct LandingTests {
         #expect(HouseTime.minutes(90) == "1 hr 30 min" && HouseTime.minutes(125) == "2 hr 5 min")
         #expect(HouseTime.minutes(0) == "1 min")
         let long = LandingSentences.training(session: "Push A", minutes: 90, opener: nil)
-        #expect(long.text == "Push A today, about 1 hr 30 min.")
-        #expect(LandingSentences.cooking(dish: "Stew", minutesLeft: 75) == "Cooking stew, 1 hr 15 min left.")
+        #expect(long.text == "Push A today, about 1 hr 30 min")
+        #expect(LandingSentences.cooking(dish: "Stew", minutesLeft: 75) == "Cooking stew, 1 hr 15 min left")
         #expect(LandingSentences.onThisStep(seconds: 3900) == "1 hr 5 min on this step")
     }
 
     @Test func pluralsAgreeInTheTemplates() {
         #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: "Eggs")
-            .text == "Tacos tonight. Eggs are short.")
+            .text == "Tacos tonight. Eggs are short")
         #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: "Rice")
-            .text == "Tacos tonight. Rice is short.")
+            .text == "Tacos tonight. Rice is short")
         #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: "Hummus").text
-            .hasSuffix("Hummus is short."))
+            .hasSuffix("Hummus is short"))
         let one = runs([1], hour: 6, minute: 40, length: 22) + runs(Array(2 ... 7), hour: 6, minute: 40, length: 22)
         #expect(RoutineUsual.line(name: "Morning", runs: one, calendar: calendar)?.contains("7 days") == true)
         // A single logical day of seven runs reads "1 day".

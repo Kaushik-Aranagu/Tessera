@@ -168,7 +168,7 @@ private struct WritingLine: View {
                 PaintDab(color: Theme.Colors.tess, size: CGSize(width: 14, height: 12), seed: 3)
                     .opacity(focused.wrappedValue || !text.isEmpty ? 1 : 0.35)
                     .tesseraAnimation(Theme.Motion.house, value: focused.wrappedValue || !text.isEmpty)
-                TextField("", text: $text, prompt: Text("Write something. @ links a thing.")
+                TextField("", text: $text, prompt: Text("Write something. @ links a thing")
                     .foregroundStyle(Theme.Colors.inkSecondary), axis: .vertical)
                     .textRole(.field)
                     .foregroundStyle(Theme.Colors.ink)
@@ -275,11 +275,11 @@ private struct NoteSeam: View {
 private struct NotesEmpty: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Text("Nothing written yet.")
+            Text("Nothing written yet")
                 .textRole(.title)
-                .wordFit("Nothing written yet.")
+                .wordFit("Nothing written yet")
                 .foregroundStyle(Theme.Colors.ink)
-            Text("Write above, or tell Tess \u{201C}note: bar felt heavy\u{201D}. @ links a note to a thing.")
+            Text("Write above, or tell Tess \u{201C}note: bar felt heavy\u{201D}. @ links a note to a thing")
                 .font(Theme.voice)
                 .foregroundStyle(Theme.Colors.inkSecondary)
         }

@@ -105,8 +105,8 @@ struct SurfacesSnapshot: Codable, Equatable {
 
 /// The words a surface says, from the clauses. Pure.
 enum SurfaceLine {
-    static let quietDay = "A quiet day."
-    static let notYet = "Open Tessera."
+    static let quietDay = "A quiet day"
+    static let notYet = "Open Tessera"
 
     struct Run: Equatable {
         let text: String

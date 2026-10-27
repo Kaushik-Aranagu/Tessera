@@ -360,7 +360,7 @@ enum RoutinesStarter {
             if running.routineID == item.id {
                 pickUp(model: model)
             } else {
-                TessVoice.shared.say("\(running.name) is running.")
+                TessVoice.shared.say("\(running.name) is running")
             }
             return false
         }
@@ -377,7 +377,7 @@ enum RoutinesStarter {
                 Task { @MainActor in TessVoice.shared.say(Receipt.takenBack(name)) }
             } else if model.session?.workout.id == workout.id {
                 // A set is logged (or the undo would not fully apply): the run stays.
-                Task { @MainActor in TessVoice.shared.say("\(name) has a set in, so it stays.") }
+                Task { @MainActor in TessVoice.shared.say("\(name) has a set in, so it stays") }
             }
         })
         return true
@@ -430,7 +430,7 @@ struct RoutineDetailSheet: View {
                     Text("Usually starts \(RoutinesLandingWords.clock(usual.startMinuteOfDay))")
                     Text("Usually \(HouseTime.minutes(usual.lengthMinutes))")
                 } else {
-                    Text("Usual start and length show after 7 runs.")
+                    Text("Usual start and length show after 7 runs")
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
                 if !item.isPrivate {

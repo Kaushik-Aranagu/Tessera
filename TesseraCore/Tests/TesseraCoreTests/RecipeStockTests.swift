@@ -24,7 +24,7 @@ struct RecipeStockTests {
         ])
         #expect(verdicts(result) == [.have, .short(.init(amount: nil, unit: nil)), .have])
         #expect(RecipeStock.shortNames(result) == ["lemon"])
-        #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Short on lemon.")
+        #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Short on lemon")
     }
 
     @Test func belowTheAmountIsShortByTheDifference() {
@@ -55,7 +55,7 @@ struct RecipeStockTests {
         let result = rows(["1 tsp paprika", "1 lemon"], stock: ["lemon": .init(.inStock)])
         #expect(verdicts(result) == [.check, .have])
         #expect(RecipeStock.shortNames(result).isEmpty)
-        #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Nothing is short.")
+        #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Nothing is short")
     }
 
     @Test func staplesTasteAndServingLinesAreNotJudged() {
@@ -89,7 +89,7 @@ struct RecipeStockTests {
         let result = rows(["1 lemon", "1 lime", "2 cups rice", "1 onion", "1 carrot"], stock: [
             "lemon": .init(.out), "lime": .init(.out), "rice": .init(.out), "onion": .init(.out), "carrot": .init(.out),
         ])
-        #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Short on lemon, lime and 3 more.")
+        #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Short on lemon, lime and 3 more")
     }
 
     @MainActor
@@ -97,7 +97,7 @@ struct RecipeStockTests {
         let store = ObjectStore.open(inMemory: true)
         let result = rows(["1 lemon", "1 Ozempic dose"], stock: ["lemon": .init(.out), "ozempic dose": .init(.out)])
         let speech = RecipeStock.speech(result, recipeIsPrivate: false, in: store)
-        #expect(speech == "Short on lemon and Private item." && !speech.lowercased().contains("ozempic"))
+        #expect(speech == "Short on lemon and Private item" && !speech.lowercased().contains("ozempic"))
         // The names alone carry the mask too.
         #expect(RecipeStock.shortNames(result).contains("ozempic dose"))
         #expect(RecipeStock.shortNames(result) { ObjectPrivacy.isPrivateWord($0, in: store) }.contains("Private item"))

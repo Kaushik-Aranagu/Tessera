@@ -37,7 +37,7 @@ struct RoutinesWeekThreadTests {
     @Test func spokenNamesOnlyTheDaysThatRan() {
         let days = RoutinesWeekThreadData.days(runs: [date(22, 7), date(20, 9)], now: date(22, 12), calendar: calendar)
         let spoken = RoutinesWeekThreadData.spoken(days, calendar: calendar)
-        #expect(spoken == "Ran on Tuesday and Thursday.")
+        #expect(spoken == "Ran on Tuesday and Thursday")
         for word in ["miss", "streak", "gap", "red"] {
             #expect(!spoken.lowercased().contains(word))
         }

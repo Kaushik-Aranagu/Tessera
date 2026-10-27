@@ -11,6 +11,10 @@ struct BoardDay: Equatable, Identifiable {
     let letter: String
     let done: Bool
     let isToday: Bool
+    /// The first lift of the day's finished workout, so the day's row on the This week page opens that lift; nil on
+    /// a day with nothing done or a private workout.
+    var liftID: UUID?
+    var liftName: String?
 }
 
 /// A best written small along the bottom of the board; tapping its number opens the lift.
@@ -42,7 +46,7 @@ struct TrainingBoard: Equatable {
 }
 
 /// Deck's masthead and widget content.
-struct TrainingDeckFacts {
+struct TrainingDeckFacts: Equatable {
     /// The widget's Big line in Deck's face (Barlow Condensed 600, 50 pt caps) cut on whole words to its 262 pt
     /// slot, trailing small words dropped: never "...".
     static func deckBig(_ text: String, width: CGFloat = 262) -> String {
@@ -88,6 +92,30 @@ struct TrainingDeckFacts {
 
 @MainActor
 extension TrainingDeckFacts {
+    /// The board's week: a letter per day, done or not, and (for a done day) the first lift of its first finished,
+    /// non-private workout, so the day's row can open that lift.
+    static func boardDays(_ week: [WeekDay], today: Date, letters: [String], store: ObjectStore,
+                          calendar: Calendar) -> [BoardDay]
+    {
+        func shown(_ title: String) -> String {
+            ObjectPrivacy.routineTitle(title, in: store)
+        }
+        return week.enumerated().map { index, slot in
+            // The day's first finished, non-private workout names the lift its row opens.
+            let lift = slot.done.lazy
+                .filter { shown($0.title) != ObjectPrivacy.routineLabel }
+                .compactMap { summary in
+                    summary.workout.orderedChildren.lazy.filter { !$0.isDeleted }
+                        .compactMap { store.linkedClass("exercise", of: $0) }
+                        .first { !ObjectPrivacy.isPrivateWord($0.name, in: store) }
+                }
+                .first
+            return BoardDay(id: index, letter: letters[calendar.component(.weekday, from: slot.day) - 1],
+                            done: !slot.done.isEmpty, isToday: slot.day == today,
+                            liftID: lift?.id, liftName: lift.map { TrainingWallFacts.lift($0.name) })
+        }
+    }
+
     static func load(_ model: AppModel, wall: TrainingWallFacts, now: Date = AppClock.now,
                      dark: Bool = false, calendar: Calendar = .current) -> TrainingDeckFacts
     {
@@ -101,10 +129,7 @@ extension TrainingDeckFacts {
                                      sessionsPerWeek: perWeek > 0 ? perWeek : nil, calendar: calendar)
         let today = TesseraDay(calendar: calendar).today(now)
         let letters = calendar.veryShortWeekdaySymbols
-        let days = week.enumerated().map { index, slot in
-            BoardDay(id: index, letter: letters[calendar.component(.weekday, from: slot.day) - 1],
-                     done: !slot.done.isEmpty, isToday: slot.day == today)
-        }
+        let days = boardDays(week, today: today, letters: letters, store: store, calendar: calendar)
         let doneDays = days.filter(\.done).count
 
         // Bests from the lifts that have them, newest lifts first.

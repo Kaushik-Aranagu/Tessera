@@ -26,7 +26,7 @@ struct SimilarExercisesSheet: View {
                     .foregroundStyle(Theme.Colors.context)
                     .padding(.bottom, Theme.Spacing.l)
                 if options.isEmpty {
-                    Text("Nothing close to this one yet.")
+                    Text("Nothing close to this one yet")
                         .font(Theme.voice(size: 21))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }

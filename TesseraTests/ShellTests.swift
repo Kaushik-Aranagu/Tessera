@@ -160,7 +160,7 @@ struct ShellDiffTests {
             DialDoor(id: "all", name: "All notes", count: "2", color: .black, label: "Newest now", lines: ["Sleep"]),
             DialDoor(id: "loose", name: "Loose", color: .orange, label: "Not about a thing"),
         ]
-        facts.sentence = "Your notes are on their own."
+        facts.sentence = "Your notes are on their own"
         facts.widget = [
             WidgetItem(id: "1", header: "Newest", big: "SLEEP"),
             WidgetItem(id: "2", header: "Newest", big: "IDEAS"),
@@ -239,5 +239,98 @@ struct ShellBackTests {
         #expect(1 - ShellBack.fade == 0.6)
         #expect(1 + ShellBack.grow == 1.18)
         #expect(ShellBack.settle == 0.28)
+    }
+}
+
+/// The root shell (sheet 283 v5): Bridge and every room in one shell, the place-by-place move between them.
+@MainActor
+struct RootShellTests {
+    private static let rooms = ["log", "deck", "galley", "watch", "purse", "lookout", "settings"]
+
+    @Test func bridgeToEveryRoomAndBackRestoresBridge() {
+        let navigator = ShellNavigator(root: .landing(BridgeRoomContent.room))
+        for room in Self.rooms {
+            navigator.state.widgetIndex = 2
+            navigator.push(.landing(room))
+            #expect(navigator.route.room == room)
+            navigator.push(.door(room, "first"))
+            navigator.pop()
+            navigator.pop()
+            #expect(navigator.route == .landing(BridgeRoomContent.room))
+            #expect(navigator.state.widgetIndex == 2, "Bridge's state came back from \(room)")
+        }
+    }
+
+    @Test func bridgeHoldsItsPlacesAndKeepsTheRestEmpty() {
+        let screen = BridgeRoomContent().screen(for: .landing("bridge"), state: RoomState())
+        #expect(screen.layout == .bridge)
+        for place in [Place.title, .switcher, .keystone, .widget, .dial, .actionWord] {
+            #expect(screen[place]?.kind == .scene, "\(place)")
+        }
+        for place in [Place.navWord, .caption, .glyph, .tess, .needs, .doorSummary] {
+            #expect(screen[place] == nil, "\(place) is kept empty on Bridge")
+        }
+    }
+
+    @Test func bridgeFramesAreTheSheets() {
+        #expect(ShellLayout.frame(.title, in: .bridge) == LandingPlace.Masthead.settingsWord)
+        #expect(ShellLayout.frame(.switcher, in: .bridge) == LandingPlace.Masthead.departureBoard)
+        #expect(ShellLayout.frame(.dial, in: .bridge) == LandingPlace.doors.frame)
+        // Needs and the door summary fold into the board and the apps dial on Bridge, and spread out of them.
+        #expect(ShellLayout.travel(.needs, from: .bridge, to: .landing) == .split(from: .switcher))
+        #expect(ShellLayout.travel(.doorSummary, from: .bridge, to: .landing) == .split(from: .dial))
+        #expect(ShellLayout.travel(.title, from: .bridge, to: .landing) == .glide)
+    }
+
+    @Test func betweenBridgeAndARoomEveryPlacePlaysItsOwnMoveAndTheKeystoneFlips() {
+        let bridge = BridgeRoomContent().screen(for: .landing("bridge"), state: RoomState())
+        let log = NotesRoomContent(facts: ShellDiffTests.facts).screen(for: .landing("log"), state: RoomState())
+        let enter = ShellPlan(from: bridge, to: log)
+        for place in [Place.title, .switcher, .widget, .dial, .actionWord] {
+            #expect(enter.moves[place] == .move, "\(place) plays its own move")
+        }
+        #expect(enter.flip == .rows)
+        #expect(enter.flipIn)
+        #expect(enter.style(.keystone, dial: bridge[.dial]).flip == .rows)
+        #expect(
+            enter.style(.dial, dial: bridge[.dial]).reelFrom == ShellPlan.bridgeApps,
+            "the dial reels from the apps"
+        )
+        let back = ShellPlan(from: log, to: bridge)
+        #expect(back.flip == .rows)
+        #expect(!back.flipIn)
+    }
+
+    @Test func eachRoomFlipsInItsOwnOrder() {
+        let orders: Set<Double> = Set(KeystoneFlip.allCases.map {
+            TileFlipTransition.order(column: 3, row: 5, flip: $0)
+        })
+        #expect(orders.count == KeystoneFlip.allCases.count, "the orders differ")
+        // Log row by row: the top row's tiles start before the second row's.
+        #expect(TileFlipTransition.order(column: 15, row: 0, flip: .rows)
+            < TileFlipTransition.order(column: 0, row: 1, flip: .rows))
+        // Watch from the ground up.
+        #expect(TileFlipTransition.order(column: 0, row: 7, flip: .groundUp)
+            < TileFlipTransition.order(column: 0, row: 0, flip: .groundUp))
+        // The whole flip ends inside a second.
+        #expect(TileFlipTransition.whole < 1)
+    }
+
+    @Test func rootContentGivesEachRoomItsFlip() {
+        let content = RootShellContent(rooms: ["log": NotesRoomContent(facts: ShellDiffTests.facts),
+                                               "bridge": BridgeRoomContent()],
+                                       flips: ["log": .rows])
+        #expect(content.screen(for: .landing("log"), state: RoomState()).flip == .rows)
+        #expect(content.screen(for: .landing("bridge"), state: RoomState()).flip == nil)
+        #expect(content.screen(for: .landing("nowhere"), state: RoomState()).slots.isEmpty)
+    }
+
+    @Test func homeLinksAndDoorsOpenTheirShellRooms() {
+        #expect(ShellRoomIDs.room(for: HomeLink.notes) == "log")
+        #expect(ShellRoomIDs.room(for: HomeLink.training) == "deck")
+        #expect(ShellRoomIDs.room(for: HomeV2Door.lookout) == "lookout")
+        #expect(ShellRoomIDs.room(for: HomeV2Door.app(.kitchen)) == "galley")
+        #expect(ShellRoomIDs.room(for: HomeLink.today) == nil)
+        #expect(Set(ShellRooms.drivers().keys) == Set(Self.rooms), "every room has a driver")
     }
 }

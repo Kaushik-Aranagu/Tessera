@@ -60,8 +60,8 @@ struct WeatherLandingTests {
     @Test func stateLineIsLongestFirstAndNamesTheChange() {
         let forms = WeatherWords.stateLine(Self.snapshot(), calendar: Self.calendar)
         #expect(forms == forms.sorted { $0.count > $1.count })
-        #expect(forms.first == "62°, feels like 60°, high 66°, low 51°, rain from 4 pm.")
-        #expect(forms.last == "62° now.")
+        #expect(forms.first == "62°, feels like 60°, high 66°, low 51°, rain from 4 pm")
+        #expect(forms.last == "62° now")
         #expect(forms.allSatisfy { !$0.contains(" of ") && !$0.contains("...") })
         #expect(WeatherWords.change(Self.snapshot(wetAt: nil), calendar: Self.calendar) == nil)
     }
@@ -147,11 +147,11 @@ struct WeatherLandingTests {
         let snapshot = Self.snapshot(sample: true)
         let line = WeatherWords.walkLine(snapshot, calendar: Self.calendar)
         #expect(line ==
-            "Best walk around \(WeatherWords.hour(snapshot.hours[0].date, calendar: Self.calendar)), 60° and dry.")
+            "Best walk around \(WeatherWords.hour(snapshot.hours[0].date, calendar: Self.calendar)), 60° and dry")
         #expect(!line.contains("..."))
         var wet = snapshot
         wet.hours = wet.hours.map { WeatherHour(date: $0.date, temperature: $0.temperature, kind: .rain) }
-        #expect(WeatherWords.walkLine(wet, calendar: Self.calendar) == "No dry daylight hour for a walk soon.")
+        #expect(WeatherWords.walkLine(wet, calendar: Self.calendar) == "No dry daylight hour for a walk soon")
     }
 
     @Test func dropHandoverIsShortAndCounted() {
@@ -198,7 +198,10 @@ struct WeatherLandingTests {
             #expect(needs.count == 2)
             #expect(needs.allSatisfy { !$0.isEmpty && !$0.contains("...") && !$0.contains(" of ") })
         }
-        #expect(WeatherWords.needs(snapshot, switcher: 0, calendar: Self.calendar)[1] == "Rain from 4 pm")
+        #expect(WeatherWords.needs(snapshot, switcher: 0, calendar: Self.calendar) == WeatherWords.careNudges(
+            snapshot,
+            calendar: Self.calendar
+        ))
     }
 
     @Test func widgetSaysWhatIsComingTonightAndADayAndNeverStrikes() {

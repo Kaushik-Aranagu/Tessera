@@ -6,29 +6,29 @@ import Testing
 private typealias Input = (text: String, timers: [ClosedRange<Double>])
 
 private let paprikaSteps: [Input] = [
-    ("Heat the oven to 425°F. Halve the potatoes and toss with oil and salt.", []),
-    ("Roast the potatoes for 15 minutes.", [15 ... 15]),
-    ("Meanwhile, rub the chicken with paprika, garlic and lemon zest.", []),
-    ("Add the chicken and onion to the pan and roast for 20 minutes, until the skin is crisp.", [20 ... 20]),
-    ("Stir the yogurt with lemon juice and a pinch of salt.", []),
-    ("Rest the chicken for 4 minutes, then serve with the yogurt.", [4 ... 4]),
+    ("Heat the oven to 425°F. Halve the potatoes and toss with oil and salt", []),
+    ("Roast the potatoes for 15 minutes", [15 ... 15]),
+    ("Meanwhile, rub the chicken with paprika, garlic and lemon zest", []),
+    ("Add the chicken and onion to the pan and roast for 20 minutes, until the skin is crisp", [20 ... 20]),
+    ("Stir the yogurt with lemon juice and a pinch of salt", []),
+    ("Rest the chicken for 4 minutes, then serve with the yogurt", [4 ... 4]),
 ]
 
 private let shrimpSteps: [Input] = [
-    ("Bring a large pot of salted water to the boil.", []),
-    ("Cook the spaghetti for 8-10 minutes, until al dente.", [8 ... 10]),
-    ("While the pasta cooks, melt the butter and cook the garlic until golden, about 2 minutes.", [2 ... 2]),
-    ("Add the shrimp and sear 1 minute a side.", [1 ... 1]),
-    ("Toss in the drained pasta with the parsley and lemon juice and cook until glossy.", []),
+    ("Bring a large pot of salted water to the boil", []),
+    ("Cook the spaghetti for 8-10 minutes, until al dente", [8 ... 10]),
+    ("While the pasta cooks, melt the butter and cook the garlic until golden, about 2 minutes", [2 ... 2]),
+    ("Add the shrimp and sear 1 minute a side", [1 ... 1]),
+    ("Toss in the drained pasta with the parsley and lemon juice and cook until glossy", []),
 ]
 
 private let breadSteps: [Input] = [
-    ("Stir the flour, yeast, salt and water into a shaggy dough.", []),
-    ("Cover and let it rise overnight, 12 to 18 hours.", [720 ... 1080]),
-    ("Heat the oven to 450°F with the pot inside for 30 minutes.", [30 ... 30]),
-    ("Shape the dough and let it rest 30 minutes.", [30 ... 30]),
-    ("Bake covered for 30 minutes, then uncovered for 15 minutes, until deep brown.", [30 ... 30, 15 ... 15]),
-    ("Cool for 1 hour before slicing.", [60 ... 60]),
+    ("Stir the flour, yeast, salt and water into a shaggy dough", []),
+    ("Cover and let it rise overnight, 12 to 18 hours", [720 ... 1080]),
+    ("Heat the oven to 450°F with the pot inside for 30 minutes", [30 ... 30]),
+    ("Shape the dough and let it rest 30 minutes", [30 ... 30]),
+    ("Bake covered for 30 minutes, then uncovered for 15 minutes, until deep brown", [30 ... 30, 15 ... 15]),
+    ("Cool for 1 hour before slicing", [60 ... 60]),
 ]
 
 /// The recipe laid on the clock: one lane as today, two with parallel steps on (PS1 to PS9).
@@ -63,8 +63,8 @@ struct CookClockPlanTests {
 
     @Test func ps7AThirdCandidateWaitsForTheFreedLane() {
         var texts = paprikaSteps
-        texts[2] = ("Meanwhile, marinate the chicken for 10 minutes.", [10 ... 10])
-        texts.insert(("While the potatoes roast, stir the yogurt.", []), at: 3)
+        texts[2] = ("Meanwhile, marinate the chicken for 10 minutes", [10 ... 10])
+        texts.insert(("While the potatoes roast, stir the yogurt", []), at: 3)
         let plan = CookClockPlan.make(texts, lanes: true)
         #expect(plan.steps[2].lane == 1 && plan.steps[2].start == 2 && plan.steps[2].end == 12)
         #expect(plan.steps[3].lane == 1 && plan.steps[3].start == 12)
@@ -72,14 +72,14 @@ struct CookClockPlanTests {
     }
 
     @Test func ps8ACueBesideAShortHostOpensNoLane() {
-        let texts: [Input] = [("Rest 4 min.", [4 ... 4]), ("Meanwhile, set the table.", [])]
+        let texts: [Input] = [("Rest 4 min", [4 ... 4]), ("Meanwhile, set the table", [])]
         let plan = CookClockPlan.make(texts, lanes: true)
         #expect(plan.steps[1].lane == 0 && plan.steps[1].start == 4)
     }
 
     @Test func ps9AWaitHostsNothingAndIsDrawnTenMinutesWide() {
         var texts = breadSteps
-        texts.insert(("Meanwhile, heat the oven.", []), at: 2)
+        texts.insert(("Meanwhile, heat the oven", []), at: 2)
         let plan = CookClockPlan.make(texts, lanes: true)
         #expect(plan.steps[1].isWait && plan.steps[1].end - plan.steps[1].start == 10)
         #expect(plan.steps[1].timer == nil && plan.steps[1].waitMinutes == 720)
@@ -100,7 +100,7 @@ struct CookClockPlanTests {
     }
 
     @Test func thirtySecondsIsATimerDrawnAtTheFloor() {
-        let plan = CookClockPlan.make([("Microwave 30 seconds.", [0.5 ... 0.5])], lanes: false)
+        let plan = CookClockPlan.make([("Microwave 30 seconds", [0.5 ... 0.5])], lanes: false)
         #expect(plan.steps[0].minutes == 2 && plan.steps[0].timer == 0.5)
     }
 
@@ -144,7 +144,7 @@ struct CookClockCopyTests {
     }
 
     @Test func timerDoneAtZeroSaysDoneNotZeroMinutes() {
-        #expect(CookModeCopy.timeLeft("Simmer", seconds: 0) == "Simmer, done.")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 0) == "Simmer, done")
         #expect(CookClockCopy.spokenTimer(remaining: 0, endsAt: .now) == "Done")
     }
 
@@ -163,13 +163,13 @@ struct CookClockCopyTests {
 
     @Test func aTimerLabelIsTheVerbNearestTheDuration() {
         #expect(CookTimerLabel.label(for: "Add the chicken and roast 20 min", stepIndex: 3) == "Roast")
-        #expect(CookTimerLabel.label(for: "Roast the potatoes for 15 minutes.", stepIndex: 1) == "Roast")
+        #expect(CookTimerLabel.label(for: "Roast the potatoes for 15 minutes", stepIndex: 1) == "Roast")
         #expect(CookTimerLabel.label(for: "Wait 5 minutes", stepIndex: 2) == "Step 3")
     }
 
     @Test func usUnitsKeepFahrenheitAndShowCelsiusBothWays() {
-        #expect(CookUnits.withFahrenheit("Heat the oven to 425°F.") == "Heat the oven to 425°F.")
-        #expect(CookUnits.withFahrenheit("Heat the oven to 220°C.") == "Heat the oven to 220°C (430°F).")
+        #expect(CookUnits.withFahrenheit("Heat the oven to 425°F") == "Heat the oven to 425°F")
+        #expect(CookUnits.withFahrenheit("Heat the oven to 220°C") == "Heat the oven to 220°C (430°F)")
     }
 
     @Test func endsLineIsTwelveHourLowercase() throws {
@@ -223,7 +223,7 @@ struct HandsFreeGrammarTests {
     @Test func handsFreeLongPhraseRefusedOnce() {
         let long = String(repeating: "next ", count: 130)
         #expect(HandsFreeGrammar.parse(long) == .refused(.tooLong))
-        #expect(HandsFreeGrammar.Reason.tooLong.line == "That's too long to send. Say it shorter.")
+        #expect(HandsFreeGrammar.Reason.tooLong.line == "That's too long to send. Say it shorter")
     }
 
     @Test func handsFreeKeyShapedTextNeverActs() {
@@ -275,9 +275,9 @@ struct CookNotesTests {
     }
 
     @Test func theLastTimeLine() {
-        #expect(CookNotes.lastTimeLine("less salt") == "Last time: less salt.")
-        #expect(CookNotes.lastTimeLine("less salt.") == "Last time: less salt.")
-        #expect(CookNotes.cookedLine("Paprika chicken") == "Paprika chicken, cooked.")
+        #expect(CookNotes.lastTimeLine("less salt") == "Last time: less salt")
+        #expect(CookNotes.lastTimeLine("less salt") == "Last time: less salt")
+        #expect(CookNotes.cookedLine("Paprika chicken") == "Paprika chicken, cooked")
     }
 
     @Test func theNewestNoteComesFromTheNewestCook() throws {
@@ -398,15 +398,15 @@ struct CookClockSessionTests {
         let session = try session()
         let line = session.handle(.command(.back))
         #expect(session.current == 0)
-        #expect(line == "Step 1 of 5.")
-        #expect(session.receipt?.text == "Step 1 of 5.")
+        #expect(line == "Step 1 of 5")
+        #expect(session.receipt?.text == "Step 1 of 5")
     }
 
     @Test func aSpokenTimerSitsOutsideTheStepsAndSurvivesFinish() throws {
         let session = try session()
         session.handle(.command(.timer(minutes: 8, label: "Bread")))
         #expect(session.spokenTimers.count == 1 && session.spokenTimers[0].label == "Bread")
-        #expect(session.receipt?.text == "Bread, 8 min.")
+        #expect(session.receipt?.text == "Bread, 8 min")
     }
 
     @Test func stoppingATimerSaysItsNameAndCanBeUndone() throws {
@@ -415,7 +415,7 @@ struct CookClockSessionTests {
         let line = try #require(session.timers.first)
         session.stop(line)
         #expect(session.timers.isEmpty)
-        #expect(session.receipt?.text == "Roast stopped.")
+        #expect(session.receipt?.text == "Roast stopped")
         try session.undo(#require(session.receipt))
         #expect(session.timers.count == 1)
     }
@@ -426,7 +426,7 @@ struct CookClockSessionTests {
         let cook = try #require(model.store.object(id: session.cookID))
         #expect(model.store.value("note", of: cook)?.stringValue == "less salt")
         #expect(model.store.value("cookedAt", of: cook) != nil)
-        #expect(TessVoice.shared.note?.text == "Paprika chicken, cooked.")
+        #expect(TessVoice.shared.note?.text == "Paprika chicken, cooked")
     }
 
     @Test func finishWithNoNoteWritesNone() throws {
@@ -451,7 +451,7 @@ struct CookClockSessionTests {
         let line = try endingNow(silent)
         silent.reconcileFlares(at: line.endsAt.addingTimeInterval(0.5), live: true)
         #expect(quiet.said.isEmpty)
-        #expect(announced.last == "Roast is done.")
+        #expect(announced.last == "Roast is done")
         #expect(silent.cue.haptic == .timeUp && silent.cue.count == 2)
 
         let talking = try session(voice: true, title: "Lemon chicken")
@@ -460,7 +460,7 @@ struct CookClockSessionTests {
         talking.speaker = spy
         let ended = try endingNow(talking)
         talking.reconcileFlares(at: ended.endsAt.addingTimeInterval(0.5), live: true)
-        #expect(spy.said == ["Roast is done."])
+        #expect(spy.said == ["Roast is done"])
     }
 
     @Test func lateOpenFlareHasNoHaptic() throws {
@@ -486,7 +486,7 @@ struct CookClockSessionTests {
         session.reconcileFlares(at: end.addingTimeInterval(0.2), live: true)
         #expect(session.cue.count == before + 1)
         #expect(session.flared.count == 2)
-        #expect(CookClockSession.joinedDone(["Roast", "Rice"]) == "Roast and Rice, done.")
+        #expect(CookClockSession.joinedDone(["Roast", "Rice"]) == "Roast and Rice, done")
     }
 
     @Test func extendRestartsTheSameStepsTimer() throws {

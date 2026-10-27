@@ -7,6 +7,7 @@ public struct RollForwardTasks: EngineAction {
     public static var dayStartHour: Int {
         TesseraDay.startHour
     }
+
     public static let rollsBeforeLater = 7
 
     public static let descriptor = ActionDescriptor(
@@ -40,11 +41,11 @@ public struct RollForwardTasks: EngineAction {
             case (0, 0): return nil
             case (_, 0):
                 let one = rolled.count == 1 ? rolled.first.flatMap { titles[$0] } : nil
-                return "\(one ?? tasks(rolled.count)) carried into today."
+                return "\(one ?? tasks(rolled.count)) carried into today"
             case (0, _):
                 let one = toLater.count == 1 ? toLater.first.flatMap { titles[$0] } : nil
-                return "\(one ?? tasks(toLater.count)) moved to Later."
-            default: return "\(tasks(rolled.count)) carried into today, \(toLater.count) to Later."
+                return "\(one ?? tasks(toLater.count)) moved to Later"
+            default: return "\(tasks(rolled.count)) carried into today, \(toLater.count) to Later"
             }
         }
     }

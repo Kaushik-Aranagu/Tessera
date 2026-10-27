@@ -63,8 +63,8 @@ public enum Explain {
         let was = "\(StatsMass.number(kg: top.weight, unit: unit)) for \(StatsMass.trimmed(top.reps))"
         let gap = next - top.weight
         let tail = gap > 0.001
-            ? "plus one \(StatsMass.number(kg: gap, unit: unit)) step."
-            : "the same weight until every set reaches the top of the range."
+            ? "plus one \(StatsMass.number(kg: gap, unit: unit)) step"
+            : "the same weight until every set reaches the top of the range"
         return "\(number): your last \(exercise.name), \(was), \(tail)"
     }
 
@@ -78,7 +78,7 @@ public enum Explain {
               let minutes = stats.usualMinutes(of: routine) else { return nil }
         let count = stats.finishedCount(of: routine, limit: 3)
         let name = routine.title
-        return "about \(HouseTime.minutes(minutes)): your last \(count) \(name) \(count == 1 ? "session" : "sessions")."
+        return "about \(HouseTime.minutes(minutes)): your last \(count) \(name) \(count == 1 ? "session" : "sessions")"
     }
 
     private static func bestSet(_ id: UUID, _ store: ObjectStore, _ classes: [SystemCatalog.Key: ClassDef],
@@ -91,7 +91,7 @@ public enum Explain {
             return nil
         }
         return "\(StatsMass.estimate(kg: best.e1RM, unit: unit)): your best \(exercise.name), "
-            + "\(StatsMass.number(kg: best.weight, unit: unit)) for \(StatsMass.trimmed(best.reps)), as a one-rep estimate."
+            + "\(StatsMass.number(kg: best.weight, unit: unit)) for \(StatsMass.trimmed(best.reps)), as a one-rep estimate"
     }
 
     private static func run(_ habit: NumberID.Habit, _ store: ObjectStore, _ classes: [SystemCatalog.Key: ClassDef],
@@ -101,7 +101,7 @@ public enum Explain {
         case .training:
             let stats = TrainingStats(store: store, classes: classes)
             guard let weeks = stats.habit(.year, now: now, calendar: calendar).bestRun else { return nil }
-            return "\(weeks) weeks: the most weeks in a row with a session, counting only runs that have ended."
+            return "\(weeks) weeks: the most weeks in a row with a session, counting only runs that have ended"
         }
     }
 
@@ -116,7 +116,7 @@ public enum Explain {
         let list = names.count == 1 ? names[0] : names.dropLast()
             .joined(separator: ", ") + " and " + names[names.count - 1]
         return "covers \(covered.count) \(covered.count == 1 ? "dinner" : "dinners"): \(list) "
-            + "\(covered.count == 1 ? "has" : "have") all they need."
+            + "\(covered.count == 1 ? "has" : "have") all they need"
     }
 
     // MARK: Money (phone only)
@@ -137,7 +137,7 @@ public enum Explain {
         let words = (["dollars"] + converted.map { PoolReport.word($0.currency).lowercased() })
         let list = words.count == 2 ? "\(words[0]) plus \(words[1])" : words.dropLast()
             .joined(separator: ", ") + " plus " + words[words.count - 1]
-        return "\(PoolFormat.wholeNumber(Decimal(dollars), lakh: lakh)): \(list) at the \(PoolReport.day(from, calendar)) rate."
+        return "\(PoolFormat.wholeNumber(Decimal(dollars), lakh: lakh)): \(list) at the \(PoolReport.day(from, calendar)) rate"
     }
 
     private static func poolBalance(_ id: UUID, _ store: ObjectStore,
@@ -148,7 +148,7 @@ public enum Explain {
         let book = PoolBook(store: store, classes: classes)
         let amount = PoolFormat.amount(book.balance(of: pool), currency: book.currency(of: pool), text: true)
         let label = ObjectPrivacy.poolLabel
-        return "\(amount): what \(label) started with, plus what came in, minus what went out."
+        return "\(amount): what \(label) started with, plus what came in, minus what went out"
     }
 
     private static func monthSpend(_ currency: String, _ store: ObjectStore, _ classes: [SystemCatalog.Key: ClassDef],
@@ -157,6 +157,6 @@ public enum Explain {
         let month = PoolReport(store: store, classes: classes, now: now).monthSpends(calendar: calendar)
         guard let total = month[currency] else { return nil }
         let word = PoolReport.word(currency).lowercased()
-        return "\(PoolFormat.digits(total)): what you logged this month in \(word)."
+        return "\(PoolFormat.digits(total)): what you logged this month in \(word)"
     }
 }

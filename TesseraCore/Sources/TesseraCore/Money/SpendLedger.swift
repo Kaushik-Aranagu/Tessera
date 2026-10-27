@@ -55,12 +55,12 @@ public struct SpendLedger {
         let shown = shown(amount, currency: currency, grouped: true)
         let note = (store.value("note", of: spend)?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if note.isEmpty {
-            return "Spent \(shown)."
+            return "Spent \(shown)"
         }
         if PrivateWords.isPrivateTitle(note, lastWeightKg: BodyWeight.lastKg(in: store)) {
-            return "\(ObjectPrivacy.spendLabel), \(shown)."
+            return "\(ObjectPrivacy.spendLabel), \(shown)"
         }
-        return "\(note.prefix(1).uppercased() + note.dropFirst()), \(shown)."
+        return "\(note.prefix(1).uppercased() + note.dropFirst()), \(shown)"
     }
 
     /// "October, logged: 41 spends · groceries 312.40 · lunch 86.10", then one line per other currency

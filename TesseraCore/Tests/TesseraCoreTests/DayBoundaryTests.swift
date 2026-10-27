@@ -85,7 +85,7 @@ struct DayBoundaryTests {
         let tasks = TaskList(store: store, classes: classes)
         #expect(tasks.rollForward(engine: engine, now: at(10, 17, 3, 59), calendar: calendar) == nil)
         #expect(tasks
-            .rollForward(engine: engine, now: at(10, 17, 4), calendar: calendar) == "Pay rent carried into today.")
+            .rollForward(engine: engine, now: at(10, 17, 4), calendar: calendar) == "Pay rent carried into today")
     }
 
     @Test func aWorkoutLeftWithNoSetsIsClosedNotSaved() throws {
@@ -96,7 +96,7 @@ struct DayBoundaryTests {
         let process = try #require(table.running())
         try engine.perform(SuspendProcess(process: process.id), by: .user)
         let notes = table.tidy(now: Date.now.addingTimeInterval(7 * 3600))
-        #expect(notes.first?.hasSuffix(", no sets, not saved.") == true)
+        #expect(notes.first?.hasSuffix(", no sets, not saved") == true)
         #expect(workout.isDeleted && store.value("endedAt", of: workout) == nil)
     }
 

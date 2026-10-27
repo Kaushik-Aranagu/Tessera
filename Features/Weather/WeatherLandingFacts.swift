@@ -217,13 +217,13 @@ enum WeatherWords {
         let range = "high \(degrees(snapshot.high)), low \(degrees(snapshot.low))"
         var forms: [String] = []
         if let change = change(snapshot, calendar: calendar) {
-            forms.append("\(now), \(feels), \(range), \(change).".capitalizedFirst)
-            forms.append("\(now), \(range), \(change).")
-            forms.append("\(now), \(change).")
+            forms.append("\(now), \(feels), \(range), \(change)".capitalizedFirst)
+            forms.append("\(now), \(range), \(change)")
+            forms.append("\(now), \(change)")
         }
-        forms.append("\(now), \(feels), \(range).")
-        forms.append("\(now), \(range).")
-        forms.append("\(now) now.")
+        forms.append("\(now), \(feels), \(range)")
+        forms.append("\(now), \(range)")
+        forms.append("\(now) now")
         return forms.sorted { $0.count > $1.count }
     }
 
@@ -238,12 +238,12 @@ enum WeatherWords {
         rest: String
     )] {
         if snapshot.isSample {
-            return [("Sample sky", " until the live forecast is on."), ("Sample sky", ".")]
+            return [("Sample sky", " until the live forecast is on"), ("Sample sky", "")]
         }
         if let change = change(snapshot, calendar: calendar) {
-            return [(change.capitalizedFirst, ".")]
+            return [(change.capitalizedFirst, "")]
         }
-        return [("Steady", " for the next 12 hours."), ("Steady", ".")]
+        return [("Steady", " for the next 12 hours"), ("Steady", "")]
     }
 
     static func windUnit(_ fahrenheit: Bool) -> String {
@@ -301,9 +301,9 @@ extension WeatherWords {
             abs($0.temperature - comfortable) != abs($1.temperature - comfortable)
                 ? abs($0.temperature - comfortable) < abs($1.temperature - comfortable) : $0.date < $1.date
         }) else {
-            return "No dry daylight hour for a walk soon."
+            return "No dry daylight hour for a walk soon"
         }
-        return "Best walk around \(hour(best.date, calendar: calendar)), \(degrees(best.temperature)) and dry."
+        return "Best walk around \(hour(best.date, calendar: calendar)), \(degrees(best.temperature)) and dry"
     }
 }
 
@@ -319,7 +319,7 @@ enum WeatherRainAlert {
     }
 
     static func receipt(on: Bool) -> String {
-        on ? "Rain alert on. You'll hear 30 minutes before rain." : "Rain alert off."
+        on ? "Rain alert on. You'll hear 30 minutes before rain" : "Rain alert off"
     }
 }
 
@@ -438,10 +438,33 @@ extension WeatherWords {
             return [lines.first?.capitalizedFirst ?? "A steady week",
                     warmest.map { "High \(degrees($0.high)) \(weekday($0.date, calendar: calendar))" } ?? ""]
         default:
-            let word = name(snapshot.kind, night: snapshot.night)
-            return ["\(word), \(degrees(snapshot.temperature))",
-                    change(snapshot, calendar: calendar)?.capitalizedFirst ?? "Steady for now"]
+            return careNudges(snapshot, calendar: calendar)
         }
+    }
+
+    /// Now's two needs lines (sheets 243 and 255): care nudges, never what the keystone already says (it shows the
+    /// temperature, the condition, feels and high, wind, when rain starts and the UV index). First what to carry,
+    /// then how to dress or where to be. Short enough for the 150 pt needs slot, so never cut.
+    static func careNudges(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> [String] {
+        let first = if isWet(snapshot.kind) {
+            "Take the umbrella"
+        } else if let wet = snapshot.hours.prefix(12).first(where: { isWet($0.kind) }) {
+            "Umbrella by \(hour(wet.date, calendar: calendar))"
+        } else {
+            "No umbrella today"
+        }
+        let second = if !snapshot.night, snapshot.uvIndex >= 6 {
+            "Wear sunscreen"
+        } else if snapshot.wind >= (snapshot.fahrenheit ? 18 : 29) {
+            "Gusty out there"
+        } else if snapshot.low <= (snapshot.fahrenheit ? 50 : 10) {
+            "Bring a layer"
+        } else if snapshot.night {
+            "Mild night out"
+        } else {
+            "Good for a walk"
+        }
+        return [first, second]
     }
 
     /// The widget's items (283): what is coming, tonight, and a day to note. Lookout has no strike.

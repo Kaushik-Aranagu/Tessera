@@ -113,7 +113,7 @@ struct TessTests {
     @Test func captureLogsAPendingGhostAndSpeaksInTessVoice() async throws {
         let capture = await tess.capture("3x10 bench 80", context: context())
         #expect(capture.source == .grammar)
-        #expect(capture.line == "Bench 3 × 10 at 80. Added to today.")
+        #expect(capture.line == "Bench 3 × 10 at 80. Added to today")
         #expect(TessVoice.violations(in: capture.line).isEmpty)
         let record = try #require(capture.records.first)
         #expect(record.state == .pending && record.actor == .tess)
@@ -138,18 +138,18 @@ struct TessTests {
             tess.capture("dentist thu 3pm", context: context()).line, // it is Wednesday
         ]
         #expect(lines == [
-            "Set 2 logged, same again.", "Set 3 logged. 80 × 7.", "Drop set logged. 70 × 10.",
-            "Dentist, tomorrow 3 pm.",
+            "Set 2 logged, same again", "Set 3 logged. 80 × 7", "Drop set logged. 70 × 10",
+            "Dentist, tomorrow 3 pm",
         ])
         await lines.append(tess.capture("blorp", context: context()).line)
-        #expect(lines.last == "blorp, kept to sort later.")
+        #expect(lines.last == "blorp, kept to sort later")
         #expect(lines.allSatisfy { TessVoice.violations(in: $0).isEmpty })
         #expect(entry.orderedChildren.count == 4)
     }
 
     @Test func invalidCapturesWriteNothing() async throws {
         let capture = await tess.capture("bench 80x0", context: context())
-        #expect(capture.keptToSort && capture.line == "bench 80x0, kept to sort later.")
+        #expect(capture.keptToSort && capture.line == "bench 80x0, kept to sort later")
         #expect(try store.objects(of: #require(classes[.workout])).isEmpty)
     }
 
@@ -169,7 +169,7 @@ struct TessTests {
 
             func capture(_ phrase: String, context _: TessContext, engine _: ActionEngine) async -> TessCapture {
                 phrases.append(phrase)
-                return TessCapture(records: [], line: "Didn't catch that.", source: .none)
+                return TessCapture(records: [], line: "Didn't catch that", source: .none)
             }
         }
         let model = FakeModel()
@@ -182,10 +182,10 @@ struct TessTests {
     // MARK: Voice
 
     @Test func voiceChecksCatchOffToneLines() {
-        #expect(TessVoice.violations(in: "Logged 80 x 8.").isEmpty)
+        #expect(TessVoice.violations(in: "Logged 80 x 8").isEmpty)
         #expect(!TessVoice.violations(in: "Awesome! You crushed it!").isEmpty)
         #expect(!TessVoice.violations(in: "You missed Pull Day again").isEmpty)
-        #expect(!TessVoice.violations(in: "This line has far too many words in it to be one of Tess's lines.").isEmpty)
+        #expect(!TessVoice.violations(in: "This line has far too many words in it to be one of Tess's lines").isEmpty)
         #expect(TessVoice.instructions(today: "Wed", currentWorkout: "none", lastSet: "none")
             .contains("Act only through"))
     }
@@ -228,22 +228,22 @@ struct TessTests {
     @Test func siriAddATaskKeepsKeysOutAndSecretsPrivate() throws {
         // QA I3 (#428): Siri's Add a Task never saves a Claude key and files a secret with a value as a private note.
         #expect(try CreateTaskIntent.add("sk-ant-api03-TEST", startsAt: nil, engine: engine) == TessRouter.keyLine)
-        #expect(try CreateTaskIntent.add("door code 4417", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("door code 4417", startsAt: nil, engine: engine) == "Private note, kept")
         let objects = store.context.objects.values
         #expect(!objects.contains { $0.title.contains("sk-ant") || $0.title.contains("4417") })
         #expect(objects.contains { $0.title == SecretWords.title })
         // "reset my PIN" lands as the Ask bar files it: a private note, never read back (Product P14 parity).
-        #expect(try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine) == "Private note, kept")
     }
 
     @Test func siriFilesPrivateThingsTheWayTheBarDoes() throws {
         // Product P14 (board 0l): one rule for the Bar and Siri; nothing private is read back in his words.
-        #expect(try CreateTaskIntent.add("took advil 400mg", startsAt: nil, engine: engine) == "Private note, kept.")
-        #expect(try CreateTaskIntent.add("$212.37 at Costco", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("took advil 400mg", startsAt: nil, engine: engine) == "Private note, kept")
+        #expect(try CreateTaskIntent.add("$212.37 at Costco", startsAt: nil, engine: engine) == "Private note, kept")
         #expect(try CreateTaskIntent.add("headache since tuesday", startsAt: nil, engine: engine)
-            == "Private note, kept.")
+            == "Private note, kept")
         #expect(try CreateTaskIntent.add("remember my rent is 2100", startsAt: nil, engine: engine)
-            == "I don't keep sums of money.")
+            == "I don't keep sums of money")
         // Something to do stays a task (W4), read back without its amount, and stored without it (board 0ai, Product
         // 2:22 PM PT: "Pay rent").
         let rent = try CreateTaskIntent.add("pay rent 2100 friday", startsAt: nil, engine: engine)

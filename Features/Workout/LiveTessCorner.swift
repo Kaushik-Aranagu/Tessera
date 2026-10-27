@@ -95,8 +95,7 @@ struct LiveTessCorner: View {
     private var soul: some View {
         TessSoul(mode: mode, eyes: eyes, wear: wear)
             .scaleEffect(0.72)
-            .scaleEffect(breathe ? 1.08 : 1)
-            .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
+            .liveBreath(on: breathe)
             .scaleEffect(swell ? 1.35 : 1)
             .frame(width: 46, height: 40)
             .frame(width: 64, height: 64)
@@ -110,7 +109,7 @@ struct LiveTessCorner: View {
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityValue(shownLine ?? "")
-            .accessibilityHint(onOpen == nil ? "" : "Type to Tess.")
+            .accessibilityHint(onOpen == nil ? "" : "Type to Tess")
             .accessibilityAddTraits(onOpen == nil ? [] : .isButton)
             .accessibilityAction { onOpen?() }
             .accessibilityActions {

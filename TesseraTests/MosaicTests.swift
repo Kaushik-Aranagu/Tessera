@@ -59,9 +59,9 @@ struct MosaicTests {
 
     @Test func readoutNamesTheHourSpan() {
         let text = MosaicReadout.text(column: 14, config: config)
-        #expect(text.hasSuffix("."))
+        #expect(!text.hasSuffix("."))
         #expect(text.contains(" to "))
-        #expect(MosaicReadout.text(column: 14, config: config, event: "Lunch").hasSuffix(", Lunch."))
+        #expect(MosaicReadout.text(column: 14, config: config, event: "Lunch").hasSuffix(", Lunch"))
         // A pair of columns reads the same hour.
         #expect(MosaicReadout.text(column: 14, config: config) == MosaicReadout.text(column: 15, config: config))
     }

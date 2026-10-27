@@ -40,7 +40,7 @@ struct AppModelTests {
 
         let done = try #require(model.finishedToday().first)
         #expect(done.title == "Push A")
-        #expect(done.line == "1 of 5 exercises, 2 sets.")
+        #expect(done.line == "1 of 5 exercises, 2 sets")
         // Trained today: Home shows the done state, not the next routine; the plan rolls on to Pull A.
         #expect(model.todaysRoutine() == nil)
         #expect(model.plan.flatMap { model.ledger.nextRoutine(in: $0) }?.title == "Pull A")
@@ -104,7 +104,7 @@ struct AppModelTests {
         let logged = interpreter.run("log bench 82.5x8")
         #expect(model.session != nil)
         let best = model.session?.lastSeated?.records.isEmpty == false
-        #expect(logged == (best ? "Bench press 82.5 × 8, logged, best." : "Bench press 82.5 × 8, logged."))
+        #expect(logged == (best ? "Bench press 82.5 × 8, logged, best" : "Bench press 82.5 × 8, logged"))
         #expect(!logged.contains("e1RM"))
         #expect(interpreter.run("what's my bench best?").contains("e1RM"))
         #expect(interpreter.run("stretch at 21:00").hasPrefix("Drying"))
@@ -115,9 +115,9 @@ struct AppModelTests {
         // Board 0ah (Research AU): a "?" line skips Tess and lands here; walled text is never a task title.
         let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let interpreter = CommandInterpreter(model: model)
-        #expect(interpreter.run("what's the wifi password?") == "It's in your private notes.")
-        #expect(interpreter.run("did I pay rent 2100?") == "That stays on this phone.")
-        #expect(interpreter.run("door code 4417") == "Private note, kept.")
+        #expect(interpreter.run("what's the wifi password?") == "It's in your private notes")
+        #expect(interpreter.run("did I pay rent 2100?") == "That stays on this phone")
+        #expect(interpreter.run("door code 4417") == "Private note, kept")
         // Built at run time and plainly fake: nothing key-shaped is committed (#487).
         let key = ["sk", "ant", "TEST"].joined(separator: "-") + "-FAKE"
         #expect(interpreter.run(key) == claudeKeyLine)

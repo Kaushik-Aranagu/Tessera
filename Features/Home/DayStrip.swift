@@ -84,6 +84,8 @@ struct HomeDayStrip: View {
                 ForEach(lanes) { lane in
                     DayStrokePage(lane: lane)
                         .containerRelativeFrame(.horizontal)
+                        // Sheets 294, 295: a day crossing the strip's side edge rolls over it.
+                        .edgeRoll(axis: .horizontal, preset: .card)
                         .id(lane.offset)
                 }
             }
@@ -124,8 +126,8 @@ private struct DayStrokePage: View {
     private func accessibilityText(now: Date) -> String {
         let count = lane.items.count
         let things = count == 1 ? "1 thing" : "\(count) things"
-        let clock = lane.offset == 0 ? " Now \(Format.clock(now))." : ""
-        let trained = lane.workouts.isEmpty ? "" : " Trained."
+        let clock = lane.offset == 0 ? " Now \(Format.clock(now))" : ""
+        let trained = lane.workouts.isEmpty ? "" : " Trained"
         return "\(lane.phrase(now: now)). \(things) scheduled.\(trained)\(clock)"
     }
 }

@@ -55,8 +55,8 @@ struct ListsShelfTests {
             let record = try model.engine.perform(AddListItem(list: packing.id, text: text), by: .user).record
             return ListsCopy.spoken(receipt: record.receipt ?? "", listTitle: "Packing", shownList: "Packing")
         }
-        #expect(try spoken("rice") == "Rice, on Packing.")
-        #expect(try spoken("advil") == "Private item, on Packing.")
+        #expect(try spoken("rice") == "Rice, on Packing")
+        #expect(try spoken("advil") == "Private item, on Packing")
         let secret = try spoken("wifi password hunter2")
         #expect(!secret.contains("hunter2") && !secret.contains("on Packing"))
         let money = try spoken("rent $1200")
@@ -67,7 +67,7 @@ struct ListsShelfTests {
 
     @Test func aPrivateListNameIsMaskedInTheReceiptAndAnEmptyPageSaysSo() {
         #expect(ListsCopy.spoken(receipt: "Rice, on Rent 1200 bills", listTitle: "Rent 1200 bills",
-                                 shownList: "Private list") == "Rice, on Private list.")
+                                 shownList: "Private list") == "Rice, on Private list")
         #expect(ListsCopy.pageContext(open: 0, all: 0) == "nothing on it yet")
         #expect(ListsCopy.pageContext(open: 4, all: 7) == "3 of 7")
     }
@@ -82,7 +82,7 @@ struct ListsShelfTests {
         let first = try #require(shelf.rows.first)
         #expect(first.name == "Packing" && first.isRunning && first.state == "RUNNING, 1 LEFT")
         #expect(shelf.context.hasSuffix(", 1 running"))
-        #expect(shelf.tess == "Packing has 1 left.")
+        #expect(shelf.tess == "Packing has 1 left")
     }
 
     @Test func aReusableListReadsReusable() throws {

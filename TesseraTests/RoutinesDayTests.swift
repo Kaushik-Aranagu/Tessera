@@ -12,26 +12,26 @@ struct RoutinesDayTests {
 
     @Test func runningWithANext() {
         #expect(RoutinesDayWords.sentence(running: "Morning", next: night, total: 2)
-            == "Morning is running. Night is next, usually 9:50 pm.")
+            == "Morning is running. Night is next, usually 9:50 pm")
     }
 
     @Test func nothingRunningWithANext() {
         #expect(RoutinesDayWords.sentence(running: nil, next: night, total: 2)
-            == "Nothing is running. Night is next, usually 9:50 pm.")
+            == "Nothing is running. Night is next, usually 9:50 pm")
         #expect(RoutinesDayWords.sentence(running: nil, next: .init(name: "Night", startMinuteOfDay: nil), total: 1)
-            == "Nothing is running. Night is next.")
+            == "Nothing is running. Night is next")
     }
 
     @Test func runningAloneAndEverythingDone() {
-        #expect(RoutinesDayWords.sentence(running: "Morning", next: nil, total: 1) == "Morning is running.")
-        #expect(RoutinesDayWords.sentence(running: nil, next: nil, total: 2) == "Everything is done today.")
-        #expect(RoutinesDayWords.sentence(running: nil, next: nil, total: 0) == "Nothing is set up yet.")
+        #expect(RoutinesDayWords.sentence(running: "Morning", next: nil, total: 1) == "Morning is running")
+        #expect(RoutinesDayWords.sentence(running: nil, next: nil, total: 2) == "Everything is done today")
+        #expect(RoutinesDayWords.sentence(running: nil, next: nil, total: 0) == "Nothing is set up yet")
     }
 
     @Test func aPrivateRoutineIsSaidWithoutATime() {
         let next = RoutinesDayWords.Next(name: RoutinesLandingWords.privateName, startMinuteOfDay: nil)
         #expect(RoutinesDayWords.sentence(running: RoutinesLandingWords.privateName, next: next, total: 2)
-            == "Private routine is running. Private routine is next.")
+            == "Private routine is running. Private routine is next")
     }
 
     @Test func noWordEverTalksStreaksOrMisses() {

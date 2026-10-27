@@ -102,11 +102,11 @@ public enum TrainingExpertise {
         }
         lines += [
             "- Effective reps are reps plus (10 - RPE) when RPE is logged; only sets of up to "
-                + "\(ExpertisePack.number(TrainingLedger.e1RMRepLimit)) effective reps estimate a max.",
+                + "\(ExpertisePack.number(TrainingLedger.e1RMRepLimit)) effective reps estimate a max",
             "- Rep maxes are tracked from \(TrainingLedger.repMaxRange.lowerBound) to "
-                + "\(TrainingLedger.repMaxRange.upperBound) reps. Warm-ups never count.",
+                + "\(TrainingLedger.repMaxRange.upperBound) reps. Warm-ups never count",
             "- Weekly sets: a working set counts 1 for each primary muscle and 0.5 for each secondary one. "
-                + "Weeks start Monday at 4 am.",
+                + "Weeks start Monday at 4 am",
             "",
             "## Exercise library (\(facts.library.count))",
         ]
@@ -235,7 +235,7 @@ public enum KitchenExpertise {
     public static func render(_ facts: Facts) -> ExpertisePack {
         var lines = ["# Kitchen expertise", "", "## Rules",
                      "- The Groceries list is the Pantry's first place, \"\(PantryPlaces.toGet)\".",
-                     "- Calories show only inside the Kitchen room, and only with \"Show calories\" on.",
+                     "- Calories show only inside the Kitchen room, and only with \"Show calories\" on",
                      "", "## Grocery aisles, in store order"]
         lines += facts.aisles
         lines += ["", "## Staples (skipped when a recipe goes on the list)"] + facts.staples.sorted()

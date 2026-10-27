@@ -121,9 +121,9 @@ struct ReadyWorkoutPage: View {
     /// it
     /// moves to is the next day.
     private func insteadLine(_ todays: String?) -> String {
-        guard let todays else { return "Nothing was planned for today, so this is today's workout." }
+        guard let todays else { return "Nothing was planned for today, so this is today's workout" }
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: AppClock.now) ?? AppClock.now
         let weekday = tomorrow.formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "en_US")))
-        return "\(todays) stays on the Plan; it moves to \(weekday)."
+        return "\(todays) stays on the Plan; it moves to \(weekday)"
     }
 }

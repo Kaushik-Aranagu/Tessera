@@ -143,7 +143,7 @@ struct ClaudeKeyTests {
 
     @Test func aWorkingKeyIsSavedCheckedForFreeAndNeverLeaves() async throws {
         let result = await check().test(pasted: "  \(Self.key)\n")
-        #expect(result.outcome == .works && result.line == "Key saved.")
+        #expect(result.outcome == .works && result.line == "Key saved")
         #expect(keys.read() == Self.key)
         let request = try #require(StubProtocol.requests.last)
         #expect(request.url?.path == "/v1/messages/count_tokens")
@@ -278,7 +278,7 @@ struct ClaudeKeyTests {
         checker.now = { calendar.date(from: DateComponents(year: 2026, month: 10, day: 16, hour: 9))! }
         ledger.calls().forEach { $0.createdAt = checker.now() }
         let result = await checker.test(pasted: Self.key)
-        #expect(result.outcome == .capReached && result.line == "Key saved. Claude paused until Nov 1.")
+        #expect(result.outcome == .capReached && result.line == "Key saved. Claude paused until Nov 1")
         #expect(keys.read() == Self.key)
     }
 

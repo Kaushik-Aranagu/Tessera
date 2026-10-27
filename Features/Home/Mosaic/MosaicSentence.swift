@@ -170,7 +170,7 @@ private struct MosaicSentenceLine: View {
     }
 }
 
-/// An app word: its accent at rest, no underline; a 1 pt underline in the accent while pressed.
+/// An app word: its accent at rest, with a 1 pt underline in the accent at offset 5 (shown at rest, not only pressed).
 struct MosaicWordStyle: ButtonStyle {
     let accent: Color
 

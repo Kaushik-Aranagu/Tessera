@@ -6,7 +6,7 @@ import Testing
 /// Harness H1b: the Door's order of steps, the router, the hedge, the cap, the key scan and the two policies.
 @MainActor
 struct DoorTests {
-    static let ask = BrainRequest(system: [TextBlock("Be brief.")], messages: [BrainMessage(.user, text: "Hi")])
+    static let ask = BrainRequest(system: [TextBlock("Be brief")], messages: [BrainMessage(.user, text: "Hi")])
 
     func job(_ ladder: [BrainID], fragments: [PackFragment] = [], hedge: Bool = false, estimate: Int64 = 100_000,
              validator: @escaping @Sendable (Data) -> Bool = { _ in true }) -> DoorJob
@@ -190,7 +190,7 @@ struct DoorTests {
         let claude = FakeBrain(.haiku), apple = FakeBrain(.appleOnDevice)
         apple.reply = "kept home"
         let rig = try DoorRig(brains: [.haiku: claude, .appleOnDevice: apple], policy: .strict)
-        let own = BrainRequest(system: [TextBlock("Be brief.")],
+        let own = BrainRequest(system: [TextBlock("Be brief")],
                                messages: [BrainMessage(.user, text: "I weighed in at 82.4 kg and ate 650 kcal")])
         let hit = await rig.events(DoorJob(name: "t", ladder: [.haiku, .appleOnDevice], request: own,
                                            estimateNano: 100_000))

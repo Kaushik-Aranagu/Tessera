@@ -16,15 +16,15 @@ enum PantryShopSwitch {
 
 /// The shop run's words and numbers, pure so each has a test. Nothing here leaves the phone.
 enum ShopV2Copy {
-    static let badPrice = "That isn't a price."
+    static let badPrice = "That isn't a price"
 
     /// "12 got, 2 left for next time."
     static func gotLeft(got: Int, left: Int) -> String {
         switch (got, left) {
-        case (0, 0): "Nothing in the basket."
-        case (_, 0): "\(got) got, nothing left."
-        case (0, _): "Nothing got, \(left) left for next time."
-        default: "\(got) got, \(left) left for next time."
+        case (0, 0): "Nothing in the basket"
+        case (_, 0): "\(got) got, nothing left"
+        case (0, _): "Nothing got, \(left) left for next time"
+        default: "\(got) got, \(left) left for next time"
         }
     }
 

@@ -45,17 +45,17 @@ public enum PrivacyPage {
 
     /// "4 private things. 2 routines, 1 workout, 1 note. They show as Private everywhere."
     public static func countsLine(_ facts: Facts) -> String {
-        guard facts.total > 0 else { return "No private things yet. Anything private shows as Private everywhere." }
-        let head = "\(facts.total) private \(facts.total == 1 ? "thing" : "things")."
+        guard facts.total > 0 else { return "No private things yet. Anything private shows as Private everywhere" }
+        let head = "\(facts.total) private \(facts.total == 1 ? "thing" : "things")"
         let parts = facts.counts.map { "\($0.count) \($0.noun)" }.joined(separator: ", ")
-        return "\(head) \(parts). They show as Private everywhere."
+        return "\(head). \(parts). They show as Private everywhere"
     }
 
-    public static let neverLeaves = "Never leaves this phone: health, calendar, body, calories, money amounts."
+    public static let neverLeaves = "Never leaves this phone: health, calendar, body, calories, money amounts"
 
     /// What Claude is sent varies by job, so the page claims no more than the switch itself.
     public static func askClaudeLine(on: Bool) -> String {
-        on ? "Tess asks Claude: On." : "Tess asks Claude: Off."
+        on ? "Tess asks Claude: On" : "Tess asks Claude: Off"
     }
 
     /// The whole page, top to bottom. `backupLine` comes from `BackupWords.lastLine`.

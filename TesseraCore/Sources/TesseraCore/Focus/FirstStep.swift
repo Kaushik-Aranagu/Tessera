@@ -26,17 +26,17 @@ public struct FirstStep {
     /// The step for a title: the verb it starts with decides, and anything else is two minutes on it.
     public static func step(for title: String) -> String {
         let words = title.trimmingCharacters(in: .whitespaces).split(separator: " ").map(String.init)
-        guard let first = words.first?.lowercased() else { return "Spend 2 minutes on it." }
+        guard let first = words.first?.lowercased() else { return "Spend 2 minutes on it" }
         let rest = words.dropFirst().joined(separator: " ")
         switch first {
-        case "write", "draft": return "Write one sentence\(rest.isEmpty ? "" : " of \(rest)")."
-        case "call", "phone": return "Find the number\(rest.isEmpty ? "" : " for \(rest)")."
-        case "email", "reply", "message", "text": return "Open the thread\(rest.isEmpty ? "" : " for \(rest)")."
-        case "clean", "tidy": return "Set a 2-minute timer and start\(rest.isEmpty ? "" : " on \(rest)")."
-        case "buy", "order": return "Put it on your list\(rest.isEmpty ? "" : ": \(rest)")."
-        case "book", "schedule": return "Open the calendar\(rest.isEmpty ? "" : " for \(rest)")."
-        case "read": return "Read one page\(rest.isEmpty ? "" : " of \(rest)")."
-        default: return "Spend 2 minutes on \(title)."
+        case "write", "draft": return "Write one sentence\(rest.isEmpty ? "" : " of \(rest)")"
+        case "call", "phone": return "Find the number\(rest.isEmpty ? "" : " for \(rest)")"
+        case "email", "reply", "message", "text": return "Open the thread\(rest.isEmpty ? "" : " for \(rest)")"
+        case "clean", "tidy": return "Set a 2-minute timer and start\(rest.isEmpty ? "" : " on \(rest)")"
+        case "buy", "order": return "Put it on your list\(rest.isEmpty ? "" : ": \(rest)")"
+        case "book", "schedule": return "Open the calendar\(rest.isEmpty ? "" : " for \(rest)")"
+        case "read": return "Read one page\(rest.isEmpty ? "" : " of \(rest)")"
+        default: return "Spend 2 minutes on \(title)"
         }
     }
 

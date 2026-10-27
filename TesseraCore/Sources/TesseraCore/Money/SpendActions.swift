@@ -170,7 +170,7 @@ public struct EditSpend: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        store.object(id: spend).map { "\($0.title), changed." }
+        store.object(id: spend).map { "\($0.title), changed" }
     }
 }
 

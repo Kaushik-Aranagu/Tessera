@@ -719,6 +719,6 @@ enum ObjectMask {
 /// The object page's own words.
 enum ObjectPageCopy {
     /// A link whose object is deleted or not on this phone (OL28, OL29).
-    static let gone = "Not on this phone anymore."
+    static let gone = "Not on this phone anymore"
     static let back = "Back"
 }

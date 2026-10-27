@@ -7,7 +7,7 @@ struct UnitsSentenceTests {
     @Test func theSentenceReadsInOrder() {
         let words = UnitsCopy.kinds.enumerated().map { UnitsCopy.lead($1, first: $0 == 0) + UnitsCopy.standard($1) }
         #expect(words
-            .joined(separator: ",") + "." == "Weights in kg, distances in km, lengths in cm, temperatures in °C.")
+            .joined(separator: ",") == "Weights in kg, distances in km, lengths in cm, temperatures in °C")
     }
 
     @Test func aTapStepsToTheOtherUnitAndBack() {

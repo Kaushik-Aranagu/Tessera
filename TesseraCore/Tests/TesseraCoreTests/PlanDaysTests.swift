@@ -73,7 +73,7 @@ struct PlanDaysTests {
         #expect(cycle == ["Push A", "Pull A", "Legs A", "Push C"])
 
         let dropped = try engine.perform(DropRoutineFromPlan(plan: plan.id, routine: pushC.id), by: .user)
-        #expect(cycle == ["Push A", "Pull A", "Legs A"] && dropped.record.summary == "Push C dropped.")
+        #expect(cycle == ["Push A", "Pull A", "Legs A"] && dropped.record.summary == "Push C dropped")
         #expect(!pushC.isDeleted) // history keeps the routine
         engine.undo(dropped.record)
         #expect(cycle == ["Push A", "Pull A", "Legs A", "Push C"])
@@ -87,20 +87,20 @@ struct PlanDaysTests {
     @Test func scheduleModeDefaultsToRollingAndSwitches() throws {
         #expect(PlanSchedule.mode(of: plan, store: store) == .rolling)
         let fixed = try engine.perform(SetScheduleMode(plan: plan.id, mode: .fixed), by: .user)
-        #expect(PlanSchedule.mode(of: plan, store: store) == .fixed && fixed.record.summary == "PPL on fixed days.")
+        #expect(PlanSchedule.mode(of: plan, store: store) == .fixed && fixed.record.summary == "PPL on fixed days")
         engine.undo(fixed.record)
         #expect(PlanSchedule.mode(of: plan, store: store) == .rolling)
         #expect(try engine.perform(SetScheduleMode(plan: plan.id, mode: .rolling), by: .user).record.summary
-            == "PPL rolls on.")
+            == "PPL rolls on")
     }
 
     @Test func oneRoutinePerWeekdayAndTheLoserIsNamed() throws {
         let pull = try engine.perform(SetRoutineWeekdays(routine: routines[1].id, weekdays: [5]), by: .user)
-        #expect(pull.output.isEmpty && pull.record.summary == "Pull A on Thursdays.")
+        #expect(pull.output.isEmpty && pull.record.summary == "Pull A on Thursdays")
         let push = try engine.perform(SetRoutineWeekdays(routine: routines[0].id, weekdays: [2, 5]), by: .user)
-        #expect(push.record.summary == "Push A on Mondays and Thursdays.")
+        #expect(push.record.summary == "Push A on Mondays and Thursdays")
         #expect(push.output.map(\.weekday) == [5] && push.output.first?.from == routines[1].id)
-        #expect(push.output.first?.line(to: "Push A") == "Thursday was Pull A's. Push A has it now.")
+        #expect(push.output.first?.line(to: "Push A") == "Thursday was Pull A's. Push A has it now")
         #expect(PlanSchedule.weekdays(of: routines[1], store: store).isEmpty)
         #expect(PlanSchedule.weekdays(of: routines[0], store: store) == [2, 5])
         // One UNDO gives Thursday back.
@@ -172,7 +172,7 @@ struct PlanDaysTests {
         #expect(ledger.week(containing: now, plan: plan, now: now, calendar: Self.calendar)
             .contains { $0.planned != nil })
         #expect(try engine.perform(SetRoutineWeekdays(routine: routines[0].id, weekdays: []), by: .user).record.summary
-            == "Push A, no fixed days.")
+            == "Push A, no fixed days")
         #expect(throws: ActionError.self) {
             try engine.perform(SetRoutineWeekdays(routine: routines[0].id, weekdays: [2, 2]), by: .user)
         }

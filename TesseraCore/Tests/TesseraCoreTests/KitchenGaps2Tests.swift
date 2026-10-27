@@ -79,17 +79,17 @@ struct KitchenGaps2Tests {
             last = at
         }
         #expect(log.finishLine(for: recipe, at: last, calendar: calendar) ==
-            "Spaghetti carbonara, 21st time this month.")
+            "Spaghetti carbonara, 21st time this month")
     }
 
     // MARK: G9
 
     @Test func longTimersAreNotOfferedAndRefuseClearly() throws {
-        let long = RecipeParser.durations(in: "Cure the salmon in the fridge for 48 hours.")
+        let long = RecipeParser.durations(in: "Cure the salmon in the fridge for 48 hours")
         #expect(long == [2880 ... 2880])
         #expect(RecipeParser.offeredTimers(long).isEmpty)
-        #expect(RecipeParser.offeredTimers(RecipeParser.durations(in: "Rest for 24 hours.")).count == 1)
-        let step = ParsedRecipe.Step(text: "Cure 48 hours.", timers: long)
+        #expect(RecipeParser.offeredTimers(RecipeParser.durations(in: "Rest for 24 hours")).count == 1)
+        let step = ParsedRecipe.Step(text: "Cure 48 hours", timers: long)
         #expect(step.offeredTimers.isEmpty)
 
         let engine = try engine()
@@ -97,7 +97,7 @@ struct KitchenGaps2Tests {
             try engine.perform(StartKitchenTimer(label: "Cure", minutes: 2880), by: .user)
             Issue.record("a 48 hour timer should be refused")
         } catch {
-            #expect(TessCaptureEngine.line(for: error) == "Didn't save that. A timer runs up to 24 hours.")
+            #expect(TessCaptureEngine.line(for: error) == "Didn't save that. A timer runs up to 24 hours")
         }
         try engine.perform(StartKitchenTimer(label: "Rest", minutes: 24 * 60), by: .user)
     }

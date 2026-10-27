@@ -121,7 +121,7 @@ public struct TessFrame: Sendable, Equatable {
     /// A name or fact keeps its own taint, so the Door drops money, body and calendar under strict.
     public func fragments(itemsPerPlace: Int = 5) -> [PackFragment] {
         let level = level == 0 ? "the landing" : "the \(door ?? "door") page"
-        var fragments = [PackFragment("Where: \(room.capitalized), \(level)\(window.map { ", \($0)" } ?? "").")]
+        var fragments = [PackFragment("Where: \(room.capitalized), \(level)\(window.map { ", \($0)" } ?? "")")]
         if let referent = referent() {
             fragments.append(PackFragment("This: \(line(referent.item)) (\(referent.place.rawValue))",
                                           taint: taint(of: referent.item)))

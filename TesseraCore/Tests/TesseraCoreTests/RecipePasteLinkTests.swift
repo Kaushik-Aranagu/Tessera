@@ -39,7 +39,7 @@ extension RecipeLinkTests {
         LinkStub.pages["budgetbytes.com"] = .init(body: Self.page(Self.chiliMac))
         let link = try #require(RecipePasteLink.bareLink("https://budgetbytes.com/chili-mac/"))
         let outcome = await RecipePasteLink.read(link, reader: reader(), asksClaude: true, shelf: shelf())
-        #expect(outcome.result.kind == .read && !outcome.kept && outcome.line == "7 ingredients, 3 steps, 2 timers.")
+        #expect(outcome.result.kind == .read && !outcome.kept && outcome.line == "7 ingredients, 3 steps, 2 timers")
         #expect(!outcome.line.contains("budgetbytes")) // never the URL in her line
     }
 
@@ -48,7 +48,7 @@ extension RecipeLinkTests {
         let link = try #require(RecipePasteLink.bareLink("https://budgetbytes.com/chili-mac/?utm_source=pin"))
         LinkStub.failure = .notConnectedToInternet
         let offline = await RecipePasteLink.read(link, reader: reader(), asksClaude: true, shelf: shelf)
-        #expect(offline.kept && offline.line == "Recipe link, kept for later.")
+        #expect(offline.kept && offline.line == "Recipe link, kept for later")
         #expect(shelf.waiting().map(\.absoluteString) == ["https://budgetbytes.com/chili-mac/"])
         // Kept once, not twice; and nothing reads it by itself.
         _ = await RecipePasteLink.read(link, reader: reader(), asksClaude: true, shelf: shelf)
@@ -112,7 +112,7 @@ extension RecipeLinkTests {
         shelf.keep(link)
         LinkStub.failure = code
         let outcome = await RecipePasteLink.read(link, reader: reader(), asksClaude: true, shelf: shelf)
-        #expect(outcome.kept && outcome.line == "Recipe link, kept for later.", "\(code)")
+        #expect(outcome.kept && outcome.line == "Recipe link, kept for later", "\(code)")
         #expect(shelf.waiting().count == 1)
     }
 
@@ -226,7 +226,7 @@ extension RecipeLinkTests {
     /// Kitchen's ruling on #845: a link that waits says so once, and "Paste the text instead." shows only when it is
     /// dropped.
     @Test func eachRetryableFailureKeepsTheLinkWithItsOwnLine() async throws {
-        let waiting = "Recipe link, kept for later."
+        let waiting = "Recipe link, kept for later"
         let link = try #require(RecipePasteLink.bareLink("https://blog.example.com/beans"))
         func run(_ prepare: () -> Void) async -> (RecipePasteLink.Outcome, RecipeLinkShelf) {
             let made = shelf()
@@ -252,7 +252,7 @@ extension RecipeLinkTests {
         )
         // Firm refusals drop the link and keep their own line: no recipe on the page, and "Claude is off".
         (outcome, box) = await run { LinkStub.pages["blog.example.com"] = .init(body: "<html><body>Hi</body></html>") }
-        #expect(!outcome.kept && box.waiting().isEmpty && outcome.line.hasSuffix("Paste the text instead."))
+        #expect(!outcome.kept && box.waiting().isEmpty && outcome.line.hasSuffix("Paste the text instead"))
         let off = await RecipePasteLink.read(link, reader: reader(claude: true), asksClaude: false, shelf: box)
         #expect(!off.kept && off.line == RecipeLinkLine.claudeOff && box.waiting().isEmpty)
         // Last, because the cap stays on the ledger.

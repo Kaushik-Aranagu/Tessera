@@ -130,7 +130,7 @@ public struct ProcessTable {
                     nil
                 {
                     if let basket, basket.count > 0 {
-                        shopNotes.append(Note(line: "\(basket.name) moved to Later. \(basket.count) in the basket.",
+                        shopNotes.append(Note(line: "\(basket.name) moved to Later. \(basket.count) in the basket",
                                               undo: nil))
                     } else {
                         putAway += 1
@@ -141,7 +141,7 @@ public struct ProcessTable {
         notes += shopNotes
         if putAway > 0 {
             let things = putAway == 1 ? "One thing" : "\(spelled(putAway).capitalized) things"
-            notes.append(Note(line: "\(things) moved to Later.", undo: nil))
+            notes.append(Note(line: "\(things) moved to Later", undo: nil))
         }
         return notes
     }
@@ -176,7 +176,7 @@ public struct ProcessTable {
             let deleted = try? engine.perform(DiscardEmptyWorkout(process: process.id, workout: workout.id, time: end),
                                               by: .system).record
             // M37, with a 10 s UNDO that brings the workout back (lines audit 2, item 1).
-            return Note(line: "\(title), no sets, not saved.", undo: deleted)
+            return Note(line: "\(title), no sets, not saved", undo: deleted)
         }
         _ = try? engine.perform(FinishWorkout(workout: workout.id, time: end), by: .system)
         _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
@@ -184,7 +184,7 @@ public struct ProcessTable {
         let started = entries.count { !$0.orderedChildren.isEmpty }
         let noun = entries.count == 1 ? "exercise" : "exercises"
         return Note(
-            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) \(noun).",
+            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) \(noun)",
             undo: nil
         )
     }

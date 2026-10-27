@@ -72,12 +72,12 @@ enum ClaudeKeyQuestionCopy {
     static let laterHint = "Asks again next time you open Tessera"
     static let nowHint = "Opens Claude's settings to answer"
     /// Tess's line after Yes (sheet 106).
-    static let yesReceipt = "Using the Claude key."
+    static let yesReceipt = "Using the Claude key"
     /// The key's line after No: never a dead end, since the switch beside it turns it on.
-    static let noReceipt = "Claude key found. Not used."
+    static let noReceipt = "Claude key found. Not used"
     /// The key's row while the question is unanswered.
-    static let found = "Claude key found. Not used yet."
+    static let found = "Claude key found. Not used yet"
     /// Under "Tess asks Claude: no." while unanswered.
-    static let waiting = "Waiting on your answer."
-    static let notSaved = "Didn't save that. Try again."
+    static let waiting = "Waiting on your answer"
+    static let notSaved = "Didn't save that. Try again"
 }

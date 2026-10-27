@@ -55,7 +55,7 @@ struct SpokenNumbersTests {
         .init("ST2", "one more", "one more"),
         .init("ST3", "two plates for five", "two plates for 5"),
         .init("ST4", "one twenty five for five", "125 for 5"),
-        .init("ST5", "Eighty-five for six.", "85 for 6"),
+        .init("ST5", "Eighty-five for six", "85 for 6"),
         .init("ST6", "185 pounds for 5", "185 lb for 5"),
     ]
 
@@ -76,16 +76,16 @@ struct SpokenNumbersTests {
 
     /// Bench Press in focus, last set 80 x 8 (context W), through the capture engine with no model.
     nonisolated static let parses: [Parse] = [
-        .init(id: "K811", heard: "eighty two and a half for eight", line: "Set 2 logged. 82.5 × 8."),
-        .init(id: "K812", heard: "a hundred for five at eight", line: "Set 2 logged. 100 × 5, RPE 8."),
+        .init(id: "K811", heard: "eighty two and a half for eight", line: "Set 2 logged. 82.5 × 8"),
+        .init(id: "K812", heard: "a hundred for five at eight", line: "Set 2 logged. 100 × 5, RPE 8"),
         .init(id: "N01", heard: "a hundred and five", line: "105 for how many reps?"),
-        .init(id: "N05", heard: "eighty two point four for six", line: "Set 2 logged. 82.5 × 6, nearest load to 82.4."),
-        .init(id: "N06", heard: "one oh five for five", line: "Set 2 logged. 105 × 5."),
-        .init(id: "N10", heard: "eight reps at nine", line: "Set 2 logged. 80 × 8, RPE 9."),
-        .init(id: "N11", heard: "same at nine and a half", line: "Set 2 logged, same again, RPE 9.5."),
-        .init(id: "N16", heard: "ten, ten, ten", line: "Sets 2 to 4 logged. 80 × 10."),
-        .init(id: "N22", heard: "drop to seventy two for ten", line: "Drop set logged. 72.5 × 10, nearest load to 72."),
-        .init(id: "N24", heard: "plus five", line: "Say the set, like 85 × 8."),
+        .init(id: "N05", heard: "eighty two point four for six", line: "Set 2 logged. 82.5 × 6, nearest load to 82.4"),
+        .init(id: "N06", heard: "one oh five for five", line: "Set 2 logged. 105 × 5"),
+        .init(id: "N10", heard: "eight reps at nine", line: "Set 2 logged. 80 × 8, RPE 9"),
+        .init(id: "N11", heard: "same at nine and a half", line: "Set 2 logged, same again, RPE 9.5"),
+        .init(id: "N16", heard: "ten, ten, ten", line: "Sets 2 to 4 logged. 80 × 10"),
+        .init(id: "N22", heard: "drop to seventy two for ten", line: "Drop set logged. 72.5 × 10, nearest load to 72"),
+        .init(id: "N24", heard: "plus five", line: "Say the set, like 85 × 8"),
     ]
 
     @Test(arguments: parses) func throughTheGrammar(_ row: Parse) async throws {

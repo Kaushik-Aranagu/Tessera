@@ -43,7 +43,7 @@ struct KitchenGaps4Tests {
         #expect(titles.allSatisfy { !$0.lowercased().contains("lasagna") }, "\(titles)")
 
         let open = await tess.capture("cook tacos friday 7pm", context: context)
-        #expect(open.line == "Tacos, Friday 7 pm.", "\(open.line)")
+        #expect(open.line == "Tacos, Friday 7 pm", "\(open.line)")
 
         // Home: planned, running and done all say "Private recipe".
         let facts = HomeFacts(engine: engine)
@@ -53,7 +53,7 @@ struct KitchenGaps4Tests {
         let cook = try engine.perform(StartCooking(recipe: health.id), by: .user).output
         try engine.perform(FinishCooking(cook: cook.id), by: .user)
         let done = try #require(facts.cooksFinished(on: .now).first)
-        #expect(HomeLines.line(for: facts.fact(doneCook: done)).text == "Private recipe done.")
+        #expect(HomeLines.line(for: facts.fact(doneCook: done)).text == "Private recipe done")
     }
 
     // MARK: G22
@@ -62,9 +62,9 @@ struct KitchenGaps4Tests {
         let engine = try engine()
         let tess = TessCaptureEngine(engine: engine)
         let long = await tess.capture("timer rise 25 hours", context: context)
-        #expect(long.line == "Didn't save that. A timer runs up to 24 hours.", "\(long.line)")
+        #expect(long.line == "Didn't save that. A timer runs up to 24 hours", "\(long.line)")
         let bare = await tess.capture("timer bread 1500", context: context)
-        #expect(bare.line == "Didn't save that. A timer runs up to 24 hours.", "\(bare.line)")
+        #expect(bare.line == "Didn't save that. A timer runs up to 24 hours", "\(bare.line)")
         #expect(CookLog(store: store, classes: engine.classes).timers().isEmpty)
         let allowed = await tess.capture("timer rise 24 hours", context: context)
         #expect(allowed.line.hasPrefix("Rise,"), "\(allowed.line)")
@@ -88,15 +88,15 @@ struct KitchenGaps4Tests {
         }
         try cook(at(10, 31, 21, 5))
         #expect(log.finishLine(for: recipe, at: at(10, 31, 21, 5), calendar: calendar)
-            == "Overnight oats, first time this month.")
+            == "Overnight oats, first time this month")
         // 1:30 am on Nov 1 is still his Oct 31: the second time this month.
         try cook(at(11, 1, 1, 30))
         #expect(log.finishLine(for: recipe, at: at(11, 1, 1, 30), calendar: calendar)
-            == "Overnight oats, second time this month.")
+            == "Overnight oats, second time this month")
         // 4:10 am on Nov 1 starts November.
         try cook(at(11, 1, 4, 10))
         #expect(log.finishLine(for: recipe, at: at(11, 1, 4, 10), calendar: calendar)
-            == "Overnight oats, first time this month.")
+            == "Overnight oats, first time this month")
     }
 
     // MARK: Groceries privacy (#688)
@@ -140,7 +140,7 @@ struct KitchenGaps4Tests {
         let cook = try engine.perform(StartCooking(recipe: tacos.id, time: when), by: .user).output
         let finish = try engine.perform(FinishCooking(cook: cook.id, time: when.addingTimeInterval(3600)), by: .user)
         #expect(isDone(task) && !isDone(other))
-        #expect(finish.record.receipt == "Tacos, done.")
+        #expect(finish.record.receipt == "Tacos, done")
         // MP-F2: one UNDO restores both.
         _ = engine.undo(finish.record)
         #expect(!isDone(other) && !isDone(task))
@@ -180,7 +180,7 @@ struct KitchenGaps4Tests {
                                        by: .user).output
         let chiliCook = try engine.perform(StartCooking(recipe: chili.id), by: .user).output
         let finish = try engine.perform(FinishCooking(cook: chiliCook.id), by: .user)
-        #expect(finish.record.receipt == "Chili, done.")
+        #expect(finish.record.receipt == "Chili, done")
     }
 
     @Test func aPrivateRecipeReceiptNeverNamesIt() throws {
@@ -192,6 +192,6 @@ struct KitchenGaps4Tests {
         let cook = try engine.perform(StartCooking(recipe: secret.id, time: noon(plusDays: 0)), by: .user).output
         let finish = try engine.perform(FinishCooking(cook: cook.id, time: noon(plusDays: 0)), by: .user)
         #expect(isDone(task))
-        #expect(finish.record.receipt == "Private recipe done.")
+        #expect(finish.record.receipt == "Private recipe done")
     }
 }

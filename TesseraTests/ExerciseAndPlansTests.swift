@@ -34,8 +34,8 @@ struct ExerciseAndPlansTests {
         #expect(ExerciseWords.signed(6.5) == "+6.5")
         #expect(ExerciseWords.signed(-2.5) == "−2.5")
         #expect(ExerciseWords.set(weight: 85, reps: 6) == "85 × 6")
-        #expect(ExerciseWords.nextTime(weight: 82.5, reps: 9, then: 85) == "Next time: 82.5 for 9, then 85.")
-        #expect(ExerciseWords.nextTime(weight: 40, reps: 8, then: nil) == "Next time: 40 for 8.")
+        #expect(ExerciseWords.nextTime(weight: 82.5, reps: 9, then: 85) == "Next time: 82.5 for 9, then 85")
+        #expect(ExerciseWords.nextTime(weight: 40, reps: 8, then: nil) == "Next time: 40 for 8")
     }
 
     /// R34 (trip rehearsal): a Pull A set logged Tuesday night in Honolulu reads "Tue 27" at home on Thursday 08:00
@@ -106,7 +106,7 @@ struct ExerciseAndPlansTests {
         #expect(digest.trend?.points.count == 2)
         #expect(digest.trend?.isRise == true)
         // The library's bench runs dp(+2.5, 5, 8): same weight, one more rep up to the top of the range.
-        #expect(digest.nextTime == "Next time: 82.5 for 8.")
+        #expect(digest.nextTime == "Next time: 82.5 for 8")
     }
 
     private func log(_ model: AppModel, _ exercise: ClassDef, daysAgo: Double, sets: [(Double, Double)], now: Date) {
@@ -203,9 +203,9 @@ struct ExerciseAndPlansTests {
         #expect(PlanMonth.headline(done: 10, pendingToday: true, planned: 26) == "Session 11\nof 26")
         #expect(PlanMonth.headline(done: 4, pendingToday: false, planned: nil) == "4 sessions\nthis month")
         #expect(PlanMonth.tessLine(done: 10, lastMonth: 13, leftThisWeek: 3, month: "October", previous: "September")
-            == "Three more this week keeps October level with September.")
+            == "Three more this week keeps October level with September")
         #expect(PlanMonth.tessLine(done: 2, lastMonth: 13, leftThisWeek: 3, month: "October", previous: "September")
-            == "Eleven more keeps October level with September.")
+            == "Eleven more keeps October level with September")
         #expect(PlanMonth.tessLine(done: 2, lastMonth: 0, leftThisWeek: 3, month: "October", previous: "September")
             == nil)
     }
@@ -237,7 +237,7 @@ struct ExerciseAndPlansTests {
         #expect(digest.aboutOneRep == 101.8)
         #expect(digest.subtitle?.contains("Best") == false, "the subtitle is the muscles; the best is the line below")
         #expect(digest.nextLine?.hasPrefix("Next time ") == true)
-        #expect(digest.nextLine?.hasSuffix("Last time 77.5 × 8.") == true)
+        #expect(digest.nextLine?.hasSuffix("Last time 77.5 × 8") == true)
     }
 
     @Test func theClimbShowsTheLastTwelveSessions() throws {
@@ -283,9 +283,9 @@ struct ExerciseAndPlansTests {
         #expect(ExerciseWords.set(weight: 82.5, reps: 7, unit: .kilograms) == "82.5 × 7")
         #expect(Format.shown(80, unit: .pounds) == "176.5")
         #expect(ExerciseWords.bestLine(bestSet: "182 × 7", aboutKilograms: 101.8, unit: .pounds)
-            == "Best set 182 × 7. About 224 lb for 1.")
+            == "Best set 182 × 7. About 224 lb for 1")
         #expect(ExerciseWords.bestLine(bestSet: "82.5 × 7", aboutKilograms: 101.8, unit: .kilograms)
-            == "Best set 82.5 × 7. About 102 kg for 1.")
+            == "Best set 82.5 × 7. About 102 kg for 1")
         #expect(ExerciseWords.bestLine(bestSet: nil, aboutKilograms: nil).hasPrefix("No best yet"))
     }
 

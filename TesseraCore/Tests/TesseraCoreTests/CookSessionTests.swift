@@ -32,12 +32,12 @@ struct CookSessionTests {
     func chicken() throws -> ObjectRecord {
         try recipe(
             "Paprika chicken",
-            steps: ["Season the chicken.", "Sear it for 4 minutes.", "Bake for 33 minutes.", "Plate it."]
+            steps: ["Season the chicken", "Sear it for 4 minutes", "Bake for 33 minutes", "Plate it"]
         )
     }
 
     func pasta() throws -> ObjectRecord {
-        try recipe("Spaghetti", steps: ["Boil the water.", "Cook the spaghetti for 10 minutes.", "Drain and toss."])
+        try recipe("Spaghetti", steps: ["Boil the water", "Cook the spaghetti for 10 minutes", "Drain and toss"])
     }
 
     func plan(_ recipes: [ObjectRecord], serveAt: Date? = nil, now: Date? = nil) throws -> ObjectRecord {
@@ -69,7 +69,7 @@ struct CookSessionTests {
     @Test func startingPlansEachDishWithItsOwnCookAndSaysSo() throws {
         let made = try engine.perform(StartCookSession(recipes: [chicken().id, pasta().id], servings: [4, 2],
                                                        serveAt: at(19), time: at(17)), by: .user)
-        #expect(made.record.receipt == "Paprika chicken and Spaghetti, planned.")
+        #expect(made.record.receipt == "Paprika chicken and Spaghetti, planned")
         #expect(made.record.summary == "Several dishes planned")
         let session = made.output
         #expect(book.status(of: session) == "planned" && rows(.cookDish).count == 2 && rows(.cook).count == 2)
@@ -92,7 +92,7 @@ struct CookSessionTests {
 
     @Test func badStartsAreRefusedAndWriteNothing() throws {
         let one = try chicken()
-        let several = try (0 ..< 7).map { try recipe("Dish \($0)", steps: ["Cook."]) }
+        let several = try (0 ..< 7).map { try recipe("Dish \($0)", steps: ["Cook"]) }
         let tries = [StartCookSession(recipes: []), StartCookSession(recipes: [one.id, one.id]),
                      StartCookSession(recipes: several.map(\.id)), StartCookSession(recipes: [UUID()])]
         for action in tries {
@@ -111,25 +111,25 @@ struct CookSessionTests {
     @Test func setServeTimeReplansAndUndoRestoresTheOldOne() throws {
         let session = try plan([chicken(), pasta()], serveAt: at(19))
         let set = try engine.perform(SetServeTime(session: session.id, serveAt: at(20), time: at(17)), by: .user)
-        #expect(set.record.receipt == "Serve at \(HouseTime.clock(at(20))).")
+        #expect(set.record.receipt == "Serve at \(HouseTime.clock(at(20)))")
         #expect(store.value("serveAt", of: session)?.dateValue == at(20))
         engine.undo(set.record)
         #expect(store.value("serveAt", of: session)?.dateValue == at(19))
         let cleared = try engine.perform(SetServeTime(session: session.id, serveAt: nil, time: at(17)), by: .user)
-        #expect(cleared.record.receipt == "Serve time, cleared." && store.value("serveAt", of: session) == nil)
+        #expect(cleared.record.receipt == "Serve time, cleared" && store.value("serveAt", of: session) == nil)
     }
 
     @Test func addingAndDroppingADishSayItAndUndoBringsItBack() throws {
         let session = try plan([chicken()], serveAt: at(19))
         let added = try engine.perform(AddDish(session: session.id, recipe: pasta().id, time: at(17)), by: .user)
-        #expect(added.record.receipt == "Spaghetti, added." && book.dishes(of: session).count == 2)
+        #expect(added.record.receipt == "Spaghetti, added" && book.dishes(of: session).count == 2)
         // The same recipe twice is refused.
         #expect(throws: (any Error).self) { try engine.perform(
             AddDish(session: session.id, recipe: pasta().id),
             by: .user
         ) }
         let dropped = try engine.perform(DropDish(dish: added.output.id, time: at(17)), by: .user)
-        #expect(dropped.record.receipt == "Spaghetti, dropped." && book.dishes(of: session).count == 1)
+        #expect(dropped.record.receipt == "Spaghetti, dropped" && book.dishes(of: session).count == 1)
         engine.undo(dropped.record)
         #expect(book.dishes(of: session).count == 2)
         // Dropping the last dish drops the session.
@@ -177,7 +177,7 @@ struct CookSessionTests {
         #expect(book.status(of: session) == "paused" && book.timers(of: session).isEmpty)
         #expect(throws: (any Error).self) { try engine.perform(PauseCook(session: session.id), by: .user) }
         let resumed = try engine.perform(ResumeCook(session: session.id, time: at(18, 15)), by: .user)
-        #expect(resumed.record.receipt == "Back on.")
+        #expect(resumed.record.receipt == "Back on")
         #expect(book.status(of: session) == "running")
         #expect(store.number("pausedTotalSec", of: session) == 300)
         #expect(store.value("serveAt", of: session)?.dateValue == at(19, 5))
@@ -193,7 +193,7 @@ struct CookSessionTests {
         let one = try chicken(), two = try pasta()
         let session = try plan([one, two], serveAt: at(19))
         let done = try engine.perform(FinishCookSession(session: session.id, note: "good", time: at(19)), by: .user)
-        #expect(done.record.receipt == "Paprika chicken and Spaghetti, cooked.")
+        #expect(done.record.receipt == "Paprika chicken and Spaghetti, cooked")
         #expect(book.status(of: session) == "done")
         let log = CookLog(store: store, classes: engine.classes)
         #expect(log.lastCooked(one) == at(19) && log.lastCooked(two) == at(19))
@@ -205,12 +205,12 @@ struct CookSessionTests {
     // MARK: Walls
 
     @Test func aPrivateRecipeReadsPrivateInEveryLine() throws {
-        let secret = try recipe("Lexapro cake", steps: ["Bake for 40 minutes."])
+        let secret = try recipe("Lexapro cake", steps: ["Bake for 40 minutes"])
         let session = try engine.perform(
             StartCookSession(recipes: [secret.id, pasta().id], serveAt: at(19), time: at(17)),
             by: .user
         )
-        #expect(session.record.receipt == "Private recipe and Spaghetti, planned.")
+        #expect(session.record.receipt == "Private recipe and Spaghetti, planned")
         let plan = book.plan(of: session.output, now: at(17))
         let lines = [
             plan.landing(calendar: calendar),

@@ -79,7 +79,7 @@ struct SimilarBusyTests {
         defer { model.endWorkout() }
         let busy = try #require(session.markBusy())
         session.receipt = WorkoutReceipt(
-            text: "\(busy.name), later.",
+            text: "\(busy.name), later",
             takeBack: { [session] in session.undoBusy(busy) }
         )
         let entry = try #require(session.currentEntry)

@@ -27,15 +27,15 @@ enum PantryCopy {
     /// Tess's band line: what the last cook used up, "Tacos took the cilantro and limes."; from 4, the count.
     static func tess(recipe: String, names: [String]) -> String {
         // Up to 3 names, then the count (Product, Oct 17): "Tacos took 5 things."
-        names.count > 3 ? "\(recipe) took \(names.count) things." : "\(recipe) took the \(list(names))."
+        names.count > 3 ? "\(recipe) took \(names.count) things" : "\(recipe) took the \(list(names))"
     }
 
     /// The empty page's one line.
-    static let emptyBody = "Clear a shop or finish a cook and this fills in."
+    static let emptyBody = "Clear a shop or finish a cook and this fills in"
 
     /// The swipe's receipt: "Milk, on Groceries." (thing first).
     static func added(_ label: String) -> String {
-        "\(label), on Groceries."
+        "\(label), on Groceries"
     }
 
     /// "cilantro", "cilantro and limes", "a, b and c", "a, b and 2 more".

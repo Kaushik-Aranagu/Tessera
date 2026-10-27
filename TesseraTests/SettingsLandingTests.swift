@@ -10,11 +10,11 @@ struct SettingsLandingTests {
     private static let colors = SettingsLandingWords.Colors(ink: .black, slate: .gray, green: .green)
 
     private static func facts(remembers: String = "12 things", claude: Bool = false,
-                              backup: String? = "Last backup tonight, 9:14 pm. 4,210 things.") -> SettingsLandingFacts
+                              backup: String? = "Last backup tonight, 9:14 pm. 4,210 things") -> SettingsLandingFacts
     {
         SettingsLandingFacts(remembers: remembers, asksClaude: claude, units: ["kg", "km", "cm", "°C"],
                              backupLine: backup, build: "abc1234",
-                             privacyLines: ["3 private notes stay on this phone.", "Health never leaves it."])
+                             privacyLines: ["3 private notes stay on this phone", "Health never leaves it"])
     }
 
     @Test func theDialCarriesTheSixDoorsInOrder() {
@@ -23,7 +23,7 @@ struct SettingsLandingTests {
         #expect(doors.allSatisfy { $0.lines.count <= 3 })
         #expect(doors[0].count == "12")
         #expect(doors[2].lines == ["kg, km", "cm, °C"])
-        #expect(doors[4].lines.first == "Last backup tonight, 9:14 pm.")
+        #expect(doors[4].lines.first == "Last backup tonight, 9:14 pm")
     }
 
     @Test func everyDoorOpensAnExistingArea() {
@@ -51,9 +51,9 @@ struct SettingsLandingTests {
             #expect(zip(forms, forms.dropFirst()).allSatisfy { $0.count >= $1.count })
             #expect(!forms.contains { $0.contains(" of ") && $0.first?.isNumber == true })
         }
-        #expect(SettingsLandingWords.stateLine(Self.facts()).first == "Tess remembers 12 things, all on this phone.")
-        #expect(SettingsLandingWords.stateLine(Self.facts(remembers: "Nothing yet")).last == "Nothing kept.")
-        #expect(SettingsLandingWords.stateLine(Self.facts()).last == "Tess keeps 12.")
+        #expect(SettingsLandingWords.stateLine(Self.facts()).first == "Tess remembers 12 things, all on this phone")
+        #expect(SettingsLandingWords.stateLine(Self.facts(remembers: "Nothing yet")).last == "Nothing kept")
+        #expect(SettingsLandingWords.stateLine(Self.facts()).last == "Tess keeps 12")
     }
 
     @Test func theSecondFormFitsAtDefaultAndTheLastAtAX5() throws {
@@ -90,12 +90,12 @@ struct SettingsLandingTests {
     }
 
     @Test func briefBoldsTheLeadAndKeepsOneSentence() {
-        let brief = SettingsLandingWords.brief("Last backup tonight, 9:14 pm. 4,210 things.")
+        let brief = SettingsLandingWords.brief("Last backup tonight, 9:14 pm. 4,210 things")
         #expect(brief.lead == "Last backup")
-        #expect(brief.rest == " tonight, 9:14 pm.")
+        #expect(brief.rest == " tonight, 9:14 pm")
         #expect(SettingsLandingWords.brief(nil).lead == nil)
-        #expect(SettingsLandingWords.briefWhen(" this afternoon, 1:11 pm.") == "this afternoon")
-        #expect(SettingsLandingWords.briefWhen(" Saturday, 3:03 am.") == "Saturday")
+        #expect(SettingsLandingWords.briefWhen(" this afternoon, 1:11 pm") == "this afternoon")
+        #expect(SettingsLandingWords.briefWhen(" Saturday, 3:03 am") == "Saturday")
     }
 
     @Test func wholeWordCutsNeverEllipsize() {

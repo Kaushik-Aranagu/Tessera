@@ -45,6 +45,8 @@ enum Haptic: Equatable, Sendable {
     case areaLands
     /// The basket is cleared (Clear the basket, ruled .success by Product on #957).
     case cleared
+    /// A dial or wheel passes one place (sheet 231): one light impact.
+    case dialStep
     /// The one thing turns to another (sheet 220): one light impact per page.
     case pageTurn
     /// A write did not save ("Didn't save that. Try again."): the map's single warning, once per failure.
@@ -73,7 +75,7 @@ enum Haptic: Equatable, Sendable {
         case .soulStroke: .impact(flexibility: .soft, intensity: 0.3)
         case .areaLands: .impact(flexibility: .soft)
         case .cleared: .success
-        case .pageTurn: .impact(weight: .light)
+        case .pageTurn, .dialStep: .impact(weight: .light)
         case .notSaved: .warning
         }
     }

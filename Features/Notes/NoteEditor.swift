@@ -102,7 +102,7 @@ struct NoteEditor: View {
                     .padding(.top, Theme.Spacing.section)
                     .accessibilityHint("Deletes the note")
                 } else {
-                    Text("This note is gone.")
+                    Text("This note is gone")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }

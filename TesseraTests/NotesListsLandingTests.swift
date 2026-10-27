@@ -5,20 +5,20 @@ import Testing
 /// The Notes and Lists landings' fixed sentences (notes-lists-landing-build-sheet-oct22.md section 3 and 4).
 struct NotesListsLandingTests {
     @Test func notesSubtitleTemplates() {
-        #expect(NotesLandingWords.subtitle(hasNotes: false, topThings: []).text == "A place for loose thoughts.")
+        #expect(NotesLandingWords.subtitle(hasNotes: false, topThings: []).text == "A place for loose thoughts")
         let own = NotesLandingWords.subtitle(hasNotes: true, topThings: [])
-        #expect(own.text == "Your notes are on their own." && own.key == "own")
+        #expect(own.text == "Your notes are on their own" && own.key == "own")
         let one = NotesLandingWords.subtitle(hasNotes: true, topThings: ["Landlord"])
-        #expect(one.text == "Landlord comes up most." && one.key == "Landlord")
+        #expect(one.text == "Landlord comes up most" && one.key == "Landlord")
         let two = NotesLandingWords.subtitle(hasNotes: true, topThings: ["Landlord", "Bench press"])
-        #expect(two.text == "Landlord and Bench press come up most.")
+        #expect(two.text == "Landlord and Bench press come up most")
     }
 
     @Test func thingsParagraphHasNoDigit() throws {
         let line = try #require(NotesLandingWords.paragraph(["Landlord", "Bench press", "Trip"]))
-        #expect(line == "You write about Landlord, Bench press, and Trip.")
-        #expect(NotesLandingWords.paragraph(["A", "B"]) == "You write about A and B.")
-        #expect(NotesLandingWords.paragraph(["A"]) == "You write about A.")
+        #expect(line == "You write about Landlord, Bench press, and Trip")
+        #expect(NotesLandingWords.paragraph(["A", "B"]) == "You write about A and B")
+        #expect(NotesLandingWords.paragraph(["A"]) == "You write about A")
         #expect(NotesLandingWords.paragraph([]) == nil)
         #expect(line.allSatisfy { !$0.isNumber })
     }
@@ -29,18 +29,18 @@ struct NotesListsLandingTests {
         #expect(NotesLandingWords.matches("Café", filter: "cafe"))
         #expect(!NotesLandingWords.matches("Bench press", filter: "zzz"))
         #expect(NotesLandingWords.matches("Landlord", filter: ""))
-        #expect(NotesLandingWords.noMatch("zzz") == "No thing called \u{201C}zzz\u{201D}. Return writes it as a note.")
+        #expect(NotesLandingWords.noMatch("zzz") == "No thing called \u{201C}zzz\u{201D}. Return writes it as a note")
     }
 
     @Test func notesMarginAndNewLines() {
         #expect(NotesLandingWords.names(weekday: "Tue", thing: "Bench press")
-            == "Your note from Tue names Bench press.")
+            == "Your note from Tue names Bench press")
         #expect(NotesLandingWords
-            .newNotes(things: ["Landlord"], loose: false, notes: 1) == "A new note about Landlord.")
-        #expect(NotesLandingWords.newNotes(things: ["A", "B"], loose: false, notes: 1) == "A new note about A and B.")
+            .newNotes(things: ["Landlord"], loose: false, notes: 1) == "A new note about Landlord")
+        #expect(NotesLandingWords.newNotes(things: ["A", "B"], loose: false, notes: 1) == "A new note about A and B")
         #expect(NotesLandingWords
-            .newNotes(things: ["A", "B", "C"], loose: false, notes: 3) == "New notes about A and B.")
-        #expect(NotesLandingWords.newNotes(things: [], loose: true, notes: 1) == "A new loose note.")
+            .newNotes(things: ["A", "B", "C"], loose: false, notes: 3) == "New notes about A and B")
+        #expect(NotesLandingWords.newNotes(things: [], loose: true, notes: 1) == "A new loose note")
         #expect(NotesLandingWords.newNotes(things: [], loose: false, notes: 0) == nil)
     }
 

@@ -55,7 +55,7 @@ public enum TesseraBackup {
         public var requiresAuth: Bool
         public var line: String?
 
-        public static let privateWordsLine = "This copy has your private words."
+        public static let privateWordsLine = "This copy has your private words"
     }
 
     /// Whether a saved copy of this store holds private words, now or in its op history.
@@ -354,7 +354,7 @@ public enum TesseraBackup {
             count == 1 ? "1 recipe" : "\(count) recipes"
         }
         return "That copy has \(recipes(copyRecipes)). The \(nowRecipes) you have now "
-            + (nowRecipes == 1 ? "is" : "are") + " kept in Backups."
+            + (nowRecipes == 1 ? "is" : "are") + " kept in Backups"
     }
 
     // MARK: Restoring
@@ -408,8 +408,8 @@ public enum TesseraBackup {
             try? manager.moveItem(at: pending, to: rejected)
             // A copy staged by a newer Tessera (or one later downgraded) says so (QA R2 on #475, Design).
             TesseraSchema.setLaunchNote(error as? BackupError == .newerSchema
-                ? "That backup is from a newer Tessera, so your data is as it was. Update the app first."
-                : "That backup couldn't be read, so your data is as it was.")
+                ? "That backup is from a newer Tessera, so your data is as it was. Update the app first"
+                : "That backup couldn't be read, so your data is as it was")
             return false
         }
         let hasStore = manager.fileExists(atPath: storeURL.path)
@@ -441,7 +441,7 @@ public enum TesseraBackup {
                 }
             } catch {
                 TesseraSchema.setLaunchNote("Couldn't keep a copy of your data first, so I didn't restore. "
-                    + "I'll try again next time.")
+                    + "I'll try again next time")
                 return false
             }
         }
@@ -455,7 +455,7 @@ public enum TesseraBackup {
                 TesseraSchema.moveBack(from: backup, to: storeURL)
             }
             TesseraSchema.setLaunchNote("Couldn't restore that backup just now, so your data is as it was. "
-                + "I'll try again next time.")
+                + "I'll try again next time")
             return false
         }
         do {
@@ -464,7 +464,7 @@ public enum TesseraBackup {
             if let backup {
                 TesseraSchema.moveBack(from: backup, to: storeURL)
             }
-            TesseraSchema.setLaunchNote("Couldn't restore that backup just now, so your data is as it was.")
+            TesseraSchema.setLaunchNote("Couldn't restore that backup just now, so your data is as it was")
             return false
         }
         try? String(now.timeIntervalSince1970).write(
@@ -477,8 +477,8 @@ public enum TesseraBackup {
             try? manager.removeItem(at: backup)
         }
         TesseraSchema.setLaunchNote(keptACopy
-            ? "Restored from your backup. What was here before is kept in Backups, so you can restore it again."
-            : "Restored from your backup.")
+            ? "Restored from your backup. What was here before is kept in Backups, so you can restore it again"
+            : "Restored from your backup")
         return true
     }
 }

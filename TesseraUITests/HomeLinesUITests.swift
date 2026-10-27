@@ -63,7 +63,7 @@ final class HomeLinesUITests: SimulatorOnlyTestCase {
             .matching(NSPredicate(format: "label BEGINSWITH %@", "Start with ")).firstMatch
         XCTAssertTrue(key.exists)
         key.press(forDuration: 1.1)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Plan kept."))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Plan kept"))
             .firstMatch.waitForExistence(timeout: 5), "The hold keeps the plan")
         sleep(2)
         snap(app, "kept")

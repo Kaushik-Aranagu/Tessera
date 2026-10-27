@@ -17,8 +17,8 @@ struct LayoutPlacesTests {
         #expect(frame("Caption") == CGRect(x: 24, y: 378, width: 354, height: 34))
         #expect(frame("Widget") == CGRect(x: 24, y: 412, width: 354, height: 200))
         #expect(frame("Glyph") == CGRect(x: 298, y: 444, width: 80, height: 80))
-        #expect(frame("Dial") == CGRect(x: 24, y: 640, width: 160, height: 120))
-        #expect(frame("Door summary") == CGRect(x: 186, y: 640, width: 192, height: 120))
+        #expect(frame("Dial") == CGRect(x: 218, y: 640, width: 160, height: 120))
+        #expect(frame("Door summary") == CGRect(x: 24, y: 640, width: 192, height: 120))
         #expect(frame("Action word") == CGRect(x: 24, y: 786, width: 220, height: 62))
         #expect(frame("Tess") == CGRect(x: 306, y: 776, width: 96, height: 96))
         #expect(frame("Masthead") == CGRect(x: 0, y: 44, width: 402, height: 138))
@@ -70,13 +70,13 @@ struct LayoutPlacesTests {
             LayoutPlaces.place(named: name, in: .galley, level)!.paneFrame
         }
         // Across: the frames stay as the contract has them and the insets differ (Switcher right 0, Needs left 0,
-        // Dial right 1, Door summary left 1), so these seams are 4 pt too.
+        // Door summary right 1, Dial left 1: the dial is on the right), so these seams are 4 pt too.
         #expect(pane("Needs").minX - pane("Switcher").maxX == 4)
-        #expect(pane("Door summary").minX - pane("Dial").maxX == 4)
+        #expect(pane("Dial").minX - pane("Door summary").maxX == 4)
         #expect(pane("Switcher").minX == 26 && pane("Switcher").maxX == 224)
         #expect(pane("Needs").minX == 228 && pane("Needs").maxX == 376)
-        #expect(pane("Dial").minX == 26 && pane("Dial").maxX == 183)
-        #expect(pane("Door summary").minX == 187 && pane("Door summary").maxX == 376)
+        #expect(pane("Door summary").minX == 26 && pane("Door summary").maxX == 215)
+        #expect(pane("Dial").minX == 219 && pane("Dial").maxX == 376)
         // Down: Keystone, Caption, Widget.
         #expect(pane("Caption").minY - pane("Keystone").maxY == 4)
         #expect(pane("Widget").minY - pane("Caption").maxY == 4)

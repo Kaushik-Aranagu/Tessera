@@ -9,11 +9,11 @@ struct FitLineCutsTests {
     private static let samples = [
         "About 40 min, 5 lifts",
         "Starts around 6:10 pm",
-        "Bench Press opens at 82.5 kg.",
+        "Bench Press opens at 82.5 kg",
         "No rain for the next 12 hours",
         "Last one this week",
         "Cook at 6:45 pm tonight",
-        "Rest today. Next is Saturday.",
+        "Rest today. Next is Saturday",
         "3 to go this week",
         "+10 lb on bench since Oct 1",
         "Across the lake and back",
@@ -31,7 +31,7 @@ struct FitLineCutsTests {
     }
 
     @Test func weakTrailingWordsAreDropped() {
-        #expect(FitLine.cuts("Bench Press opens at 82.5 kg.").dropFirst().first == "Bench Press")
+        #expect(FitLine.cuts("Bench Press opens at 82.5 kg").dropFirst().first == "Bench Press")
         #expect(FitLine.cuts("Last one this week").contains("Last one"))
         #expect(!FitLine.cuts("Last one this week").contains("Last one this"))
     }

@@ -36,50 +36,50 @@ struct SetCountAskTests {
 
     nonisolated static let asks: [Row] = [
         .init("Q01", "2x10", .db, "2 × 10: 2 sets, or 2 kg?",
-              sets: "Sets 2 and 3 logged. 24 × 10.", kg: "Set 2 logged. 2 × 10."),
+              sets: "Sets 2 and 3 logged. 24 × 10", kg: "Set 2 logged. 2 × 10"),
         .init("Q02", "4x8", .db, "4 × 8: 4 sets, or 4 kg?",
-              sets: "Sets 2 to 5 logged. 24 × 8.", kg: "Set 2 logged. 4 × 8."),
+              sets: "Sets 2 to 5 logged. 24 × 8", kg: "Set 2 logged. 4 × 8"),
         .init("Q03", "6x8", .db, "6 × 8: 6 sets, or 6 kg?",
-              sets: "Sets 2 to 7 logged. 24 × 8.", kg: "Set 2 logged. 6 × 8."),
+              sets: "Sets 2 to 7 logged. 24 × 8", kg: "Set 2 logged. 6 × 8"),
         .init("Q06", "5x10", .db12, "5 × 10: 5 sets, or 5 kg?",
-              sets: "Sets 2 to 6 logged. 12 × 10.", kg: "Set 2 logged. 4 × 10, nearest load to 5."),
+              sets: "Sets 2 to 6 logged. 12 × 10", kg: "Set 2 logged. 4 × 10, nearest load to 5"),
         .init("Q07", "5x5", .cable, "5 × 5: 5 sets, or 5 kg?",
-              sets: "Sets 2 to 6 logged. 55 × 5.", kg: "Set 2 logged. 5 × 5."),
+              sets: "Sets 2 to 6 logged. 55 × 5", kg: "Set 2 logged. 5 × 5"),
         .init("Q08", "6x10", .cable, "6 × 10: 6 sets, or 6 kg?",
-              sets: "Sets 2 to 7 logged. 55 × 10.", kg: "Set 2 logged. 5 × 10, nearest load to 6."),
+              sets: "Sets 2 to 7 logged. 55 × 10", kg: "Set 2 logged. 5 × 10, nearest load to 6"),
         .init("Q09", "4x10", .machine, "4 × 10: 4 sets, or 4 kg?",
-              sets: "Sets 2 to 5 logged. 40 × 10.", kg: "Set 2 logged. 5 × 10, nearest load to 4."),
+              sets: "Sets 2 to 5 logged. 40 × 10", kg: "Set 2 logged. 5 × 10, nearest load to 4"),
         .init("Q11", "2x10", .bar, "2 × 10: 2 sets, or 2 kg?",
-              sets: "Sets 2 and 3 logged. 80 × 10.", kg: "2 kg isn't loadable here."),
+              sets: "Sets 2 and 3 logged. 80 × 10", kg: "2 kg isn't loadable here"),
         .init("Q13", "5x5", .bw, "5 × 5: 5 sets, or +5 kg?",
-              sets: "Sets 2 to 6 logged. bodyweight × 5.", kg: "Set 2 logged. +5 × 5."),
+              sets: "Sets 2 to 6 logged. bodyweight × 5", kg: "Set 2 logged. +5 × 5"),
         .init("Q14", "10x6", .bw, "10 × 6: 10 sets, or +10 kg?",
-              sets: "Sets 2 to 11 logged. bodyweight × 6.", kg: "Set 2 logged. +10 × 6."),
+              sets: "Sets 2 to 11 logged. bodyweight × 6", kg: "Set 2 logged. +10 × 6"),
         .init("Q15", "3x8", .dip, "3 × 8: 3 sets, or +3 kg?",
-              sets: "Sets 2 to 4 logged. +10 × 8.", kg: "Set 2 logged. +2.5 × 8, nearest load to 3."),
+              sets: "Sets 2 to 4 logged. +10 × 8", kg: "Set 2 logged. +2.5 × 8, nearest load to 3"),
         .init("Q16", "4x15", .kb, "4 × 15: 4 sets, or 4 kg?",
-              sets: "Sets 2 to 5 logged. 16 × 15.", kg: "Set 2 logged. 4 × 15."),
+              sets: "Sets 2 to 5 logged. 16 × 15", kg: "Set 2 logged. 4 × 15"),
         .init("Q19", "5x5", .bwNone, "5 × 5: 5 sets, or +5 kg?",
-              sets: "Sets 1 to 5 logged. bodyweight × 5.", kg: "Set 1 logged. +5 × 5."),
+              sets: "Sets 1 to 5 logged. bodyweight × 5", kg: "Set 1 logged. +5 × 5"),
         .init("Q20", "2×10", .db, "2 × 10: 2 sets, or 2 kg?",
-              sets: "Sets 2 and 3 logged. 24 × 10.", kg: "Set 2 logged. 2 × 10."),
+              sets: "Sets 2 and 3 logged. 24 × 10", kg: "Set 2 logged. 2 × 10"),
         .init("Q21", "2 by 10", .db, "2 × 10: 2 sets, or 2 kg?",
-              sets: "Sets 2 and 3 logged. 24 × 10.", kg: "Set 2 logged. 2 × 10."),
+              sets: "Sets 2 and 3 logged. 24 × 10", kg: "Set 2 logged. 2 × 10"),
     ]
 
     nonisolated static let logs: [Row] = [
-        .init("Q04", "7x8", .db, "Set 2 logged. 6 × 8, nearest load to 7."),
-        .init("Q05", "6x10", .db12, "Set 2 logged. 6 × 10."),
-        .init("Q10", "4x10", .machine0, "Set 2 logged. 5 × 10, nearest load to 4."),
-        .init("Q17", "8x15", .kb, "Set 2 logged. 8 × 15."),
-        .init("Q18", "4x10", .dbNone, "Set 1 logged. 4 × 10."),
-        .init("Q22", "2 for 10", .db, "Set 2 logged. 2 × 10."),
-        .init("Q23", "4 kg x 10", .db, "Set 2 logged. 4 × 10."),
-        .init("Q26", "5 kg x 5", .bw, "Set 2 logged. +5 × 5."),
-        .init("Q27", "3 sets of 10", .db, "Sets 2 to 4 logged. 24 × 10."),
-        .init("K888", "2 kilos x 10", .db, "Set 2 logged. 2 × 10."),
-        .init("BY3", "26 by 8", .db, "Set 2 logged. 26 × 8."),
-        .init("K889", "7x10", .db, "Set 2 logged. 6 × 10, nearest load to 7."),
+        .init("Q04", "7x8", .db, "Set 2 logged. 6 × 8, nearest load to 7"),
+        .init("Q05", "6x10", .db12, "Set 2 logged. 6 × 10"),
+        .init("Q10", "4x10", .machine0, "Set 2 logged. 5 × 10, nearest load to 4"),
+        .init("Q17", "8x15", .kb, "Set 2 logged. 8 × 15"),
+        .init("Q18", "4x10", .dbNone, "Set 1 logged. 4 × 10"),
+        .init("Q22", "2 for 10", .db, "Set 2 logged. 2 × 10"),
+        .init("Q23", "4 kg x 10", .db, "Set 2 logged. 4 × 10"),
+        .init("Q26", "5 kg x 5", .bw, "Set 2 logged. +5 × 5"),
+        .init("Q27", "3 sets of 10", .db, "Sets 2 to 4 logged. 24 × 10"),
+        .init("K888", "2 kilos x 10", .db, "Set 2 logged. 2 × 10"),
+        .init("BY3", "26 by 8", .db, "Set 2 logged. 26 × 8"),
+        .init("K889", "7x10", .db, "Set 2 logged. 6 × 10, nearest load to 7"),
     ]
 
     let store = ObjectStore.open(inMemory: true)
@@ -156,10 +156,10 @@ struct SetCountAskTests {
         let entry = try entry(.db)
         _ = await tess.capture("2x10", context: context(entry))
         let sets = await tess.capture("2 sets", context: context(entry))
-        #expect(sets.records.count == 2 && sets.line == "Sets 2 and 3 logged. 24 × 10.")
+        #expect(sets.records.count == 2 && sets.line == "Sets 2 and 3 logged. 24 × 10")
         _ = await tess.capture("4x8", context: context(entry))
         let kilos = await tess.capture("4 kilos", context: context(entry))
-        #expect(kilos.records.count == 1 && kilos.line == "Set 4 logged. 4 × 8.")
+        #expect(kilos.records.count == 1 && kilos.line == "Set 4 logged. 4 × 8")
     }
 
     @Test func anotherPhraseDropsTheAsk() async throws {
@@ -168,7 +168,7 @@ struct SetCountAskTests {
         _ = await tess.capture("2x10", context: context(entry))
         #expect(tess.pendingAsk != nil)
         let same = await tess.capture("same", context: context(entry))
-        #expect(same.line == "Set 2 logged, same again." && tess.pendingAsk == nil)
+        #expect(same.line == "Set 2 logged, same again" && tess.pendingAsk == nil)
         #expect(tess.answer(.sets, context: context(entry)).records.isEmpty)
     }
 
@@ -194,7 +194,7 @@ struct SetCountAskTests {
         let entry = try entry(.db)
         let asked = await tess.capture("2x10 @8", context: context(entry))
         #expect(asked.line == "2 × 10: 2 sets, or 2 kg?")
-        #expect(tess.answer(.kilograms, context: context(entry)).line == "Set 2 logged. 2 × 10, RPE 8.")
+        #expect(tess.answer(.kilograms, context: context(entry)).line == "Set 2 logged. 2 × 10, RPE 8")
         let warm = try SetCountAskTests()
         let warmEntry = try warm.entry(.db)
         _ = await warm.tess.capture("warmup 2x10", context: warm.context(warmEntry))
@@ -215,7 +215,7 @@ struct SetCountAskTests {
         let entry = try entry(.bar)
         let both = await tess.capture("8 and call mum at 7", context: context(entry))
         #expect(both.records.count == 2)
-        #expect(both.line == "Set 2 logged. 80 × 8. Call mum, today 7 pm.")
+        #expect(both.line == "Set 2 logged. 80 × 8. Call mum, today 7 pm")
         let comma = await tess.capture("same, call mum thu", context: context(entry))
         #expect(comma.records.count == 2 && comma.line.hasPrefix("Set 3 logged, same again. Call mum"))
     }
@@ -231,6 +231,6 @@ struct SetCountAskTests {
         // QA Q7a: "bench 80x8, 6" is a set and 6 reps at 80, never "bench 80 x 8 x 6".
         let entry = try entry(.bar)
         let capture = await tess.capture("bench 80x8, 6", context: context(entry))
-        #expect(capture.records.count == 2 && capture.line == "Sets 2 and 3 logged.")
+        #expect(capture.records.count == 2 && capture.line == "Sets 2 and 3 logged")
     }
 }

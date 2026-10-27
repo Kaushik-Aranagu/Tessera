@@ -13,7 +13,7 @@ final class BackupReinstallUITests: SimulatorOnlyTestCase {
         app.swipeUp()
         app.swipeUp()
         backups.tap()
-        XCTAssertTrue(app.staticTexts["Reinstalled? Restore brings back your copy from iCloud Drive."]
+        XCTAssertTrue(app.staticTexts["Reinstalled? Restore brings back your copy from iCloud Drive"]
             .waitForExistence(timeout: 5))
         sleep(2)
     }

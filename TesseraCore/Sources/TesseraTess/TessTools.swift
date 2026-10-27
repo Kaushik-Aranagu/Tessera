@@ -71,7 +71,7 @@ public enum TessTools {
     public static let maxRecordsPerPhrase = 10
 
     /// What a tool call answers once a phrase is at its cap.
-    static let capLine = "Error: that is enough for one phrase."
+    static let capLine = "Error: that is enough for one phrase"
 
     /// `budget`: how many more ghosts this phrase may leave (QA on #666). A list of lines or items is cut to it before
     /// the tool runs, and anything past it is taken back after, on both the on-device and the Claude path.
@@ -129,7 +129,7 @@ public enum TessTools {
             if let line = TakeRest.refusalLine(error) {
                 throw TessToolError(line)
             }
-            throw (error as? TessToolError) ?? TessToolError("That didn't work.")
+            throw (error as? TessToolError) ?? TessToolError("That didn't work")
         }
     }
 
@@ -158,7 +158,7 @@ public enum TessTools {
             guard let exercise = call.grammar.resolveExercise(name) else {
                 throw TessToolError("no exercise called \(name)")
             }
-            let unit = MassUnit(parsing: args["unit"] as? String ?? "kg") ?? .kilograms
+            let unit = MassUnit(parsing: args["unit"] as? String ?? TessUnits.symbol) ?? TessUnits.weight
             return try [call.perform(LogExercise(exercise: exercise.id, weight: args.number("weight"),
                                                  reps: args.number("reps"), sets: Int(args.number("sets")),
                                                  unit: unit))]
@@ -515,7 +515,7 @@ public enum ListLookup {
 /// The line for a name that matches two lists (G40), for the app to say the same words.
 public enum ListLookupLine {
     public static func moreThanOne(_ name: String) -> String {
-        "More than one list like \(name)."
+        "More than one list like \(name)"
     }
 }
 

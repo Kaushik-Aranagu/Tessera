@@ -23,14 +23,15 @@ struct PantryShopV2Tests {
 
     @Test func theTwoSwitchesSitOnTheirOwnPage() throws {
         let page = try #require(ReviewChoices.facetPages().first { $0.word == "Kitchen v2" })
-        #expect(page.rows.map(\.id) == ["pantryLevelsV2", "shopV2"])
+        // The Kitchen rooms switch (231 to 233) and the link reader join them to keep six a page elsewhere.
+        #expect(page.rows.map(\.id) == ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch"])
     }
 
     @Test func gotAndLeftReadAsOneSentence() {
-        #expect(ShopV2Copy.gotLeft(got: 12, left: 2) == "12 got, 2 left for next time.")
-        #expect(ShopV2Copy.gotLeft(got: 5, left: 0) == "5 got, nothing left.")
-        #expect(ShopV2Copy.gotLeft(got: 0, left: 3) == "Nothing got, 3 left for next time.")
-        #expect(ShopV2Copy.gotLeft(got: 0, left: 0) == "Nothing in the basket.")
+        #expect(ShopV2Copy.gotLeft(got: 12, left: 2) == "12 got, 2 left for next time")
+        #expect(ShopV2Copy.gotLeft(got: 5, left: 0) == "5 got, nothing left")
+        #expect(ShopV2Copy.gotLeft(got: 0, left: 3) == "Nothing got, 3 left for next time")
+        #expect(ShopV2Copy.gotLeft(got: 0, left: 0) == "Nothing in the basket")
     }
 
     @Test func theAboutTotalIsWholeDollars() {

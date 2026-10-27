@@ -30,7 +30,7 @@ struct TimersSheet: View {
                 }
                 .padding(.top, Theme.Spacing.xl)
                 if lines.isEmpty {
-                    Text("Nothing running.")
+                    Text("Nothing running")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.Workout.inkSecondary)
                         .padding(.top, Theme.Spacing.l)

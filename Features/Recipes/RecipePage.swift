@@ -219,7 +219,7 @@ struct RecipePage: View {
         } else {
             // Product's wording (kitchen gap hunt G3): the fact, then the one way back.
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                Text("Recipe gone.")
+                Text("Recipe gone")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
                 Button("Back to the list") { dismiss() }
@@ -520,7 +520,7 @@ private struct RecipeOriginal: View {
                     .accessibilityAddTraits(.isHeader)
                 MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {
                     if cooks.isEmpty {
-                        Text("Not yet.")
+                        Text("Not yet")
                             .font(Theme.voice)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                     } else {
@@ -598,7 +598,7 @@ enum RecipeCopy {
     {
         // ER14 (ruled Oct 17, 4:35): a private recipe's failure keeps the form and prints only the kind.
         guard let result = try? perform() else {
-            return .failed(isPrivate ? "Didn't save that. Private recipe." : "Didn't save that. Try again.")
+            return .failed(isPrivate ? "Didn't save that. Private recipe" : "Didn't save that. Try again")
         }
         // The engine's own line, masked for a private recipe since #836: "Tacos, 3 updated.", "Tacos, 2 added, 3
         // updated.", "Private recipe, 2 added.". A write of any kind (new rows or changed amounts) is an add with
@@ -606,7 +606,7 @@ enum RecipeCopy {
         var line = result.record.receipt ?? result.record.summary
         if isPrivate, !line.hasPrefix(ObjectPrivacy.recipeLabel) {
             // Belt and braces: never a private title, whatever the engine said.
-            line = "\(ObjectPrivacy.recipeLabel), \(result.record.ops.isEmpty ? "nothing to add" : "added")."
+            line = "\(ObjectPrivacy.recipeLabel), \(result.record.ops.isEmpty ? "nothing to add" : "added")"
         }
         return result.record.ops.isEmpty ? .nothing(line) : .added(line, result.record)
     }
@@ -631,7 +631,7 @@ enum RecipeCopy {
         } catch let ActionError.invalidArguments(_, reason) where reason == StartCooking.workoutRunningReason {
             return StartCooking.workoutRunningLine
         } catch {
-            return "Didn't save that. Try again."
+            return "Didn't save that. Try again"
         }
     }
 
@@ -654,7 +654,7 @@ enum RecipeCopy {
 
     /// Paste's receipt, thing first: "Carbonara, on Recipes."; a private one "Private recipe, on Recipes." (K87.3).
     static func saved(_ shownTitle: String) -> String {
-        "\(shortName(shownTitle)), on Recipes."
+        "\(shortName(shownTitle)), on Recipes"
     }
 
     /// A receipt's short name: the title's first noun phrase (Product 4:57, K87.2), so a long title never makes a long
@@ -712,7 +712,7 @@ enum RecipeCopy {
     /// "4 steps", "1 step", and with none, "No steps yet. Paste them below." (G55, Product).
     static func stepCount(_ count: Int) -> String {
         switch count {
-        case 0: "No steps yet. Paste them below."
+        case 0: "No steps yet. Paste them below"
         case 1: "1 step"
         default: "\(count) steps"
         }

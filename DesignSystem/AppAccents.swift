@@ -24,6 +24,26 @@ extension Theme.Colors {
             tuned(\.kitchen, light: 0xA8701F, dark: 0xD49A52)
         }
 
+        /// Kitchen's small words (sheet 231: Cook now, Undo, low, Get it): darker by day so they reach 4.5:1.
+        static var kitchenText: Color {
+            Color(light: 0x93611A, dark: 0xC49A5E)
+        }
+
+        /// Kitchen's section names (a slate, so the names stand apart from the place and its actions).
+        static var kitchenSection: Color {
+            Color(light: 0x34506F, dark: 0xA7BCD6)
+        }
+
+        /// Kitchen's low, eat by tomorrow and throw out today (a wine).
+        static var kitchenWarn: Color {
+            Color(light: 0x9A2541, dark: 0xEE8E9C)
+        }
+
+        /// Kitchen's leftover days that are fine (a pine).
+        static var kitchenFresh: Color {
+            Color(light: 0x2F6450, dark: 0x8EC7AE)
+        }
+
         /// Money: sage.
         static var money: Color {
             tuned(\.money, light: 0x3F7A62, dark: 0x8DBFA7)

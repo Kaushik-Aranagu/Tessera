@@ -57,11 +57,11 @@ struct TriedToday: Codable, Equatable {
     /// "Trying Upper in 25 today. Push A tomorrow." The Plan's weekday for the replaced routine is the next day it
     /// rolls to; the weekday is spoken as that day's name ("Thursday").
     func line(now: Date = AppClock.now, calendar: Calendar = .current) -> String {
-        let trying = "Trying \(title) in \(minutes) today."
+        let trying = "Trying \(title) in \(minutes) today"
         guard let replacedTitle else { return trying }
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now
         let weekday = tomorrow.formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "en_US")))
-        return "\(trying) \(replacedTitle) on \(weekday)."
+        return "\(trying). \(replacedTitle) on \(weekday)"
     }
 }
 

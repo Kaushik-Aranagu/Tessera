@@ -38,7 +38,7 @@ struct PoolActionTests {
         #expect(store.value("currency", of: india)?.stringValue == "INR" && store.value("poolKind", of: india)?
             .stringValue == "saving")
         #expect(book.balance(of: india) == Decimal(string: "1200.50"))
-        #expect(made.record.receipt == "India account, started.")
+        #expect(made.record.receipt == "India account, started")
         // The op log never holds the name, the source or the opening.
         #expect(made.record.summary == "New pool")
         for bad in [
@@ -55,7 +55,7 @@ struct PoolActionTests {
 
     @Test func aWalledPoolNameReadsPrivateInTheReceipt() throws {
         let made = try engine.perform(CreatePool(name: "Ozempic dose"), by: .user)
-        #expect(made.record.receipt == "Private pool, started.")
+        #expect(made.record.receipt == "Private pool, started")
         #expect(!(made.record.receipt ?? "").contains("Ozempic"))
     }
 
@@ -63,7 +63,7 @@ struct PoolActionTests {
         let checking = try pool("US checking")
         let cash = try pool("Cash")
         let first = try engine.perform(LogInflow(amount: "3200", pool: checking.id, source: "paycheck"), by: .user)
-        #expect(first.record.receipt == "Got $3,200.00, paycheck.")
+        #expect(first.record.receipt == "Got $3,200.00, paycheck")
         // The pool was used last: with none said, the next lands there.
         let second = try engine.perform(LogInflow(amount: "40", source: "gift"), by: .user).output
         #expect(store.linkedObjects("pool", of: second).first?.id == checking.id)
@@ -103,7 +103,7 @@ struct PoolActionTests {
             _ = try engine.perform(LogInflow(amount: "5", pool: india.id, currency: "USD"), by: .user)
             Issue.record("expected a refusal")
         } catch {
-            #expect("\(error)".contains("That pool holds INR."))
+            #expect("\(error)".contains("That pool holds INR"))
         }
         #expect(throws: (any Error).self) { try engine.perform(
             LogSpend(amount: 5, currency: "USD", pool: india.id),
@@ -114,7 +114,7 @@ struct PoolActionTests {
             _ = try engine.perform(ReassignSpend(spend: usd.id, pool: india.id), by: .user)
             Issue.record("expected a refusal")
         } catch {
-            #expect("\(error)".contains("That pool holds INR."))
+            #expect("\(error)".contains("That pool holds INR"))
         }
         #expect(rows(.inflow).isEmpty && store.linkedObjects("pool", of: usd).isEmpty)
     }
@@ -167,7 +167,7 @@ struct PoolActionTests {
             LogMove(from: checking.id, to: india.id, sent: "1000.00", arrived: "82650.00", fee: "5.00"),
             by: .user
         )
-        #expect(made.record.receipt == "Moved $1,000.00, got INR 82,650.00.")
+        #expect(made.record.receipt == "Moved $1,000.00, got INR 82,650.00")
         #expect(made.record.summary == "Money moved")
         #expect(book.balance(of: checking) == 3995 && book.balance(of: india) == 82650)
         let note = try #require(rows(.rateNote).first)
@@ -199,7 +199,7 @@ struct PoolActionTests {
 
     @Test func recordRateSavesAndRefusesNonsense() throws {
         let made = try engine.perform(RecordRate(pair: "usd/inr", value: "83.10"), by: .user)
-        #expect(made.record.receipt == "Rate saved, INR 83.10.")
+        #expect(made.record.receipt == "Rate saved, INR 83.10")
         #expect(made.record.summary == "Rate noted")
         for bad in [RecordRate(pair: "USD", value: "83"), RecordRate(pair: "USD/USD", value: "1"),
                     RecordRate(pair: "USD/INR", value: "0"), RecordRate(pair: "USD/INR", value: "-3"),
@@ -215,7 +215,7 @@ struct PoolActionTests {
         let fresh = try pool("Fresh")
         try engine.perform(LogInflow(amount: "7", pool: fresh.id), by: .user)
         let archived = try engine.perform(ArchivePool(pool: old.id), by: .user)
-        #expect(archived.record.receipt == "Old savings, archived.")
+        #expect(archived.record.receipt == "Old savings, archived")
         #expect(book.balance(of: old) == 100)
         // Nothing new defaults into it.
         let landed = try engine.perform(LogInflow(amount: "1"), by: .user).output

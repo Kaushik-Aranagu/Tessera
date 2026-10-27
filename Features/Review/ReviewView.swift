@@ -116,8 +116,8 @@ enum ReviewCopy {
             (week.workouts.count, "workout", "workouts"),
             (week.notesWritten, "note", "notes"),
         ].filter { $0.0 > 0 }.map { "\($0.0) \($0.0 == 1 ? $0.1 : $0.2)" }
-        guard let last = parts.last else { return "Nothing to count this week." }
-        return (parts.count == 1 ? last : parts.dropLast().joined(separator: ", ") + " and " + last) + "."
+        guard let last = parts.last else { return "Nothing to count this week" }
+        return parts.count == 1 ? last : parts.dropLast().joined(separator: ", ") + " and " + last
     }
 
     /// Tess's one line, looking forward: a muscle behind its weekly sets, else what's resting in Later.

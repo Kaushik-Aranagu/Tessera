@@ -88,8 +88,8 @@ struct SetLossTests {
         ("US2", "spent $23.47 at trader joe's sat", "spend $23.47 - trader joe's @"),
         ("US3", "chicken $1.29/lb, rice", "groceries chicken $1.29/lb, rice"),
         // Research's 113 re-trace and Design's Speak review.
-        ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
-        ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
+        ("R113b", "Bench 80 kg, 8 reps only", "lift Bench Press 80x8"),
+        ("R113c", "Bench 3 sets of 8 at 80", "lift Bench Press 3x80x8"),
         ("SPK1", "oat milk and eggs for groceries", "groceries oat milk, eggs"),
         ("SPK2", "eggs on the shopping list", "groceries eggs"),
         ("SPK3", "Okay Tess, bench 80 for 8", "lift Bench Press 80x8"),
@@ -118,7 +118,7 @@ struct SetLossTests {
         // QA L3 on #287: "Tess 80 for 8" with no comma.
         #expect(read(grammar.parse("Tess 80 for 8", context: live)) == "set 80x8")
         // R113a: a wake word and a dictated full stop, during a workout: the set, never Groceries.
-        #expect(read(grammar.parse("Okay Tess, 80 for 8.", context: live)) == "set 80x8")
+        #expect(read(grammar.parse("Okay Tess, 80 for 8", context: live)) == "set 80x8")
         #expect(read(grammar.parse("80 for 8, milk", context: live)) != "groceries 80 for 8, milk")
         // QA R2 on #262: number words and an errand together.
         #expect(read(grammar.parse("bench eighty for eight, call mum at seven", context: live))
@@ -128,7 +128,7 @@ struct SetLossTests {
     @Test func theMissLineOffersAnExampleOnlyWhereItFits() async throws {
         let tess = TessCaptureEngine(engine: engine)
         #expect(await tess.capture("what is a plate?", context: context)
-            .line == "what is a plate?, kept to sort later.")
+            .line == "what is a plate?, kept to sort later")
         let workout = try store.create(#require(classes[.workout]), title: "Push")
         let entry = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
                                        by: .user).output
@@ -150,10 +150,10 @@ struct SetLossTests {
     @Test func receiptsForTheNewShapes() async {
         let tess = TessCaptureEngine(engine: engine)
         // A181: no "at 0" on a bodyweight lift.
-        #expect(await tess.capture("pull ups 3x8", context: context).line == "Pull-Up 3 × 8. Added to today.")
+        #expect(await tess.capture("pull ups 3x8", context: context).line == "Pull-Up 3 × 8. Added to today")
         // A027: the dated ask and its LOG line say "Squat".
         #expect(await tess.capture("squat 100x5 tue", context: context).line == "Squat 100 × 5 for Tuesday?")
-        #expect(tess.answer(TessDatedLiftAsk.Choice.log, context: context).line == "Squat 100 × 5 logged for Tuesday.")
+        #expect(tess.answer(TessDatedLiftAsk.Choice.log, context: context).line == "Squat 100 × 5 logged for Tuesday")
     }
 
     @Test func aHundredCommaFiveInAWorkoutIsNeverGroceries() throws {

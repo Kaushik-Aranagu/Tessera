@@ -19,7 +19,7 @@ public extension ObjectStore {
         guard let root, classDef.id != root.id, isSubclass(classDef, ofClassID: root.id) else { return false }
         let key = classDef.systemKey ?? ""
         let groupings = ["system.exercise", "system.activity", "system.strengthExercise", "system.barbellLift"]
-        return !groupings.contains(key) && !key.hasPrefix("library.pattern.") && !key.hasPrefix("library.group.")
+        return !groupings.contains(key) && !key.hasPrefix("library.pattern") && !key.hasPrefix("library.group")
     }
 
     /// The nearest equipment trait up the class's lineage.

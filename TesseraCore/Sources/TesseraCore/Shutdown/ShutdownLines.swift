@@ -80,35 +80,35 @@ public enum ShutdownLines {
         let other = max(inputs.counted - (inputs.workouts > 0 ? 1 : 0) - (inputs.cooks > 0 ? 1 : 0), 0)
         if inputs.afterGap, inputs.counted > 0 {
             let headline = [inputs.workoutName, inputs.recipeName].compactMap(\.self).first ?? counts(inputs)
-            return "Back in. \(headline)."
+            return "Back in. \(headline)"
         }
         if let lift = inputs.bestLift {
             let more = inputs.counted - 1
-            return more > 0 ? "\(lift) best, plus \(more) more things." : "\(lift) best."
+            return more > 0 ? "\(lift) best, plus \(more) more things" : "\(lift) best"
         }
         if inputs.travelDay {
-            return "Travel day. \(inputs.counted) things logged on the move."
+            return "Travel day. \(inputs.counted) things logged on the move"
         }
         if inputs.workouts > 0, inputs.cooks > 0, let workout = inputs.workoutName, let recipe = inputs.recipeName {
-            return "\(workout) and \(recipe). Fed and trained."
+            return "\(workout) and \(recipe). Fed and trained"
         }
         if inputs.busy {
-            return "Full one. \(inputs.counted) things across \(inputs.appsTouched) apps."
+            return "Full one. \(inputs.counted) things across \(inputs.appsTouched) apps"
         }
         if inputs.workouts > 0, let workout = inputs.workoutName {
-            return other > 0 ? "\(workout), \(inputs.sets) sets. \(other) other things too." : "\(workout), \(inputs.sets) sets."
+            return other > 0 ? "\(workout), \(inputs.sets) sets. \(other) other things too" : "\(workout), \(inputs.sets) sets"
         }
         if inputs.cooks > 0, let recipe = inputs.recipeName {
-            return other > 0 ? "Cooked \(recipe). \(other) more things logged." : "Cooked \(recipe)."
+            return other > 0 ? "Cooked \(recipe). \(other) more things logged" : "Cooked \(recipe)"
         }
         if inputs.quiet {
-            return "Quiet day. \(counts(inputs))."
+            return "Quiet day. \(counts(inputs))"
         }
         if inputs.counted == 0, let sleep = inputs.sleep {
-            return "Rest day. Slept \(sleep)."
+            return "Rest day. Slept \(sleep)"
         }
         if inputs.counted == 0, todayOnlyBeforeShutdown {
-            return "Fills itself as you go."
+            return "Fills itself as you go"
         }
         return nil
     }
@@ -117,23 +117,23 @@ public enum ShutdownLines {
     public static func opener(_ inputs: ShutdownInputs) -> String {
         let counted = counts(inputs)
         if inputs.lateNight, inputs.counted > 0 {
-            return "Filed under \(inputs.attributedWeekday). Did \(counted)."
+            return "Filed under \(inputs.attributedWeekday). Did \(counted)"
         }
         if inputs.afterGap, inputs.counted > 0 {
-            return "Back in. Did \(counted) today."
+            return "Back in. Did \(counted) today"
         }
         if let lift = inputs.bestLift, inputs.counted > 0 {
-            return "Did \(counted). Plus a best on \(lift)."
+            return "Did \(counted). Plus a best on \(lift)"
         }
         if inputs.busy {
-            return "\(inputs.counted) things done. Full day."
+            return "\(inputs.counted) things done. Full day"
         }
         if inputs.counted >= 2 {
-            return "Did \(counted)."
+            return "Did \(counted)"
         }
         if inputs.counted == 1 {
             let name = inputs.workoutName ?? inputs.recipeName
-            return name.map { "\($0), done. That counts." } ?? "Did \(counted)."
+            return name.map { "\($0), done. That counts" } ?? "Did \(counted)"
         }
         if inputs.meetings > 0 || inputs.sleep != nil {
             var parts: [String] = []
@@ -144,8 +144,8 @@ public enum ShutdownLines {
                 parts.append(parts.isEmpty ? "Slept \(sleep)" : "slept \(sleep)")
             }
             let lead = parts.joined(separator: ", ")
-            return parts.count == 1 && inputs.meetings == 0 ? "\(lead). That was the day."
-                : "\(lead.prefix(1).uppercased() + lead.dropFirst()). That was the day."
+            return parts.count == 1 && inputs.meetings == 0 ? "\(lead). That was the day"
+                : "\(lead.prefix(1).uppercased() + lead.dropFirst()). That was the day"
         }
         return "A quiet one. Want a line for tomorrow?"
     }
@@ -155,55 +155,55 @@ public enum ShutdownLines {
         let count = inputs.rolling.count
         guard count > 0 else { return nil }
         if inputs.pastMidnight {
-            return "\(count) moving to \(inputs.nextWeekday). Tap any for later."
+            return "\(count) moving to \(inputs.nextWeekday). Tap any for later"
         }
         if inputs.firstShutdownEver {
-            return "\(count) moving to tomorrow. Tap any for later."
+            return "\(count) moving to tomorrow. Tap any for later"
         }
         if count >= 6 {
-            return "\(count) rolling over. Plan my day picks up to 3."
+            return "\(count) rolling over. Plan my day picks up to 3"
         }
         if count == 1 {
             let task = inputs.rolling[0]
-            return task.split(separator: " ").count > 4 ? "1 moving to tomorrow. Tap to keep it."
-                : "\(task) moves to tomorrow. Tap to keep it."
+            return task.split(separator: " ").count > 4 ? "1 moving to tomorrow. Tap to keep it"
+                : "\(task) moves to tomorrow. Tap to keep it"
         }
-        return "\(count) moving to tomorrow. Tap any for later."
+        return "\(count) moving to tomorrow. Tap any for later"
     }
 
     /// Slot C's own small line for items untouched for 7 days or more (C1).
     public static func autoAge(_ inputs: ShutdownInputs) -> String? {
         inputs.itemsUntouchedSevenDays > 0
-            ? "\(inputs.itemsUntouchedSevenDays) going to Later. Still there, just quieter." : nil
+            ? "\(inputs.itemsUntouchedSevenDays) going to Later. Still there, just quieter" : nil
     }
 
     /// Slot D, the placeholder for tomorrow's line (D1, D2); empty on a day B7 already offered it.
     public static func tomorrowPlaceholder(_ inputs: ShutdownInputs) -> String {
         if let event = inputs.tomorrowFirstEvent {
-            return "Tomorrow starts with \(event.title) at \(event.time)."
+            return "Tomorrow starts with \(event.title) at \(event.time)"
         }
         let offeredAlready = inputs.counted == 0 && inputs.meetings == 0 && inputs.sleep == nil
-        return offeredAlready ? "" : "One line for tomorrow, if you want."
+        return offeredAlready ? "" : "One line for tomorrow, if you want"
     }
 
     /// Slot E, the close (E1 to E5), or F3 and F4 late at night.
     public static func close(_ inputs: ShutdownInputs) -> String {
         if inputs.lateNight {
-            return inputs.workouts > 0 ? "Closed. Sleep is also training."
-                : "Saved to \(inputs.attributedWeekday). Pick up tomorrow."
+            return inputs.workouts > 0 ? "Closed. Sleep is also training"
+                : "Saved to \(inputs.attributedWeekday). Pick up tomorrow"
         }
         if inputs.afterGap {
-            return "Closed. Tomorrow picks up from here."
+            return "Closed. Tomorrow picks up from here"
         }
         if let lift = inputs.bestLift {
-            return "Closed. \(lift) best filed under \(inputs.attributedWeekday)."
+            return "Closed. \(lift) best filed under \(inputs.attributedWeekday)"
         }
         if inputs.wroteTomorrowLine {
-            return "Closed. Your line is waiting at \(inputs.tomorrowLineTime)."
+            return "Closed. Your line is waiting at \(inputs.tomorrowLineTime)"
         }
         if inputs.counted > 0 {
-            return "Closed. \(inputs.counted) things in \(inputs.attributedWeekday)'s log."
+            return "Closed. \(inputs.counted) things in \(inputs.attributedWeekday)'s log"
         }
-        return "Day closed. Nothing waiting tonight."
+        return "Day closed. Nothing waiting tonight"
     }
 }

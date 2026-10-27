@@ -15,7 +15,9 @@ struct PantryView: View {
         NavigationStack {
             Group {
                 // The places page on the dial rail while Landing pages is On (QA on #1224); else as it was.
-                if LandingSwitch.isOn {
+                if Tier1b.kitchenRoomsIsOn {
+                    PantryRoomPage()
+                } else if LandingSwitch.isOn {
                     PantryRailPage()
                 } else {
                     PantryPage()
@@ -124,7 +126,7 @@ private struct PantryPage: View {
         }
         let name = model.store.displayTitle(of: entry.ingredient)
         guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return false
         }
         model.touch()

@@ -102,7 +102,7 @@ enum ExerciseCredits {
     static let gymVisualLine = "(c) Gym visual - https://gymvisual.com/"
     static let gymVisualURL = URL(string: "https://gymvisual.com/")!
     static let line = "Exercise pictures: Workout Guide by Bryl Lim (bryllim.com), CC BY-SA 4.0. Artwork by "
-        + "Everkinetic / Greg Priday, CC BY-SA 4.0. Changes: recolored and resized."
+        + "Everkinetic / Greg Priday, CC BY-SA 4.0. Changes: recolored and resized"
     static let licenseURL = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!
     static let sourceURL = URL(string: "https://github.com/bryllim/workout-guide")!
     static let upstreamURL = URL(string: "https://github.com/everkinetic/data")!

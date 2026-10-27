@@ -26,7 +26,7 @@ struct TasksLandingPage: View {
     }
 
     private func landing(_ front: TasksFront) -> some View {
-        var sentence = AttributedString("One thing at a time.")
+        var sentence = AttributedString("One thing at a time")
         sentence.foregroundColor = Theme.Colors.inkSecondary
         return LandingPage(
             back: (title: "Home", action: { dismiss() }),
@@ -83,7 +83,7 @@ private struct TasksLead: View {
                     }
                 }
             } else {
-                Text("Nothing next.")
+                Text("Nothing next")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
             }
@@ -131,7 +131,7 @@ private struct TasksRail: View {
     var body: some View {
         RailPage(
             title: "Tasks",
-            subtitle: { _ in "One thing at a time." },
+            subtitle: { _ in "One thing at a time" },
             back: (title: "Tasks", action: back),
             pinned: RailPlace(id: "now", name: "Now", count: front.lines(in: "now").count),
             accent: Theme.Colors.ink,
@@ -141,7 +141,7 @@ private struct TasksRail: View {
             sectionStyle: .none,
             sections: { [.init(label: nil, rows: front.lines(in: $0))] },
             foot: { _ in "New task" },
-            empty: { $0 == "now" ? "Nothing next." : "Nothing here yet." },
+            empty: { $0 == "now" ? "Nothing next" : "Nothing here yet" },
             row: row
         )
         .toolbarVisibility(.hidden, for: .navigationBar)

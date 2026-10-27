@@ -35,9 +35,9 @@ struct PantryFront {
 
     static func swipe(_ entry: PantryLedger.Entry, groceries: Groceries, store: ObjectStore) -> Swipe {
         switch listed(entry.ingredient, groceries: groceries, store: store) {
-        case .open: .already(receipt: "\(entry.label), already on Groceries.")
+        case .open: .already(receipt: "\(entry.label), already on Groceries")
         // Ticked off and in the basket: "already on Groceries" would read as still to buy (Design on #743).
-        case .basket: .already(receipt: "\(entry.label), in the basket.")
+        case .basket: .already(receipt: "\(entry.label), in the basket")
         case .none: .add(receipt: PantryCopy.added(entry.label))
         }
     }
