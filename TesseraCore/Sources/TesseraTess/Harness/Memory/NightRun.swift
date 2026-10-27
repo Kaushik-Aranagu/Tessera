@@ -213,12 +213,20 @@ public struct NightRun {
             let read = everything.filter { $0.at >= window.from && $0.at < window.to }
             let allowed = NightPass.allowed(read, under: policy)
             let steps = window.night.summaries(day: window.isWeek ? [] : allowed, week: window.isWeek ? allowed : [])
-            for case let .summary(written, text) in steps where written == path {
+            var written = false
+            for case let .summary(name, text) in steps where name == path {
+                written = true
                 record.cites = (record.cites ?? [:]).merging([path: read.flatMap(\.cites)]) { $1 }
                 if record.summaries[path] != text {
                     record.summaries[path] = text
                     changed.append(path)
                 }
+            }
+            // A path no night would write now (a week name that isn't one) is dropped, never left as it was.
+            if !written {
+                record.summaries[path] = nil
+                record.cites?[path] = nil
+                changed.append(path)
             }
         }
         return changed.sorted()

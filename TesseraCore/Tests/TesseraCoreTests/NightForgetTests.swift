@@ -137,9 +137,12 @@ struct NightForgetTests {
         store.softDelete(gone)
         var record = NightRecord(summaries: ["/summaries/day/someday": "1 workout: Leg Day"],
                                  cites: ["/summaries/day/someday": [gone.id]])
+        record.summaries["/summaries/week/2026-W99"] = "1 workout: Leg Day"
         let report = try #require(await run(24, &record))
-        #expect(report.rebuilt == ["/summaries/day/someday"])
+        #expect(report.rebuilt == ["/summaries/day/someday", "/summaries/week/2026-W99"])
         #expect(record.summaries["/summaries/day/someday"] == nil && record.cites?["/summaries/day/someday"] == nil)
+        // A week name no night would write now is dropped too, never left as it was.
+        #expect(record.summaries["/summaries/week/2026-W99"] == nil)
     }
 
     @Test func theCiteIndexSurvivesTheFileAndTrimsWithTheSummaries() throws {
