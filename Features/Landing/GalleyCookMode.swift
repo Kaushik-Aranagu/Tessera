@@ -232,7 +232,7 @@ struct GalleyCookScreen: Equatable {
             start = "Start \(GalleyCookWords.minutes(pan))"
         }
         if facts.isLast {
-            verb = "Finish"
+            verb = "Serve"
             object = facts.recipe
             hold = true
         } else {

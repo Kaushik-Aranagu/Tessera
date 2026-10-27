@@ -73,7 +73,7 @@ struct GalleyCookModeTests {
         facts.steps[1].timer = .init(id: "u", label: "Chicken", endsAt: now.addingTimeInterval(-5))
         let screen = GalleyCookScreen(facts)
         #expect(screen.timers.first?.time == "Ready" && screen.timers.first?.ready == true)
-        #expect(screen.verb == "Finish" && screen.hold && screen.object == "Tacos")
+        #expect(screen.verb == "Serve" && screen.hold && screen.object == "Tacos")
     }
 
     @Test func noShownLineEndsWithAFullStop() {
