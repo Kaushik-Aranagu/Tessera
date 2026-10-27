@@ -27,7 +27,7 @@ struct EvalWorldSeederTests {
         // the only refusals, and they are Tess's wall working, not a seeding fault.
         #expect(report.refused.filter { $0.key != "memory" }.isEmpty, "\(report.firstRefusal)")
         #expect((report.refused["memory"] ?? 0) <= 2, "\(report.firstRefusal)")
-        #expect(SettingsStore(engine: engine).read().isTestStore)
+        #expect(SettingsStore.isTestStore(in: store) && TestStore.allowsClaude(store))
         #expect(report.notSeeded == ["leftovers", "renames"])
 
         // Training: the deleted 95 kg bench never counts, so the best for 5 is the planted 92.5 kg.
