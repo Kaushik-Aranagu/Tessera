@@ -357,7 +357,8 @@ public struct TopicTree: Codable, Sendable, Equatable {
     }
 
     mutating func merge(_ kept: String, _ removed: String) -> Change {
-        nodes[kept]?.leaves += nodes[removed]?.leaves ?? []
+        let moved = nodes[removed]?.leaves ?? []
+        nodes[kept]?.leaves += moved
         if let parent = nodes[removed]?.parent {
             nodes[parent]?.children.removeAll { $0 == removed }
         }
@@ -369,7 +370,8 @@ public struct TopicTree: Codable, Sendable, Equatable {
     mutating func collapse(_ id: String) -> Change? {
         guard let node = nodes[id], node.children.count == 1, let child = node.children.first,
               let parent = node.parent else { return nil }
-        nodes[parent]?.children = nodes[parent]?.children.map { $0 == id ? child : $0 } ?? []
+        let siblings = nodes[parent]?.children ?? []
+        nodes[parent]?.children = siblings.map { $0 == id ? child : $0 }
         nodes[child]?.parent = parent
         nodes[id] = nil
         forget(id)
