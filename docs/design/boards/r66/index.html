@@ -2371,7 +2371,15 @@ function thUndo(el,byTess,msg,undo,dry){msg=msg.replace(/\.\s*$/,'');let ul=el.q
  /* a new change dries the one before it at once */
  if(ul._dry){const d=ul._dry;ul._dry=null;d()}ul._dry=dry||null;
  ul.innerHTML=(byTess?'<span style="color:var(--tessblue)">Tess</span> ':'')+msg+' <button>Undo</button>';clearTimeout(ul._t);aside(1);if(!RM)ul.querySelector('button').animate([{opacity:1},{opacity:1,offset:.6},{opacity:.45}],{duration:10000,fill:'forwards'});
- ul.querySelector('button').onclick=()=>{clearTimeout(ul._t);ul.innerHTML='';ul._dry=null;aside(0);undo()};ul._t=setTimeout(()=>{ul.innerHTML='';aside(0);const d=ul._dry;ul._dry=null;d&&d()},10000)}
+ /* 307: Undo rewinds its own line. The words wind back from the right, as if the sentence were taken back, while the
+    change itself reverses; the action word returns only once the line is gone. When the 10 s run out the line just
+    fades. Neither is ever a cut. */
+ const leave=(how,then)=>{const gen=ul._gen=(ul._gen||0)+1;if(RM){ul.innerHTML='';then();return}
+  const a=how==='rewind'?ul.animate([{clipPath:'inset(0 0 0 0)',opacity:1},{clipPath:'inset(0 100% 0 0)',opacity:.6}],{duration:220,easing:'cubic-bezier(.5,0,.75,0)'}):ul.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out'});
+  a.onfinish=()=>{if(ul._gen!==gen)return;ul.innerHTML='';then()}};
+ ul._gen=(ul._gen||0)+1;ul.getAnimations().forEach(x=>x.cancel());
+ ul.querySelector('button').onclick=()=>{clearTimeout(ul._t);ul._dry=null;ul.querySelector('button').onclick=null;undo();leave('rewind',()=>aside(0))};
+ ul._t=setTimeout(()=>{const d=ul._dry;ul._dry=null;leave('fade',()=>{aside(0);d&&d()})},10000)}
 function thAside(el,on){const act=el&&el.querySelector('.act');if(!act||!!act._aside===!!on)return;act._aside=on;act.style.pointerEvents=on?'none':'';
  if(on)act.animate([{opacity:1},{opacity:0}],{duration:RM?0:200}).onfinish=()=>{if(act._aside){act.style.visibility='hidden';act.classList.add('aside')}};else{act.style.visibility='';act.classList.remove('aside');act.animate([{opacity:0},{opacity:1}],{duration:RM?0:260})}}
 const thTween=(ms,f,done)=>{const t0=performance.now();const s=now=>{const u=Math.min(1,(now-t0)/ms);f(u);if(u<1)requestAnimationFrame(s);else done&&done()};requestAnimationFrame(s)};

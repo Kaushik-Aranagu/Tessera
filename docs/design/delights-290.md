@@ -159,3 +159,16 @@ No full stops at the end of any of these (sheet 289).
 - Reduce Motion: no detent at all, as before.
 - For the builders: `DoorsDial` knows when its index wraps; pass `.wrap` to `MotionPolicy.delight(.detent)` and to
   `TesseraHaptics.play`.
+
+## 12. Undo rewinds its own line (sheet 307)
+
+- Tapping Undo no longer just swaps the line away. The "Undo" line rewinds from its trailing edge over 220 ms (eased
+  in, fading to 60%) while the change it undoes reverses, so the line visibly takes itself back.
+- The action word ("Cook", "Start") returns only after the line is gone, never under it.
+- When the 10 s window runs out without a tap, the line simply fades over 260 ms; only a tap rewinds.
+- The undo itself happens at once; only the line's exit is animated.
+- Reduce Motion: the line goes at once and the action word returns in place.
+- Measured on the board (`t51.js`): Galley in paper and Deck in black, frames every 20 ms; the line clips from the right,
+  the action word comes back at full strength, no overlap.
+- For the builders: a trailing-edge `.mask` that animates its width to zero through `MotionPolicy`, then the action
+  word's own transition in the completion.
