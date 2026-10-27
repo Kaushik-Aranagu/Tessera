@@ -1,5 +1,6 @@
 import Foundation
 @testable import Tessera
+import SwiftUI
 import Testing
 
 @MainActor
