@@ -274,11 +274,23 @@ struct TessConversationLayer: View {
     private func lineView(_ line: TessLayerModel.Line, newest: Bool) -> some View {
         switch line.role {
         case .tess:
-            TessLineView(line: line, font: newest ? TessFont.newest : TessFont.inLayer,
-                         color: newest ? Theme.Colors.ink : Theme.Colors.inkSecondary,
-                         arriving: model.arriving == line.id,
-                         echoName: model.echo?.line == line.id ? model.echo?.name : nil,
-                         onArrived: { model.arrived(line.id) })
+            VStack(alignment: .leading, spacing: 4) {
+                TessLineView(line: line, font: newest ? TessFont.newest : TessFont.inLayer,
+                             color: newest ? Theme.Colors.ink : Theme.Colors.inkSecondary,
+                             arriving: model.arriving == line.id,
+                             echoName: model.echo?.line == line.id ? model.echo?.name : nil,
+                             onArrived: { model.arrived(line.id) })
+                // Who answered her newest reply (Kaushik, Oct 26): Claude, or this phone. One small ink 2 line once
+                // her words have arrived.
+                if newest, let source = line.answeredBy, model.arriving != line.id {
+                    Text(source.line)
+                        .font(Theme.voice(size: 13))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(1)
+                        .accessibilityIdentifier("tess.answeredBy")
+                        .transition(.opacity)
+                }
+            }
         case .user:
             Text(line.text)
                 .font(Theme.voice(size: newest ? 17 : 16))
