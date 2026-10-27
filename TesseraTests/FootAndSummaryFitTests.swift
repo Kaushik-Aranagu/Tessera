@@ -19,7 +19,9 @@ struct FootAndSummaryFitTests {
                             lines: ["Tacos", "Rice bowl", "Soup"])
         for (label, line) in [(CGFloat(20), CGFloat(24)), (34, 41), (48, 58)] {
             let rows = DoorSummary.rows(door, label: label, line: line)
-            #expect(rows.count == 4)
+            // The label plus as many lines as fit the doors place (3 at default, fewer at accessibility sizes).
+            #expect(rows.count == 1 + DoorSummary.fittingLines(label: label, line: line))
+            #expect(rows.last.map { $0.y + line } ?? 0 <= 108)
             for (above, below) in zip(rows, rows.dropFirst()) {
                 let height = above.isLabel ? label : line
                 #expect(below.y >= above.y + height, "rows overlap at \(label)/\(line)")

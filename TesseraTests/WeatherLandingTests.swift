@@ -198,7 +198,10 @@ struct WeatherLandingTests {
             #expect(needs.count == 2)
             #expect(needs.allSatisfy { !$0.isEmpty && !$0.contains("...") && !$0.contains(" of ") })
         }
-        #expect(WeatherWords.needs(snapshot, switcher: 0, calendar: Self.calendar)[1] == "Rain from 4 pm")
+        #expect(WeatherWords.needs(snapshot, switcher: 0, calendar: Self.calendar) == WeatherWords.careNudges(
+            snapshot,
+            calendar: Self.calendar
+        ))
     }
 
     @Test func widgetSaysWhatIsComingTonightAndADayAndNeverStrikes() {

@@ -438,10 +438,33 @@ extension WeatherWords {
             return [lines.first?.capitalizedFirst ?? "A steady week",
                     warmest.map { "High \(degrees($0.high)) \(weekday($0.date, calendar: calendar))" } ?? ""]
         default:
-            let word = name(snapshot.kind, night: snapshot.night)
-            return ["\(word), \(degrees(snapshot.temperature))",
-                    change(snapshot, calendar: calendar)?.capitalizedFirst ?? "Steady for now"]
+            return careNudges(snapshot, calendar: calendar)
         }
+    }
+
+    /// Now's two needs lines (sheets 243 and 255): care nudges, never what the keystone already says (it shows the
+    /// temperature, the condition, feels and high, wind, when rain starts and the UV index). First what to carry,
+    /// then how to dress or where to be. Short enough for the 150 pt needs slot, so never cut.
+    static func careNudges(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> [String] {
+        let first = if isWet(snapshot.kind) {
+            "Take the umbrella"
+        } else if let wet = snapshot.hours.prefix(12).first(where: { isWet($0.kind) }) {
+            "Umbrella by \(hour(wet.date, calendar: calendar))"
+        } else {
+            "No umbrella today"
+        }
+        let second = if !snapshot.night, snapshot.uvIndex >= 6 {
+            "Wear sunscreen"
+        } else if snapshot.wind >= (snapshot.fahrenheit ? 18 : 29) {
+            "Gusty out there"
+        } else if snapshot.low <= (snapshot.fahrenheit ? 50 : 10) {
+            "Bring a layer"
+        } else if snapshot.night {
+            "Mild night out"
+        } else {
+            "Good for a walk"
+        }
+        return [first, second]
     }
 
     /// The widget's items (283): what is coming, tonight, and a day to note. Lookout has no strike.

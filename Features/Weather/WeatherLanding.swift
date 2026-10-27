@@ -129,8 +129,11 @@ struct LookoutSkypiece: View {
     @Environment(\.colorScheme) private var scheme
 
     static let radius: CGFloat = 26
-    /// How far below the glass a shadow may reach: the caption starts 10 pt under the slot.
-    static let shadowFoot: CGFloat = 6
+    /// How far below the glass a shadow may reach: the caption starts 10 pt under the slot, so the shadows have faded
+    /// to nothing 1 pt above it.
+    static let shadowFoot: CGFloat = 9
+    /// How far the light and shadows fall off the other edges (inside the 24 pt gutters).
+    static let shadowReach: CGFloat = 22
 
     var body: some View {
         let size = LandingKeystone<EmptyView>.size
@@ -140,6 +143,8 @@ struct LookoutSkypiece: View {
                 .frame(width: size.width, height: size.height, alignment: .topLeading)
                 .background { LookoutGlass(shape: shape, onDark: scheme == .dark, foot: Self.shadowFoot) }
                 .contentShape(shape)
+                .keystoneBleed(EdgeInsets(top: Self.shadowReach, leading: Self.shadowReach,
+                                          bottom: Self.shadowFoot, trailing: Self.shadowReach))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(
@@ -153,11 +158,11 @@ struct LookoutSkypiece: View {
         let forms = WeatherWords.condition(snapshot.kind, night: snapshot.night)
         return ZStack(alignment: .topLeading) {
             (Text("\(snapshot.temperature)")
-                .font(.custom("Outfit", fixedSize: 112).weight(.ultraLight))
-                + Text("°").font(.custom("Outfit", fixedSize: 44).weight(.ultraLight))
+                .font(.custom("Outfit", fixedSize: 100).weight(.ultraLight))
+                + Text("°").font(.custom("Outfit", fixedSize: 40).weight(.ultraLight))
                 // Raised to the numeral's cap line, as on the board.
-                .baselineOffset(46))
-                .tracking(-0.03 * 112)
+                .baselineOffset(41))
+                .tracking(-0.03 * 100)
                 .monospacedDigit()
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize()
@@ -228,38 +233,47 @@ struct LookoutSkypiece: View {
     }
 }
 
-/// The glass's light and shadow, drawn outside the shape only: the inside is cut away so the sky stays untouched.
-/// The shadows end `foot` points under the glass, fading out, so they never reach the caption.
+/// The glass's light and shadow (sheet 254 v9, surface approved): the slot is the screen's own glass, raised a little.
+/// A soft light falls off the top-left edge (14 pt blur, 4 pt out, 38% white on bright skies, 22% on dark), a shadow
+/// off the bottom-right (20 pt blur, 8 pt down, 24% / 36%) and a wider fainter one (34 pt blur, 14 pt down, 9% /
+/// 16%), and a 1 pt hairline of the same light and shade just inside the edge. Everything is drawn outside the shape:
+/// the inside is cut away, so the sky shows through untouched (no fill, tint, frost or refraction). The shadows fade
+/// to nothing `foot` points under the glass, so they melt into the ground before the caption.
 struct LookoutGlass: View {
     let shape: RoundedRectangle
     let onDark: Bool
     let foot: CGFloat
 
-    private static let reach: CGFloat = 30
+    private static let reach: CGFloat = 40
 
     var body: some View {
         let reach = Self.reach
-        let insets = EdgeInsets(top: reach, leading: reach, bottom: foot, trailing: reach)
+        let insets = EdgeInsets(top: reach, leading: reach, bottom: reach, trailing: reach)
         ZStack {
-            shape.fill(.black).shadow(color: .white.opacity(onDark ? 0.22 : 0.38), radius: 7, x: -4, y: -4)
-            shape.fill(.black).shadow(color: .black.opacity(onDark ? 0.36 : 0.24), radius: 10, x: 5, y: 4)
-            shape.fill(.black).shadow(color: .black.opacity(onDark ? 0.16 : 0.09), radius: 17, x: 2, y: 6)
+            shape.fill(.black)
+                .shadow(color: .white.opacity(onDark ? 0.22 : 0.38), radius: 7, x: -4, y: -4)
+            shape.fill(.black)
+                .shadow(color: .black.opacity(onDark ? 0.36 : 0.24), radius: 10, x: 3, y: 8)
+            shape.fill(.black)
+                .shadow(color: .black.opacity(onDark ? 0.16 : 0.09), radius: 17, x: 5, y: 14)
         }
         .padding(insets)
         .mask {
             VStack(spacing: 0) {
+                // Full strength down to the glass's foot, then gone `foot` points below it.
                 Rectangle()
                 LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: foot)
+                Color.clear.frame(height: reach - foot)
             }
             .overlay { shape.padding(insets).blendMode(.destinationOut) }
             .compositingGroup()
         }
-        .padding(EdgeInsets(top: -reach, leading: -reach, bottom: -foot, trailing: -reach))
+        .padding(-reach)
         .overlay {
             shape.strokeBorder(LinearGradient(stops: [
-                .init(color: .white.opacity(onDark ? 0.18 : 0.3), location: 0),
+                .init(color: .white.opacity(onDark ? 0.22 : 0.38), location: 0),
                 .init(color: .white.opacity(0), location: 0.5),
-                .init(color: .black.opacity(onDark ? 0.14 : 0.08), location: 1),
+                .init(color: .black.opacity(onDark ? 0.30 : 0.16), location: 1),
             ], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
         }
         .allowsHitTesting(false)

@@ -76,7 +76,9 @@ struct LandingActionWord: View {
                 }
             }
             .frame(height: verbHeight, alignment: .leading)
-            if !step.object.isEmpty {
+            // At sizes where verb and object outgrow the slot, the verb stands alone (VoiceOver still reads both), so
+            // the foot never rises into the doors above it.
+            if !step.object.isEmpty, verbHeight + objectHeight <= Self.slot {
                 Text(step.object)
                     .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.medium))
                     .foregroundStyle(Theme.Colors.inkSecondary)
