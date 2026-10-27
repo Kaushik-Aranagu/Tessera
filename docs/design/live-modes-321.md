@@ -259,3 +259,13 @@ When a pan timer reaches zero in cooking mode, the ticket printer feeds: the pap
 - Only one alert shows; a second timer that finishes replaces it and feeds again.
 - The alert line is 28 pt tall and pushes the ticket down, so nothing overlaps.
 - Test: t67 paper and black green; AL.png shows the fed ticket.
+
+## Sheet 334: the ticket tears off when you pay
+
+The last "Pay" in shopping mode tears the list off the rail instead of swapping it.
+
+- The old ticket lifts away up and to the left (18 pt left, 70 pt up, 5° anticlockwise from its top-left corner) and fades out over 440 ms, easing in like a hand pulling it.
+- The paid ticket then prints from the rail: it starts 40 pt up, overshoots 4 pt and settles in six steps over 560 ms, 220 ms after the tear starts, so the two never sit on top of each other for long.
+- One short double buzz as it tears.
+- Reduce Motion: no tear, the paid ticket simply replaces the list.
+- Test: t67 paper and black green; ptr.js shows one torn copy mid-tear and none after.

@@ -1570,8 +1570,11 @@ SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortil
    '<div class="tk-verb" data-a="got">'+(allLeft()?'Got it':'Pay')+'</div><div class="tk-sub">'+(it?'<span data-a="skip">not here, ask me later</span>':'swipe up')+'</div>';
   const k2=S.a+'|'+j+'|'+S.fin;if(!RM&&lastKey&&k2!==lastKey){P.innerHTML=html;[...P.querySelectorAll('.tk-item,.tk-how,.tk-cue')].forEach((e,i)=>e.animate([{opacity:0,transform:'translateX(30px)'},{opacity:1,transform:'none'}],{duration:360,delay:i*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))}else P.innerHTML=html;lastKey=k2;P.querySelectorAll('.tk-big,.tk-how,.tk-cue,.tk-h,.tk-top span').forEach(fitLine)}
  function toggle(a,j){const k=key(a,j);if(S.got.has(k))S.got.delete(k);else S.got.add(k);paint()}
- function got(){if(S.fin)return back();const j=nextJ(S.a);if(j<0){const n=AIS.findIndex((_,a)=>leftIn(a));if(n<0){S.fin=1;GET=[];return paint()}S.a=n;return paint()}
+ function got(){if(S.fin)return back();const j=nextJ(S.a);if(j<0){const n=AIS.findIndex((_,a)=>leftIn(a));if(n<0){S.fin=1;GET=[];return tear()}S.a=n;return paint()}
   const k=key(S.a,j),nm=AIS[S.a].it[j][0];S.got.add(k);S.just=k;setTimeout(()=>{if(S.just===k)S.just=null},400);GET=GET.filter(x=>x!==nm);receipt(el,nm+', in the basket',()=>{S.got.delete(k);paint()});paint()}
+ function tear(){if(RM)return paint();const g=P.cloneNode(true);g.classList.add('tk-torn');P.after(g);if(navigator.vibrate)try{navigator.vibrate([4,40,10])}catch(e){}
+  g.animate([{transform:'none',opacity:1},{transform:'translate(-18px,-70px) rotate(-5deg)',opacity:0}],{duration:440,easing:'cubic-bezier(.5,0,.75,.3)',fill:'forwards'}).onfinish=()=>g.remove();
+  paint();P.animate([{transform:'translateY(-40px)',opacity:0},{transform:'translateY(-40px)',opacity:1,offset:.01},{transform:'translateY(4px)',offset:.75},{transform:'none'}],{duration:560,delay:220,easing:'steps(6)',fill:'backwards'})}
  function skip(){const j=nextJ(S.a);if(j<0)return;const q=AIS[S.a].it.splice(j,1)[0];AIS[S.a].it.push(q);receipt(el,q[0]+', later in this aisle');paint()}
  paint();window.__sh.got=got;return null}};
 
@@ -1654,6 +1657,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .fullticket .tk-bg{position:absolute;inset:0;background:#F3ECDD}
 .fullticket .tk-rail{position:absolute;left:0;right:0;top:50px;height:8px;background:linear-gradient(#b9b9b9,#8d8d8d);box-shadow:0 2px 3px rgba(0,0,0,.18)}
 .fullticket .tk-rail i{position:absolute;left:50%;top:-4px;width:34px;height:18px;margin-left:-17px;background:#6f6f6f;border-radius:2px}
+.fullticket .tk-torn{pointer-events:none;transform-origin:0 0;z-index:3}
 .fullticket .tk-paper{position:absolute;left:24px;right:24px;top:70px;bottom:0;font-family:'IBM Plex Sans Condensed',sans-serif}
 .fullticket .tk-pad{position:absolute;inset:0;z-index:5;touch-action:none;cursor:pointer}
 .tk-alert{margin:-8px 0 10px;font-size:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8C2F39;height:28px;line-height:28px;border-bottom:1.5px dashed rgba(140,47,57,.5)}
