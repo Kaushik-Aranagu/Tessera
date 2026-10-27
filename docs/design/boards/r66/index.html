@@ -1374,7 +1374,14 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   T(st?'Done':'Next lift',24,790,44,.97,ACC);T(st?(st.u?'the warm up':'set '+(d+1)+', swipe up'):'swipe across',24,816,15,.55,D);HIT.done=[0,740,250,874];drawLifts()}
  function drawLifts(){HIT.lifts=[];LIFTS.forEach((q,i)=>{const y=640+i*26;const on=i===S.li;const w=T(q.k,378,y,on?22:17,on?.98:.5,on?W:D,'r');if(!left(q))tick(378-w-22,y-7,.6,D);HIT.lifts.push([i,378-w-8,y-20,w+16,26])});
   T('hold to finish',378,108,15,.45,D,'r');HIT.fin=[290,90,112,28]}
- let raf=0,smear=0;const loop=()=>{draw();if(smear>0){g.save();g.globalCompositeOperation='destination-out';g.globalAlpha=smear*.0;g.restore()}raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
+ /* 338: when the rest ends the board is wiped, not swapped. A snapshot of the rest board stays on the right of an eraser
+    band that sweeps left to right; the next lift is already written behind it, and the band leaves a faint haze. */
+ let WP=null;const snap=document.createElement('canvas');snap.width=804;snap.height=1748;
+ function wipe(){if(RM)return;snap.getContext('2d').drawImage(cv,0,0);WP={t0:performance.now()}}
+ function drawWipe(){if(!WP)return;const e=(performance.now()-WP.t0)/460;if(e>=1){WP=null;return}const ez=e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2,bx=-60+ez*520;
+  g.save();g.beginPath();g.moveTo(bx+18,0);g.lineTo(402,0);g.lineTo(402,874);g.lineTo(bx-18,874);g.closePath();g.clip();g.drawImage(snap,0,0,402,874);g.restore();
+  const gr=g.createLinearGradient(bx-46,0,bx+20,0);gr.addColorStop(0,'rgba('+W+',0)');gr.addColorStop(.75,'rgba('+W+',.07)');gr.addColorStop(1,'rgba('+W+',0)');g.save();g.globalAlpha=1-Math.max(0,e-.8)*5;g.fillStyle=gr;g.fillRect(bx-46,130,66,720);g.restore()}
+ let raf=0,smear=0;const loop=()=>{draw();drawWipe();if(smear>0){g.save();g.globalCompositeOperation='destination-out';g.globalAlpha=smear*.0;g.restore()}raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
  // input
  const pad=h('div','fbpad');el.appendChild(pad);let x0=null,y0,acc=0,mode=null,hold=null;
  const inR=(r,x,y)=>r&&x>=r[0]&&x<=r[0]+r[2]&&y>=r[1]&&y<=r[1]+r[3];
@@ -1399,7 +1406,7 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
   const li=S.li;receipt(el,l.name+', '+(st.u?st.w+' min':st.w+' × '+st.r)+', logged',()=>{S.done[li]--;S.log.pop();S.phase='lift';S.rest=0;S.pending=null});
   if(!LIFTS.some(x=>left(x)))return finish();
   S.phase='rest';S.restOf=S.rest=l.rest;S.pending=left(l)?null:LIFTS.findIndex(x=>left(x))}
- function endRest(){S.phase='lift';S.pr=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
+ function endRest(){wipe();S.phase='lift';S.pr=null;if(S.pending!=null){S.li=S.pending;S.pending=null}pulse()}
  function finish(){S.phase='done';pulse()}
  const iv=setInterval(()=>{if(!document.contains(el))return;if(S.phase==='rest'){S.rest=Math.max(0,S.rest-1);if(!S.rest)endRest()}},1000);
  Object.assign(window.__wo,{tickRest:n=>{S.rest=Math.max(1,S.rest-n+1)},finish:()=>{LIFTS.forEach((l,i)=>{while(S.done[i]<l.sets.length){S.log.push({li:i,...l.sets[S.done[i]]});S.done[i]++}});S.t0=Date.now()-41*60000;finish()},feel:setFeel,log,pick});

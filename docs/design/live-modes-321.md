@@ -300,3 +300,14 @@ The last "Serve" in cooking mode files the ticket away the way a kitchen does, t
 - Reduce Motion: the summary simply replaces the ticket.
 - This differs from the shopping tear (334) on purpose: a shopping list is torn off and thrown away, a cooked order is spiked.
 - Test: t67 paper and black green; psp.js shows one spiked copy mid-way and none after, S.fin 1.
+
+## Sheet 338: the rest is wiped off the board
+
+When the rest ends (timer out, tap, or Start now), the board is wiped clean instead of swapped.
+
+- The rest board stays as it was on the right of an eraser band. The band sweeps left to right across the whole board in 460 ms (ease in-out), slightly slanted (36 pt lean top to bottom). The next lift is already written behind it on the left.
+- The band trails a faint chalk haze, 66 pt wide at 7% white, which fades out over the last fifth of the sweep.
+- No sound, no buzz beyond the existing end-of-rest tick.
+- Reduce Motion: no wipe, the next lift simply appears.
+- On the phone: snapshot the rest layer into an image at end of rest and mask it with the moving band, so the live lift layer underneath keeps updating.
+- Test: t67 paper and black green; pwp.js freezes the clock mid-wipe (WP1.png: next lift on the left, rest board on the right, haze at the edge).
