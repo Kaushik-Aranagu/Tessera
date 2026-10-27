@@ -105,7 +105,9 @@ public enum PyramidStats {
     static let shown: [Shown] = [
         Shown(key: "workouts", label: "workouts", taint: .claudeSafe, value: sum("workouts")),
         Shown(key: "sets", label: "sets", taint: .claudeSafe, value: sum("sets")),
-        Shown(key: "volumeKg", label: "kg lifted", taint: .claudeSafe, value: sum("volumeKg")),
+        // Whole kilograms: a decimal beside "kg" reads as his body weight to the strict wall ("38437.5 kg lifted").
+        Shown(key: "volumeKg", label: "kg lifted", taint: .claudeSafe,
+              value: { stats in sum("volumeKg")(stats).map { $0.rounded() } }),
         Shown(key: "cooks", label: "meals cooked", taint: .claudeSafe, value: sum("cooks")),
         Shown(key: "chores", label: "chores done", taint: .claudeSafe, value: sum("chores")),
         Shown(key: "habits", label: "habit check-ins", taint: .claudeSafe, value: sum("habits")),
@@ -120,6 +122,9 @@ public enum PyramidStats {
         Shown(key: "weight", label: "kg body weight on average", taint: .deviceOnly,
               value: average("weightKg", over: "weighIns")),
     ]
+
+    /// The totals strict shows. Only a claude-safe leaf adds to them.
+    static let safeKeys = Set(shown.filter { $0.taint == .claudeSafe }.map(\.key))
 
     /// A number as a line shows it: whole numbers plain, others to one place.
     static func format(_ value: Double) -> String {
@@ -185,8 +190,11 @@ public struct MemoryPyramid: Sendable {
                 paths.append(path)
                 let print = ([leaf.kind, String(leaf.at.timeIntervalSince1970), leaf.text]
                     + leaf.stats.keys.sorted().map { "\($0)=\(leaf.stats[$0] ?? 0)" }).joined(separator: "|")
+                // A walled leaf counts for nothing a strict total shows: its "notes 1" would tell strict it was there.
+                let stats = leaf.taint == .claudeSafe ? leaf.stats
+                    : leaf.stats.filter { !PyramidStats.safeKeys.contains($0.key) }
                 nodes[path] = PyramidNode(path: path, level: .leaf, title: leaf.kind, children: [], also: [],
-                                          stats: leaf.stats, residuals: PyramidResiduals(),
+                                          stats: stats, residuals: PyramidResiduals(),
                                           strictResiduals: PyramidResiduals(), hash: Self.fnv(print),
                                           text: PyramidLine(text: leaf.text, taint: leaf.taint),
                                           safeLeaves: leaf.taint == .claudeSafe ? 1 : 0)
@@ -271,23 +279,33 @@ public struct MemoryPyramid: Sendable {
 
     // MARK: Reading
 
-    /// One node as Tess reads it: its title, its totals, then each child with what sets it apart, best first. Under
-    /// strict, money, body and calendar things are not there at all: no total, no residual, no leaf, no path, no count.
-    public func zoom(_ path: String, policy: DoorPolicy) -> (text: String, isError: Bool) {
+    /// One node as Tess reads it: its title, its gist when a fresh one was written under this policy, its totals, then
+    /// each child with what sets it apart, best first. Under strict, money, body and calendar things are not there at
+    /// all: no total, no residual, no leaf, no path, no count.
+    public func zoom(_ path: String, policy: DoorPolicy,
+                     gists: PyramidGists = PyramidGists()) -> (text: String, isError: Bool)
+    {
         let key = path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
         func visible(_ path: String) -> Bool {
             policy == .lab || (nodes[path]?.safeLeaves ?? 0) > 0
         }
         guard let node = nodes[key], visible(key) else { return ("Nothing there.", true) }
+        func allows(_ taint: Taint) -> Bool {
+            policy == .lab || taint == .claudeSafe
+        }
         func allowed(_ line: PyramidLine) -> Bool {
-            policy == .lab || line.taint == .claudeSafe
+            allows(line.taint)
         }
         if let text = node.text {
             return (text.text, false)
         }
         var lines = ["\(node.title) (\(node.path))"]
+        let gist = (gists.fresh(key, policy: policy, in: self)?.sentences ?? []).filter { allows($0.taint) }
+        if !gist.isEmpty {
+            lines.append("In short: " + gist.map(\.text).joined(separator: " "))
+        }
         let totals = PyramidStats.shown.compactMap { shown -> String? in
-            guard let value = shown.value(node.stats), allowed(PyramidLine(text: "", taint: shown.taint)) else {
+            guard let value = shown.value(node.stats), allows(shown.taint) else {
                 return nil
             }
             return "\(shown.label) \(PyramidStats.format(value))"
