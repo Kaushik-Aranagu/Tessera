@@ -29,7 +29,7 @@ Stills: mockups/training-app-124.png (Library, Bench Press, Stats, Programs).
 
 ## Rules
 Words "best", never "record". No muscle figure by exercise names, no 3D, no paid assets.
-Body, health and calorie numbers never reach Claude. Private routines stay outlined.
+Body, health and calorie numbers never reach Claude. Private routines stay outlined. (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 Everything else as sheet 119 (rail) and sheet 116 (type).
 
 ## Own layouts (Kaushik, Oct 22: not every page uses the same layout; each gets the clearest form for its data)

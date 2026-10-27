@@ -1194,3 +1194,48 @@ Engine to Core, screens to Builder B (Builder B's ios/kitchen-v2 holds the scree
 ## 6:20 PM Oct 19: Claude and the Money/Reading actions (#1148, QA note 7)
 
 Money actions are NOT offered to the model: LogSpend, LogShopTotal, SkipShopTotal set isOfferedToModel false. The grammar on the phone handles money phrases; a money phrase it cannot read still follows the capture-miss route (#860) but Claude cannot act on it, so it is kept to sort later. No money values (amounts, month line, totals) appear in any tool result Claude sees. Reading actions (QueueBook, StartReading, SetBookPage, FinishBook, SetBookAside) stay offered; a private book title is masked like any private title. Stricter than the default, so no sign-off from Kaushik is needed. Offering money actions to Claude later would widen what Claude can act on and needs his yes.
+
+## 6:30 PM Oct 19: You page (#1155, sheet 108 section 3)
+
+1. Totals on the You page count private workouts (counts shown on screen keep private items, ruling 61 (1)); nothing from it is sent to Claude. Private workouts never reach a "best" row.
+2. A best row reads "best 102.5 kg" (his load unit as the app already shows it), never "e1RM". Consistent with "best, not record".
+
+## 8:10 PM Oct 19: private workout on the Lock Screen (#1158 QA note)
+
+A private workout masks the exercise name, weight and reps on the Lock Screen rest card and Live Activity too (the screen is seen by others); the card shows only "Private workout" and the rest timer. Stricter than sheet 109, which is amended. Rides a later Builder A PR; #1158 stays frozen.
+
+## 8:15 AM Oct 20: Review rows for unbuilt features (#1163, sheet 110)
+
+Hide them. A switch never names what is not drawn, so a Review row appears only when its feature ships in that build; the "Soon" rows on the Workout, Kitchen and Cooking tabs go. Sheet 110 wording stands and the code follows it. Follow-up PR for Builder B (small, rides the next Review PR, not a new lane).
+
+## 1:18 AM Oct 22: Training phase 1 GO (Kaushik, "Go phase 1")
+
+Phase 1 = Library per product/training-app-scope-oct22.md and design/training-app-124.md: Exercises and Workouts, the exercise page, Try today swap, Similar swap. Run mode R1 (control plane, no visible change) may run in parallel. Everything not yet drawn or needing his opinion ships behind a Review switch. One lane per lead (pace to Sunday).
+
+## 1:30 AM Oct 22: landing pages order
+
+Order after Training phase 1: Core sentence templates (L0, alongside phase 1); Builder B frame then Money; Builder A Training then Kitchen; Builder B Lists, Notes; Routines after run mode R2. Review switch "Landing pages", Off. Details in product/training-app-scope-oct22.md.
+
+## 1:31 AM Oct 22: HOLD on landing pages, run mode and metrics
+
+Kaushik: his landing, metrics and mode ideas are raw thoughts to polish and brainstorm. Landing L0-L4 (1:30 AM entry above), run mode R1-R4, Stats and metrics and phases 2-4 are held: design and brainstorm only, no build, until he approves a polished version. Training phase 1 (Library) is unaffected. The "R1 in parallel" line is withdrawn.
+
+## 11:25 AM Oct 22: Routines landing sheet defaults
+
+Landing pages are unheld (his 18:19 UTC approval of landing v2); run mode stays held. Accept the defaults in product/routines-landing-build-sheet-oct22.md: swipe left on a routine line does nothing yet; the Thread is drawn on the landing and in the runner; the first Start word carries the single rose underline when nothing runs; a timer waits for Done at zero; "14 days" counts days with a finished run in the last 30; workout routines (Push A style names, whatever the Training reorganization names them) appear as lines and Start opens the live workout. Accent is dusk rose (131 table), not calm blue. The existing workout Routines page and its gestures are untouched.
+
+## 11:30 AM Oct 22: Notes and Lists landing sheet defaults
+
+Accept the defaults in product/notes-lists-landing-build-sheet-oct22.md. Notes lead form follows sheet 131 (131 wins over 127): a write/search field, then one linked paragraph of things, then the margin; swipe left on a Lists line and swipe right on a Notes row do nothing yet; Lists foot word "New list"; private list names masked "Private list" (the private-list rule beats lists-acceptance 13.9); no "Nothing written yet." band (131 bans empty bands), Tess's line stays; the Notes rail index waits on the RailPage lift. Core's PR 1 first diffs against what #1222 LandingSentences already covers.
+
+## 2:27 PM Oct 22: Training Stats approved
+
+Kaushik: "okay for the training stats". Stats and Log (product/training-stats-log-spec-oct22.md) are UNHELD and buildable: Core PR 1 (TrainingStats, sentences, calories function, privacy filter, Review ids, tests), Builder A PR 2 (Stats page) and PR 3 (Log page, landing sentence). Defaults ruled earlier stand: single page; private sessions excluded everywhere; a lower lift reads "holding near its best"; light-week threshold only behind a Review switch (Off); calories burned stays Off. Still held: run mode R1-R4, Programs and scenarios, services (phases 2 and 4).
+
+## 12:10 PM Oct 27: NO privacy filtering of what is sent to Claude (Kaushik, ruling in the Builder B thread, 18:59 UTC Oct 27)
+
+Kaushik: "I don't want any privacy-related restrictions on the what Claude can be and whatnot. So yeah, calories or weight or money or everything I'm fine with, all of it going there, because that is what I would do anyway. So yeah, don't filter or mask any of them."
+1. What is sent to Claude is not filtered or masked: money, calories, weight, health, body and private items all go as they are. This SUPERSEDES every earlier rule that kept those out of Claude payloads (ruling 61 (1) for counts sent to Claude, the walled-phrase rules in the capture-miss route, 6:20 PM Oct 19 "no money values in any tool result Claude sees", the Stats/Training "never reaches Claude" lines, the Me profile and calorie lines, private masks in what is sent). Code: #1488.
+2. UNCHANGED: the Claude key and key-shaped text never leave the phone; the walls on backups, logs, widgets, notifications, Live Activity, Lock Screen and the screen itself (private items still read "Private ..." on screen and in widgets); the in-app cap and the asking-Claude switch behavior.
+3. Money write tools by Claude (LogSpend, LogShopTotal, SkipShopTotal, EditSpend and pool actions offered to the model) are PENDING his decision; until he says, they stay not offered (6:20 PM Oct 19 stands for the write side only).
+4. Docs: lines elsewhere that say a thing "never reaches Claude" are stale for the send side. Ops amends them in the docs PR with this entry as the source; the key rule and the screen/backup/log/widget wall wording stay.

@@ -120,12 +120,12 @@ Claude calls and the walls:
 - `AppModel.asksClaude` gates all Claude use. The "Tess asks Claude" switch off means nothing is sent and the phone does everything.
 - Spend: $50 per month in-app cap, checked before any network call, through `TessUsageLedger`. Every call writes a ledger row.
 - Every Claude request is recorded in the "What was sent" log with the exact words (a key-shaped string never goes in).
-- **Lab mode is Kaushik's pick for Claude calls only** (flag `tessLabPolicy`, "Lab mode for Claude", ships On). Under lab, Claude may see health, body, calendar, calorie and money text in calls from his phone, because he chose that; the key is never included. Under strict, fragments tagged `deviceOnly` stay on the phone or the Mac. Callers must tag health, body, calendar, calorie and money fragments `deviceOnly`; the Door applies the policy.
-- Lab mode does not widen anything else: Siri, Shortcuts and App Intents never send to Claude; the capture-miss route sends a whole unreadable phrase only (phrases the grammar can answer stay on the phone, more than 600 characters are refused); backups never include the key, bookmarks, flags or `claude-spend.json`; the harness trace file (`harness-trace.json`), the director playbook and run checkpoints are excluded from backups and never sent; trace spans hold numbers and names only, never request text.
+- **No privacy filtering of what is sent to Claude (Kaushik, 12:10 PM Oct 27, `docs/product/decisions.md`; code #1488).** Money, calories, weight, health, body and private items go to Claude as they are; nothing is filtered or masked on the send side. This supersedes lab mode as the gate (flag `tessLabPolicy`) and every older "never reaches Claude" line in the docs, which are stale for the send side. Older docs say otherwise; the decisions entry wins. Check the code before you rely on a detail.
+- Unchanged by that ruling: the Claude key and key-shaped text never leave the phone; Siri, Shortcuts and App Intents never send to Claude; the capture-miss route sends a whole unreadable phrase only (check the code for the current limits); backups never include the key, bookmarks, flags or `claude-spend.json`; the harness trace file (`harness-trace.json`), the director playbook and run checkpoints are excluded from backups and never sent; trace spans hold numbers and names only, never request text.
 - Model choice: Haiku 5.5 and Sonnet 5.5 only, no Opus. Smallest model that fits each job. On-device first where it fits (Apple Foundation Models). No other cloud LLM.
 - Titles: `ObjectPrivacy.isPrivateTitle` is the one title check. Dentist, physio and PT titles read plain; "dr" and "dr." plus a word are walled; when unsure, wall. `SecretWords` refusal runs first in `TessRouter`. Private fixtures use lexapro and therapy.
-- The UI never claims that notes, places, health or money "never go" anywhere unless that is still true under the current policy.
-- Health, body, calendar and calorie facts never reach backups, logs or widgets. The calendar and Health mirrors, held notices, Tess's conversation and the exact "What was sent" log are in no backup copy, including the local one. Lab mode only changes what a live Claude call may carry.
+- The UI must not claim that notes, places, health or money "never go" to Claude, because they now do (Oct 27 ruling). Money write tools for Claude (LogSpend, LogShopTotal, SkipShopTotal, EditSpend, pool actions) stay not offered until he decides. Screen copy that still says otherwise (for example the Settings walls line) needs an app change.
+- Health, body, calendar and calorie facts never reach backups, logs or widgets. The calendar and Health mirrors, held notices, Tess's conversation and the exact "What was sent" log are in no backup copy, including the local one. The Oct 27 ruling is about what a live Claude call may carry, not about those stores.
 - Money has no amount on the doorway or on Home. Money undo is worded "Reversed".
 
 ## 8. Look rules
@@ -163,5 +163,6 @@ When you are near your own limits, write a short handoff note in `ops/rotation-h
 ## Update log
 
 - 6:05 PM PT Oct 23: first version (Ops). State and queued work as of the coordinator's 5:52 PM note.
+- Oct 27: section 7 rewritten for the 12:10 PM no-filtering ruling (Kaushik's own words, decisions.md).
 - 6:20 PM PT Oct 23: section 7 (health, body, calendar, calorie facts and what is in no backup), crimson never shipped, the 4:09 PM fit rule, and #1368 to #1370 noted (QA fix and lows on #1371).
 - 6:10 PM PT Oct 23: #1366 worded as open against integ/77 and merged into integ/77-next; harness specs now point to docs/ai/harness/ (one copy).
