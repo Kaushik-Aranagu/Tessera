@@ -19,6 +19,14 @@ struct GalleyShopModePage: View {
     @State private var cue = HapticCue()
     /// The last Pay (sheet 334): the old ticket tears off, then the paid ticket prints in.
     @State private var tearing = false
+    /// The ticket as it was when Pay was pressed: the copy that lifts away (the live one is already empty).
+    @State private var frozen: (facts: GalleyShopFacts, index: Int)?
+    /// Whether the new thing has arrived (sheet 332): false at the swap, then each block comes in from 30 pt right.
+    @State private var shown = true
+    /// "Not here" (sheet 339): the aisle's rows as shown while one slides to the end, and the row that settles in last.
+    @State private var listOverride: [GalleyShopScreen.Line]?
+    @State private var landing: String?
+    @State private var landed = true
     @State private var paidCount: Int?
     @State private var paidOffset: CGFloat = GalleyTearOff.from
 
@@ -27,12 +35,17 @@ struct GalleyShopModePage: View {
         let facts = Self.facts(model: model, trip: trip, pushed: pushed)
         let index = facts.aisles.isEmpty ? 0 : min(max(focus, 0), facts.aisles.count - 1)
         let data = GalleyShopScreen(facts, aisle: index)
+        let old = frozen
         ZStack {
-            ticket(facts: facts, index: index, data: data)
+            ticket(facts: old?.facts ?? facts, index: old?.index ?? index,
+                   data: old.map { GalleyShopScreen($0.facts, aisle: $0.index) } ?? data)
                 .rotationEffect(.degrees(tearing ? GalleyTearOff.angle : 0), anchor: .topLeading)
                 .offset(x: tearing ? GalleyTearOff.liftX : 0, y: tearing ? GalleyTearOff.liftY : 0)
                 .opacity(tearing ? 0 : 1)
-                .animation(reduceMotion ? nil : .easeIn(duration: GalleyTearOff.fade), value: tearing)
+                .animation(
+                    reduceMotion ? nil : .timingCurve(0.5, 0, 0.75, 0.3, duration: GalleyTearOff.fade),
+                    value: tearing
+                )
                 .allowsHitTesting(!tearing)
             if let count = paidCount {
                 paid(count)
@@ -40,8 +53,36 @@ struct GalleyShopModePage: View {
                     .transition(.identity)
             }
         }
+        // The layer behind the paper is paper, never white: nothing flashes at the edges while the ticket lifts.
+        .background(GalleyPaper.sheet.ignoresSafeArea())
         .onAppear(perform: begin)
         .tesseraFeedback(cue)
+        #if DEBUG
+            .task {
+                // Simulator only (LaunchFlags): `-shopGot` checks the first thing after 3 s (the pen stroke);
+                // `-shopPay` checks three things, then pays after 3 s (the tear-off); `-shopNotHere` sends the first
+                // thing to the end of its aisle after 3 s, for stills and recordings.
+                let pay = LaunchFlags.has("-shopPay")
+                guard LaunchFlags.has("-shopGot") || LaunchFlags.has("-shopNotHere") || pay else { return }
+                try? await Task.sleep(for: .seconds(3))
+                let groceries = Groceries(store: model.store, classes: model.classes)
+                if pay {
+                    for item in groceries.aisles().flatMap(\.items).prefix(3) {
+                        _ = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
+                    }
+                    model.touch()
+                    try? await Task.sleep(for: .seconds(1))
+                }
+                let facts = Self.facts(model: model, trip: trip, pushed: pushed)
+                if pay {
+                    self.pay(facts, 0)
+                } else if LaunchFlags.has("-shopNotHere") {
+                    notHere(facts, 0)
+                } else {
+                    got(facts, 0)
+                }
+            }
+        #endif
     }
 
     private func ticket(facts: GalleyShopFacts, index: Int, data: GalleyShopScreen) -> some View {
@@ -68,23 +109,19 @@ struct GalleyShopModePage: View {
                         .foregroundStyle(GalleyPaper.ink)
                         .lineLimit(2)
                         .minimumScaleFactor(0.5)
-                        .opacity(faded ? 0.15 : 1)
-                        .overlay {
-                            if pen != nil {
-                                GalleyPenStroke(progress: penProgress)
-                                    .stroke(GalleyPaper.ink, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                            }
-                        }
+                        .arrives(shown, order: 0, reduceMotion: reduceMotion)
                         .padding(.top, 18)
                     if let amount = data.amount {
                         Text(amount)
                             .font(GalleyPaper.number(34, weight: .regular))
                             .foregroundStyle(GalleyPaper.ochre)
+                            .arrives(shown, order: 1, reduceMotion: reduceMotion)
                     }
                     if let why = data.why {
                         Text(why)
                             .font(GalleyPaper.plex(.medium, 19))
                             .foregroundStyle(GalleyPaper.ink)
+                            .arrives(shown, order: 2, reduceMotion: reduceMotion)
                             .padding(.top, 8)
                     }
                     if let tip = data.tip {
@@ -94,14 +131,33 @@ struct GalleyShopModePage: View {
                                 .foregroundStyle(GalleyPaper.ink)
                                 .lineLimit(2)
                         }
+                        .arrives(shown, order: 3, reduceMotion: reduceMotion)
                     }
                     label("In this aisle") {
                         VStack(spacing: 5) {
-                            ForEach(data.inAisle.prefix(5)) { line in
+                            ForEach(Array((listOverride ?? data.inAisle).prefix(5).enumerated()),
+                                    id: \.element.id)
+                            { offset, line in
+                                // The pen strikes the thing's own row, in place: the row stays where it is, dimmed.
                                 GalleyLeaderRow(name: line.name, amount: line.amount, struck: line.struck)
+                                    .opacity(offset == 0 && faded ? 0.45 : 1)
+                                    .overlay {
+                                        if pen != nil, offset == 0, !line.struck {
+                                            GalleyPenStroke(progress: penProgress)
+                                                .stroke(GalleyPaper.ink,
+                                                        style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                                        }
+                                    }
+                                    // "Not here" (339): the skipped row lifts out and settles in last, fading in on the
+                                    // second half.
+                                    .opacity(line.id == landing && !landed ? 0 : 1)
+                                    .offset(y: line.id == landing && !landed ? -10 : 0)
+                                    .animation(reduceMotion ? nil : .easeIn(duration: 0.22).delay(0.22), value: landed)
+                                    .transition(.identity)
                             }
                         }
                         .frame(maxWidth: 230)
+                        .arrives(shown, order: 4, reduceMotion: reduceMotion)
                     }
                     if let after = data.after {
                         label("After this") {
@@ -121,7 +177,7 @@ struct GalleyShopModePage: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 22) {
                             small("Not here") { notHere(facts, index) }
-                            small("Pay", hold: true) { pay() }
+                            small("Pay", hold: true) { pay(facts, index) }
                         }
                         GalleyModeVerb(word: data.verb, object: data.object, tint: GalleyPaper.olive) {
                             got(facts, index)
@@ -240,10 +296,18 @@ struct GalleyShopModePage: View {
             try? await Task.sleep(for: .milliseconds(200))
             // The next thing replaces this one in place: no cross-fade (two words never overlap), so the check is
             // written without an animation and the ticket is whole again at once.
-            check(id, animated: false)
-            pen = nil
-            faded = false
-            penProgress = 0
+            var swap = Transaction()
+            swap.disablesAnimations = true
+            withTransaction(swap) {
+                shown = false
+                check(id, animated: false)
+                pen = nil
+                faded = false
+                penProgress = 0
+            }
+            // Then the new thing, its how and its tip come in from 30 pt right, 360 ms, 40 ms apart. No cross-fade.
+            await Task.yield()
+            shown = true
         }
     }
 
@@ -264,11 +328,41 @@ struct GalleyShopModePage: View {
     /// Not here: the thing moves to the end of its aisle.
     private func notHere(_ facts: GalleyShopFacts, _ index: Int) {
         guard facts.aisles.indices.contains(index), let first = facts.aisles[index].items.first else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pushed.append(first.id) }
+        guard !reduceMotion else {
+            pushed.append(first.id)
+            return
+        }
+        let shownRows = GalleyShopScreen(facts, aisle: index).inAisle
+        let plan = GalleyNotHere.plan(rows: shownRows, moving: first.id)
+        Task { @MainActor in
+            // The other rows slide up over 340 ms (the skipped row is not among them: rows never cross)...
+            landing = first.id
+            landed = false
+            listOverride = plan.without
+            withAnimation(.easeInOut(duration: GalleyNotHere.slide)) { listOverride = plan.without }
+            // The thing at the top changes with the data: swap, then arrive.
+            var swap = Transaction()
+            swap.disablesAnimations = true
+            withTransaction(swap) {
+                shown = false
+                pushed.append(first.id)
+            }
+            await Task.yield()
+            shown = true
+            try? await Task.sleep(for: .milliseconds(Int(GalleyNotHere.slide * 1000)))
+            // ...then the skipped row settles in last over 440 ms, fading in on the second half.
+            var land = Transaction()
+            land.disablesAnimations = true
+            withTransaction(land) { listOverride = plan.final }
+            withAnimation(.easeOut(duration: GalleyNotHere.settle)) { landed = true }
+            try? await Task.sleep(for: .milliseconds(Int(GalleyNotHere.settle * 1000)))
+            listOverride = nil
+            landing = nil
+        }
     }
 
     /// Pay: what is in the basket walks to its Pantry place in the same step as the finish, with one Undo.
-    private func pay() {
+    private func pay(_ facts: GalleyShopFacts, _ index: Int) {
         let groceries = Groceries(store: model.store, classes: model.classes)
         let basket = groceries.list.map { ListContents(store: model.store, classes: model.classes).done(in: $0) } ?? []
         let walk = basket.isEmpty ? nil : ShopWalk.placements(basket: basket, model: model)
@@ -280,6 +374,7 @@ struct GalleyShopModePage: View {
         model.touch()
         TessVoice.shared.say(outcome.line, undo: record, holds: .seconds(10))
         let count = basket.count
+        frozen = (facts, index)
         Task { await tearOff(count: count) }
     }
 
@@ -295,11 +390,11 @@ struct GalleyShopModePage: View {
         func item(_ entry: ListContents.Item) -> GalleyShopFacts.Item {
             let names = ShopTrip.recipeNames(groceries.recipes(for: entry.object).map(\.title), lastWeightKg: weight)
             return GalleyShopFacts.Item(id: entry.id.uuidString,
-                                        name: trip.label(
+                                        name: GalleyCookWords.capital(trip.label(
                                             for: entry,
                                             name: GroceriesCopy.name(entry),
                                             lastWeightKg: weight
-                                        ),
+                                        )),
                                         amount: entry.quantity, why: names.first.map { "For the \($0.lowercased())" })
         }
         var facts = GalleyShopFacts()

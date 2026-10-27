@@ -50,7 +50,15 @@ struct GalleyCookModePage: View {
             }
         }
         .onChange(of: session?.current) { clearPrinted() }
-        .tesseraFeedback(cue)
+        #if DEBUG
+            .task {
+                // Simulator only (LaunchFlags): `-printNow` feeds the ready line after 3 s, for stills and recordings.
+                guard LaunchFlags.has("-printNow") else { return }
+                try? await Task.sleep(for: .seconds(3))
+                await printLine(GalleyCookWords.readyLine(label: "Chicken"))
+            }
+        #endif
+            .tesseraFeedback(cue)
     }
 
     private func screen(_ session: CookClockSession, now: Date) -> some View {
