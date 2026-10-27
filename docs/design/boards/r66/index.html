@@ -328,9 +328,21 @@ const MAP=[];
 function drawMap(){const m=$('#map');const cur=stack.length?stack[stack.length-1].id:null;
  m.innerHTML=MAP.map(g=>'<div class="app"><b>'+g.app+'<small>'+g.state+'</small></b><div>'+g.screens.map(([id,label,p])=>'<button data-id="'+id+'" data-p=\''+JSON.stringify(p||{})+'\' class="'+(id===cur?'on':'')+'">'+label+'</button>').join('')+'</div>'+(g.note?'<p>'+g.note+'</p>':'')+'</div>').join('');
  m.querySelectorAll('button').forEach(b=>b.onclick=()=>{const id=b.dataset.id,p=JSON.parse(b.dataset.p);if(id==='home')reset('home');else{reset('home');go(id,p)}})}
-function setLook(l){phone.dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',l==='paper');$('#lk-black').setAttribute('aria-pressed',l==='black');
+/* 290, built in 299: ink goes last. The ground turns first; the old ink lingers 60 ms on it, then hands over to the
+   new ink, as if the ink were catching up. The old page keeps its own colors while it leaves. */
+function setLook(l){if(phone.dataset.look===l)return;const old=!RM&&stack.length?current:null,keep={};
+ if(old){const cs=getComputedStyle(phone);for(const p of cs)if(p.startsWith('--'))keep[p]=cs.getPropertyValue(p);for(const p in keep)old.style.setProperty(p,keep[p])}
+ phone.dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',l==='paper');$('#lk-black').setAttribute('aria-pressed',l==='black');
  document.querySelectorAll('iframe').forEach(f=>{try{f.contentWindow.postMessage({look:l},'*')}catch(e){}});
- if(stack.length){const top=stack[stack.length-1];const {el,c}=mount(top.id,top.params);current.remove();cleanup&&cleanup();current=el;cleanup=c}}
+ /* the same page in a new look: nothing arrives again, so arrivals are skipped while it remounts */
+ window.__lookswap=1;clearTimeout(window.__lsT);window.__lsT=setTimeout(()=>{window.__lookswap=0},900);
+ if(stack.length){const top=stack[stack.length-1];const oldC=cleanup;const {el,c}=mount(top.id,top.params);
+  if(!old){current.remove();oldC&&oldC();current=el;cleanup=c;return}
+  stage.insertBefore(el,old);current=el;cleanup=c;old.style.pointerEvents='none';
+  const ink=[...el.children];ink.forEach(x=>x.animate([{opacity:0},{opacity:1}],{duration:260,delay:60,easing:'ease-out',fill:'backwards'}));
+  old.animate([{backgroundColor:keep['--p-bg']||getComputedStyle(old).backgroundColor},{backgroundColor:'transparent'}],{duration:200,easing:'ease-in',fill:'forwards'});
+  [...old.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:220,delay:60,easing:'ease-in',fill:'forwards'}));
+  setTimeout(()=>{old.remove();oldC&&oldC()},320)}}
 $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('black');$('#go-home').onclick=()=>reset('home');
 </script>
 <style>
@@ -1529,7 +1541,7 @@ function widgetV3(el,R,id){const W=R.w,box=h('div','one lw');box.style.zIndex=6;
    s.animate([{opacity:0,transform:'scale(.06) rotate(-70deg)',filter:'blur(1px)'},{opacity:1,transform:'scale(1.08) rotate(4deg)',filter:'blur(0)',offset:.7},{opacity:1,transform:'none'}],{duration:440,delay:330,fill:'both',easing:'cubic-bezier(.2,.8,.2,1)'})}}
   sv=s;loop=lp;return g}
  let gk=glyph(W[0]);cur=card(0);if(!RM)cur.classList.add('wait');box.appendChild(cur);requestAnimationFrame(()=>fit(cur));document.fonts&&document.fonts.ready.then(()=>fit(cur));
- const enter=b=>{b.classList.remove('wait');if(RM)return;const d=(EMIT[id]||(()=>0))(el,W[wi],b,gk,loop)||0;(THEMES[WORDIN[id]||R.theme]||THEMES.wind)([...b.children].slice(1).filter(x=>!(d&&x.classList.contains('big')&&id==='notes')));if(!(id==='routines'&&gk==='bird'))setTimeout(()=>loop&&loop(),d)};
+ const enter=b=>{b.classList.remove('wait');if(RM||window.__lookswap)return;const d=(EMIT[id]||(()=>0))(el,W[wi],b,gk,loop)||0;(THEMES[WORDIN[id]||R.theme]||THEMES.wind)([...b.children].slice(1).filter(x=>!(d&&x.classList.contains('big')&&id==='notes')));if(!(id==='routines'&&gk==='bird'))setTimeout(()=>loop&&loop(),d)};
  function show(n,ax,sgn){const nb=card(n);box.appendChild(nb);fit(nb);gk=glyph(W[n],sv);if(RM){cur.remove();cur=nb;wi=n;return}
   const m=ax==='x'?360:212;nb.style.transform=ax==='x'?'translateX('+(sgn*m)+'px)':'translateY('+(sgn*m)+'px)';
   const old=cur;requestAnimationFrame(()=>requestAnimationFrame(()=>{nb.style.transition=old.style.transition='transform .38s cubic-bezier(.3,.9,.3,1)';nb.style.transform='none';old.style.transform=ax==='x'?'translateX('+(-sgn*m)+'px)':'translateY('+(-sgn*m)+'px)'}));

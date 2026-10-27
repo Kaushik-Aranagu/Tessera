@@ -45,7 +45,7 @@ Haptics use the iOS feedback names. One haptic per move at most, and none while 
 | Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | builders |
 | Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | builders |
 | Shape mode (sheet 287) | **The places loosen.** Each outline breathes once, 1.006 in scale, as the screen goes into shape mode. | soft | on the board (291) |
-| Paper to black (`appLook`) | **Ink goes last.** The ground changes first and the type follows 60 ms later, as if the ink were catching up. | none | builders |
+| Paper to black (`appLook`) | **Ink goes last.** The ground changes first and the type follows 60 ms later, as if the ink were catching up. The old ink keeps its own colours while it leaves, and the page never replays its arrivals for a look change. | none | on the board (299) |
 
 ## 3. Copy for empty and quiet states
 
@@ -71,3 +71,15 @@ No full stops at the end of any of these (sheet 289).
 - The haptics go through one `TesseraHaptics.play(_:for:)` so the "one per move, none for `.system`" rule lives in one
   place.
 - The copy lines go in the room's string table with the other empty states, not in the views.
+
+## 5. Ink goes last, as built (sheet 299)
+
+- The old page stays on top with its old colours pinned. Its ground fades away over 200 ms, showing the new ground
+  under it.
+- 60 ms in, the old ink fades out over 220 ms while the new ink fades in over 260 ms. The swap is over by 320 ms.
+- Nothing arrives again: the widget's words, the torn ticket and every other arrival are skipped, because the page
+  hasn't changed, only its look.
+- The old page takes no touches while it leaves. Reduce Motion: an instant swap.
+- For the builders: `appLook` changes go through `withTesseraAnimation(.look)`. Pin the outgoing palette in a
+  snapshot layer (`.drawingGroup()` of the old palette), cross-fade the ground first, then the foreground with a 60 ms
+  delay. Arrival transitions check `MotionPolicy.isLookChange` and stay still.
