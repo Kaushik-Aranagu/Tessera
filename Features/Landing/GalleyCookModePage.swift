@@ -40,7 +40,7 @@ struct GalleyCookModePage: View {
                 let done = session.timers.filter { $0.isDone(at: now) && !printedTimers.contains($0.id.uuidString) }
                 guard let first = done.first else { continue }
                 printedTimers.formUnion(done.map(\.id.uuidString))
-                await print(GalleyCookWords.readyLine(label: first.label))
+                await printLine(GalleyCookWords.readyLine(label: first.label))
             }
         }
         .onChange(of: session?.current) { clearPrinted() }
@@ -50,8 +50,75 @@ struct GalleyCookModePage: View {
     private func screen(_ session: CookClockSession, now: Date) -> some View {
         let facts = Self.facts(session: session, model: model, now: now)
         let data = GalleyCookScreen(facts)
-        return GalleyModeScreen(room: "Galley", topRight: data.topRight, back: { dismiss() },
-                                verb: { primary(session, data) })
+        return VStack(spacing: 0) {
+            printer
+            modeScreen(session, facts: facts, data: data)
+        }
+    }
+
+    /// The paper has fed `feed` points: the printed line sits in the space it freed, over a dashed tear line.
+    private var printer: some View {
+        ZStack(alignment: .bottom) {
+            if let line = printedLine {
+                VStack(spacing: 2) {
+                    Text(line)
+                        .font(GalleyPaper.plex(.bold, 20))
+                        .textCase(.uppercase)
+                        .tracking(20 * 0.04)
+                        .foregroundStyle(GalleyPaper.printed)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    PrinterTear()
+                        .stroke(GalleyPaper.printed.opacity(0.7), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                        .frame(height: 1)
+                }
+                .padding(.horizontal, 24)
+                .contentShape(Rectangle())
+                .onTapGesture { clearPrinted() }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Clears it")
+            }
+        }
+        .frame(height: feed)
+        .clipped()
+        .background(GalleyPaper.sheet)
+    }
+
+    private struct PrinterTear: Shape {
+        func path(in rect: CGRect) -> Path {
+            Path { path in
+                path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+                path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            }
+        }
+    }
+
+    /// Feeds the paper 30 pt with a 4 pt overshoot in five steps, with one buzz; Reduce Motion drops it in place.
+    private func printLine(_ line: String) async {
+        printedLine = line
+        cue.play(.timeUp)
+        guard !reduceMotion else {
+            feed = GalleyPrinter.drop
+            return
+        }
+        for offset in GalleyPrinter.feedSteps {
+            feed = offset
+            try? await Task.sleep(for: .milliseconds(45))
+        }
+    }
+
+    private func clearPrinted() {
+        guard printedLine != nil else { return }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            feed = 0
+            printedLine = nil
+        }
+    }
+
+    private func modeScreen(_ session: CookClockSession, facts: GalleyCookFacts, data: GalleyCookScreen) -> some View {
+        GalleyModeScreen(room: "Galley", topRight: data.topRight, back: { dismiss() },
+                         verb: { primary(session, data) })
         {
             VStack(alignment: .leading, spacing: 0) {
                 Text(data.title)
