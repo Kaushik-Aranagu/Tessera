@@ -316,8 +316,9 @@ struct WorkoutModeScreen: View {
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .accessibilityIdentifier("mode.restTime")
             chalkStrokes(now: now).accessibilityIdentifier("mode.strokes")
-            Text(board.info1).font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.white)
-                .lineLimit(1).minimumScaleFactor(0.6).frame(height: line * 1.15, alignment: .leading)
+            restNextLine(board: board)
+                .font(Chalk.font(24, relativeTo: .title3))
+                .minimumScaleFactor(0.6).frame(height: line * 1.15, alignment: .leading)
                 .accessibilityIdentifier("mode.restNext")
             Text(model.loadNext ?? " ").font(Chalk.font(22, relativeTo: .callout)).foregroundStyle(Chalk.quiet)
                 .lineLimit(1).minimumScaleFactor(0.6).frame(height: line, alignment: .leading)
@@ -338,6 +339,22 @@ struct WorkoutModeScreen: View {
                     .accessibilityHint(hint(for: felt))
                 }
             }
+        }
+    }
+
+    /// "Next, bench press, 185 lb x 5"; once Felt changed the weight, the old number is struck and the new written
+    /// after.
+    @ViewBuilder
+    private func restNextLine(board: WorkoutModeState.Scoreboard) -> some View {
+        if let change = state.restNextChange, case let .rest(_, _, lift) = state.phase,
+           let next = state.nextUp(after: lift)
+        {
+            FeltChangeLine(
+                prefix: "Next, \(next.lift.name.lowercased()),", old: PlateLoad.number(change.old),
+                new: PlateLoad.number(change.new), suffix: "\(state.unit.symbol) \u{00D7} \(next.set.reps)"
+            )
+        } else {
+            Text(board.info1).foregroundStyle(Chalk.white).lineLimit(1)
         }
     }
 
