@@ -51,6 +51,8 @@ enum LandingPlace: String, CaseIterable {
 
     enum Foot {
         static let actionWord = CGRect(x: 24, y: 786, width: 220, height: 62)
+        /// The word's frame height at the default size; at larger sizes it grows upward.
+        static let designHeight: CGFloat = 62
         static let tess = CGRect(x: 306, y: 776, width: 96, height: 96)
     }
 

@@ -1,4 +1,5 @@
 import CoreGraphics
+import SwiftUI
 
 /// Where each place sits in each layout (sheet 283 v4 frames, `LandingPlace`), the merge table of v5, and the pure
 /// rules the shell plays a change by. No views here, so the tests read it directly.
@@ -55,6 +56,70 @@ enum ShellLayout {
         case .dial: return LandingPlace.doors.frame
         default: return ownFrame(place)
         }
+    }
+
+    /// Gap kept between the last row's room and the action word (Design sheets 288 and 291: no text crosses another
+    /// element's frame, in any look or Dynamic Type size).
+    static let pageFootGap: CGFloat = 10
+
+    /// The action word's slot height at a Dynamic Type size: the verb line (24 pt, 32 line) over the object line
+    /// (13 pt, 18 line), both scaled, never less than the design frame. The word grows upward from its bottom edge.
+    static func actionSlotHeight(typeSize: DynamicTypeSize) -> CGFloat {
+        let size = min(typeSize, .accessibility2)
+        return max(Foot.designHeight, (32 * titleScale(size)).rounded(.up) + (18 * captionScale(size)).rounded(.up))
+    }
+
+    private typealias Foot = LandingPlace.Foot
+
+    /// Title 2 and Caption 1 scale factors by size, close to UIFontMetrics' curve.
+    private static func titleScale(_ size: DynamicTypeSize) -> CGFloat {
+        switch size {
+        case .xSmall: 0.86
+        case .small: 0.93
+        case .medium: 0.96
+        case .large: 1
+        case .xLarge: 1.07
+        case .xxLarge: 1.14
+        case .xxxLarge: 1.21
+        case .accessibility1: 1.32
+        default: 1.5
+        }
+    }
+
+    private static func captionScale(_ size: DynamicTypeSize) -> CGFloat {
+        switch size {
+        case .xSmall: 0.92
+        case .small: 0.96
+        case .medium: 0.98
+        case .large: 1
+        case .xLarge: 1.08
+        case .xxLarge: 1.17
+        case .xxxLarge: 1.25
+        case .accessibility1: 1.4
+        default: 1.6
+        }
+    }
+
+    /// A place's rect on screen (x not centred): its layout frame, y scaled to the screen's height. The action word
+    /// grows up from its bottom edge with Dynamic Type, and the Page's viewport stops above whatever the word needs,
+    /// so rows always end above it.
+    static func screenRect(_ place: Place, in layout: LayoutKind, scale: CGFloat,
+                           typeSize: DynamicTypeSize) -> CGRect
+    {
+        var rect = frame(place, in: layout)
+        rect.origin.y *= scale
+        switch place {
+        case .actionWord:
+            let slot = actionSlotHeight(typeSize: typeSize)
+            rect.origin.y += rect.height - slot
+            rect.size.height = slot
+        case .page:
+            let word = screenRect(.actionWord, in: layout, scale: scale, typeSize: typeSize)
+            rect.size.height = max(0, min(rect.height, word.minY - pageFootGap - rect.minY))
+        default:
+            break
+        }
+        return rect
     }
 
     static func exists(_ place: Place, in layout: LayoutKind) -> Bool {

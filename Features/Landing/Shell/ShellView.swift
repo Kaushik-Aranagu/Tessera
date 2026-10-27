@@ -12,6 +12,7 @@ struct ShellView<Room: RoomContent>: View {
     var act: (ShellIntent) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// The page behind the places; nil is the theme's page (Lookout draws its sky plate here).
     @Environment(\.shellBackdrop) private var backdrop
     @State private var shown: [Place: SlotContent] = [:]
@@ -45,11 +46,11 @@ struct ShellView<Room: RoomContent>: View {
             let dx = (proxy.size.width - 402) / 2
             ZStack(alignment: .topLeading) {
                 ForEach(Place.allCases, id: \.self) { place in
-                    let rect = ShellLayout.frame(place, in: layout)
+                    let rect = ShellLayout.screenRect(place, in: layout, scale: scale, typeSize: typeSize)
                     PlaceHost(place: place, content: shown[place], style: styles[place] ?? .rest, size: rect.size,
                               reduceMotion: reduceMotion, navigator: navigator, act: act)
                         .background(alignment: .topLeading) { wash(place) }
-                        .offset(x: rect.minX + dx, y: rect.minY * scale)
+                        .offset(x: rect.minX + dx, y: rect.minY)
                         .modifier(BackPull(place: place, amount: pullAmount, reduceMotion: reduceMotion))
                         .allowsHitTesting(shown[place] != nil && !busy.contains(place))
                         // Live only when seen: a place with no content (the dial or glyph merged away) draws nothing.

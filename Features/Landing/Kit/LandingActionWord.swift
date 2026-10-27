@@ -71,18 +71,19 @@ struct LandingActionWord: View {
                         }
                 }
             }
-            .frame(height: 32, alignment: .leading)
+            .frame(minHeight: 32, alignment: .leading)
             if !step.object.isEmpty {
                 Text(step.object)
                     .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.medium))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
-                    .frame(height: 18, alignment: .leading)
+                    .frame(minHeight: 18, alignment: .leading)
                     .id("object-\(current)")
                     .transition(.offset(y: reduceMotion ? 0 : 6))
             }
         }
-        .frame(width: 220, height: 64, alignment: .topLeading)
+        .frame(width: 220, alignment: .topLeading)
+        .frame(minHeight: 64, alignment: .topLeading)
         .offset(x: max(-18, min(18, pull / 3)))
         .contentShape(Rectangle())
         .onTapGesture { tapped() }
