@@ -143,3 +143,24 @@ with `pull` = `drag / 3`, soft-capped at 28 pt, and `.opacity(1 - 0.35 * u)`, wh
 Foot words: tint the next look with `Theme.room.mix(with: .secondary, by: u)` and the current one with `1 - u`.
 On end, either `withTesseraAnimation(.snap)` the look change, or `withTesseraAnimation(.springHome)` back to zero.
 
+
+## Sheet 309: the Nav word changes its letters (Oct 26)
+
+Holding the Nav word to enter shape mode used to swap "Bridge" for "Done" in one frame. Now the word changes its
+letters instead.
+
+- Letters the two words share, in order and in the same case, stay and slide to their new places with a small
+  overshoot (340 ms). "Bridge" keeps its e for "Done".
+- The other letters leave upward by 5 pt with a touch of blur, 10 ms apart (140 ms).
+- The new letters rise in from 5 pt below only after the old ones have gone (from 170 ms, 26 ms apart), so two
+  letters never share a place mid-change.
+- Leaving shape mode plays the same change back, "Done" to "Bridge".
+- Changing mind mid-change (enter, leave, enter) starts from the word now meant, never from leftover letters.
+- VoiceOver hears the new word at once; Reduce Motion swaps it in place.
+- Measured on the board (`t53.js`): Deck in paper and Galley in black, with a fast on-off-on-off toggle; the word
+  always ends whole, and `t39.js` still finds no cut words.
+
+For the builders: `Text(word).contentTransition(.interpolate)` is not enough here, because it blends the glyphs.
+Lay out each letter as its own `Text` in an `HStack(spacing: 0)` keyed by its matched index (a longest common
+subsequence of the two words), with `.matchedGeometryEffect` for the kept letters and a `.move(edge: .top)` plus
+`.opacity` transition for the rest, all through `MotionPolicy`.
