@@ -57,17 +57,6 @@ final class AppModel {
     /// Whether the settings object lives in his real store (not a memory fallback or a failed seed).
     var settingsAreReal = false
 
-    /// "Tess asks Claude", for misses, Plan my day, Home's done words and day names: the one settings field (On
-    /// unless he chose Off), never on a throwaway store and never in a demo (`isDemo`: -demo, -resetDemo, -theme,
-    /// -fakeClaudeKey). Sample data is the stamped test world and may ask Claude (Kaushik, Oct 24): it follows his own
-    /// stored choice, read from his model and never written.
-    var asksClaude: Bool {
-        guard !Self.isDemo else { return false }
-        let source = isSample ? (claudeOwner ?? self) : self
-        guard source.settingsAreReal || source.isSample else { return false }
-        return SettingsStore(engine: source.engine).read().sendsMissesToClaude
-    }
-
     /// For the Sample data model: his own model, whose "Tess asks Claude" choice the sample follows (read only).
     @ObservationIgnored weak var claudeOwner: AppModel?
 
@@ -254,12 +243,6 @@ final class AppModel {
     @ObservationIgnored private(set) var engine: ActionEngine!
     @ObservationIgnored private(set) var ledger: TrainingLedger!
 
-    /// What's running (Core's process table): the running process is Now; suspended ones form Home's ledger.
-    var processes: ProcessTable {
-        _ = revision
-        return ProcessTable(engine: engine)
-    }
-
     // MARK: Tess captures (ghost rows)
 
     /// A capture Tess made that is still wet paint: drawn as a ghost row until committed or dropped.
@@ -293,10 +276,6 @@ final class AppModel {
             }
         }
         return record.objectIDs.first
-    }
-
-    func isGhost(_ objectID: UUID) -> Bool {
-        pendingCaptures.contains { $0.objectIDs.contains(objectID) }
     }
 
     /// Everything Tess just proposed (one phrase can become several actions).
@@ -873,5 +852,32 @@ extension AppModel {
         else { return nil }
         let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
         return await homeDone.words(for: line, dayLabel: label, store: store)
+    }
+}
+
+/// "Tess asks Claude", kept out of the class body.
+extension AppModel {
+    /// "Tess asks Claude", for misses, Plan my day, Home's done words and day names: the one settings field (On
+    /// unless he chose Off), never on a throwaway store and never in a demo (`isDemo`: -demo, -resetDemo, -theme,
+    /// -fakeClaudeKey). Sample data is the stamped test world and may ask Claude (Kaushik, Oct 24): it follows his own
+    /// stored choice, read from his model and never written.
+    var asksClaude: Bool {
+        guard !Self.isDemo else { return false }
+        let source = isSample ? (claudeOwner ?? self) : self
+        guard source.settingsAreReal || source.isSample else { return false }
+        return SettingsStore(engine: source.engine).read().sendsMissesToClaude
+    }
+}
+
+/// The process table and ghost lookups, kept out of the class body.
+extension AppModel {
+    /// What's running (Core's process table): the running process is Now; suspended ones form Home's ledger.
+    var processes: ProcessTable {
+        _ = revision
+        return ProcessTable(engine: engine)
+    }
+
+    func isGhost(_ objectID: UUID) -> Bool {
+        pendingCaptures.contains { $0.objectIDs.contains(objectID) }
     }
 }
