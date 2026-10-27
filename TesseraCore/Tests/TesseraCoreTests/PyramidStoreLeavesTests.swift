@@ -119,6 +119,10 @@ struct PyramidStoreLeavesTests {
             $0.components(separatedBy: ", ")
         } ?? []
         let last = BodyWeight.lastKg(in: store)
+        // The weigh-in is read, so the wall really runs with his weight. Set notation beside a lift name is the bar,
+        // never his body (PrivateFacts, QA on #644), so "82 kg x5" itself may show.
+        #expect(last == 82)
+        #expect(ObjectPrivacy.isPrivateTitle("weighed 82 kg", lastWeightKg: last))
         #expect(lifts.allSatisfy { !ObjectPrivacy.isPrivateTitle($0, lastWeightKg: last) }, "\(lifts)")
         #expect(leaf.text.contains("60 kg x8"))
         // What isn't shown isn't counted either.
