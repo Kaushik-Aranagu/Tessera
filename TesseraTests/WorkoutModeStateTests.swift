@@ -439,3 +439,36 @@ struct ModeLiveContentTests {
         #expect(!json.contains("Bench") && !json.contains("185"))
     }
 }
+
+@Suite("Workout mode: plate diff")
+struct PlateDiffTests {
+    @Test("Adding a plate on the outside keeps the rest and adds one")
+    func adds() {
+        let diff = PlateDiff.between([45], [45, 25])
+        #expect(diff.kept == [.init(position: 0, plate: 45)])
+        #expect(diff.added == [.init(position: 1, plate: 25)])
+        #expect(diff.removed.isEmpty)
+    }
+
+    @Test("Removing the outer plate slides it off")
+    func removes() {
+        let diff = PlateDiff.between([45, 25], [45])
+        #expect(diff.removed == [.init(position: 1, plate: 25)])
+        #expect(diff.added.isEmpty)
+    }
+
+    @Test("A changed inner plate takes everything after it off and puts the new ones on, inside out")
+    func swaps() {
+        let diff = PlateDiff.between([45, 25, 5], [45, 35])
+        #expect(diff.kept.map(\.plate) == [45])
+        #expect(diff.removed.map(\.plate) == [25, 5])
+        #expect(diff.added.map(\.plate) == [35])
+    }
+
+    @Test("Same load is empty, and the bar alone has nothing kept")
+    func same() {
+        #expect(PlateDiff.between([45, 25], [45, 25]).isEmpty)
+        let bar = PlateDiff.between([45], [])
+        #expect(bar.kept.isEmpty && bar.removed.count == 1)
+    }
+}

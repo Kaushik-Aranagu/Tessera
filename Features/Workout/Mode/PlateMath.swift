@@ -82,3 +82,39 @@ extension PlateMath where Self == GreedyPlateMath {
         GreedyPlateMath()
     }
 }
+
+/// What changed on one side of the bar between two loads (sheet 331), in order from the collar outward. Plates are
+/// compared from the inside out: the longest run of equal plates from the collar is kept; the old plates after it
+/// slide off, the new plates after it drop on.
+struct PlateDiff: Equatable, Sendable {
+    struct Item: Equatable, Sendable {
+        /// Distance from the collar: 0 is the plate against it.
+        var position: Int
+        var plate: Double
+    }
+
+    var kept: [Item]
+    var added: [Item]
+    var removed: [Item]
+
+    var isEmpty: Bool {
+        added.isEmpty && removed.isEmpty
+    }
+
+    /// `old` and `new` are one side's plates, collar outward (a `PlateLoad.perSide`, heaviest first).
+    static func between(_ old: [Double], _ new: [Double]) -> PlateDiff {
+        var shared = 0
+        while shared < old.count, shared < new.count, abs(old[shared] - new[shared]) < 0.0005 {
+            shared += 1
+        }
+        func items(_ plates: [Double], from start: Int) -> [Item] {
+            plates.indices.filter { $0 >= start }.map { Item(position: $0, plate: plates[$0]) }
+        }
+        return PlateDiff(kept: items(Array(new.prefix(shared)), from: 0),
+                         added: items(new, from: shared), removed: items(old, from: shared))
+    }
+
+    static func between(_ old: PlateLoad, _ new: PlateLoad) -> PlateDiff {
+        between(old.perSide, new.perSide)
+    }
+}
