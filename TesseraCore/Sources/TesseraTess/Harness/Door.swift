@@ -107,12 +107,17 @@ public final class Door {
         return walk(value)
     }
 
-    /// Actions that move or record money. A model is never offered one, under either policy: money actions need his
-    /// tap.
+    /// Actions that move or record money. A model may be offered one while `ClaudeSees.moneyWrites` is on (his pick,
+    /// Oct 27): it lands pending like any change. Off, a request that offers one is refused under either policy.
     static let moneyActions: Set<String> = [
         "logSpend", "editSpend", "logShopTotal", "skipShopTotal", "createPool", "logInflow", "reassignSpend", "logMove",
         "recordRate", "archivePool",
     ]
+
+    /// Whether a request offers a money action while money stays off every model.
+    static func offersMoney(_ request: BrainRequest) -> Bool {
+        ClaudeSees.keepsOnPhone(request.tools.contains { moneyActions.contains($0.name) })
+    }
 
     /// Strict mode's own scan of everything a Claude rung would carry: the request's words, not only its fragments.
     func strictHit(_ request: BrainRequest) -> Bool {
@@ -194,7 +199,7 @@ public final class Door {
                                          runID: job.runID))
             return end(.refused)
         }
-        if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
+        if offersMoney(job.request) {
             await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction",
                                          runID: job.runID))
             return end(.refused)
@@ -494,7 +499,7 @@ public final class Door {
             await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
             return nil
         }
-        if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
+        if offersMoney(job.request) {
             return nil
         }
         let packed = pack(job, policy: policy, onClaude: true)

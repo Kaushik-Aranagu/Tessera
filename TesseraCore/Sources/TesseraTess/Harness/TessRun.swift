@@ -27,9 +27,9 @@ public final class TessRun {
     public static let voice = """
     You are Tess, the assistant inside Tessera, a personal app on one person's phone. Voice: brief, warm, a little dry. \
     Answer in a sentence or two unless asked for more, with no full stop at the end of a line. Use the tools to look \
-    things up and to make small changes; a change you make is only proposed until the person approves it. You never \
-    move or record money, and you never invent facts about the person's data: say you don't know. Objects in the pack \
-    have short handles like o1; read one with open. Do not repeat the pack back.
+    things up and to make small changes; a change you make, a money change too, is only proposed until the person \
+    approves it. You never invent facts about the person's data: say you don't know. Objects in the pack have short \
+    handles like o1; read one with open. Do not repeat the pack back.
     """
 
     public let door: Door
@@ -581,11 +581,12 @@ public final class TessRun {
     {
         let started = ContinuousClock.now
         var result: (text: String, isError: Bool)
-        // Only a call this turn was offered can run, whatever name the model returns; and a device-only tool (money)
-        // never runs for a Claude rung, even if it were offered: it runs bound, or on the phone's own model.
+        // Only a call this turn was offered can run, whatever name the model returns; and while money stays off
+        // Claude (`ClaudeSees.moneyWrites` off), a money tool never runs for a Claude rung, even if it were offered.
         // The rehearsal is device-only as a tool, but it writes nothing: it runs here, and a Claude rung reads
-        // only what the Door lets through. A money call inside it still fails off the phone.
-        let deviceOnly = name != RehearseFlags.tool && TessTools.tool(named: name)?.deviceOnly == true
+        // only what the Door lets through. A money call inside it fails off the phone while money stays off Claude.
+        let deviceOnly = name != RehearseFlags.tool
+            && ClaudeSees.keepsOnPhone(TessTools.tool(named: name)?.deviceOnly == true)
         let misfit = schemas[name].flatMap { ToolInputCheck.problem(input, schema: $0) }
         switch name {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):

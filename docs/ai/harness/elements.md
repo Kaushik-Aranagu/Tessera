@@ -29,7 +29,7 @@ lands, the place that offered it plays its own move, and Tess's soul hands off t
 | `ElementCall` | One thing the place lets Tess do. It has a `name` (a Tess tool, `open`, or a shell call), a `kind` (`.tool` writes typed actions pending, as a ghost row with Undo; `.shell` only changes what is shown), the `phrases` that name it, its `inputs`, its `reaction`, its `reach`, and the item `kinds` it applies to. |
 | `CallInput` | An argument and where it comes from when his words leave it out: `asked` (his words only), `referent` ("this"), `window` (the switcher's word), `door` (the dial's focus), `now`. |
 | `Reaction` | How the place answers. `strike` (the Big line is struck, Undo 10 s). `next` (the item leaves, the next rises). `keystoneTakes` (the keystone takes it its own way: a word sets, a ticket hangs, chalk is written). `reform` (the glyph re-forms). `navigate`. `lines` (needs or door summary change). `tessLine` (only her line says it). |
-| `CallReach` | `anyRung`, or `deviceOnly`: rules and the phone's own model only. Every money call is `deviceOnly`, because money actions are never offered to Claude. |
+| `CallReach` | `anyRung`, or `deviceOnly`. Every money call is `deviceOnly`. Since his Oct 27 pick (`ClaudeSees.moneyWrites`, On) Claude may run them too; off, they stay on rules and the phone's own model. |
 | `ElementMeaning` | One place's meaning: its items, its focus index, its calls. |
 | `TessFrame` | Where he is: room, level, door, the switcher's word, every place's meaning, his last touch, and now. |
 
@@ -60,8 +60,9 @@ if he last tapped a door. The item's `kind` picks between calls with the same wo
    its target, and the frame fills every required input. "Open this" names `openItem` and `openDoor`, but only
    one of them takes a thing. The call runs at once as Tess, pending, with a ghost row and Undo, and the place
    reacts. Examples: "done", "got it", "open this", "go back", "start" (Deck, on Push A in the widget).
-2. **Money named.** A `deviceOnly` call matched ("I spent 12 on lunch" in the Purse). Only the phone's own model
-   gets it, with that one tool forced. Claude never sees a money call.
+2. **Money named.** A `deviceOnly` call matched ("I spent 12 on lunch" in the Purse). While `moneyWrites` is On it
+   leads like any named call and Claude may make it, pending with Undo. Off, only the phone's own model gets it,
+   with that one tool forced.
 3. **Everything else.** Tools in this order, at most 12:
    1. The calls his words named.
    2. Every call the screen offers, with the touched place's calls first.
@@ -121,15 +122,16 @@ The look of a change Tess makes is sheet 285 (`docs/design/tess-hand-285.md`, bo
 - Frame items still carry a private thing's label (the app builds them); under lab they should carry its own name,
   a follow-up. Calls carry its `id`, so "done" on a "Private item" still checks the right row.
 - Money: every Purse call is `deviceOnly`. Purse names and amounts carry `deviceOnly` taint, so under strict they
-  never reach Claude. Under lab they may be read, and still never acted on by Claude.
+  never reach Claude. **Claude can write money too (his card pick, Oct 27 12:28 PM PT):** `ClaudeSees.moneyWrites`
+  (On) offers money calls to Claude like any other, and each lands pending, a ghost row with Undo. The Door and
+  `runTool` refuse them only with the switch off.
 - Body, sleep and calendar facts carry `deviceOnly` taint, the same as the day digest.
 - Shell calls write nothing. Tool calls are always pending (a ghost row, Undo 10 s), as `TessTools` already does.
 - **A model runs only a call it was offered.** `TessRun.runTool` refuses any tool name that is not in this turn's
-  pack (plus `open` and the offered shell calls), and refuses a `deviceOnly` tool on a Claude rung even if it were
-  offered. So `logSpend` runs in exactly two ways: bound from the frame by the phone with no model (never today: its
-  amount is asked, so it does not bind), or called by the phone's own model. Claude can neither see nor call it; a
-  test scripts Claude returning `logSpend` and finds no op and an error result. A shell call's object must be a handle
-  of this pack.
+  pack (plus `open` and the offered shell calls). With `moneyWrites` off it also refuses a `deviceOnly` tool on a
+  Claude rung even if it were offered, and a test scripts Claude returning `logSpend` and finds no op and an error
+  result. With it On (shipped), `ClaudeMoneyWritesTests` finds Claude's `logSpend` lands as one pending ghost row. A
+  shell call's object must be a handle of this pack.
 
 ## 7. Room by room
 

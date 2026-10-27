@@ -214,7 +214,7 @@ struct DoorTests {
         #expect(rig.sent.shownWords(of: exact).contains("82.4 kg"))
     }
 
-    @Test func moneyActionsAreNeverOfferedToAModel() async throws {
+    @Test(.oldWalls) func moneyActionsAreNeverOfferedToAModel() async throws {
         for policy in [DoorPolicy.lab, .strict] {
             let brain = FakeBrain(.haiku)
             let rig = try DoorRig(brains: [.haiku: brain], policy: policy)
@@ -230,6 +230,17 @@ struct DoorTests {
         for name in Door.moneyActions {
             #expect(ActionRegistry.descriptors.contains { $0.name == name }, "\(name)")
         }
+    }
+
+    @Test func aMoneyActionMayBeOfferedWhileClaudeWritesMoney() async throws {
+        // His pick on the card (Oct 27): Claude may make money changes too, each one pending with Undo.
+        let brain = FakeBrain(.haiku)
+        let rig = try DoorRig(brains: [.haiku: brain])
+        var request = Self.ask
+        request.tools = [ToolSpec(name: "logSpend", description: "Logs a spend",
+                                  schema: Data(#"{"type":"object"}"#.utf8))]
+        let events = await rig.events(DoorJob(name: "t", ladder: [.haiku], request: request, estimateNano: 1000))
+        #expect(events.failure == nil && brain.streamCount == 1)
     }
 
     @Test func theKeyScanAlsoCoversToolInputsAndToolDescriptions() async throws {

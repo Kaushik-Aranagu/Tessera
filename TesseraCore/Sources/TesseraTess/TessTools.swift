@@ -55,9 +55,10 @@ public enum TessTools {
          plantRoutine, pauseRoutine, rehearse]
     }
 
-    /// The tools Claude may be given: everything but the device-only ones (money).
+    /// The tools Claude may be given: money too while `ClaudeSees.moneyWrites` is on. Never the rehearsal, which is
+    /// offered through its own spec and runs on the phone.
     public static var claudeTools: [Tool] {
-        all.filter { !$0.deviceOnly }
+        all.filter { $0.name != RehearseFlags.tool && !ClaudeSees.keepsOnPhone($0.deviceOnly) }
     }
 
     public static func tool(named name: String) -> Tool? {

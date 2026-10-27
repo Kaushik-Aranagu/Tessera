@@ -12,6 +12,16 @@ public enum ClaudeSees {
     /// On. A test runs the old walls with `ClaudeSees.$everything.withValue(false) { ... }`.
     @TaskLocal public static var everything = true
 
+    /// Money changes too (his pick on the card, Oct 27 12:28 PM PT, "Claude can write money too"): a money call is
+    /// offered to Claude like any other and lands pending, as a ghost row with Undo. Off, money calls stay on the
+    /// phone's own rungs, as before.
+    @TaskLocal public static var moneyWrites = true
+
+    /// Whether a call marked for the phone only (a money call) is still kept off Claude.
+    public static func keepsOnPhone(_ deviceOnly: Bool) -> Bool {
+        deviceOnly && !moneyWrites
+    }
+
     /// Whether text must not go to Claude: a key always; `walled`, the old wall, only with `everything` off.
     public static func blocks(_ text: String, walled: @autoclosure () -> Bool) -> Bool {
         looksLikeClaudeKey(text) || (!everything && walled())

@@ -168,7 +168,9 @@ These come from Kaushik and from project memory. Only he can change them.
 
 - **The key.** He has a Claude key in the Keychain. Never copy, print, log or ask for any part of it. It never
   leaves `ClaudeBrain`. A key-shaped ask is refused before the Door.
-- **Money.** Money actions are never offered to Claude. The Money agent is read-only.
+- **Money.** Claude can write money too (his card pick, Oct 27 12:28 PM PT): `ClaudeSees.moneyWrites` (On) offers
+  money calls to Claude like any other, and each lands pending with Undo. Only `logSpend` is a Tess tool today; the
+  other money actions have no tool. The Money agent is still read-only (no agent has a money tool yet).
 - **Spend.** The AI cap is $100 a month (`TessUsageLedger`; it was $50 until Oct 23), with a step-aside at 80%. It's
   there to stop a runaway bug, not to shape any design choice. Turning "Tess asks Claude"
   Off means nothing is sent.
