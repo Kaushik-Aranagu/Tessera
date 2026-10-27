@@ -2543,12 +2543,27 @@ function shapeBar(el,room,k){const bar=el.querySelector(':scope > .shapebar');if
  else bar.innerHTML='<b>'+k[0].toUpperCase()+k.slice(1)+'</b><span>'+P[5][0]+'. <i>'+P[5][1]+'</i>. Drawn next round.</span>'}
 function shapePick(el,room,k){el.querySelectorAll(':scope > .shp').forEach(p=>p.classList.toggle('on',p.dataset.k===k));shapeBar(el,room,k)}
 function shapeTo(el,room,f){if((LOOKS[room]||'reel')===f)return;LOOKS[room]=f;setDoorLook(el,room,f,true);shapeBar(el,room,'dial')}
-function shapeSwipe(el,room,p){let x0=null,lens=null;
- p.addEventListener('pointerdown',e=>{if(!p.classList.contains('on'))return;x0=e.clientX;p.setPointerCapture(e.pointerId)});
+function shapeSwipe(el,room,p){let x0=null,lens=null,cur=null,nx=null;
+ /* 308: the swipe-through. The doors follow the finger, held back (a third of the travel, never past 28 pt) and
+    thinning as they go, while the next look's word in the foot warms toward the room's colour and the current one cools. Past 40 pt it is
+    taken on release; short of it the doors spring home and the word cools. Nothing new is drawn on the glass. */
+ const L=FORMS.dial,doors=()=>el.querySelector(':scope > .dlook')||el.querySelector(':scope > .dial');
+ const word=f=>el.querySelector(':scope > .shapebar [data-f="'+f+'"]');
+ const pull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};
+ const cool=()=>{if(nx){const w=word(nx);if(w)w.style.color='';nx=null}const c=word(LOOKS[room]||'reel');if(c)c.style.color=''};
+ p.addEventListener('pointerdown',e=>{if(!p.classList.contains('on'))return;x0=e.clientX;cur=doors();p.setPointerCapture(e.pointerId)});
  p.addEventListener('pointermove',e=>{if(x0==null)return;const dx=(e.clientX-x0)/K;if(Math.abs(dx)>8&&!lens){lens=h('i','shlens');el.appendChild(lens)}
-  if(lens){const [x,y]=localXY(e,el);lens.style.left=(x-30)+'px';lens.style.top=(y-30)+'px'}});
- p.addEventListener('pointerup',e=>{if(x0==null)return;const dx=(e.clientX-x0)/K;x0=null;if(lens){const l=lens;lens=null;l.animate([{opacity:1},{opacity:0,transform:'scale(.8)'}],{duration:180}).onfinish=()=>l.remove()}
-  if(Math.abs(dx)<40)return;const L=FORMS.dial,i=L.indexOf(LOOKS[room]||'reel');shapeTo(el,room,L[(i+(dx<0?1:L.length-1))%L.length])})}
+  if(lens){const [x,y]=localXY(e,el);lens.style.left=(x-30)+'px';lens.style.top=(y-30)+'px'}
+  if(RM||Math.abs(dx)<=8){if(cur)cur.style.translate='';cool();return}
+  const i=L.indexOf(LOOKS[room]||'reel'),f=L[(i+(dx<0?1:L.length-1))%L.length],u=Math.min(1,(Math.abs(dx)-8)/32);
+  if(nx!==f)cool();nx=f;const w=word(f);const mix=v=>'color-mix(in srgb,var(--room,var(--ink)) '+Math.round(v*100)+'%,var(--ink2))';if(w)w.style.color=mix(u);const wc=word(L[i]);if(wc)wc.style.color=mix(1-u);
+  if(cur){cur.style.translate=pull(dx)+'px 0';cur.style.opacity=1-.35*u}});
+ const end=e=>{if(x0==null)return;const dx=(e.clientX-x0)/K;x0=null;if(lens){const l=lens;lens=null;l.animate([{opacity:1},{opacity:0,transform:'scale(.8)'}],{duration:180}).onfinish=()=>l.remove()}
+  const c=cur;cur=null;const go=e.type==='pointerup'&&Math.abs(dx)>=40;
+  if(c){const t=c.style.translate||'0px 0',o=c.style.opacity||1;c.style.translate='';c.style.opacity='';
+   if(!RM&&t!=='0px 0')c.animate(go?[{translate:t,opacity:o},{translate:'0px 0',opacity:o}]:[{translate:t,opacity:o},{translate:(-.12*parseFloat(t))+'px 0',opacity:1,offset:.7},{translate:'0px 0',opacity:1}],{duration:go?160:320,easing:go?'cubic-bezier(.3,0,.2,1)':'cubic-bezier(.2,.8,.3,1)'})}
+  const f=nx;cool();if(go&&f)shapeTo(el,room,f)};
+ p.addEventListener('pointerup',end);p.addEventListener('pointercancel',end)}
 function shapeOff(el,room){el.classList.remove('shaping');const nav=el.querySelector('.lnav');if(nav&&nav._was)nav.textContent=nav._was;
  el.querySelectorAll(':scope > .shp,:scope > .shapebar').forEach(e=>{if(RM)return e.remove();e.animate([{opacity:1},{opacity:0}],{duration:200}).onfinish=()=>e.remove()});
  const was=el._shapeFrom,now=LOOKS[room]||'reel';thAside(el,0);

@@ -118,4 +118,28 @@ Tess's changes while he is away (live-visibility.md, section "Compatibility"):
 
 - ~~Draw Column and Sentence for the Log's eight doors~~ Done in sheet 292 (`transitions-287.md`, "Many doors").
 - ~~Draw the Page looks (Even, Two columns, By time) on one room.~~ Done in sheet 293 (`transitions-287.md`, "Page forms").
-- Draw the Layout mode swipe-through.
+- ~~Draw the Layout mode swipe-through.~~ Done in sheet 308, below.
+
+## Sheet 308: the swipe-through (Oct 26)
+
+In shape mode (hold the Nav word, tap the doors), a swipe across the doors used to do nothing until the finger lifted,
+then the look changed. Now the swipe shows where it is going before it gets there.
+
+- **The doors follow the finger, held back.** They move a third of the finger's travel, easing out so they never go
+  past 28 pt, and thin to 65% as they go. They stay inside their own pane of glass, so nothing is cut.
+- **The foot says which look is coming.** The foot already lists Reel, Index and Sentence. As the finger moves, the
+  next look's word warms from grey to the room's colour while the current one cools. It reaches full colour exactly
+  at 40 pt, the point where letting go takes it, so the colour is the threshold and no marker is needed.
+- **Letting go past 40 pt** takes the look: the doors settle back over 160 ms as the look's own change plays.
+- **Letting go short of it** springs the doors home over 320 ms with a small overshoot, and the words cool back.
+- The glass lens still rides under the finger. Nothing new is drawn on the glass.
+- Reduce Motion: the doors do not move and the words do not warm; a swipe past 40 pt changes the look with the
+  150 ms crossfade.
+- Measured on the board (`t52.js`): Deck in paper and black, a 30 pt swipe that springs home, a 90 pt swipe that
+  takes Index, and a swipe back to Reel. `t39.js` still finds no cut words.
+
+For the builders: a `DragGesture` on the pane drives `@State var drag: CGFloat`. Doors: `.offset(x: pull(drag))`
+with `pull` = `drag / 3`, soft-capped at 28 pt, and `.opacity(1 - 0.35 * u)`, where `u = clamp((|drag| - 8) / 32)`.
+Foot words: tint the next look with `Theme.room.mix(with: .secondary, by: u)` and the current one with `1 - u`.
+On end, either `withTesseraAnimation(.snap)` the look change, or `withTesseraAnimation(.springHome)` back to zero.
+
