@@ -180,7 +180,8 @@ public struct PyramidDistiller {
                 ],
             ]],
         ]
-        return (try? JSONSerialization.data(withJSONObject: schema, options: [.sortedKeys])) ?? Data("{}".utf8)
+        let options: JSONSerialization.WritingOptions = [.sortedKeys, .withoutEscapingSlashes]
+        return (try? JSONSerialization.data(withJSONObject: schema, options: options)) ?? Data("{}".utf8)
     }
 
     static func instructions(words: Int) -> String {

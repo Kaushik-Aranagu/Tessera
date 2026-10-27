@@ -169,10 +169,7 @@ struct PyramidLiveScoreTests {
                     stopped = true
                     break
                 }
-                let job = DoorJob(name: "pyramid-score", ladder: [.haiku], request: PyramidScore.request(question),
-                                  fragments: PyramidScore.context(question, arm: arm, pyramid: pyramid, gists: gists,
-                                                                  policy: policy),
-                                  validator: { PyramidScore.answer(from: $0) != nil })
+                let job = PyramidScore.job(question, arm: arm, pyramid: pyramid, gists: gists, policy: policy)
                 var answer = "", usage = BrainUsage()
                 do {
                     for try await event in door.run(job) {

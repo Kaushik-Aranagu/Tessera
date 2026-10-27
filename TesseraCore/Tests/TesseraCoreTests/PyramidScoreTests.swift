@@ -76,9 +76,8 @@ struct PyramidScoreTests {
         let input = Data(#"{"answer":"14"}"#.utf8)
         let brain = ScriptedBrain(.haiku, rounds: [[.toolUse(id: "t1", name: PyramidScore.toolName, input: input)]])
         let rig = try DoorRig(brains: [.haiku: brain], policy: .strict)
-        let job = DoorJob(name: "pyramid-score", ladder: [.haiku], request: PyramidScore.request(question),
-                          fragments: PyramidScore.context(question, arm: .zoom, pyramid: pyramid,
-                                                          gists: PyramidGists(), policy: .strict))
+        let job = PyramidScore.job(question, arm: .zoom, pyramid: pyramid, gists: PyramidGists(), policy: .strict)
+        #expect(job.estimateNano > 0)
         let events = await rig.events(job)
         let answer = events.compactMap { event -> String? in
             if case let .toolUse(_, _, data) = event { PyramidScore.answer(from: data) } else { nil }

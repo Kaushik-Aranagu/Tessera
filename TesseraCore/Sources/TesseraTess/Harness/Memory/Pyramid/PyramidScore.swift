@@ -176,7 +176,8 @@ public enum PyramidScore {
             "type": "object", "additionalProperties": false, "required": ["answer"],
             "properties": ["answer": ["type": "string", "description": "The answer alone, in a few words."]],
         ]
-        return (try? JSONSerialization.data(withJSONObject: schema, options: [.sortedKeys])) ?? Data("{}".utf8)
+        let options: JSONSerialization.WritingOptions = [.sortedKeys, .withoutEscapingSlashes]
+        return (try? JSONSerialization.data(withJSONObject: schema, options: options)) ?? Data("{}".utf8)
     }
 
     static let instructions = """
@@ -189,6 +190,23 @@ public enum PyramidScore {
         BrainRequest(system: [TextBlock(instructions)], messages: [BrainMessage(.user, text: question.ask)],
                      tools: [ToolSpec(name: toolName, description: "Gives the answer.", schema: schema)],
                      toolChoice: .tool(toolName), maxTokens: 200, effort: .low, deadline: .seconds(30))
+    }
+
+    /// One question asked one way, as a Door job with a real estimate: the ledger refuses a job estimated at 0.
+    @MainActor
+    public static func job(_ question: PyramidQuestion, arm: Arm, pyramid: MemoryPyramid, gists: PyramidGists,
+                           policy: DoorPolicy) -> DoorJob
+    {
+        let built = Self.request(question)
+        let fragments = Self.context(question, arm: arm, pyramid: pyramid, gists: gists, policy: policy)
+        let estimate = TessUsageLedger.estimate(
+            text: Door.words(built) + fragments.map(\.text).joined(separator: "\n")
+                + String(decoding: schema, as: UTF8.self),
+            maxTokens: built.maxTokens,
+            model: ClaudeBrain.Model.haiku.rawValue
+        )
+        return DoorJob(name: "pyramid-score", ladder: [.haiku], request: built, fragments: fragments,
+                       estimateNano: estimate, validator: { PyramidScore.answer(from: $0) != nil })
     }
 
     /// The answer a tool call carries.
