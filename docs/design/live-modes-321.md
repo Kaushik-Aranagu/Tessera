@@ -279,3 +279,13 @@ The last routine step, Lights ("Phone away"), turns the screen down with it.
 - Every line stays readable at the dim level (checked in DM2.png); the verb and Undo keep their colour.
 - Reduce Motion keeps the dimming (it is light, not motion).
 - Test: t67 paper and black green; pdim.js reads --dim 0 on Tidy, 0.53 halfway through Lights, 1 when tended.
+
+## Sheet 336: a new best is written in chalk
+
+When a logged set's estimated max (Epley) beats the lift's best, the board says so during the rest.
+
+- Top right of the rest screen, level with "Rest": "new best, est. 216 lb" in the accent chalk, 24 pt, written on left to right over 720 ms (a clip that widens, like a hand writing it). Reduce Motion: it is simply there.
+- A longer buzz pattern than a normal log (6, 50, 6, 50, 12 ms), once.
+- The line clears when the rest ends. A later set only writes it again if it beats the new best.
+- The Done board lists what beat its best this session ("New best, bench est. 216 lb") or says "No new bests, steady work". It no longer shows a fixed line.
+- Test: t67 paper and black green; ppr.js logs bench 185 × 5 (est. 216 over best 212) and reads S.pr 216, newBest 216.
