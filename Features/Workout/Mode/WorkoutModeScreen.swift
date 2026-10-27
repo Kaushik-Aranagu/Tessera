@@ -31,6 +31,7 @@ struct WorkoutModeScreen: View {
     /// Sheet 338: the rest board as it was, wiped off by the eraser band when the rest ends.
     @State private var wipeImage: Image?
     @State private var wipeTime = 0.0
+    @State private var wipeDirection = EraserBand.Direction.leftToRight
     @State private var middleSize = CGSize.zero
     /// Sheet 348: the set just logged waits for its tick until the rest ends, then it is drawn on.
     @State private var tickLift: String?
@@ -204,7 +205,7 @@ struct WorkoutModeScreen: View {
         .onGeometryChange(for: CGSize.self) { $0.size } action: { middleSize = $0 }
         .overlay(alignment: .topLeading) {
             if let wipeImage {
-                AnimatedEraserWipe(snapshot: wipeImage, time: wipeTime)
+                AnimatedEraserWipe(snapshot: wipeImage, time: wipeTime, direction: wipeDirection)
             }
         }
     }
@@ -454,9 +455,7 @@ struct WorkoutModeScreen: View {
         VStack(alignment: .trailing, spacing: 0) {
             ForEach(Array(state.lifts.enumerated()), id: \.element.id) { index, lift in
                 Button {
-                    state.select(lift: index)
-                    cue.play(.selection)
-                    actions.changed(state)
+                    changeLift(to: index, direction: .forTap(from: state.focus, to: index))
                 } label: {
                     HStack(spacing: 6) {
                         if lift.isComplete {
@@ -500,10 +499,7 @@ struct WorkoutModeScreen: View {
                 if abs(dy) > abs(dx), dy < -80 {
                     verb(AppClock.now)
                 } else if abs(dx) > abs(dy), abs(dx) > 70 {
-                    let next = state.focus + (dx < 0 ? 1 : -1)
-                    state.select(lift: next)
-                    cue.play(.selection)
-                    actions.changed(state)
+                    changeLift(to: state.focus + (dx < 0 ? 1 : -1), direction: .forSwipe(dx: dx))
                 }
             }
     }
@@ -540,6 +536,23 @@ struct WorkoutModeScreen: View {
         }
     }
 
+    /// Changing lift in the lift phase wipes the board with the eraser (a swipe left sweeps right to left, a tap on a
+    /// later
+    /// lift the same, an earlier one the other way). During a rest it only queues the lift: no wipe, it turns when the
+    /// rest ends.
+    private func changeLift(to index: Int, direction: EraserBand.Direction) {
+        guard state.lifts.indices.contains(index), !state.isDone else { return }
+        if case .rest = state.phase {
+            state.select(lift: index)
+        } else {
+            guard index != state.focus else { return }
+            wipeBoard(AppClock.now, direction: direction)
+            state.select(lift: index)
+        }
+        cue.play(.selection)
+        actions.changed(state)
+    }
+
     private func applyFelt(_ felt: WorkoutModeState.Felt) {
         guard let result = state.apply(felt: felt) else { return }
         cue.play(.selection)
@@ -558,7 +571,15 @@ struct WorkoutModeScreen: View {
     /// is
     /// already live behind it. Called just before the rest ends. Reduce Motion: a plain swap (nothing is made).
     private func wipeRestBoard(_ now: Date) {
-        guard !reduceMotion, case .rest = state.phase, middleSize.width > 0, middleSize.height > 0 else { return }
+        guard case .rest = state.phase else { return }
+        wipeBoard(now, direction: .leftToRight)
+    }
+
+    /// Wipes the board as it is now off with the eraser, in `direction`, revealing what the state changes to behind it
+    /// (called just before the change). Reduce Motion: nothing is made, the swap is plain.
+    private func wipeBoard(_ now: Date, direction: EraserBand.Direction) {
+        guard !reduceMotion, middleSize.width > 0, middleSize.height > 0 else { return }
+        wipeDirection = direction
         let board = state.scoreboard(at: now)
         let layer = middle(board: board, now: now)
             .frame(width: middleSize.width, height: middleSize.height, alignment: .topLeading)

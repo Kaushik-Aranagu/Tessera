@@ -111,6 +111,10 @@ extension WorkoutModeState {
 
     /// The next set to do after a rest: the same lift while it has sets, else the next lift with sets left.
     func nextUp(after liftIndex: Int) -> (lift: Lift, set: PlannedSet)? {
+        // A lift picked during the rest is what comes next.
+        if let queued = queuedFocus, lifts.indices.contains(queued), let index = lifts[queued].nextIndex {
+            return (lifts[queued], lifts[queued].sets[index])
+        }
         if let index = lifts[liftIndex].nextIndex {
             return (lifts[liftIndex], lifts[liftIndex].sets[index])
         }
