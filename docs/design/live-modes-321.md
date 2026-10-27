@@ -379,3 +379,12 @@ When "How did it feel" changes the next set's weight, the rest board corrects it
 - The strike is only shown when the next set is the same lift. It clears when the rest ends.
 - Reduce Motion: the struck and new numbers simply appear.
 - Test: t67 paper and black green; pfx.js taps Easy, Hard, Right, Easy and reads 190 / 180 / 185 / 190 with the strike from 185 (FX1.png).
+
+## Sheet 346: a started timer rolls up
+
+In cooking mode, tapping a timer row ("5:00, tap to start") starts it with the same digit roll the counters use elsewhere.
+
+- The digits roll up from 0:00 to the timer's length, each digit on its own (numRoll), with a 4 ms tick.
+- Tapping a running timer adds a minute; only the minute digit rolls on, so you can see the minute land.
+- Reduce Motion: the time simply appears.
+- Test: t67 paper and black green; ptm.js taps the chicken timer with a real pointer (5 digit animations), taps again and reads 359 s (5:00 plus a minute, less a second).

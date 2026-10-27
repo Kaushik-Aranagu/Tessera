@@ -1544,7 +1544,9 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
  const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),mins=()=>Math.max(0,Math.floor((Date.now()-S.t0)/60000));
  const clock=d=>(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0');
  const left=()=>ST.filter((_,i)=>!S.done.has(i)).reduce((a,x)=>a+(x.tm?x.tm/60:3),0);
- const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='ack'){S.alert=null;return paint()}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1)}if(a.startsWith('st')){S.i=+a.slice(2);paint()}}});
+ const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='ack'){S.alert=null;return paint()}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);const was=S.T[k]>0?mm(S.T[k]):'0:00';S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1);
+   /* 346: a timer you start rolls up from 0:00 to its time; tapping a running one adds a minute and the minutes roll on */
+   const o=P.querySelector('[data-a="tm'+k+'"] .o');if(o&&!RM)numRoll(o,was);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}}if(a.startsWith('st')){S.i=+a.slice(2);paint()}}});
  let lastKey='';
  function paint(force){const s=ST[S.i];const key=S.i+'|'+S.fin+'|'+[...S.done].join()+'|'+Object.keys(S.T).join()+'|'+(S.alert||'');
   const timers=ST.filter(x=>x.tm).map(x=>{const T=S.T[x.k];return lead(x.tn,T==null?'<i>'+mm(x.tm)+', tap to start</i>':T>0?'<b class="o">'+mm(T)+'</b>':'<b class="ready">Ready, off the heat</b>',T>0?'run':'')}).map((h,j)=>h.replace('class="tl','data-a="tm'+ST.filter(x=>x.tm)[j].k+'" class="tl')).join('');
