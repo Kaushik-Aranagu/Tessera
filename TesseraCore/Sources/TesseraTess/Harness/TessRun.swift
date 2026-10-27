@@ -345,6 +345,11 @@ public final class TessRun {
         }
         runs.save(state, now: now())
         if case let .reply(reply) = outcome, !Task.isCancelled {
+            // C6 in shadow: the verdict goes on the trace before the reply is out, so a runner that reads the trace
+            // when the run ends finds it.
+            await recordAnswerCheck(reply: reply, ask: text, pack: pack, messages: state.messages, runID: state.id)
+        }
+        if case let .reply(reply) = outcome, !Task.isCancelled {
             emit(.finished(reply), active)
         } else if case let .phone(line) = outcome, !Task.isCancelled {
             emit(.failed(line), active)
