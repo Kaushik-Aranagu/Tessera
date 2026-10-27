@@ -8,17 +8,24 @@ public struct NightRecord: Codable, Sendable, Equatable {
     public static let fileName = "night-pass.json"
     public static let keepDays = 60
     public static let keepWeeks = 26
+    /// How long a tool path no run has taken is kept.
+    public static let keepProcedureDays = 90
 
     public var lastNight: String?
     /// Expertise raw value to the hash its cached pack was built with.
     public var packHashes: [String: String]
     /// Summary path ("/summaries/day/2026-10-23") to its lines.
     public var summaries: [String: String]
+    /// Which tool paths answered each job (input-hygiene H6). Nil in a file from before it.
+    public var procedures: ProcedureBook?
 
-    public init(lastNight: String? = nil, packHashes: [String: String] = [:], summaries: [String: String] = [:]) {
+    public init(lastNight: String? = nil, packHashes: [String: String] = [:], summaries: [String: String] = [:],
+                procedures: ProcedureBook? = nil)
+    {
         self.lastNight = lastNight
         self.packHashes = packHashes
         self.summaries = summaries
+        self.procedures = procedures
     }
 
     /// Drops the oldest summaries past the limits. Stamps sort as text, so the newest are last.
@@ -106,10 +113,11 @@ public struct NightRun {
 
     // MARK: The run
 
-    /// Nil when this night already ran.
+    /// Nil when this night already ran. `runs` are Tess's run digests from the trace: the closing day's teach the
+    /// procedure book.
     public func run(
         record: inout NightRecord, eval: inout MemoryEvalRecord, packs: [AgentSpec.Expertise: String] = [:],
-        notebooks: [NightPass.NotebookFile] = [], prune: (String) -> Void = { _ in },
+        notebooks: [NightPass.NotebookFile] = [], runs: [RunDigest] = [], prune: (String) -> Void = { _ in },
         reflect: (AgentSpec) async -> Void = { _ in }, ask: (EvalQuestion, BrainID) async -> String?
     ) async -> Report? {
         let pass = pass
@@ -156,11 +164,24 @@ public struct NightRun {
                 failed.append(step)
             }
         }
+        learn(runs.filter { $0.at >= start && $0.at < end }, into: &record)
         record.lastNight = pass.night
         record.trim()
 
         let nights = await runEval(night: pass.night, record: &eval, ask: ask)
         return Report(night: pass.night, steps: steps, failed: failed, reflected: reflected, eval: nights)
+    }
+
+    /// The closing day's runs into the procedure book (H6); paths no run has taken in 90 days go.
+    func learn(_ runs: [RunDigest], into record: inout NightRecord) {
+        var book = record.procedures ?? ProcedureBook()
+        for run in runs {
+            book.learn(run)
+        }
+        if let cutoff = calendar.date(byAdding: .day, value: -NightRecord.keepProcedureDays, to: now) {
+            book.expire(before: cutoff)
+        }
+        record.procedures = book
     }
 
     /// M6: tonight's questions, kept misses first, asked on each model and scored exactly. A question counts toward
