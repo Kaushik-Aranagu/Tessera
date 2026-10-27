@@ -22,6 +22,8 @@ struct GalleyCookModePage: View {
     @State private var printedLine: String?
     @State private var feed: CGFloat = 0
     @State private var cue = HapticCue()
+    /// The Needs lines set out on the counter, by step number and name (sheet 353).
+    @State private var setOut: Set<String> = []
     /// The last Serve (sheet 337): the ticket spiked, then the Eat summary printing down.
     @State private var spiked = false
     /// The old ticket's layers are removed once the spike has finished, so nothing of it stays under the summary.
@@ -312,7 +314,17 @@ struct GalleyCookModePage: View {
                     section("Needs") {
                         VStack(spacing: 5) {
                             ForEach(Array(data.needs.enumerated()), id: \.offset) { _, need in
-                                GalleyLeaderRow(name: need.name, amount: need.amount)
+                                // Sheet 353: tap a line when it is out on the counter; the pen strikes it. Optional,
+                                // kept per step, never blocks Next and nothing counts it.
+                                let key = "\(data.number)|\(need.name)"
+                                GalleyNeedRow(name: need.name, amount: need.amount, struck: setOut.contains(key)) {
+                                    if setOut.contains(key) {
+                                        setOut.remove(key)
+                                    } else {
+                                        setOut.insert(key)
+                                        cue.play(.selection)
+                                    }
+                                }
                             }
                         }
                         .frame(maxWidth: 230)
@@ -544,5 +556,42 @@ struct RollingTimerTime: View {
                 try? await Task.sleep(for: .milliseconds(550))
                 rolling = nil
             }
+    }
+}
+
+/// A Needs line as a mise en place tick (sheet 353): tapping it draws the pen stroke through it in 300 ms and it stays
+/// struck until tapped again. Reduce Motion: the strike is simply there.
+private struct GalleyNeedRow: View {
+    let name: String
+    var amount: String?
+    let struck: Bool
+    var tap: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var progress: CGFloat?
+
+    var body: some View {
+        Button(action: tap) {
+            GalleyLeaderRow(name: name, amount: amount, struck: struck)
+                .overlay {
+                    let shown = progress ?? (struck ? 1 : 0)
+                    if shown > 0 {
+                        GalleyPenStroke(progress: shown)
+                            .stroke(GalleyPaper.ink, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(name + (amount.map { ", \($0)" } ?? ""))
+        .accessibilityValue(struck ? "Set out" : "")
+        .accessibilityAddTraits(.isToggle)
+        .onChange(of: struck) { _, now in
+            guard now, !reduceMotion else {
+                progress = nil
+                return
+            }
+            progress = 0
+            withAnimation(.timingCurve(0.3, 0.7, 0.3, 1, duration: 0.3)) { progress = 1 }
+        }
     }
 }
