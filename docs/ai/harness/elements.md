@@ -111,10 +111,15 @@ The look of a change Tess makes is sheet 285 (`docs/design/tess-hand-285.md`, bo
   keystones (Deck, Lookout, Purse) it lies over the keystone in screen blend.
 - On a refusal, the dab stops short and goes home.
 
-## 6. Walls (unchanged, now by construction)
+## 6. Walls (by construction)
 
-- A private item reaches Tess by its label only. Calls carry its `id`, so "done" on a "Private item" still checks the
-  right row, and no word of it is packed.
+- **Claude sees everything but the key (Kaushik, Oct 27 11:59 AM PT).** Nothing sent to Claude is filtered or masked
+  for privacy: money, health, body, calories, calendar, secret words and private things go as they are. One switch
+  holds it, `ClaudeSees.everything` (On); under lab the pack, `open` and recall give a private thing by its own words,
+  tainted `deviceOnly` so strict still drops it. The walls below are what strict keeps, and what the phone's own
+  screens, widgets, backups and logs keep.
+- Frame items still carry a private thing's label (the app builds them); under lab they should carry its own name,
+  a follow-up. Calls carry its `id`, so "done" on a "Private item" still checks the right row.
 - Money: every Purse call is `deviceOnly`. Purse names and amounts carry `deviceOnly` taint, so under strict they
   never reach Claude. Under lab they may be read, and still never acted on by Claude.
 - Body, sleep and calendar facts carry `deviceOnly` taint, the same as the day digest.

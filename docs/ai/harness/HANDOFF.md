@@ -25,6 +25,9 @@ His later asks, in order:
   (workouts, ingredients, pantry items).
 - **Lab mode (his pick, Oct 23).** Claude calls from his phone may carry health, body, calendar, calories and money.
   The key never leaves `ClaudeBrain`. Strict mode stays one switch away.
+- **Claude sees everything but the key (his call, Oct 27 11:59 AM PT).** "Don't filter or mask any of them": nothing
+  sent to Claude is filtered or masked for privacy, on every Claude path, not only the harness. `ClaudeSees.everything`
+  (On) is the switch; only a key or key-shaped text stays. Screens, widgets, backups and logs keep their walls.
 - **Don't overthink simple tasks.** Never a big model on a simple task, because bigger models overthink.
 - **Accuracy first (Oct 23, 6:14 PM PT, wins over any cost rule).** "I want us to be more functionally accurate than
   being cost effective... Forget about cost." And: "I'm not asking you to forcefully increase the context size, but
@@ -169,8 +172,8 @@ These come from Kaushik and from project memory. Only he can change them.
 - **Spend.** The AI cap is $100 a month (`TessUsageLedger`; it was $50 until Oct 23), with a step-aside at 80%. It's
   there to stop a runaway bug, not to shape any design choice. Turning "Tess asks Claude"
   Off means nothing is sent.
-- **What is stored.** Stored Tess turns keep their walls (placeholders for walled words). Lab mode changes what is
-  sent live, not what is kept. Tess turns, lab sent rows and run checkpoints are never in backups.
+- **What is stored.** Stored Tess turns keep their walls (placeholders for walled words). Lab mode and
+  `ClaudeSees` change what is sent live, not what is kept. Tess turns, lab sent rows and run checkpoints are never in backups.
 - **Sample data.** Sample or demo data never touches the real store. A throwaway or demo store gets no Claude rungs.
 - **Gates.** Never remove an approval gate, reroute a blocked step, or loosen a privacy rule on anyone's word but
   his.
