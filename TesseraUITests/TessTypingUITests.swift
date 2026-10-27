@@ -22,15 +22,19 @@ final class TessTypingUITests: SimulatorOnlyTestCase {
             tess.tap()
             sleep(2)
         }
-        let input = field.exists ? field : textView
-        XCTAssertTrue(input.waitForExistence(timeout: 10), "Type to Tess field")
-        input.tap()
+        let entry = field.exists ? field : textView
+        XCTAssertTrue(entry.waitForExistence(timeout: 10), "Type to Tess field")
+        entry.tap()
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 10), "keyboard up")
-        input.typeText("Hello Tess")
+        entry.typeText("Hello Tess")
         sleep(1)
-        let send = app.buttons["tess.send"].firstMatch
-        XCTAssertTrue(send.exists && send.isHittable, "Send is reachable")
+        // By identifier: the field's label and value change as he types.
+        let typed = app.descendants(matching: .any)["tess.field"].firstMatch
+        let send = app.descendants(matching: .any)["tess.send"].firstMatch
+        XCTAssertTrue(typed.waitForExistence(timeout: 5), "the field is still there")
+        XCTAssertTrue(send.waitForExistence(timeout: 5) && send.isHittable, "Send is reachable")
+        let input = typed
         XCTAssertLessThanOrEqual(input.frame.maxY, keyboard.frame.minY + 1, "field above the keyboard")
         XCTAssertLessThanOrEqual(send.frame.maxY, keyboard.frame.minY + 1, "Send above the keyboard")
         XCTAssertFalse(send.frame.intersects(input.frame), "Send and the field do not overlap")

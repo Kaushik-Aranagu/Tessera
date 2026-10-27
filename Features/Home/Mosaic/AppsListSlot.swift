@@ -161,7 +161,9 @@ struct AppsListSlot: View {
                 // more away wait outside the frame.
                 ForEach(rows.indices, id: \.self) { index in
                     let offset = AppsListRows.relative(index, middle: middle, count: rows.count)
-                    if abs(offset) <= 2 {
+                    // The rows outside the three places exist only while the dial moves (they roll in); at rest they
+                    // are not there at all, so nothing reads or measures over the widget (bounds check, Oct 26).
+                    if abs(offset) <= 1 || (abs(offset) <= 2 && (drag != 0 || snapping)) {
                         line(rows[index], isMiddle: offset == 0, offset: offset)
                             .offset(y: (CGFloat(offset) + 1) * rowHeight + drag)
                             .transition(.identity)

@@ -330,6 +330,7 @@ struct TessConversationLayer: View {
                     submit()
                 }
                 .accessibilityLabel("Type to Tess")
+                .accessibilityIdentifier("tess.field")
             Button("Send") { submit() }
                 .buttonStyle(.plain)
                 .font(Theme.voice(size: 18).weight(.semibold))
