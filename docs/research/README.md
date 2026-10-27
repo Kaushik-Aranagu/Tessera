@@ -291,3 +291,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 - [fixtures/recipe-link-us-25.md](fixtures/recipe-link-us-25.md): Recipe link fixtures: 20 pages and 5 injection pages (K8)
 - [fixtures/walls-recipe-measures-and-cap.md](fixtures/walls-recipe-measures-and-cap.md): Walls fixtures: recipe measures and the 10-ghost cap
 - [new-on-your-phone-r10.md](new-on-your-phone-r10.md): New on your phone: release f8bb516e
+- [two-plane-memory/1-front.md](two-plane-memory/1-front.md): Two-plane memory research: verdict per idea, method and math (2-method.md), algorithms and latency (3-algos.md); scripts in `scripts/ai/small_models/`

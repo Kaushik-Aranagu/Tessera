@@ -34,3 +34,6 @@ Data caches, pickles, vector files and vendored binaries were left out on purpos
 | `algos/bench/` | latency benchmarks b1-b7: encoder, scoring, HNSW, pyramid descent, BM25, internode, training, paths |
 | `algos/rerun/`, `algos/side/` | independent reruns and side checks of those benchmarks |
 | `math/` | checks behind the math sections: objectives, theory (noise, hub, gating), referee (chat-clustered CIs), code-vs-math audit, shared latent space |
+| `audits/` | the review journals: skeptic re-runs and prior-art check (`wf1`), pyramid review (`wf2`), algorithms review (`wf3`, `algos_review.md`), referee and code-vs-math audit (`wf4`) |
+
+The paper's Markdown source is in `docs/research/two-plane-memory/`.
