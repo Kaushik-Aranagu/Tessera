@@ -105,7 +105,9 @@ public enum PyramidStats {
     static let shown: [Shown] = [
         Shown(key: "workouts", label: "workouts", taint: .claudeSafe, value: sum("workouts")),
         Shown(key: "sets", label: "sets", taint: .claudeSafe, value: sum("sets")),
-        Shown(key: "volumeKg", label: "kg lifted", taint: .claudeSafe, value: sum("volumeKg")),
+        // Whole kilograms: a decimal beside "kg" reads as his body weight to the strict wall ("38437.5 kg lifted").
+        Shown(key: "volumeKg", label: "kg lifted", taint: .claudeSafe,
+              value: { stats in sum("volumeKg")(stats).map { $0.rounded() } }),
         Shown(key: "cooks", label: "meals cooked", taint: .claudeSafe, value: sum("cooks")),
         Shown(key: "chores", label: "chores done", taint: .claudeSafe, value: sum("chores")),
         Shown(key: "habits", label: "habit check-ins", taint: .claudeSafe, value: sum("habits")),

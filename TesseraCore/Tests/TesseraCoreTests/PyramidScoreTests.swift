@@ -56,6 +56,9 @@ struct PyramidScoreTests {
                 let text = fragments.map(\.text).joined(separator: "\n")
                 #expect(!walled.contains { text.contains($0) }, "\(question.id) \(arm)")
                 #expect(!text.contains("dollars spent") && !text.contains("hours of sleep"), "\(question.id) \(arm)")
+                // The Door's own strict scan passes it, so a strict run is never refused for its context.
+                #expect(!PrivateFacts.isWalled(text, lastWeightKg: nil) && !PrivateFacts.isCalorieShaped(text)
+                    && !SecretWords.mentions(text), "\(question.id) \(arm)")
             }
         }
     }
