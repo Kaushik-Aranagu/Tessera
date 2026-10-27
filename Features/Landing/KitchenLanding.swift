@@ -201,25 +201,14 @@ struct GalleyTicketView: View {
         let pages = ticket.pages
         let shown = pages[min(page, pages.count - 1)]
         VStack(alignment: .leading, spacing: 0) {
-            Text(ticket.title.uppercased())
-                .font(.custom("IBMPlexSansCond-Bold", fixedSize: 13))
-                .tracking(13 * 0.08)
-                .foregroundStyle(titleColor)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+            GalleyFitLine(text: ticket.title.uppercased(), face: "IBMPlexSansCond-Bold", size: 13, tracking: 13 * 0.08,
+                          color: titleColor)
             if let sub = ticket.sub {
-                Text(sub.uppercased())
-                    .font(.custom("IBMPlexSansCond-Medium", fixedSize: 10.5))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                GalleyFitLine(text: sub.uppercased(), face: "IBMPlexSansCond-Medium", size: 10.5,
+                              color: Theme.Colors.inkSecondary)
             }
             ForEach(Array(shown.enumerated()), id: \.offset) { _, line in
-                Text(line)
-                    .font(.custom("IBMPlexSansCond-Regular", fixedSize: 12.5))
-                    .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
+                GalleyFitLine(text: line, face: "IBMPlexSansCond-Regular", size: 12.5, color: Theme.Colors.ink)
             }
             Spacer(minLength: 0)
             if pages.count > 1 {
