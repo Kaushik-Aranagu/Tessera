@@ -11,12 +11,22 @@ public enum SecretWords {
     public static let words: Set<String> = ["password", "passwords", "passcode", "passcodes", "pin", "pins", "code", "codes",
                                      "combo", "combination", "passphrase", "pw", "pwd"]
 
-    /// The words of a line, lowercased, punctuation off, ":" kept as its own word.
-    static func tokens(_ text: String) -> [String] {
+    /// The words of a line, lowercased, punctuation off, ":" kept as its own word: from the canonical form, or from
+    /// the text as typed.
+    static func tokens(_ text: String, canonical: Bool = true) -> [String] {
         // Any whitespace, newlines included: a secret word that starts a line is its own word (Research 137 PL2).
-        text.lowercased().replacingOccurrences(of: ":", with: " : ").split(whereSeparator: \.isWhitespace)
+        (canonical ? CanonicalText.of(text) : text).lowercased().replacingOccurrences(of: ":", with: " : ")
+            .split(whereSeparator: \.isWhitespace)
             .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".,!?;'\"()")) }
             .filter { !$0.isEmpty }
+    }
+
+    /// Both readings of a line, as typed and canonical (input-hygiene H1). A check holds when it holds for either:
+    /// the canonical form catches a secret word hidden by a zero-width space, full-width letters or curly quotes, and
+    /// the typed form keeps a value that folding would turn into letters ("pⅰn" with a Roman numeral becomes "pin").
+    static func readings(_ text: String) -> [[String]] {
+        let typed = tokens(text, canonical: false), canonical = tokens(text)
+        return typed == canonical ? [typed] : [typed, canonical]
     }
 
     /// Where the secret words sit in a line (indexes into `tokens`). "wifi" counts only before ":" or "is".
@@ -32,7 +42,7 @@ public enum SecretWords {
 
     /// Whether a line holds a secret word at all.
     public static func mentions(_ text: String) -> Bool {
-        !secretIndexes(tokens(text)).isEmpty
+        readings(text).contains { !secretIndexes($0).isEmpty }
     }
 
     /// Secret words that are also things to buy ("buy pins", "a combination lock"; Research 139).
@@ -41,14 +51,18 @@ public enum SecretWords {
     /// Whether a list line is a secret: one with a value, or a secret word that is never a thing to buy ("reset wifi
     /// password"; AI architecture on #627). "buy pins" stays on the list (Research 139).
     public static func isSecretListLine(_ text: String) -> Bool {
-        let tokens = tokens(text)
-        return hasValue(text) || secretIndexes(tokens).contains { !goodsWords.contains(tokens[$0]) }
+        hasValue(text) || readings(text).contains { tokens in
+            secretIndexes(tokens).contains { !goodsWords.contains(tokens[$0]) }
+        }
     }
 
     /// Whether the line carries a value after a secret word: the next word with a digit, letters mixed with digits or
     /// symbols, three or more spoken digits, or any word after "is" or ":" that follows the secret word (R3).
     public static func hasValue(_ text: String) -> Bool {
-        let tokens = tokens(text)
+        readings(text).contains(where: hasValue(tokens:))
+    }
+
+    static func hasValue(tokens: [String]) -> Bool {
         for index in secretIndexes(tokens) {
             var next = index + 1
             // "wifi password is …": skip a second secret word.
@@ -93,7 +107,10 @@ public extension SecretWords {
     /// Whether one pasted or fetched line holds a secret with a value. Stricter than a capture (PR5), since recipes
     /// are full of small numbers: "code 3" and "PIN the dough" pass, "door code 4417" and "pw tacocat24" do not.
     static func isPrivateLine(_ line: String) -> Bool {
-        let tokens = tokens(line)
+        readings(line).contains(where: isPrivateLine(tokens:))
+    }
+
+    internal static func isPrivateLine(tokens: [String]) -> Bool {
         if isAccountLine(tokens) {
             return true
         }
