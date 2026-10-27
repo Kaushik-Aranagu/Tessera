@@ -155,3 +155,69 @@ A mode keeps going when the phone locks.
 - For the builders: ActivityKit `ContentState` per mode, with `Text(timerInterval:)` for every countdown so it runs
   while the app sleeps. Weights are training data, not body data; a workout marked private sends no lift names or
   weights to the activity.
+
+## Sheets 327-329: the modes take the whole screen (his 2:59 AM note and his pick, 3:04 AM)
+
+"All of them need improvement." He picked whole screen over keeping the landing places. Sheets 321-325 above are
+superseded where they describe layout. Their information (plates, effort, heat, doneness, where and how to pick)
+carries over.
+
+**The shared rule.** For the length of a mode, the whole screen is the room's material, printed in the room's face.
+- **Order on the screen:** it reads top to bottom: what this is, the one big thing, the facts that serve it.
+- **The bottom third belongs to the thumb:** the verb bottom left in the room colour at 44 pt, and the steps (lifts,
+  steps, aisles) down the right edge above Tess. Tap one to jump.
+- **Gestures:** swipe up anywhere does the verb.
+- **Top line:** the room's name top left goes back, and the clock or count sits top right.
+- **Undo:** the receipt sits just above the thumb zone.
+
+**327 Workout, the whole blackboard.**
+- **Material:** slate texture full bleed, everything in chalk (Barlow Condensed). Big chalk keeps a fine edge (stroke
+  capped at 2.4 pt) so it doesn't read as a sticker outline.
+- **Top:** "Push A" in chalk blue, the clock and "done about 10:32", and "hold to finish" under it.
+- **Middle:**
+  - The lift.
+  - The weight at 170 pt with "lb" and "× 5" in blue.
+  - The bar with each side's plates to scale.
+  - "Each side 45 + 25".
+  - Sets 1-3, ticked with their felt word.
+  - Last time and estimated max.
+- **Rest:** the time at 178 pt, the chalk strokes wiping every ten seconds, what to load next, and "How did it feel:
+  Easy, Right, Hard" at 40 pt.
+- **Gestures:** drag the weight up or down; swipe across to change lift; swipe up to log, with the chalk dust falling.
+
+**328 Cooking and shopping, the whole ticket.**
+- **Material:** cream ticket paper full bleed under the rail and its clip, printed in IBM Plex Sans Condensed. It
+  stays paper in the black look, like the real thing.
+- **Cooking:**
+  - "Tacos for 2".
+  - The step number in Outfit at 104 pt, with the heat on its right ("Medium high, a spoon of oil").
+  - The instruction at 46 pt, up to two lines, balanced.
+  - How, then "Done when" and the cue.
+  - "Needs" with dotted leaders to each amount.
+  - "Timers", with a running timer in bold rolling Outfit; tap one to start it.
+- **Shopping:**
+  - The aisle and where it is.
+  - The thing at 64 pt with its amount in Outfit.
+  - Why it's on the list, and a Tip on how to pick it.
+  - "In this aisle" with dotted leaders, got ones struck through.
+  - "After this", with the next aisle and where it is.
+  - The top line counts what's left and tonight's taco things.
+
+**329 Routine, the whole evening.**
+- **Material:** a dusk gradient that darkens with every step tended, so by Lights it's night.
+- **The move:** the step and move count, the move in Figtree extra bold at 84 pt (shrinks to fit, never cut), and the
+  cue in Newsreader italic (Tess's voice).
+- **Breath guide:** "breathe in" and "breathe out" widen and narrow (4 s in, 6 s out). It's only words, so there's no
+  ring.
+- **Countdown:** the time left in Outfit at 96 pt, rolling and clipped. The step's moves are listed with their times.
+- **Bottom:** Next, with "pause" and "not tonight" under it.
+
+**Checks.** `t67.js` replaces t63-t65. In paper and black it checks:
+- workout from the warm up, the rest, Easy adding 5 lb, and finish;
+- cooking turns to Brown whole and starts its timer;
+- shopping from limes to Dairy;
+- routine from Tidy to Stretch;
+- no cut line, no full stop, no page error.
+
+For the builders: each mode is a full-screen cover over the room (`.fullScreenCover`), with no system chrome but the
+status bar. The landing stays underneath, so Back is the room. The Live Activity (sheet 326) is unchanged.
