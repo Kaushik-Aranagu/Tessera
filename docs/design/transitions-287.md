@@ -239,3 +239,24 @@ transition as the shape foot line, driven by the door index through `MotionPolic
 
 For the builders: the action's object is derived from the current door (`actions(for: door)`), never captured when
 the page is built. Its `Text` uses the letter morph keyed on its string.
+
+## Sheet 317: an item's facts change in place (Oct 27)
+
+- On a door page, swiping the item title to the next item (Bench to Overhead press) redrew the three facts under
+  it and settled them all in again, even the ones that stayed ("today", "of 4").
+- Now the facts keep their frame. A fact whose number changed rolls only the number (95 lb to 110 lb, 2 of 4 to
+  3 of 4, sheet 313); a fact whose words changed eases out and in (sheet 315); a fact that stayed does not move.
+  When the item has a different set of facts, they settle in together as before.
+- Found on the way, two real bugs:
+  - The action word stayed on the first item: on Overhead press it still said "Log, set 1, 185 lb" from Bench.
+    Now it follows the item. With the same verbs, only the object changes letter by letter (sheet 316); with
+    different verbs, the old action word leaves left and the new one comes in from the right, as between rooms.
+  - The rolling digits picked up the page's small uppercase label style. They now always inherit the line's own
+    type.
+- Reduce Motion: everything changes in place.
+- Measured on the board (`t61.js`): three swipes on the Deck in paper and the Galley in black, then a tap; facts,
+  action and receipt always match the item; `t57`, `t58`, `t60`, `t39` and `t45` still pass.
+
+For the builders: an item page's facts are keyed by their label, so SwiftUI keeps the views that stay and runs
+`numericText` on the values that change. The action row is derived from the current item, never captured when the
+page is built.

@@ -723,7 +723,7 @@ const DETAIL={
 function detailOf(r){if(DETAIL[r.id])return DETAIL[r.id];const m=/^(\d+) steps, about (\d+) min/.exec(r.k);
  if(m){const n=+m[1],L=+m[2];return {len:L,daysOn:'Every day',from:r.g==='Across the lake'?r.k.replace('from ','From '):'Made here',planted:'Oct 1',cap:'Small tree',who:'On the phone only',steps:Array.from({length:n},(_,i)=>['Step '+(i+1),Math.max(1,Math.round(L/n)),'What to do in this step.']),tess:'Kept most days this month.',split:'No step stands out yet.'}}
  return {len:+(/(\d+) min/.exec(r.k)||[0,1])[1],daysOn:'Every day',from:r.g==='Across the lake'?r.k.replace('from ','From '):'Made here',planted:'Oct 1',cap:'Small tree',who:'On the phone only',one:[r.n+'.','One thing, once a day.'],tess:'Kept most days this month.',split:'No day stands out yet.'}}
-/* 313: a line that only changes its numbers rolls just those numbers, like a counter: a number going down drops in
+/* 313 (317: its spans inherit the line's type, so a page's own span rules never restyle them): a line that only changes its numbers rolls just those numbers, like a counter: a number going down drops in
    from above, one going up rises from below, and every other word stays still. A line whose words change too eases
    out upward and the new one rises in (as the shape foot line, sheet 310). Never a swap. */
 function numRoll(e,was){const now=e.textContent;if(RM||!was||was===now)return;const sp=t=>t.split(/(\d+)/);const A=sp(was),B=sp(now);
@@ -732,10 +732,10 @@ function numRoll(e,was){const now=e.textContent;if(RM||!was||was===now)return;co
   g.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -4px'}],{duration:140,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish=()=>g.remove();
   e.animate([{opacity:0,translate:'0 4px'},{opacity:1,translate:'0 0'}],{duration:240,delay:120,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});return}
  e.innerHTML=B.map((x,i)=>i%2&&x!==A[i]?'<span class="nr" data-was="'+A[i]+'">'+x+'</span>':x.replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('');
- e.querySelectorAll('.nr').forEach((n,j)=>{const down=+n.textContent<+n.dataset.was,d=down?-1:1;n.style.cssText='display:inline-block;position:relative';
-  const g=h('span','',n.dataset.was);g.style.cssText='position:absolute;left:0;top:0;pointer-events:none';n.appendChild(g);
+ e.querySelectorAll('.nr').forEach((n,j)=>{const down=+n.textContent<+n.dataset.was,d=down?-1:1;n.style.cssText='display:inline-block;position:relative;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;margin:0;';
+  const g=h('span','',n.dataset.was);g.style.cssText='position:absolute;left:0;top:0;pointer-events:none;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;margin:0;';n.appendChild(g);
   g.animate([{opacity:1,translate:'0 0',filter:'blur(0)'},{opacity:0,translate:'0 '+(-d*.7)+'em',filter:'blur(1px)'}],{duration:160,delay:j*40,easing:'cubic-bezier(.4,0,.8,.6)',fill:'forwards'}).onfinish=()=>g.remove();
-  const w=h('span','',n.firstChild.nodeValue);n.firstChild.nodeValue='';n.prepend(w);w.style.display='inline-block';
+  const w=h('span','',n.firstChild.nodeValue);n.firstChild.nodeValue='';n.prepend(w);w.style.cssText='display:inline-block;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;margin:0;';
   w.animate([{opacity:0,translate:'0 '+(d*.7)+'em',filter:'blur(1px)'},{opacity:1,translate:'0 0',filter:'blur(0)'}],{duration:300,delay:60+j*40,easing:'cubic-bezier(.2,.9,.3,1.15)',fill:'backwards'});
   /* the number's own width eases from the old to the new, so the words after it slide over rather than jump */
   const w1=n.getBoundingClientRect().width/K,w0=g.getBoundingClientRect().width/K;if(Math.abs(w1-w0)>.5)n.animate([{width:w0+'px'},{width:w1+'px'}],{duration:280,delay:90+j*40,easing:'cubic-bezier(.3,0,.2,1)',fill:'backwards'})})}
@@ -2046,10 +2046,21 @@ Object.keys(LV).forEach(room=>{const D=LV[room];const S=SCREENS[room];
   const itemOf=r=>D.items[r.it]||{name:r.t,line:r.s,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'—','',d.k.toLowerCase()],[String(rows.indexOf(r)+1),'','of '+rows.length]],body:{kind:'sib',me:r.t,l:rows.map(x=>[x.t,x.s,x.v||''])},acts:[{v:'Open',o:r.t},{v:'Ask',o:'Tess about '+r.t}]};
   const cap=el.querySelector('.lcap');const fx=h('div','lfx');el.appendChild(fx);const bd=h('div','lbd');el.appendChild(bd);
   const fill=(dir)=>{const it=itemOf(rows[ri]);if(cap)cap.textContent=d.cap;
+   /* 317: swiping to the next item keeps the facts' frame; only the numbers and words that changed roll (sheets 313, 315) */
+   const prev=[...fx.children].map(c=>[c.querySelector('b'),c.querySelector(':scope > span')].map(e=>e?e.textContent:''));
    fx.innerHTML=it.facts.map(([n,u,l])=>'<div><b>'+String(n).replace(/^about /,'<small>about </small>')+(u?'<span class="u">'+u+'</span>':'')+'</b><span>'+l+'</span></div>').join('');fx.querySelectorAll('b').forEach(fitLine);
-   lvBody(bd,it.body,D.color);if(dir){lvSettle(fx);lvSettle(bd)}};
+   lvBody(bd,it.body,D.color);if(dir){const now=[...fx.children];
+    if(now.length===prev.length&&prev.length)now.forEach((c,i)=>{const b=c.querySelector('b'),l=c.querySelector(':scope > span');
+     if(b&&b.textContent!==prev[i][0]){if(b.children.length)lvSettle(c);else numRoll(b,prev[i][0])}if(l&&l.textContent!==prev[i][1])numRoll(l,prev[i][1])});
+    else lvSettle(fx);lvSettle(bd)}
+   /* 316 on items too: the action's object follows the item shown, when the verbs are the same */
+   const vs=it.acts.map(a=>a.v).join('|');if(el._act&&el._verbs===vs)el._act.retarget(it.acts.map(a=>a.o),dir);
+   else if(el._act){/* different verbs (Log a set, then Open): the old action word leaves left and the new one comes in, as between rooms */
+    const old=el._act;old.style.pointerEvents='none';
+    if(RM)old.remove();else old.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateX(-24px)'}],{duration:200,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'}).onfinish=()=>old.remove();
+    const nf=lvAct(el,D.color,it.acts);el.appendChild(old);el._act=nf;el._verbs=vs; /* the leaving one goes last, so the page finds the new one first */if(!RM)nf.animate([{opacity:0,transform:'translateX(24px)'},{opacity:1,transform:'none'}],{duration:320,delay:140,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})}};
   lvTitle(el,'ldt lit',i=>{const it=itemOf(rows[i]);return [it.name,it.line]},rows.length,ri,(i,dd)=>{ri=i;fill(dd)});fill(0);
-  lvAct(el,D.color,itemOf(rows[ri]).acts);return stop}}});
+  el._act=lvAct(el,D.color,itemOf(rows[ri]).acts);el._verbs=itemOf(rows[ri]).acts.map(a=>a.v).join('|');return stop}}});
 SECT.masthead.push('.ldt');
 {const st=document.createElement('style');st.textContent=`
 .ldt{position:absolute;left:24px;right:24px;top:106px;height:70px;z-index:6;touch-action:pan-y;cursor:grab;display:flex;flex-direction:column;justify-content:center}
