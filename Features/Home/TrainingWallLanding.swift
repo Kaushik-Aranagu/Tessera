@@ -117,7 +117,7 @@ struct ChalkDustHandOver: View {
         GeometryReader { proxy in
             let scale = max(0.86, min(1.1, proxy.size.height / 874))
             if let start, !reduceMotion {
-                TimelineView(.animation(minimumInterval: 1.0 / 60)) { timeline in
+                LiveTimeline(minimumInterval: 1.0 / 60) { timeline in
                     let elapsed = timeline.date.timeIntervalSince(start)
                     Canvas { context, _ in
                         guard elapsed < Self.duration else { return }
@@ -129,6 +129,7 @@ struct ChalkDustHandOver: View {
         .ignoresSafeArea(.container, edges: .top)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .liveRegion(LiveFeatures.wallHandover)
         .task {
             guard !reduceMotion, start == nil else { return }
             start = .now

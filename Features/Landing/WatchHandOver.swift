@@ -27,7 +27,7 @@ struct WatchHandOver: View {
         GeometryReader { proxy in
             let k = max(0.86, min(1.1, proxy.size.height / 874))
             if running, !reduceMotion {
-                TimelineView(.animation(minimumInterval: 1 / 60)) { timeline in
+                LiveTimeline(minimumInterval: 1 / 60) { timeline in
                     let elapsed = timeline.date.timeIntervalSince(moment.at)
                     let p = max(0, min(1, elapsed / Self.duration(moment.kind)))
                     Canvas { context, _ in
@@ -43,6 +43,7 @@ struct WatchHandOver: View {
         .ignoresSafeArea(.container, edges: .top)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .liveRegion(LiveFeatures.watchHandover)
         .task(id: moment) {
             guard !reduceMotion else { return }
             running = true

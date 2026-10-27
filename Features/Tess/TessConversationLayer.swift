@@ -111,7 +111,9 @@ struct TessLineView: View {
 
     var body: some View {
         let units = units
-        TimelineView(.animation(minimumInterval: 1 / 60, paused: !arriving || reduceMotion)) { context in
+        LiveClock(LiveFeatures.tessConversation, minimumInterval: 1 / 60,
+                  paused: !arriving || reduceMotion)
+        { context in
             let elapsed = reduceMotion || !arriving ? .infinity : context.date.timeIntervalSince(start)
             TessFlow {
                 ForEach(Array(units.enumerated()), id: \.offset) { index, unit in

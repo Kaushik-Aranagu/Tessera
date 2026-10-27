@@ -17,7 +17,7 @@ struct ThinkingIndicator: View {
     }
 
     private var glyph: some View {
-        TimelineView(.animation(minimumInterval: 1 / 60, paused: false)) { context in
+        LiveClock(minimumInterval: 1 / 60) { context in
             let time = context.date.timeIntervalSinceReferenceDate
             switch Theme.concept.thinking {
             case .dots: dots(time: time)
@@ -25,6 +25,7 @@ struct ThinkingIndicator: View {
             }
         }
         .frame(width: size, height: size)
+        .liveRegion(LiveFeatures.thinking)
         .accessibilityLabel("Tess is thinking")
     }
 

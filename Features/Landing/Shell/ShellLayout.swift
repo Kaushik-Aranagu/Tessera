@@ -20,6 +20,40 @@ enum ShellLayout {
              .actionWord, .tess]
         case .door:
             [.title, .navWord, .doorTitle, .keystone, .caption, .page, .actionWord, .tess]
+        case .bridge:
+            // Bridge (sheet 283 v4): the Settings word holds the Title's place, the Departure board the Switcher's;
+            // the apps dial takes the whole doors band; the foot holds the undo line. The Nav word, Caption and
+            // Glyph are kept and empty there.
+            [.title, .navWord, .switcher, .keystone, .caption, .widget, .glyph, .dial, .actionWord, .tess]
+        }
+    }
+
+    /// Where a place that is not in a layout waits there: the place it merged into, or (on Bridge) the place that
+    /// folds it in. A change spreads it out of that place's rect, or flows it into it.
+    static func partner(_ place: Place, in layout: LayoutKind) -> Place? {
+        switch layout {
+        case .landing:
+            nil
+        case .door:
+            target(of: place)
+        case .bridge:
+            switch place {
+            case .needs, .doorTitle: .switcher
+            case .doorSummary: .dial
+            case .page: .widget
+            default: nil
+            }
+        }
+    }
+
+    /// A place's frame in a layout where it exists.
+    static func layoutFrame(_ place: Place, in layout: LayoutKind) -> CGRect {
+        guard layout == .bridge else { return ownFrame(place) }
+        switch place {
+        case .title: return LandingPlace.Masthead.settingsWord
+        case .switcher: return LandingPlace.Masthead.departureBoard
+        case .dial: return LandingPlace.doors.frame
+        default: return ownFrame(place)
         }
     }
 
@@ -70,7 +104,10 @@ enum ShellLayout {
     /// target's rect (so a split spreads out from it).
     static func frame(_ place: Place, in layout: LayoutKind) -> CGRect {
         if exists(place, in: layout) {
-            return ownFrame(place)
+            return layoutFrame(place, in: layout)
+        }
+        if let partner = partner(place, in: layout), exists(partner, in: layout) {
+            return layoutFrame(partner, in: layout)
         }
         if let target = target(of: place) {
             return mergedFrame(target)
@@ -100,13 +137,13 @@ enum ShellLayout {
         case (true, true): return .glide
         case (false, false): return .absent
         case (true, false):
-            if let target = target(of: place), exists(target, in: new) {
-                return .merge(into: target)
+            if let partner = partner(place, in: new), exists(partner, in: new) {
+                return .merge(into: partner)
             }
             return merges[place] != nil ? .form : .dissolve
         case (false, true):
-            if let target = target(of: place), exists(target, in: old) {
-                return .split(from: target)
+            if let partner = partner(place, in: old), exists(partner, in: old) {
+                return .split(from: partner)
             }
             return merges[place] != nil ? .form : .dissolve
         }

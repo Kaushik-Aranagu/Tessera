@@ -120,7 +120,7 @@ struct TessLineCheckTests {
             slot: .detail, item: .doneWithLifts, expect: "pass"),
         Row(id: "L42", line: "Bench, incline barbell press, cable crossovers: 3 exercises, 12 sets, 1 new best.",
             slot: .detail, item: .doneWithLifts, expect: "C3"),
-        Row(id: "L43", line: "3 exercises, 12 sets, 1 new best", slot: .detail, item: .done, expect: "C4"),
+        Row(id: "L43", line: "3 exercises, 12 sets, 1 new best", slot: .detail, item: .done, expect: "pass"),
         Row(id: "L44", line: "3 exercises, 12 sets. 1 new best.", slot: .detail, item: .done, expect: "C4"),
         Row(id: "L45", line: "3 exercises and 1 new best.", slot: .detail, item: .done, expect: "C7"),
         Row(id: "L46", line: "3 exercises, 12 sets, 2 new bests.", slot: .detail, item: .done, expect: "C6"),

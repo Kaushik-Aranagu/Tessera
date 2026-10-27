@@ -52,7 +52,9 @@ private struct PlaceRenderer: View {
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .fixedSize()
-                    .frame(width: size.width, height: size.height, alignment: .trailing)
+                    // The word's right edge lines up with the page's 24 pt margin (x 378), never flush on the edge.
+                    .frame(width: size.width - 16, height: size.height, alignment: .trailing)
+                    .frame(width: size.width, height: size.height, alignment: .leading)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -69,10 +71,16 @@ private struct PlaceRenderer: View {
         case let .wall(words, label):
             ShellKeystone(words: words, label: label, act: act)
         case let .scene(key, label):
-            ShellSceneKeystone(key: key, label: label)
+            if place == .keystone {
+                ShellSceneKeystone(key: key, label: label)
+            } else {
+                // Any other place drawn by the room itself (Bridge's board, one-thing box, apps dial, undo line).
+                ShellScenePlace(key: key)
+                    .frame(width: size.width, height: size.height, alignment: .topLeading)
+            }
         case let .widget(items):
             LandingWidget(items: items, index: navigator.binding(\.widgetIndex),
-                          open: { act(.openItem($0.id)) }, glyph: { _ in Color.clear })
+                          open: { act(.openItem($0.id)) }, strike: { act(.done($0.id)) }, glyph: { _ in Color.clear })
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .glyph(item, color):
             LandingGlyph(item: item, color: color, formDelay: style.context == .merge ? 0.05 : 0.33, room: glyphRoom)
@@ -247,8 +255,7 @@ private struct ShellPage: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                    Button { act(.openItem(row.id)) } label: { rowView(row) }
-                        .buttonStyle(.plain)
+                    ShellPageRow(row: row, act: act) { rowView(row) }
                         .offset(y: settled || !settle ? 0 : -10)
                         .opacity(settled || !settle ? 1 : 0)
                         .animation(rowAnimation(index), value: settled)
@@ -288,4 +295,69 @@ enum ShellProbe {
     static let enabled = LaunchFlags.has("-shellProbe")
     /// `-shellReduceMotion` plays the shell's Reduce Motion path without changing the simulator's settings.
     static let reduceMotion = LaunchFlags.has("-shellReduceMotion")
+}
+
+/// A place drawn by its room through `shellScene`, at the place's origin (not clipped: Bridge's board rides above its
+/// place, as on the page).
+private struct ShellScenePlace: View {
+    let key: String
+
+    @Environment(\.shellScene) private var scene
+
+    var body: some View {
+        scene(key)
+    }
+}
+
+/// One row of a door page. A tap opens it; a row that can be swiped follows the finger and, through GestureKit's one
+/// policy, a swipe right is Done (or starts it) and a swipe left is Not now.
+private struct ShellPageRow<Label: View>: View {
+    let row: ShellRow
+    let act: (ShellIntent) -> Void
+    @ViewBuilder let label: () -> Label
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pull: CGFloat = 0
+    @State private var swiped = false
+    @State private var cue = HapticCue()
+
+    var body: some View {
+        let button = Button {
+            guard !swiped else { return }
+            act(.openItem(row.id))
+        } label: { label() }
+            .buttonStyle(.plain)
+        if row.swipe {
+            button
+                .offset(x: pull)
+                .rowSwipe(.both, limit: 150) { event in swipe(event) }
+                .tesseraFeedback(cue)
+                .accessibilityAction(named: "Done") { act(.done(row.id)) }
+                .accessibilityAction(named: "Not now") { act(.notNow(row.id)) }
+                .accessibilityIdentifier("shell.row.\(row.id)")
+        } else {
+            button
+        }
+    }
+
+    private func swipe(_ event: RowSwipeEvent) {
+        switch event {
+        case let .pulled(value):
+            swiped = true
+            pull = value
+        case let .committed(side):
+            cue.play(side == .leading ? .done : .selection)
+            act(side == .leading ? .done(row.id) : .notNow(row.id))
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
+        case .cancelled:
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
+        case .ended:
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(250))
+                swiped = false
+            }
+        case .armed, .disarmed:
+            break
+        }
+    }
 }
