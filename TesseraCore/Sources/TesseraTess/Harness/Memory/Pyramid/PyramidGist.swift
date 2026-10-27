@@ -86,6 +86,8 @@ public struct PyramidGists: Sendable, Equatable {
 @MainActor
 public struct PyramidDistiller {
     public static let toolName = "writeGist"
+    /// What a forced tool call adds to a request beyond its words, padded onto every pyramid job's estimate.
+    public static let toolOverheadTokens = 400
 
     /// What one node's gist is written from, line by line, each line with its taint.
     public struct Material: Sendable {
@@ -296,7 +298,8 @@ public struct PyramidDistiller {
         let estimate = TessUsageLedger.estimate(
             text: Door.words(request) + material.fragments.map(\.text).joined(separator: "\n")
                 + String(decoding: Self.schema(children: material.children.map { $0.path }), as: UTF8.self),
-            maxTokens: request.maxTokens,
+            // Tool use adds a few hundred tokens the text doesn't show; counting them as output keeps the hold high.
+            maxTokens: request.maxTokens + PyramidDistiller.toolOverheadTokens,
             model: ClaudeBrain.Model.haiku.rawValue
         )
         let job = DoorJob(name: "pyramid-gist", ladder: [.haiku], request: request, fragments: material.fragments,

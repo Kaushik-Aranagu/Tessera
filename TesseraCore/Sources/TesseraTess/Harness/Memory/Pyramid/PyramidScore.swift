@@ -202,7 +202,8 @@ public enum PyramidScore {
         let estimate = TessUsageLedger.estimate(
             text: Door.words(built) + fragments.map(\.text).joined(separator: "\n")
                 + String(decoding: schema, as: UTF8.self),
-            maxTokens: built.maxTokens,
+            // Tool use adds a few hundred tokens the text doesn't show; counting them as output keeps the hold high.
+            maxTokens: built.maxTokens + PyramidDistiller.toolOverheadTokens,
             model: ClaudeBrain.Model.haiku.rawValue
         )
         return DoorJob(name: "pyramid-score", ladder: [.haiku], request: built, fragments: fragments,
