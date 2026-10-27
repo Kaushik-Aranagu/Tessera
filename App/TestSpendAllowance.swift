@@ -28,12 +28,17 @@ final class TestSpendAllowance {
     let url: URL
     private let ledger: TessUsageLedger
     private var committed: Int64
+    /// The ledger month this launch is counting in, and the last moment it looked (to close a month it has left).
+    private var month: String
+    private var lastSeen: Date
     private var loop: Task<Void, Never>?
 
-    private init(url: URL, ledger: TessUsageLedger, committed: Int64) {
+    private init(url: URL, ledger: TessUsageLedger, committed: Int64, month: String, now: Date) {
         self.url = url
         self.ledger = ledger
         self.committed = committed
+        self.month = month
+        lastSeen = now
     }
 
     static func monthKey(_ date: Date, calendar: Calendar = .current) -> String {
@@ -65,17 +70,41 @@ final class TestSpendAllowance {
         guard TestStore.allowsClaude(store) else { return nil }
         let ledger = TessUsageLedger(store: store, classes: classes)
         let month = monthKey(now)
-        let seed = TessUsageLedger.capNano - allowanceNano + spent(at: url, month: month)
-        ledger.record(use: .keyCheck, model: "test-world-allowance", input: 0, output: 0, costNano: seed, latency: 0,
-                      outcome: "allowance", requestID: nil, at: now)
-        let made = TestSpendAllowance(url: url, ledger: ledger, committed: ledger.monthTotal(now: now))
+        seedRow(ledger, url: url, month: month, now: now)
+        let made = TestSpendAllowance(url: url, ledger: ledger, committed: ledger.monthTotal(now: now), month: month,
+                                      now: now)
         made.startLoop()
         return made
     }
 
-    /// Adds what this launch spent since the last commit to the file, atomically. Safe to call often.
+    /// The ledger row that leaves only the rest of the allowance in the month `now` falls in.
+    private static func seedRow(_ ledger: TessUsageLedger, url: URL, month: String, now: Date) {
+        let seed = TessUsageLedger.capNano - allowanceNano + spent(at: url, month: month)
+        ledger.record(use: .keyCheck, model: "test-world-allowance", input: 0, output: 0, costNano: seed, latency: 0,
+                      outcome: "allowance", requestID: nil, at: now)
+    }
+
+    /// Adds what this launch spent since the last commit to the file, atomically. Safe to call often. When the ledger
+    /// month has turned since the last call (the 04:00 edge), the old month's spend is closed into the file under its
+    /// own key and the new month gets a fresh seed row (what the file shows for it, 0 unless another launch spent).
     func commit(now: Date = .now) {
-        let total = ledger.monthTotal(now: now)
+        if Self.monthKey(now) != month {
+            roll(now: now)
+            return
+        }
+        write(total: ledger.monthTotal(now: now), now: now)
+        lastSeen = now
+    }
+
+    private func roll(now: Date) {
+        write(total: ledger.monthTotal(now: lastSeen), now: lastSeen)
+        month = Self.monthKey(now)
+        Self.seedRow(ledger, url: url, month: month, now: now)
+        committed = ledger.monthTotal(now: now)
+        lastSeen = now
+    }
+
+    private func write(total: Int64, now: Date) {
         let delta = total - committed
         guard delta > 0 else { return }
         let month = Self.monthKey(now)

@@ -76,6 +76,39 @@ struct TestSpendAllowanceTests {
         #expect(ledger.reserve(1) == nil)
     }
 
+    @Test func aLaunchCrossingTheMonthEdgeGetsAFreshAllowance() throws {
+        defer { cleanUp() }
+        let calendar = Calendar.current
+        let march = try #require(calendar.date(from: DateComponents(year: 2026, month: 3, day: 15, hour: 12)))
+        let april = try #require(calendar.date(from: DateComponents(year: 2026, month: 4, day: 15, hour: 12)))
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let first = ObjectStore(context: container.mainContext)
+        _ = try first.prepareCatalog()
+        try TestStore.stamp(first)
+        let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let ledger = TessUsageLedger(store: app.store, classes: app.classes)
+        let allowance = try #require(TestSpendAllowance.begin(store: app.store, classes: app.classes, url: file,
+                                                              now: march))
+        func left(_ date: Date) -> Int64 {
+            TessUsageLedger.capNano - ledger.monthTotal(now: date)
+        }
+        #expect(left(march) == TestSpendAllowance.allowanceNano)
+        let spendDate = try #require(calendar.date(byAdding: .day, value: 2, to: march))
+        ledger.record(use: .capture, model: "claude-haiku-5-5", input: 1, output: 1, costNano: 4_000_000_000,
+                      latency: 0, outcome: "ok", requestID: nil, at: spendDate)
+        allowance.commit(now: spendDate)
+        #expect(TestSpendAllowance.spent(at: file, month: "2026-03") == 4_000_000_000)
+        // The month turns: allowance is full again for April, and March's spend does not carry over.
+        allowance.commit(now: april)
+        #expect(left(april) == TestSpendAllowance.allowanceNano)
+        let later = try #require(calendar.date(byAdding: .day, value: 1, to: april))
+        ledger.record(use: .capture, model: "claude-haiku-5-5", input: 1, output: 1, costNano: 1_000_000_000,
+                      latency: 0, outcome: "ok", requestID: nil, at: later)
+        allowance.commit(now: later)
+        #expect(TestSpendAllowance.spent(at: file, month: "2026-04") == 1_000_000_000)
+        #expect(left(later) == TestSpendAllowance.allowanceNano - 1_000_000_000)
+    }
+
     @Test func anotherMonthsFileHoldsNothing() throws {
         defer { cleanUp() }
         try Data(#"{"month":"1999-01","nano":19000000000}"#.utf8).write(to: file)
