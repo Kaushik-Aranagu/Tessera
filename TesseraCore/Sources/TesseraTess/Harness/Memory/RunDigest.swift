@@ -45,8 +45,26 @@ public struct RunDigest: Sendable, Equatable, Codable {
     public var outTokens: Int
     public var reading: Reading
 
+    /// The name a tool step is kept under when it isn't a tool Tess has: a span carries the name the model chose, so a
+    /// steered or made-up name never becomes a path, a leaf or a hint (QA on #1474).
+    public static let unknownTool = "unknown"
+
+    /// Every tool a run can call: the Tess tools, the harness's (open, recall, remember, notebook, ask_agent, web) and
+    /// the shell calls.
+    @MainActor
+    public static var knownTools: Set<String> {
+        AgentSpec.knownTools.union(TessRecallTools.names).union(ElementCatalog.shellCalls)
+            .union(TessRun.shellSpecs().map(\.name))
+            .union([TessOpenTool.name, AgentNotebook.name, TessRun.askAgent])
+    }
+
     /// The digest of one run, or nil when the trace holds none of its spans.
+    @MainActor
     public static func make(runID: UUID, spans: [TraceSpan], reading: Reading = .unknown) -> RunDigest? {
+        make(runID: runID, spans: spans, reading: reading, known: knownTools)
+    }
+
+    static func make(runID: UUID, spans: [TraceSpan], reading: Reading, known: Set<String>) -> RunDigest? {
         let own = spans.filter { $0.runID == runID }.sorted { $0.at < $1.at }
         guard let first = own.first, let last = own.last else { return nil }
         let brains = own.filter { $0.kind == .brain }
@@ -58,8 +76,10 @@ public struct RunDigest: Sendable, Equatable, Codable {
         let started = own.map { $0.at.addingTimeInterval(-Double($0.totalMs) / 1000) }.min() ?? first.at
         return RunDigest(
             runID: runID, at: first.at, job: brains.first?.name ?? "none", brains: brains.compactMap(\.brain),
-            steps: own.filter { $0.kind == .tool }
-                .map { Step(tool: $0.name, ok: $0.outcome != "error", ms: $0.totalMs) },
+            steps: own.filter { $0.kind == .tool }.map { span in
+                Step(tool: known.contains(span.name) ? span.name : unknownTool, ok: span.outcome != "error",
+                     ms: span.totalMs)
+            },
             answered: answered, failure: answered ? nil : brains.last.map(outcome) ?? "none",
             totalMs: max(0, Int((last.at.timeIntervalSince(started) * 1000).rounded())),
             inTokens: own.reduce(0) { $0 + $1.inTokens }, outTokens: own.reduce(0) { $0 + $1.outTokens },
@@ -68,9 +88,10 @@ public struct RunDigest: Sendable, Equatable, Codable {
     }
 
     /// Every run the trace holds, oldest first. A run whose reading is not given is read as `.unknown`.
+    @MainActor
     public static func all(from spans: [TraceSpan], readings: [UUID: Reading] = [:]) -> [RunDigest] {
-        let ids = Set(spans.compactMap(\.runID))
-        return ids.compactMap { make(runID: $0, spans: spans, reading: readings[$0] ?? .unknown) }
+        let ids = Set(spans.compactMap(\.runID)), known = knownTools
+        return ids.compactMap { make(runID: $0, spans: spans, reading: readings[$0] ?? .unknown, known: known) }
             .sorted { ($0.at, $0.runID.uuidString) < ($1.at, $1.runID.uuidString) }
     }
 

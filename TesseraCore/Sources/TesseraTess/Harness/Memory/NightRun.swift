@@ -114,7 +114,8 @@ public struct NightRun {
     // MARK: The run
 
     /// Nil when this night already ran. `runs` are Tess's run digests from the trace: the closing day's teach the
-    /// procedure book.
+    /// procedure book. Until the run loop stamps each run's reading, every digest reads as `.unknown` and nothing is
+    /// learned.
     public func run(
         record: inout NightRecord, eval: inout MemoryEvalRecord, packs: [AgentSpec.Expertise: String] = [:],
         notebooks: [NightPass.NotebookFile] = [], runs: [RunDigest] = [], prune: (String) -> Void = { _ in },

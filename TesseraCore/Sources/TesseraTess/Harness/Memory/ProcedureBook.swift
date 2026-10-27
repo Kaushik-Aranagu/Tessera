@@ -46,9 +46,9 @@ public struct ProcedureBook: Sendable, Equatable, Codable {
     /// Learns one run. False when the run is no signal and nothing changed.
     @discardableResult
     public mutating func learn(_ run: RunDigest) -> Bool {
-        guard !run.reading.untrusted, run.answered || Self.pathFailures.contains(run.failure ?? "") else {
-            return false
-        }
+        // A run that called a tool Tess doesn't have is no path to learn.
+        guard !run.reading.untrusted, !run.steps.contains(where: { $0.tool == RunDigest.unknownTool }),
+              run.answered || Self.pathFailures.contains(run.failure ?? "") else { return false }
         let key = Self.key(job: run.job, path: run.path)
         var record = records[key] ?? Record(job: run.job, path: run.path, tries: 0, answered: 0, failedCalls: 0,
                                             totalMs: 0, lastAt: run.at)
