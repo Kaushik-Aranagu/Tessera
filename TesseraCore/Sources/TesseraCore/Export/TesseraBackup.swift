@@ -41,6 +41,8 @@ public enum TesseraBackup {
     public static let keepBeforeRestore = 3
 
     public enum BackupError: Error, Equatable {
+        /// A store the test world made is never copied: it holds made-up data and its own files.
+        case testStore
         /// Not a Tessera backup at all.
         case notABackup
         /// A Tessera backup that won't read.
@@ -73,6 +75,7 @@ public enum TesseraBackup {
     public static func write(from context: TesseraContext, to url: URL, now: Date = .now,
                              appVersion: String? = nil, leavingOutPrivate: Bool = false) throws
     {
+        guard !TestStore.isStamped(context) else { throw BackupError.testStore }
         try context.save()
         // A copy for iCloud Drive is built and masked in the app's own temporary folder (never beside the destination,
         // which may be a file-provider folder), then moved in: the whole copy never sits there (G28, QA on #707).
@@ -194,6 +197,7 @@ public enum TesseraBackup {
         // A store with no file (this session fell back to memory: a damaged open, or data from a newer Tessera) is
         // never copied: a week of empty copies would roll his seven good ones away (QA M1 on #475).
         guard context.url != nil else { return nil }
+        guard !TestStore.isStamped(context) else { throw BackupError.testStore }
         let manager = FileManager.default
         try manager.createDirectory(at: folder, withIntermediateDirectories: true)
         let key = TesseraDay(calendar: calendar).day(of: now)
