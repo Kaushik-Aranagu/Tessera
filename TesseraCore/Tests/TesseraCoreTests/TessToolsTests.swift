@@ -208,6 +208,15 @@ struct TessToolsTests {
             if let items = schema["items"] as? [String: Any] {
                 check(items, path: path + "[]")
             }
+            // The API refuses a schema whose enum holds a value the declared type doesn't allow (a nullable choice must
+            // list null).
+            if let values = schema["enum"] as? [Any] {
+                let declared = (schema["type"] as? [String]) ?? [schema["type"] as? String ?? "string"]
+                for value in values {
+                    let kind = value is NSNull ? "null" : value is String ? "string" : "other"
+                    #expect(declared.contains(kind), "\(path) enum value \(value) does not fit \(declared)")
+                }
+            }
         }
         for tool in tools {
             #expect(tool["strict"] as? Bool == true)

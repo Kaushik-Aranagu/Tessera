@@ -598,8 +598,18 @@ public indirect enum TessSchema: Sendable {
                 "properties": Dictionary(uniqueKeysWithValues: properties.map { ($0.0, $0.1.json) }),
                 "required": properties.map(\.0),
             ]
-        case let .nullable(inner):
-            inner.json.merging(["type": [inner.json["type"] as? String ?? "string", "null"]]) { _, new in new }
+        case let .nullable(inner): Self.nullable(inner.json)
         }
+    }
+
+    /// A nullable schema: the type takes null, and a choice lists null among its values too, or the API refuses it
+    /// ("Enum value does not match declared type").
+    private static func nullable(_ inner: [String: Any]) -> [String: Any] {
+        var json = inner
+        json["type"] = [inner["type"] as? String ?? "string", "null"]
+        if let values = inner["enum"] as? [Any] {
+            json["enum"] = values + [NSNull()]
+        }
+        return json
     }
 }

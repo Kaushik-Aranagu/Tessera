@@ -46,6 +46,8 @@ struct TessLiveEvalTests {
         /// The check failed on a reply the key scores right: the number the 2% gate counts.
         var falseFail: Bool?
         var skipped: String?
+        /// How each model call ended ("works", "badKey", "timeout"...): never a word of the call itself.
+        var brainOutcomes: [String]?
     }
 
     /// The answer check's shadow results over the run (docs/ai/harness/checks.md): false fails are fails on replies the
@@ -286,7 +288,8 @@ struct TessLiveEvalTests {
                 totalMs: Self.milliseconds(clock.now - started), costNano: cost,
                 score: scored, answerCheck: check?.outcome, answerCheckUnsupported: check?.unsupported,
                 keyUnsupported: Self.keyUnsupported(question, reply: reply),
-                falseFail: check.map { $0.outcome == "failed" && scored?.passed == true }
+                falseFail: check.map { $0.outcome == "failed" && scored?.passed == true },
+                brainOutcomes: spans.filter { $0.kind == .brain }.map(\.outcome)
             ))
         }
 
