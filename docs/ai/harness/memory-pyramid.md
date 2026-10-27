@@ -215,7 +215,14 @@ that set its leaves apart, counted exactly. The rules come from "Learned weights
 - At most 3 structural changes a night, each logged so it can be undone.
 
 The reader goes from the root down and keeps a leaf that shares two words with the ask, the same rule flat uses.
-Results with seed 1 over nights 46-60 (opens, tokens, recall per ask):
+Results with seed 1 over nights 46-60 (opens, tokens, recall per ask), from these two commands:
+
+```
+python3 scripts/ai/pyramid_topic_sim.py --key 12
+python3 scripts/ai/pyramid_topic_sim.py --key 12 --reader index
+```
+
+(The script's default key is 6 words; the table uses 12.)
 
 | Reader | flat | grow | merge | churn | settle |
 |---|---|---|---|---|---|
@@ -224,14 +231,17 @@ Results with seed 1 over nights 46-60 (opens, tokens, recall per ask):
 
 What it shows:
 
-- **A reader that routes by shown keys loses what it can't see.** Recall falls from 0.86 to 0.33-0.47 as the tree
-  deepens, whatever the key length (6, 12 or 24 words) or beam. So the topic axis must route by an exact index (which
-  children hold a matching leaf) and use keys and weights only to rank. This is the same rule as the time axis:
-  weights rank, they never hide.
-- **With an exact index, recall equals flat's at about 12% of its tokens** by night 60, across seeds 1-5 (settle:
-  1095-1184 tokens against flat's 9676-9684).
+- **A reader that routes by shown keys loses what it can't see.** Recall falls from 0.86 to 0.33-0.43 by nights 46-60
+  with 12-word keys (0.24-0.46 with 6, 0.52-0.68 with 24), and a wider beam doesn't help. So the topic axis must route
+  by an exact index (which children hold a matching leaf) and use keys and weights only to rank. This is the same rule
+  as the time axis: weights rank, they never hide.
+- **The index reader's recall equals flat's by construction, not by measurement**: it opens every child holding a
+  matching leaf. What is measured is its cost: about 12% of flat's tokens by night 60 across seeds 1-5 (settle:
+  1095-1184 tokens against flat's 9676-9684). The index lookup itself (which children hold a match) is not counted in
+  opens or tokens; on the phone it is a local search that never goes in a pack.
 - **Scatter is the cost.** Opens grow to 5-6 a night because a split cuts a subtopic across holders and new leaves
-  land on either side. Settling leaves back is the fix that works: 9-20% fewer tokens than split-only on every seed.
+  land on either side. Settling leaves back is the fix that works: 9-20% fewer tokens than split-only on every seed (QA reproduced
+  10-16% on seeds 1-3).
   Merge alone does little here, because hysteresis blocks merging two big halves, which is its job.
 - **No flips in this world**, even with no hysteresis and no cap (churn makes 3-4 times as many merges, and no split
   was undone within 10 nights). Changes stay near one a night. Hysteresis and the cap are kept as guards; this world
