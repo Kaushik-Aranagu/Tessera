@@ -47,6 +47,7 @@ public enum TesseraIntentsCatalog {
         "setRoutineKind": "in-app only: the routine editor",
         "addRoutineStep": "in-app only: the routine editor",
         "editRoutineStep": "in-app only: the routine editor",
+        "setWarmUp": "in-app only: the routine editor",
         "applyDayName": "in-app only: Tess names a training day",
         "createClass": "in-app only: the class page's New subclass",
         "syncCalendar": "system: the calendar mount on foreground",

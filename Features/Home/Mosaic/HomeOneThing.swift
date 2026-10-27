@@ -113,6 +113,10 @@ struct HomeOneThing: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var strike: Double = 0
+    /// Sheet 290: the pen lifts at the end of the strike (a 4 pt flick, there and gone).
+    @State private var lift: Double = 0
+    /// Sheet 294: how far into the roll his finger has taken the card (0 at rest).
+    @State private var follow: CGFloat = 0
     @State private var holdTask: Task<Void, Never>?
     @State private var full = false
     /// The finger moved too far during this hold: it can no longer finish anything.
@@ -134,6 +138,10 @@ struct HomeOneThing: View {
                 let thing = things[index]
                 // The widget is the clipped place: the tiers roll over its top and bottom edges (sheets 294, 295).
                 page(thing)
+                    // Sheet 294: the card leans over the top edge as the finger drags it (no travel: the tiers carry
+                    // that on commit); nothing at rest.
+                    .modifier(EdgeRollPass(overflow: follow, axis: .vertical, side: .leading, preset: .card,
+                                           reduceMotion: reduceMotion))
                 // A's 80 pt pixel sign sits at the top right; its slot is left clear here.
                 Color.clear.frame(width: 80, height: 80)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
@@ -215,8 +223,8 @@ struct HomeOneThing: View {
                 // Through the motion policy: under Reduce Motion each becomes the short crossfade.
                 .transition(.asymmetric(
                     insertion: AnyTransition.modifier(
-                        active: roll(1, side: .trailing, inset: inset),
-                        identity: roll(0, side: .trailing, inset: inset)
+                        active: roll(1, side: .trailing, inset: inset, arriving: true),
+                        identity: roll(0, side: .trailing, inset: inset, arriving: true)
                     )
                     .animation(MotionPolicy.resolve(.easeOut(duration: 0.3).delay(delay),
                                                     reduceMotion: reduceMotion)),
@@ -231,9 +239,11 @@ struct HomeOneThing: View {
         .frame(maxWidth: .infinity, minHeight: height, alignment: .topLeading)
     }
 
-    private func roll(_ overflow: CGFloat, side: EdgeRoll.Side, inset: CGFloat) -> EdgeRollPass {
+    private func roll(_ overflow: CGFloat, side: EdgeRoll.Side, inset: CGFloat,
+                      arriving: Bool = false) -> EdgeRollPass
+    {
         EdgeRollPass(overflow: overflow, axis: .vertical, side: side, travel: Self.height, inset: inset,
-                     placeLength: Self.height, preset: .card, reduceMotion: reduceMotion)
+                     placeLength: Self.height, preset: .card, reduceMotion: reduceMotion, arriving: arriving)
     }
 
     @ViewBuilder
@@ -245,7 +255,7 @@ struct HomeOneThing: View {
                 : .custom("Figtree", fixedSize: Self.bigSize(typeSize)).weight(.bold))
             .foregroundStyle(colour)
             .lineLimit(1)
-            .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
+            .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink, lift: lift))
         if thing.taskID != nil {
             text.simultaneousGesture(hold(thing))
         } else {
@@ -355,11 +365,16 @@ struct HomeOneThing: View {
     /// previous. The dominant axis wins; it commits past 50 pt or on a flick faster than 300 pt/s.
     private var swipe: some Gesture {
         DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
-            .onChanged { _ in
+            .onChanged { value in
                 // A drag in any direction is a swipe, not a hold: the strike retracts.
                 cancelHold()
+                // Sheet 294: the roll follows the finger, from the first point of travel, up to a third of the roll
+                // before it commits (the commit's own roll then carries it the rest of the way).
+                let travel = max(abs(value.translation.width), abs(value.translation.height))
+                follow = reduceMotion ? 0 : min(travel / (Self.swipeDistance * 3), 0.3)
             }
             .onEnded { value in
+                withTesseraAnimation(.easeOut(duration: 0.28), reduceMotion: reduceMotion) { follow = 0 }
                 let sideways = abs(value.translation.width) >= abs(value.translation.height)
                 // A diagonal has no clear direction: the dominant axis must lead by 1.3x or the swipe is ignored.
                 let lead = sideways
@@ -404,6 +419,7 @@ struct HomeOneThing: View {
                         withTesseraAnimation(.linear(duration: 0.6), reduceMotion: false) { strike = 1 }
                         try? await Task.sleep(for: .milliseconds(600))
                         guard !Task.isCancelled else { return }
+                        penLift()
                     }
                     full = true
                 }
@@ -420,6 +436,16 @@ struct HomeOneThing: View {
                     cancelHold()
                 }
             }
+    }
+
+    /// The pen leaves the paper: the flick runs out and back inside 240 ms; it has no haptic of its own (the Done
+    /// pattern is this move's one). Reduce Motion drops it.
+    private func penLift() {
+        withTesseraAnimation(.easeOut(duration: 0.08), reduceMotion: false) { lift = 1 }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(80))
+            withTesseraAnimation(.easeIn(duration: 0.16), reduceMotion: false) { lift = 0 }
+        }
     }
 
     private func cancelHold() {

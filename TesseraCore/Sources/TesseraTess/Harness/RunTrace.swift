@@ -6,6 +6,8 @@ import Foundation
 public struct TraceSpan: Codable, Sendable, Equatable {
     public enum Kind: String, Codable, Sendable {
         case brain, tool
+        /// A check on a finished reply (`AnswerCheck` in shadow): its verdict is the outcome.
+        case check
     }
 
     public var kind: Kind
@@ -24,12 +26,16 @@ public struct TraceSpan: Codable, Sendable, Equatable {
     public var outcome: String
     /// The Tess run this span belongs to, when it has one.
     public var runID: UUID?
+    /// For a check span, how many numbers in the reply nothing she was given supports. Only the count: a number can
+    /// be a body or money value, which never reaches a log.
+    public var unsupported: Int?
 
     public init(kind: Kind, name: String, brain: String? = nil, model: String? = nil, at: Date = .now,
                 ttftMs: Int? = nil, totalMs: Int, usage: BrainUsage = BrainUsage(), outcome: String,
-                runID: UUID? = nil)
+                runID: UUID? = nil, unsupported: Int? = nil)
     {
         self.runID = runID
+        self.unsupported = unsupported
         self.kind = kind
         self.name = name
         self.brain = brain

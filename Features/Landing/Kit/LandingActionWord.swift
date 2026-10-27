@@ -78,7 +78,7 @@ struct LandingActionWord: View {
             .frame(height: verbHeight, alignment: .leading)
             // At sizes where verb and object outgrow the slot, the verb stands alone (VoiceOver still reads both), so
             // the foot never rises into the doors above it.
-            if !step.object.isEmpty, verbHeight + objectHeight <= Self.slot {
+            if !step.object.isEmpty, verbHeight * 1.3 + objectHeight <= Self.slot {
                 Text(step.object)
                     .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.medium))
                     .foregroundStyle(Theme.Colors.inkSecondary)
@@ -128,7 +128,7 @@ struct LandingActionWord: View {
     /// Verb over object fits the slot from its top at regular sizes; at large sizes the two stack upward from the
     /// slot's bottom instead, so they keep their own lines and never run off the screen's foot.
     static func alignment(verb: CGFloat, object: CGFloat) -> Alignment {
-        verb + object > slot ? .bottomLeading : .topLeading
+        verb * 1.3 + object > slot ? .bottomLeading : .topLeading
     }
 
     /// The verb's letters; on a change they stream in from the swipe side, leaning, 22 ms apart.

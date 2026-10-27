@@ -6,8 +6,7 @@ import TesseraCore
 /// never named. Nothing here reaches Claude.
 @MainActor
 struct KitchenFront {
-    /// Kitchen's one accent, ochre (131 table: #C49A5E dark (moved off D49A52, too close to Ember gold), #A8701F
-    /// light).
+    /// Kitchen's one accent, ochre (131 table: #C49A5E dark, #A8701F light).
     static var accent: Color {
         Theme.Colors.Accent.kitchen
     }

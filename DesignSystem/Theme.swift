@@ -596,6 +596,10 @@ enum Theme {
         static let house = Animation.spring(Spring(duration: 0.42, bounce: 0.12))
         /// A list snapping to a row under the finger (sheet 220): about 0.35 s, no overshoot.
         static let firm = Animation.spring(Spring(duration: 0.35, bounce: 0))
+        /// A form switch (sheets 292, 293): a shared name travels from its place in one form to its place in the next.
+        static let travel = Animation.smooth(duration: 0.52)
+        /// What does not travel (values, second lines, joiners) fades in over 260 ms while the names move.
+        static let fadeIn = Animation.easeOut(duration: 0.26)
         /// Direct manipulation: drags, swipes, toggles under the finger.
         static let snappy = Animation.snappy(duration: 0.25)
         /// Ink drying: the colour of a moment fading back to rest, 1.1 s on the house curve after 0.4 s. Nil under

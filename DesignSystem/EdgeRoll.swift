@@ -160,10 +160,13 @@ enum EdgeRoll {
     /// The tilt's sign: the thing falls away from the viewer over the edge it is leaving by.
     static func tiltSign(side: Side, axis: Axis) -> Double {
         switch (axis, side) {
-        case (.vertical, .leading): -1
-        case (.vertical, .trailing): 1
-        case (.horizontal, .leading): 1
-        case (.horizontal, .trailing): -1
+        // Checked by rendering (ImageRenderer): a positive angle about x brings the bottom toward the viewer and the
+        // top away; a positive angle about y sends the right side away. So the edge a thing leaves by gets the
+        // positive angle on the top and the right, the negative one on the bottom and the left.
+        case (.vertical, .leading): 1
+        case (.vertical, .trailing): -1
+        case (.horizontal, .leading): -1
+        case (.horizontal, .trailing): 1
         }
     }
 }
@@ -245,6 +248,9 @@ struct EdgeRollPass: ViewModifier, Animatable {
     var placeLength: CGFloat = 0
     var preset = EdgeRoll.Preset.card
     var reduceMotion = false
+    /// Sheet 298: a thing that will arrive is held back unseen until its arrival starts (never drawn, hidden, then
+    /// drawn again). It is clear at full overflow and fully there from a tenth of the way in.
+    var arriving = false
 
     nonisolated var animatableData: CGFloat {
         get { overflow }
@@ -254,8 +260,10 @@ struct EdgeRollPass: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         let look = EdgeRoll.look(overflow: overflow, preset: preset, reduceMotion: reduceMotion)
         let shift = (side == .leading ? -1 : 1) * overflow * travel * (reduceMotion ? 0 : 1)
+        let held = arriving && !reduceMotion ? min(max((1 - overflow) * 10, 0), 1) : 1
         return content
             .rolled(look, axis: axis, side: side)
+            .opacity(held)
             .edgeFaded(axis: axis, shift: shift, inset: inset, placeLength: placeLength, depth: preset.depth,
                        active: overflow > 0 && !reduceMotion)
             .offset(x: axis == .horizontal ? shift : 0, y: axis == .vertical ? shift : 0)
@@ -296,11 +304,28 @@ private struct InPlaceFade: ViewModifier {
                     )
                     : nil
                 if let stops {
+                    // The gradient covers the line's own box; past its box (a descender, a glyph's overshoot) the
+                    // mask keeps the opacity of that end, so a line is never sliced by its own box, only faded by
+                    // the edge it rolls over.
+                    let vertical = axis == .vertical
                     LinearGradient(stops: stops.map { .init(color: .black.opacity($0.opacity), location: $0.location) },
-                                   startPoint: axis == .vertical ? .top : .leading,
-                                   endPoint: axis == .vertical ? .bottom : .trailing)
+                                   startPoint: vertical ? .top : .leading,
+                                   endPoint: vertical ? .bottom : .trailing)
+                        .background(alignment: vertical ? .top : .leading) {
+                            Color.black.opacity(stops.first?.opacity ?? 1)
+                                .frame(width: vertical ? nil : 60, height: vertical ? 60 : nil)
+                                .offset(x: vertical ? 0 : -60, y: vertical ? -60 : 0)
+                        }
+                        .background(alignment: vertical ? .bottom : .trailing) {
+                            Color.black.opacity(stops.last?.opacity ?? 1)
+                                .frame(width: vertical ? nil : 60, height: vertical ? 60 : nil)
+                                .offset(x: vertical ? 0 : 60, y: vertical ? 60 : 0)
+                        }
                 } else {
-                    Color.black
+                    // At rest nothing is cut: the mask reaches past the line's box up and down (sheet 298, a line
+                    // clips sideways only).
+                    Color.black.padding(.vertical, axis == .vertical ? -60 : 0)
+                        .padding(.horizontal, axis == .horizontal ? -60 : 0)
                 }
             }
         }
@@ -330,5 +355,13 @@ extension View {
     {
         edgeFaded(axis: axis, shift: shift, inset: inset, placeLength: placeLength, depth: depth,
                   active: !reduceMotion && shift != 0)
+    }
+}
+
+extension View {
+    /// Sheet 298: clips at the left and right edges only. A mask that reaches far past the top and bottom, so a line
+    /// moving up or down is never sliced there (use instead of `clipped()` where the motion is vertical).
+    func sidewaysClip() -> some View {
+        mask { Color.black.padding(.vertical, -400) }
     }
 }

@@ -88,6 +88,8 @@ struct RootView: View {
                 }
 
                 DoorwayOverlay(doorway: model.doorway)
+                // Sheet 299: on a look change the old page leaves on top, ground first, ink last.
+                LookInkOverlay()
                 PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }
@@ -107,14 +109,21 @@ struct RootView: View {
                 }
             }
         }
+        // Sheet 299: a change of look never replays the page's arrivals. While the old page leaves, the page under it
+        // changes its colours with no animation of its own.
+        .transaction { transaction in
+            if LookInk.shared.pass != nil {
+                transaction.disablesAnimations = true
+            }
+        }
         .fullScreenCover(isPresented: $model.isWorkoutPresented) {
             if model.workoutRisesFromLane {
                 // START on Training: live mode rises out of the first lane (training-mode.md).
-                WorkoutModeView()
+                WorkoutCover()
                     .environment(\.animateEntrance, true)
                     .navigationTransition(.zoom(sourceID: WorkoutRise.sourceID, in: zoom))
             } else {
-                WorkoutModeView()
+                WorkoutCover()
                     .environment(\.animateEntrance, true)
             }
         }

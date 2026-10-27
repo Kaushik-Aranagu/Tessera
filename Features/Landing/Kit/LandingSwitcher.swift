@@ -21,6 +21,13 @@ struct LandingSwitcher: View {
     @State private var direction = 1
     @State private var rolling = false
     @State private var cue = HapticCue()
+    /// A change is playing (letters leaving and arriving): the word's right edge fades only while it moves.
+    @State private var changing = false
+
+    /// Sheet 298: the word owns the 24 pt margin to the screen's left edge as a soft fade, and its right edge fades
+    /// only while it moves, never at rest.
+    static let margin: CGFloat = 24
+    static let trailingFade: CGFloat = 22
 
     private var word: String {
         if !vertical.isEmpty, vertical.indices.contains(verticalIndex), rolling {
@@ -41,10 +48,14 @@ struct LandingSwitcher: View {
             }
         }
         .id(word)
-        // Sheet 297: the word under his finger fades through the frame's edge (22 pt, no lean: the drag skews it).
-        .edgeFade(axis: .horizontal, shift: drag.width * 0.5, placeLength: Self.size.width, reduceMotion: reduceMotion)
+        // The word reaches the screen's edge: its frame spans the 24 pt margin to the left, and that margin is a soft
+        // fade (clear at the screen edge, opaque at the word's rest), so letters leave into it and are gone by the
+        // edge instead of being sliced by a box. The fade is a mask on the word, never a blur or a band over it.
+        .padding(.leading, Self.margin)
         .offset(x: drag.width * 0.5, y: drag.height * 0.3)
-        .frame(width: Self.size.width, height: Self.size.height, alignment: .leading)
+        .frame(width: Self.size.width + Self.margin, height: Self.size.height, alignment: .leading)
+        .mask(alignment: .leading) { marginFade(moving: (dragging || changing) && !reduceMotion) }
+        .frame(width: Self.size.width, height: Self.size.height, alignment: .trailing)
         .contentShape(Rectangle())
         .gesture(swipe)
         .onTapGesture { step(across: 1) }
@@ -52,6 +63,26 @@ struct LandingSwitcher: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(word)
         .accessibilityAdjustableAction { direction in step(across: direction == .increment ? 1 : -1) }
+    }
+
+    /// Clear at the screen edge, opaque by the word's rest; and, only while it moves, clear again at the right edge.
+    private func marginFade(moving: Bool) -> some View {
+        let total = Self.size.width + Self.margin
+        let rest = Self.size.width - Self.trailingFade
+        return HStack(spacing: 0) {
+            LinearGradient(stops: [
+                .init(color: .black.opacity(reduceMotion ? 1 : 0), location: 0),
+                .init(color: .black, location: Self.margin / total),
+                .init(color: .black, location: (Self.margin + rest) / total),
+                .init(color: .black.opacity(moving ? 0 : 1), location: 1),
+            ], startPoint: .leading, endPoint: .trailing)
+                .frame(width: total)
+            // A word wider than its frame is never cut at rest.
+            Color.black.opacity(moving ? 0 : 1).frame(width: 300)
+        }
+        .animation(MotionPolicy.resolve(Theme.Motion.house, reduceMotion: reduceMotion), value: moving)
+        // Tall: a letter rolling over like a drum is never cut at the top or bottom of the word's box.
+        .padding(.vertical, -120)
     }
 
     private func letterTransition(_ position: Int) -> AnyTransition {
@@ -99,6 +130,7 @@ struct LandingSwitcher: View {
         }
         cue.play(.selection)
         changed()
+        movingBriefly()
     }
 
     private func stepVertical(_ delta: Int) {
@@ -109,6 +141,16 @@ struct LandingSwitcher: View {
         }
         cue.play(.selection)
         changed()
+        movingBriefly()
+    }
+
+    /// The right edge's fade is on while the letters move (about a second), then off at rest.
+    private func movingBriefly() {
+        changing = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(1000))
+            changing = false
+        }
     }
 }
 

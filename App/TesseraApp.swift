@@ -12,19 +12,26 @@ struct TesseraApp: App {
     @State private var model: AppModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var didWarmUp = false
+    /// The test world's $20 monthly allowance (a `-testStore` launch only; nil otherwise).
+    private let testAllowance: TestSpendAllowance?
 
     init() {
         FontRegistry.registerAll()
         Theme.configure()
+        LookInk.install()
         AppClock.configure()
-        let container = TesseraSchema.makeContainer()
+        // `-testStore` (simulator only): a fresh stamped store under the temporary folder, so his store is never
+        // opened.
+        let testContainer = TestStoreGate.flaggedContainer()
+        let container = testContainer ?? TesseraSchema.makeContainer()
         self.container = container
         // Data from builds before GRDB (SwiftData) moves across once, then the old store goes to Backups.
         // Only into a store on disk: if opening fell back to memory, leave the old files for next launch.
-        if TesseraSchema.lastOpenOutcome != .inMemoryFallback {
+        if testContainer == nil, TesseraSchema.lastOpenOutcome != .inMemoryFallback {
             try? LegacyStore.migrate(into: container.mainContext)
         }
         let model = AppModel(context: container.mainContext, seedsStarterLists: true)
+        testAllowance = TestSpendAllowance.begin(store: model.store, classes: model.classes)
         // Fake history only when asked for (simulator, recordings): never on Kaushik's phone.
         // -resetDemo starts the first-launch rest day over too (QA low on #641); LaunchFlags is simulator-only.
         if LaunchFlags.has("-resetDemo") {
@@ -67,7 +74,7 @@ struct TesseraApp: App {
                         } else if LaunchFlags.has("-notes") {
                             NotesView()
                         } else if LaunchFlags.has("-trainingLanding") {
-                            TrainingRoomView()
+                            TrainingRoomView().hostsWorkoutCover()
                         } else if LaunchFlags.has("-routinesLanding") {
                             NavigationStack { RoutinesWoodlandLandingPage() }
                         } else if LaunchFlags.has("-settingsLanding") {
@@ -126,6 +133,9 @@ struct TesseraApp: App {
                 WatchBridge.shared.update(for: model.session)
             }
             .onChange(of: scenePhase, initial: true) { _, phase in
+                if phase != .active {
+                    testAllowance?.commit()
+                }
                 // Once a day, on the way out: a backup copy (docs/research/free-signing-survival.md).
                 if phase == .background {
                     BackupKeeper.runDaily(model.context)

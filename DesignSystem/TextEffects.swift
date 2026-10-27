@@ -33,10 +33,16 @@ struct GlyphRevealRenderer: TextRenderer, Animatable {
 struct StrikeRenderer: TextRenderer, Animatable {
     var progress: Double
     var color: Color
+    /// Sheet 290, the pen lifts: after the strike ends, a 4 pt flick leaves the end of the line up and to the right,
+    /// as a pen leaves the paper. A path, never a state: the caller runs it 0 to 1 and back to 0, and it is 0 at rest.
+    var lift: Double = 0
 
-    var animatableData: Double {
-        get { progress }
-        set { progress = newValue }
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(progress, lift) }
+        set {
+            progress = newValue.first
+            lift = newValue.second
+        }
     }
 
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
@@ -58,6 +64,14 @@ struct StrikeRenderer: TextRenderer, Animatable {
             path.move(to: CGPoint(x: bounds.minX, y: y))
             path.addLine(to: CGPoint(x: bounds.minX + bounds.width * local, y: y))
             context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            if lift > 0, local >= 1, index == lines.count - 1 {
+                // 4 pt long, 45 degrees up and to the right.
+                let end = CGPoint(x: bounds.minX + bounds.width, y: y)
+                var flick = Path()
+                flick.move(to: end)
+                flick.addLine(to: CGPoint(x: end.x + 2.8 * lift, y: end.y - 2.8 * lift))
+                context.stroke(flick, with: .color(color), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            }
         }
     }
 }

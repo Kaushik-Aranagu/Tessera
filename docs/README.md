@@ -29,6 +29,10 @@ The live copies are in the project's shared folder, `tessera/product/`. They're 
 
 The team board lives at `tessera/ops/board.md` in the shared folder. A copy is on the same mirror branch at `docs/ops/board.md`.
 
+## Reading older docs
+
+Lines in older docs that say money, calories, weight, health, body or private items "never reach Claude" are stale for the send side: Kaushik ruled at 11:59 AM Oct 27 that nothing is filtered or masked on what is sent to Claude (see the entry in [product/decisions.md](product/decisions.md)). The key rule and the backup, log, widget, notification and screen walls still stand, and Claude may propose money changes (Kaushik, 12:28 PM Oct 27), each pending with a 10 s Undo; room agents have no money tools. Where a living doc was amended, the line carries a note; QA and fixture records are left as they were.
+
 ## Vision and design
 
 - [PRODUCT_VISION.md](PRODUCT_VISION.md): the product vision, captured from Kaushik. Read it before designing a feature or changing the data model.

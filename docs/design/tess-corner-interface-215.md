@@ -30,7 +30,7 @@ A (Tess layer: gestures, states, room). Core (SpeechAnalyzer path, "Ask about th
 ## Reviewer guards (12:35 PM, via coordinator): required
 1. The ask is a transient surface. Home has no standing field. The hold-to-talk letters clear after release.
 2. Everything runs on the phone first. A question goes to Claude only when asksClaude is on, and only with context that is already allowed.
-3. A drag onto a walled, private, money, health, body, calorie or calendar item answers on the phone only. Private items are named by shownLabel. Money actions are never offered.
+3. A drag onto a walled, private, money, health, body, calorie or calendar item answers on the phone only. Private items are named by shownLabel. Money actions are never offered. (Superseded Oct 27, 12:28 PM, by Kaushik's card answer: Claude may propose money changes, each pending with a 10 s Undo worded "Reversed"; see docs/product/decisions.md. Room agents still have no money tools.)
 4. Speech is on-device and has nothing to do with Siri.
 5. Her room is Tess's surface, so private titles show as shownLabel there. Each action has one op-log Undo.
 6. She never speaks unprompted from 11 PM to 7 AM.
