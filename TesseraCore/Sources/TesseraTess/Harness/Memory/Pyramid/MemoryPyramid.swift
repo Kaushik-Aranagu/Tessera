@@ -110,6 +110,7 @@ public enum PyramidStats {
               value: { stats in sum("volumeKg")(stats).map { $0.rounded() } }),
         Shown(key: "cooks", label: "meals cooked", taint: .claudeSafe, value: sum("cooks")),
         Shown(key: "chores", label: "chores done", taint: .claudeSafe, value: sum("chores")),
+        Shown(key: "tasks", label: "tasks done", taint: .claudeSafe, value: sum("tasks")),
         Shown(key: "habits", label: "habit check-ins", taint: .claudeSafe, value: sum("habits")),
         Shown(key: "notes", label: "notes", taint: .claudeSafe, value: sum("notes")),
         Shown(key: "told", label: "things he told you", taint: .claudeSafe, value: sum("told")),
