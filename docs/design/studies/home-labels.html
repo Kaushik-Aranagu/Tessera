@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Home labels</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/home-labels.md: Home's stroke words and label words. Start paints in and hands off to the workout; Resume with a waiting ledger row; Finish held to done, then the empty state's label word. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--amber:#E0A35C}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E6DCEF 0%,rgba(230,220,239,0) 70%),radial-gradient(70% 45% at 0% 40%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(80% 50% at 100% 80%,#DCE6EE 0%,rgba(220,230,238,0) 70%),#F4F0EA}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);white-space:nowrap}
+.la{position:absolute}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0);transform-origin:left}
+.ctx{position:absolute;left:22px;font-size:21px;color:var(--ctx);white-space:nowrap}
+.hero{position:absolute;left:20px;font-weight:500;font-size:56px;line-height:1.02;letter-spacing:-.04em}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1;overflow:visible}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+    <clipPath id="none"><rect width="0" height="0"/></clipPath></svg>
+  <div class="abs lbl" style="left:22px;top:58px;display:flex;gap:22px"><span>REVIEW</span><span style="color:var(--ink)">TODAY</span><span>TRAINING</span><span>KITCHEN</span></div>
+  <div class="abs" style="left:107px;top:80px;width:56px;height:4px;background:var(--verm);border-radius:2px 1px 2.4px 1.2px;transform:rotate(-1.2deg)"></div>
+  <section id="stage" class="abs" style="inset:0"></section>
+  <div id="dark" class="abs" style="left:0;right:0;top:844px;height:844px;background:#1C1828;z-index:20"></div>
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;color:var(--cobalt);text-align:right;opacity:0;z-index:12"></div>
+  <span id="undo" class="la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const stage = $('stage');
+const add = (html) => { stage.insertAdjacentHTML('beforeend', html); return stage.lastElementChild; };
+function fadeTo(el, o, dur, delay = 0, extra) { const from = getComputedStyle(el).opacity; el.getAnimations().forEach((a) => a.cancel()); el.style.opacity = from; el.animate([{ opacity: from, ...(extra || {}) }, { opacity: o, transform: 'none' }], { duration: dur, delay, fill: 'forwards' }); }
+function say(t, undo) { const s = $('say'); fadeTo(s, 0, 0); s.textContent = t; fadeTo(s, 1, 300, 0, { transform: 'translateX(12px)' }); if (undo) fadeTo($('undo'), 1, 240, 120); }
+const hush = () => { fadeTo($('say'), 0, 160); fadeTo($('undo'), 0, 160); };
+const rise = (el, d = 0) => anim(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: d, easing: HOUSE });
+async function clearStage() { hush(); await anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 280 }); stage.innerHTML = ''; stage.getAnimations().forEach((a) => a.cancel()); stage.style.opacity = 1; await sleep(220); }
+
+// a stroke word: the stroke is a clipped path so it can paint in, empty to a trace and repaint
+let sid = 0;
+function stroke(text, colour, left, top, w, meta) {
+  const id = 'c' + (++sid);
+  const el = add(`<div class="abs" style="left:${left}px;top:${top}px;display:flex;align-items:baseline;gap:22px"><div class="sw"><span>${text}</span><svg width="${w}" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><rect x="0" y="-10" width="0" height="40"/></clipPath></defs><g clip-path="url(#${id})"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="${colour}" opacity=".85" filter="url(#rough)"/></g><path class="trace" d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="${colour}" opacity="0" filter="url(#rough)"/><ellipse class="tip" cx="196" cy="7.5" rx="6" ry="4.5" fill="${colour}" opacity="0"/></svg></div>${meta ? `<div class="lbl meta" style="line-height:20px">${meta}</div>` : ''}</div>`);
+  el.clip = el.querySelector('clipPath rect'); el.svg = el.querySelector('svg'); el.trace = el.querySelector('.trace'); el.tip = el.querySelector('.tip');
+  return el;
+}
+const paintIn = (s, dur = 260) => tween(dur, (k) => s.clip.setAttribute('width', 200 * k), easeOut);
+async function tapStroke(s) {
+  const r = rel(s.querySelector('.sw').getBoundingClientRect()); await fingerOn(r.left + r.width / 2, r.top + r.height / 2); await sleep(100); fingerOff();
+  s.svg.style.transformOrigin = '50% 70%';
+  await anim(s.svg, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 420, easing: 'ease-out' });
+}
+async function holdStroke(s, dur) {
+  const r = rel(s.querySelector('.sw').getBoundingClientRect()); await fingerOn(r.left + r.width / 2, r.top + r.height / 2);
+  s.trace.setAttribute('opacity', '.2');
+  await tween(140, (k) => s.clip.setAttribute('width', 200 * (1 - k)));
+  await tween(dur, (k) => s.clip.setAttribute('width', 200 * k), easeOut);
+  // the tip blooms: a blot at the end of the stroke swells and settles
+  s.tip.setAttribute('opacity', '.85'); s.tip.style.transformOrigin = '196px 7.5px';
+  anim(s.tip, [{ transform: 'scale(.4)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 260, easing: SETTLE });
+  await sleep(140); fingerOff();
+}
+const labelWord = (text, colour, x, y, right) => add(`<span class="la lbl" style="${right ? 'right' : 'left'}:${x}px;top:${y}px;color:${colour}">${text}<span class="line" style="background:${colour}"></span></span>`);
+async function tapLabel(el) { const r = rel(el.getBoundingClientRect()); await fingerOn(r.left + r.width / 2, r.top + 10); anim(el.querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 150, easing: HOUSE }); await sleep(110); fingerOff(); }
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+
+  // 1 · today's training: Start paints in under itself as the page lands; a tap hands off to the workout
+  const c1 = add(`<div class="ctx" style="top:250px">today's training</div>`);
+  const h1 = add(`<div class="hero" style="top:282px">Push Day A</div>`);
+  const st = stroke('Start', '#C8452F', 22, 372, 92, 'HOLD'.replace('HOLD', '5 EXERCISES<br>18 SETS'));
+  st.querySelector('.meta').style.marginLeft = '18px';
+  rise(c1); rise(h1, 60); rise(st, 140);
+  await sleep(520); await paintIn(st);
+  await sleep(1300);
+  await tapStroke(st);
+  await anim($('dark'), [{ transform: 'none' }, { transform: 'translateY(-844px)' }], { duration: 420, easing: HOUSE });
+  await sleep(300); stage.innerHTML = '';
+  await anim($('dark'), [{ transform: 'translateY(-844px)', opacity: 1 }, { transform: 'translateY(-844px)', opacity: 0 }], { duration: 300 });
+  $('dark').getAnimations().forEach((a) => a.cancel());
+
+  // 2 · a workout running: Resume, and a waiting process in the ledger with RESUME as a label word
+  const c2 = add(`<div class="ctx" style="top:250px">running now, Push Day A</div>`);
+  const h2 = add(`<div class="hero" style="top:282px">Bench press,<br>set 2 of 4</div>`);
+  const rs = stroke('Resume', '#C8452F', 22, 430, 118, '<span>REST</span><br><span id="clock">1:24</span>');
+  rise(c2); rise(h2, 60); rise(rs, 140);
+  await sleep(520); paintIn(rs);
+  const seam = add(`<div class="abs" style="left:22px;right:22px;top:560px;height:2px;background:var(--verm);box-shadow:0 0 4px rgba(200,69,47,.45)"></div>`);
+  const lt = add(`<div class="abs" style="left:22px;top:574px;font-size:21px;font-weight:600">Groceries for the week</div>`);
+  const ls = add(`<div class="abs" style="left:22px;top:602px;font-size:18px;color:var(--sub)">Shopping, 9 left, in Dairy</div>`);
+  const lr = labelWord('RESUME', '#C8452F', 22, 578, true);
+  [seam, lt, ls, lr].forEach((el, k) => rise(el, 200 + k * 50));
+  let left = 84; const tick = setInterval(() => { left--; $('clock').textContent = `1:${String(left - 60).padStart(2, '0')}`; }, 1000);
+  await sleep(2200);
+  await tapLabel(lr);
+  await sleep(900); clearInterval(tick);
+  await clearStage();
+
+  // 3 · a task now: Finish, held. The stroke empties to a trace, repaints under the thumb, the tip blooms
+  const c3 = add(`<div class="ctx" style="top:250px">now, until twenty to seven</div>`);
+  const h3 = add(`<div class="hero" style="top:282px">Groceries for<br>the week</div>`);
+  const fi = stroke('Finish', '#C8452F', 22, 430, 104, 'HOLD · 30 MIN LEFT');
+  const drain = add(`<div class="abs" style="left:22px;top:494px;width:346px;height:6px"><svg width="214" height="8" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#E0A35C" opacity=".85" filter="url(#rough)"/></svg></div>`);
+  rise(c3); rise(h3, 60); rise(fi, 140); rise(drain, 200);
+  await sleep(520); await paintIn(fi);
+  await sleep(1300);
+  await holdStroke(fi, 700);
+  // done: the hero strikes through and the page empties to its quiet state
+  const strike = add(`<div class="abs" style="left:20px;top:312px;width:330px;height:4px;background:var(--ink);transform-origin:left;transform:scaleX(0)"></div>`);
+  await anim(strike, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 320, easing: HOUSE });
+  say('Done. Groceries for the week.', true);
+  await sleep(700);
+  [c3, h3, fi, drain, strike].forEach((el) => anim(el, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 300 }));
+  await sleep(320);
+  const e1 = add(`<div class="abs" style="left:22px;right:22px;top:282px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:42px">Nothing else is<br>planned today.</div>`);
+  const e2 = labelWord('LOOK BACK AT THE WEEK', '#2B2440', 22, 384);
+  rise(e1); rise(e2, 100);
+  await sleep(1600); hush();
+  await tapLabel(e2);
+  await sleep(1200);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<title>Notes door pages</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@800&family=Urbanist:wght@900&family=Outfit:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap">
+<style>
+:root{--ground:#EFECE6;--ink:#1D1B19;--ink2:#5E5A55;--slate:#34506F;--acc:#7A5A1E;--edge:#DDD8D0;--words:"Figtree",-apple-system,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.head{max-width:1180px;margin:0 auto 22px;display:flex;flex-direction:column;gap:8px}h1{font-size:34px;letter-spacing:-.02em;margin:0}.sub{margin:0;max-width:72ch;color:var(--ink2);font-size:16px;line-height:1.5}
+.lab{margin:0;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--slate)}
+.tools{display:flex;gap:4px 22px;flex-wrap:wrap}.tr{background:none;border:0;font:inherit;font-size:15px;color:var(--acc);padding:10px 0;cursor:pointer;min-height:44px}.tr[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.tl{font-size:13px;color:var(--ink2);align-self:center}
+.row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.row>div{width:min(402px,100%)}.fit{width:100%;aspect-ratio:402/874;position:relative}
+.lite{--c0:#B5452B;--c1:#1E6E77;--c2:#7A5A12;--c3:#5A3F8E;--c4:#2F6A8F;--c5:#8A4570;--c6:#3F6B2A;--c7:#9A2541;--c8:#0F766E;--c9:#92400E;--c10:#1F4E8C;--c11:#1D1B19;--bg:#F7F5F1;--t:#1D1B19;--t2:#5E5A55;--room:#8A4570;--tess:#2B4FB3;--gold:#8A6410;--slate2:#4A5F78}
+.blk{--c0:#F09A7E;--c1:#84C3C9;--c2:#E2C26A;--c3:#B4A3E6;--c4:#8DBAD6;--c5:#E3A3CB;--c6:#A9D48A;--c7:#F08E9C;--c8:#5FD0C0;--c9:#F0B07A;--c10:#9DB8F0;--c11:#F1EEE9;--bg:#000;--t:#F1EEE9;--t2:#ABA6A0;--room:#E3A3CB;--tess:#9DB4F5;--gold:#E2C26A;--slate2:#A7BCD6}
+.phone{position:absolute;left:0;top:0;width:402px;height:874px;transform-origin:0 0;background:var(--bg);color:var(--t);border-radius:54px;overflow:hidden;outline:1px solid var(--edge)}
+.z{position:absolute;left:24px;right:24px}
+.wall,.shelf{position:absolute;left:24px;width:354px}
+.w{position:absolute;left:0;top:0;cursor:pointer;transform-origin:50% 50%;will-change:transform;user-select:none}
+.w svg,.sp svg{display:block;overflow:visible}
+.sl{margin:0 0 8px;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--t2)}
+.dial{position:relative;height:144px;overflow:hidden;touch-action:none;cursor:grab;display:grid;grid-template-columns:52% 48%}
+.rail{position:relative}
+.dw{position:absolute;left:0;right:0;top:48px;height:48px;display:flex;align-items:center;gap:8px;transform-origin:0 50%;user-select:none;white-space:nowrap}
+.dw .nm{font-size:21px;font-weight:700;letter-spacing:-.01em}.dw .n{font-family:Outfit,sans-serif;font-size:11px;font-weight:400;color:var(--t2);align-self:center;margin-top:4px}
+.dw:not(.focus) .nm{color:var(--t2)!important}
+.peek{padding-left:14px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.peek p{margin:0;white-space:nowrap;overflow:hidden;text-overflow:clip}.pw{font-size:13px;color:var(--t2);margin-bottom:4px!important}.pt{font-size:16px;font-weight:500;color:var(--t);line-height:24px}.p0{font-weight:700}
+.rc2{position:absolute;left:24px;right:24px;font-size:15px;line-height:22px;color:var(--t2)}
+
+.act{background:none;border:0;font:inherit;font-size:20px;font-weight:700;min-height:44px;padding:0;cursor:pointer;color:var(--room)}
+.tess{position:absolute;right:24px;bottom:30px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFB36B,#E8582A 60%,#B2301C)}
+.ghost{position:absolute;left:0;right:0;pointer-events:none;outline:1px dashed var(--t2);opacity:0}
+.show .ghost{opacity:.35}
+.cap{color:var(--ink2);font-size:14px;max-width:402px;margin:12px 0 0;line-height:1.5}
+.notes{max-width:900px;margin:34px auto 0;color:var(--ink2);font-size:16px;line-height:1.55}.notes b{color:var(--ink)}.notes p{margin:0 0 14px}
+#ms{position:absolute;left:-9999px;top:0}
+.nd{position:absolute;left:24px;right:24px;height:144px;overflow:hidden;touch-action:none;cursor:grab}
+.nw{position:absolute;left:0;right:0;top:48px;height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;transform-origin:0 50%;user-select:none;white-space:nowrap}
+.nw .nm{font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--t);overflow:hidden}.nw .when{font-size:13px;color:var(--t2);transform-origin:100% 50%}
+.nw:not(.focus) .nm{color:var(--t2)}
+.pv{position:absolute;left:24px;right:24px;display:flex;flex-direction:column;gap:6px}
+.pv .body{margin:0;font-size:16px;line-height:24px;color:var(--t);max-height:72px;overflow:hidden}
+.pv .tessw{font-family:'Newsreader',Georgia,serif;font-size:18px;color:var(--tess)}
+.pv .meta{margin:0;font-size:14px;color:var(--t2)}.pv .meta b{color:var(--t);font-weight:600}
+.dur{font-family:Outfit,sans-serif;font-size:28px;font-weight:400;color:var(--room)}.dur small{font-size:14px}
+.lock{position:absolute;left:24px;right:24px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.back{position:absolute;left:24px;top:30px;background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+.ttl,.sub{transition:opacity .25s}
+.ledger{position:absolute;left:24px;right:24px;display:flex;flex-direction:column}
+.lg{display:grid;grid-template-columns:84px 1fr;column-gap:12px;min-height:50px;cursor:pointer;padding-block:4px}
+.lgk{font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--room);padding-top:4px}
+.lgv{min-width:0}.lgt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.lgt span:first-child{font-size:17px;font-weight:600;color:var(--t)}
+.lgw{font-size:13px;color:var(--t2);white-space:nowrap}
+.lgs{font-size:14px;line-height:20px;color:var(--t2);white-space:nowrap;overflow:hidden}
+.lg.open .lgt span:first-child{font-size:20px;font-weight:700}
+.tl .tab{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:13px;font-weight:600;color:var(--t2)}.tl .tab b{color:var(--t);font-weight:700}
+.tq{margin:2px 0 0;font-family:'Newsreader',Georgia,serif;line-height:1.3;color:var(--tess);text-wrap:pretty}.tl{min-height:64px}
+.lgb{display:flex;flex-direction:column;gap:4px;margin-top:4px}.lgb .body{margin:0;font-size:16px;line-height:23px;color:var(--t)}.lgb .meta{margin:0;font-size:13px;color:var(--t2)}.lgb .meta b{color:var(--t);font-weight:600}
+.dur.s{font-size:15px;color:var(--room)}.dur.s small{font-size:10px}
+.pages{position:absolute;left:24px;right:24px;overflow:hidden;height:390px}.pgtrack{display:flex;height:100%}
+.pg{flex:0 0 100%;display:flex;flex-direction:column;gap:18px}.pgi .lgt span:first-child{font-size:22px;font-weight:700}
+.pgb{margin:4px 0 0;font-size:15px;line-height:22px;color:var(--t2);max-height:44px;overflow:hidden}
+.pgnext{position:absolute;right:24px;background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+.lite{--back:#ECE8E1;--back2:#F7F5F1;--back3:#DDD7CE;--crease:rgba(0,0,0,.16);--card:#EFECE6}
+.blk{--back:#1A1A1C;--back2:#0B0B0C;--back3:#262629;--crease:rgba(255,255,255,.10);--card:#121214}
+.fhd{position:absolute;left:24px;right:24px;height:24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--t2)}
+.ttlw{background:none;border:0;padding:0 0 0 16px;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer;font-variant-caps:normal;letter-spacing:0}
+.folio{position:absolute;left:24px;width:354px;touch-action:none;cursor:grab}
+.folio>div{position:absolute;inset:0}
+.under,.front{background:var(--bg)}
+.shade,.flap{pointer-events:none;opacity:0}
+.flap{box-shadow:0 0 18px rgba(0,0,0,.12)}
+.fpg{display:flex;flex-direction:column;gap:10px;height:100%}
+.cd{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:5px;padding:14px 16px;border-radius:16px;background:var(--card);cursor:pointer;min-height:124px}
+.cd:focus-visible{outline:2px solid var(--room)}
+.ct{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.cn{font-size:19px;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden}
+.cn.tq0{font-size:13px;font-weight:600;color:var(--t2)}
+.cw{font-size:13px;color:var(--t2);white-space:nowrap}
+.cs{font-size:15px;line-height:21px;color:var(--t2);white-space:nowrap;overflow:hidden}
+.cs.tq{font-family:Newsreader,Georgia,serif;font-size:18px;line-height:24px;color:var(--tess);white-space:normal;max-height:48px}
+.ca{display:flex;gap:12px;margin-top:auto}.ar{font-size:13px;font-weight:600}
+.nb{position:absolute;left:24px;right:24px;display:flex;justify-content:space-between;gap:16px}
+.nb button{background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;min-height:44px;cursor:pointer;max-width:48%;white-space:nowrap;overflow:hidden}
+.nbp{color:var(--t2)}.nbn{color:var(--room)}
+.tov{position:absolute;inset:0;background:var(--bg);padding:84px 24px 24px;display:flex;flex-direction:column;gap:14px;z-index:5}
+.tovh{display:flex;gap:16px;align-items:center}
+.tin{flex:1;min-width:0;background:none;border:0;outline:0;font:inherit;font-size:24px;font-weight:700;color:var(--t);caret-color:var(--room);padding:6px 0}
+.tin::placeholder{color:var(--t2);font-weight:600}
+.tcl{background:none;border:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+.tlist{display:flex;flex-direction:column;overflow:auto}
+.tli[hidden]{display:none!important}
+.tli{all:unset;display:flex;justify-content:space-between;gap:10px;align-items:baseline;min-height:44px;font-size:18px;font-weight:600;color:var(--t);cursor:pointer}
+.note{position:absolute;left:24px;right:24px;display:flex;flex-direction:column;gap:12px}
+.nb1{margin:0;font-size:17px;line-height:26px;color:var(--t)}.tessw2{font-family:Newsreader,Georgia,serif;font-size:20px;line-height:28px;color:var(--tess)}
+.nb2{margin:0;font-size:14px;color:var(--t2)}.nb2 b{color:var(--t);font-weight:600}
+.arw{display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.arb{background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:700;color:var(--room);min-height:44px;cursor:pointer}
+.gp{position:absolute;z-index:6;display:flex;flex-direction:column;padding:8px 18px;border-radius:20px;background:color-mix(in srgb,var(--bg) 42%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.gpi{all:unset;display:flex;justify-content:space-between;gap:28px;min-height:40px;align-items:center;font-size:17px;font-weight:600;cursor:pointer}
+.gpi.on span:first-child{font-weight:800}.gpn{font-family:Outfit,sans-serif;font-size:13px;color:var(--t2)}
+</style>
+
+<div class="head">
+  <p class="lab">Round 247 v3, Oct 24</p>
+  <h1>Notes: the pages behind the doors</h1>
+  <p class="sub">Your Codex-era choices (2:45 to 8:35 AM) on top of your 2:19 AM rules. The band stays fixed on every door (354 x 124) and short doors repeat their words in other colours and sizes. Under it, the Folio: a page of small note cards that curls left when you swipe sideways and folds top to bottom when you swipe down or up, while the band stays put. The words under the page name the neighbouring notes, Titles opens a searchable list, a note opens on its own page, and its Areas open a glass pane that gathers notes across doors.</p>
+  <div class="tools"><span class="tl">Open</span><button class="tr go" data-d="-1" aria-pressed="true">Landing</button></div>
+  
+</div>
+<div class="row">
+ <div><div class="fit"><div class="phone lite" id="p1"></div></div><p class="cap">Paper.</p></div>
+ <div><div class="fit"><div class="phone blk" id="p2"></div></div><p class="cap">Pure black.</p></div>
+</div>
+<div class="notes">
+<p><b>The band.</b> Every door page has the same block, 354 x 124 pt at y 140, so nothing below it moves from door to door. Each door's words are sized to fill it exactly: rows meet both edges, stacks mix big and small words, and the wall may scale 8% at most. When a door has too few notes to fill it (Pinned, Private), its titles repeat in other colours and sizes, never next to themselves. Tap a word and the Folio turns to that note.</p>
+<p><b>The Folio.</b> Under the band, a page of three small note cards: title, when, one line, and its areas in their colours. Drag sideways and the page curls left under your finger. The fold tilts as the corner lifts first, the sheet's back shows past the fold with a crease, and a soft shadow falls on the next page. Let go past a third and it turns; otherwise it settles back. Drag down or up and it folds from the top to the bottom the same way. With Reduce Motion it cross-fades. The two words under the page are the neighbouring notes' titles (no Previous or Next, no arrows); tap one to turn.</p>
+<p><b>Titles.</b> The word at the top right of the Folio opens a list of every title on this page, with a search line at the top. Pick one to turn straight to it.</p>
+<p><b>A note.</b> Tap a card and the note opens on its own page, without the band: title, "Updated an hour ago.", then the words. After the content, Areas and the note's areas. Tap Areas for the glass pane: translucent and thin, with no border and no bright rim, sized to what it holds, every area with its note count. Pick an area and its page gathers every note in it across all doors, with its own band.</p>
+<p><b>Private.</b> Locked until Face ID. Off this page, private notes are only ever counted ("3 private notes"). Private notes carry no areas, so an area never shows them.</p>
+<p><b>Still to settle with you.</b> Band height: 124 (Codex prototype) or 132 (2:19 AM board v4); this board uses 124. Small cards are an exception to "no cards" that you asked for here, so they're kept to this place.</p>
+</div>

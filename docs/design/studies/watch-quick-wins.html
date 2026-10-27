@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Watch quick wins</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board for research/apple-watch.md W1 and W2: the rest Live Activity in the Watch Smart Stack (small family), and the heart line on the workout summary. Drawn to docs/design/no-buttons.md. -->
+<style>
+body{margin:0;background:#E9E2D8;font-family:'Inter Tight',sans-serif;color:#2B2440}
+.board{display:flex;gap:48px;padding:40px;align-items:flex-start}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:#6E6480;margin-bottom:14px}
+.watch{width:206px;height:250px;border-radius:52px;background:#0B0A10;position:relative;box-shadow:0 0 0 6px #2A2733}
+.stack{position:absolute;left:14px;right:14px;top:84px;height:82px;background:#1C1826;border-radius:20px;overflow:hidden}
+.x{position:absolute}
+.small{color:#F3ECE0}
+.phone{width:390px;height:560px;position:relative;overflow:hidden;background:radial-gradient(70% 40% at 80% 10%,#3A3150 0%,rgba(58,49,80,0) 70%),#1C1826;color:#F3ECE0;border-radius:6px}
+.note{font-size:18px;line-height:26px;color:#6E6480;max-width:390px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="board">
+  <div>
+    <div class="cap">W2 · REST IN THE SMART STACK (SMALL)</div>
+    <div class="watch">
+      <div class="stack small">
+        <div class="x" style="left:12px;top:6px;font-size:30px;font-weight:300;letter-spacing:-.03em;font-variant-numeric:tabular-nums">1:42</div>
+        <div class="x" style="right:12px;top:15px;font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(243,236,224,.7)">+15</div>
+        <div class="x" style="left:12px;right:12px;top:44px;height:1px;background:rgba(243,236,224,.18)"></div>
+        <div class="x" style="left:12px;width:96px;top:43.5px;height:2px;background:#2E6DA4;box-shadow:0 0 6px rgba(46,109,164,.9)"></div>
+        <div class="x" style="left:12px;top:52px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums">82.5 × 8</div>
+        <div class="x" style="right:12px;top:55px;font-size:16px;font-weight:700;letter-spacing:.08em;color:#F2B8A8">SET 3</div>
+      </div>
+    </div>
+    <div class="note">The phone's rest layout, folded to two lines. The countdown sits on the horizon line, which is the timer. The planned set is the Done control (tap logs it on the phone). +15 is a label word. No pill buttons.</div>
+    <div class="cap" style="margin-top:28px">AFTER DONE, UNTIL THE REST ENDS</div>
+    <div class="watch" style="height:200px">
+      <div class="stack small" style="top:58px">
+        <div class="x" style="left:12px;top:6px;font-size:30px;font-weight:300;letter-spacing:-.03em;font-variant-numeric:tabular-nums">2:30</div>
+        <div class="x" style="left:12px;right:12px;top:44px;height:1px;background:rgba(243,236,224,.18)"></div>
+        <div class="x" style="left:12px;right:12px;top:43.5px;height:2px;background:#2E6DA4;box-shadow:0 0 6px rgba(46,109,164,.9)"></div>
+        <div class="x" style="left:12px;top:54px;font-size:16px;color:rgba(243,236,224,.62)">Set 3 logged</div>
+        <div class="x" style="right:12px;top:55px;font-size:16px;font-weight:700;letter-spacing:.08em;color:#F2B8A8">UNDO</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="cap">W1 · THE HEART LINE ON THE SUMMARY</div>
+    <div class="phone">
+      <svg class="x" style="left:60px;top:70px" width="270" height="60" viewBox="0 0 270 60"><defs><linearGradient id="g" x1="0" x2="270" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#C8452F"/><stop offset=".35" stop-color="#2E6DA4"/><stop offset=".7" stop-color="#E0A35C"/><stop offset="1" stop-color="#6E9E6A"/></linearGradient></defs><path d="M6 34 C 70 26, 160 40, 264 28" stroke="url(#g)" stroke-width="16" fill="none" stroke-linecap="round" opacity=".9"/></svg>
+      <div class="x" style="left:22px;top:170px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1">Push Day A</div>
+      <div class="x" style="left:22px;top:240px;font-size:21px;color:rgba(243,236,224,.75)">6 exercises, 22 sets, 58 min</div>
+      <div class="x" style="left:22px;right:22px;top:286px;font-size:21px;line-height:30px">New best: <b style="font-weight:600">85 × 5</b> on bench.</div>
+      <div class="x" style="left:22px;right:22px;top:334px;font-size:21px;line-height:30px;color:rgba(243,236,224,.88)">Your heart averaged <b style="font-weight:600;color:#F3ECE0">128</b>, and peaked at <b style="font-weight:600;color:#F3ECE0">164</b> on squats.</div>
+      <svg class="x" style="left:22px;top:400px" width="346" height="40" viewBox="0 0 346 40"><path d="M0 30 C 20 26, 34 18, 52 22 S 80 10, 104 16 S 140 28, 160 20 S 196 6, 222 4 S 260 18, 284 22 S 320 26, 346 24" stroke="#C8452F" stroke-width="2" fill="none" opacity=".75"/></svg>
+      <div class="x" style="left:22px;top:446px;font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(243,236,224,.55)">FROM YOUR WATCH</div>
+    </div>
+    <div class="note">The heart sentence sits under the summary in the same voice, with one thin vermilion line of the session's heart rate under it (2pt, no axes, no dots). With no Watch, or under 3 samples, both are simply absent and the page closes up. Never "0" or "no data".</div>
+  </div>
+</div>
+</body>
+</html>

@@ -193,7 +193,7 @@ public enum AppSummaryLines {
             return AppSummaryLine(app: .lists, text: "No lists yet", opens: .app(.lists), isPrivate: false)
         }
         let name = shown(lead.name, in: engine.store, classes: engine.classes)
-        let text = name.1 ? "Private" : "\(name.text), \(lead.total - lead.left) of \(lead.total) done"
+        let text = name.1 ? "Private" : lead.left == 0 ? "\(name.text), all done" : "\(name.text), \(lead.left) left"
         return AppSummaryLine(app: .lists, text: text, opens: .object(lead.list), isPrivate: name.1)
     }
 

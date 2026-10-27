@@ -115,7 +115,7 @@ struct Look: Sendable, Identifiable, Equatable {
         live: 0xE2432A, liveInk: 0xC23A22, now: 0xF0A500, health: 0x12936A, training: 0xCC3F68, neutral: 0x9C95A8,
         sky: 0x7FB6E0,
         sheen: 0xF0A500, sheenOnLetters: true,
-        accents: LookAccents(training: 0xC03C20, kitchen: 0x9A6212, routines: 0x9A4255, lists: 0x536016,
+        accents: LookAccents(training: 0x0B62AE, kitchen: 0x9A6212, routines: 0x9A4255, lists: 0x536016,
                              notes: 0x5E2EA8, money: 0x357059, skyFrom: 0xA85A18, skyTo: 0xA33C62),
         ink2: 0x54514D, ink3: 0x86827C
     )
@@ -126,7 +126,7 @@ struct Look: Sendable, Identifiable, Equatable {
         ground: 0x000000, raised: 0x0F0E12, ink: 0xF4F1EC, context: 0xB7A6E0, muted: 0x5C5765, tess: 0x86B4FF,
         live: 0xFF5B3A, liveInk: 0xFF7A5C, now: 0xFFC23D, health: 0x3FD49A, training: 0xFF6B92, neutral: 0x8E879A,
         sky: 0x7FD6E8,
-        accents: LookAccents(training: 0xFF6F52, kitchen: 0xF4B25E, routines: 0xEBA2B2, lists: 0xC6CF82,
+        accents: LookAccents(training: 0x8FB0EE, kitchen: 0xF4B25E, routines: 0xEBA2B2, lists: 0xC6CF82,
                              notes: 0xC6B7EE, money: 0x97CBB2, skyFrom: 0xFFB062, skyTo: 0xF286A6),
         ink2: 0xA3A09B, ink3: 0x6E6B67
     )

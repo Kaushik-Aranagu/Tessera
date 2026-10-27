@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings 80</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 80. D1: a WHAT WAS SENT list under the Claude section of Settings (job names and counts for the last 30 days, never any text; a tap opens the receipts for that job). D2: the one Backups line that says a copy holds everything. Board by default; ?play records: the list, the switch to no and back, a tap on a job, the scroll to Backups, then the side (glance, full). -->
+<style>
+:root{--board:#E9E6EE;--house:cubic-bezier(.2,.9,.25,1)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1000px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:26px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--s2:.66;--hair:rgba(18,16,22,.14)}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--s2:.72;--hair:rgba(245,242,236,.18)}
+.abs{position:absolute}
+.s2{color:rgba(var(--ink),var(--s2))}
+.lab{font-weight:700;font-size:16px;line-height:22px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.sub{font-weight:700;font-size:13px;line-height:20px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.b19{font-size:19px;line-height:26px}
+.v{font-weight:600}
+.tess{color:var(--tess)}
+.title{left:22px;top:84px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em}
+/* the Settings page, drawn as a flow inside .scr so it can be scrolled */
+.scr{position:absolute;left:22px;right:22px;top:118px;will-change:transform}
+.sec{margin-bottom:22px}
+.sec>.lab{margin-bottom:12px}
+.sec .b{margin-bottom:5px}
+.ans{overflow:hidden}
+.meter{position:relative;height:14px;margin:-2px 0 10px}
+.meter .hl{position:absolute;left:0;right:0;top:6px;height:1px;background:var(--hair)}
+.meter svg{position:absolute;left:0;top:3px;overflow:visible}
+.words{white-space:nowrap;font-weight:700;font-size:16px;line-height:22px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.words span+span{margin-left:22px}
+.grp{margin-top:8px}
+.jr{position:relative;display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:21px;line-height:28px}
+.jr .nm{position:relative;transition:color .24s}
+.jr .nm i{position:absolute;left:0;bottom:-1px;height:1.5px;width:0;background:currentColor}
+.jr .n{font-size:19px;color:rgba(var(--ink),var(--s2));font-variant-numeric:tabular-nums;padding-left:18px;transition:color .24s}
+.off .jr .nm{color:rgba(var(--ink),var(--s2))}
+.off .jr .n{color:rgba(var(--ink),.6)}
+.ctx19{transition:opacity .15s}
+.new{font-size:19px;line-height:26px;margin:0 0 8px}
+/* page covers: the back word at the top, a fade above Tess's band */
+.cvT{position:absolute;left:0;right:0;top:0;height:112px;background:linear-gradient(var(--bg) 0 74px,var(--bg0));z-index:3}
+.cvB{position:absolute;left:0;right:0;top:690px;bottom:0;background:linear-gradient(var(--bg0),var(--bg) 46px);z-index:3}
+/* receipts, one layer down */
+.rr{display:flex;justify-content:space-between;align-items:center;height:44px;font-size:21px;line-height:28px}
+.rr em{font-style:normal;font-size:19px;color:rgba(var(--ink),var(--s2));font-variant-numeric:tabular-nums}
+/* sides */
+.sd{position:absolute;left:22px;right:22px}
+.sd .ctxl{display:flex;justify-content:space-between;align-items:baseline;font-size:21px;line-height:28px;color:var(--ctx)}
+.sd .ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink))}
+.sr{padding:9px 0 3px}
+.sr .l1{display:flex;justify-content:space-between;font-size:21px;line-height:28px}
+.sr .l1 em{font-style:normal;font-size:19px;color:rgba(var(--ink),var(--s2))}
+.sr .l2{font-size:17px;line-height:22px;color:rgba(var(--ink),var(--s2))}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,var(--bg0),var(--bg) 34px);z-index:4}
+.gl .gk{font-weight:700;font-size:13px;line-height:18px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),var(--s2))}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+/* Tess */
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px);z-index:6}
+.tl{position:absolute;right:71px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font-size:19px;line-height:25px;color:var(--tess);z-index:6}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+.obs .finger{background:rgba(245,242,236,.16);border-color:rgba(245,242,236,.3)}
+/* Dynamic Type, AX3 */
+.ax .b{font-size:31px;line-height:38px}
+.ax .b19{font-size:28px;line-height:35px}
+.ax .lab{font-size:24px;line-height:30px}
+.ax .sub{font-size:20px;line-height:26px}
+.ax .jr{flex-direction:column;align-items:flex-start;justify-content:center;font-size:31px;line-height:38px;padding:6px 0}
+.ax .jr .n{font-size:28px;padding:0}
+.ax .new{font-size:28px;line-height:35px}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="tl">${line}</div>` : ''}`;
+const JOBS = [["Today's lines", 21, 'task titles and counts'], ['Plan my day', 9, 'task titles and counts'], ['Your week', 5, 'counts only'], ['Recipe reading', 3, 'recipe text, no prices']];
+const TESS_SIDE = "Today's lines made 21 of 38 calls.";
+const ANS_NO = 'Tess stays on this phone.';
+const ANS_YES = 'Tess asks Claude when unsure, for plans, Today and your week.';
+const ctxLine = off => (off ? 'Off now. ' : '') + '38 calls in the last 30 days.';
+
+// The Claude section with the new list. Order: switch, its answer, spend and meter, WHAT WAS SENT, the walls line, then the key.
+const claude = (o = {}) => {
+  const list = o.empty
+    ? `<div class="b s2 ctx19" id="ctx">Nothing has gone to Claude in the last 30 days.</div>`
+    : `<div class="b19 s2 ctx19" id="ctx">${ctxLine(o.off)}</div><div class="grp" id="jobs">${JOBS.map(([n, c]) => `<div class="jr" data-j="${n}"><span class="nm">${n}<i></i></span><span class="n">${c}</span></div>`).join('')}</div>`;
+  return `<div class="sec${o.off ? ' off' : ''}" id="sc"><div class="lab">CLAUDE</div>
+    <div class="b">Tess asks Claude: <span class="v" id="sw">${o.off ? 'no' : 'yes'}</span>.</div>
+    <div class="b tess ans" id="ans" style="height:${o.ans ? (o.ans.length > 40 ? 56 : 28) : 0}px;opacity:${o.ans ? 1 : 0}">${o.ans || ''}</div>
+    <div class="b">This month <span class="v">$3.20</span> of $10.</div>
+    <div class="meter"><div class="hl"></div><svg width="110" height="8"><path d="M0 4 C 30 2.4, 80 2.6, 109.5 3.6 L 109.5 4.6 C 80 5.8, 30 5.6, 0 5 Z" fill="var(--tess)"/></svg></div>
+    <div class="sub" style="margin-top:14px">WHAT WAS SENT</div>${list}
+    <div style="font-size:16px;line-height:22px;margin:10px 0 16px" class="s2">Never notes, places, health or money.</div>
+    <div class="b">Key ends in <span class="v">...a1B2</span>, works.</div>
+    <div class="words"><span>TEST</span><span>REPLACE</span><span>REMOVE</span></div></div>`;
+};
+// Backups: the new line is always the last prose line above the label words.
+const NEWLINE = 'A copy holds everything, Private note, weight and money included.';
+const backups = (o = {}) => `<div class="sec" id="bk" data-sec="backups"><div class="lab">BACKUPS</div>
+  ${o.nofolder
+    ? `<div class="b">Kept on this iPhone. Last copy today, 4:02&nbsp;am.</div><div class="b">Also keep them in <span class="v">a folder you choose</span>.</div><div class="b19 s2" style="margin-bottom:8px">Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them.</div>`
+    : `<div class="b">Kept in two places. Last copy today, 4:02&nbsp;am.</div><div class="b">Also kept in <span class="v">iCloud Drive/Tessera</span>.</div>`}
+  <div class="new" id="newline">${NEWLINE}</div>
+  <div class="words" style="margin-top:6px">${o.nofolder ? '' : '<span style="margin:0">STOP USING IT</span><br>'}<span style="margin:0">SAVE A COPY</span><span>RESTORE</span></div></div>
+  <div class="sec"><div class="lab">UNITS</div><div class="b">Kilograms. Bar 20&nbsp;kg, plates from 1.25&nbsp;kg, dumbbells in 2&nbsp;kg steps.</div></div>`;
+const units = '';
+const back = '<div class="abs lab" style="left:22px;top:58px;z-index:4">‹ REVIEW</div>';
+const page = (inner, o = {}) => `${back}<div class="cvT"></div><div class="scr" ${o.id ? `id="${o.id}"` : ''} ${o.align ? `data-align="${o.align}"` : ''}>${inner}</div><div class="cvB"></div>`;
+
+// Receipts for one job, one layer down (the existing receipts page, filtered)
+const DAYS = ['9:05 am', 'Fri Oct 16, 6:12 pm', 'Thu Oct 15, 6:10 pm', 'Wed Oct 14, 6:14 pm', 'Tue Oct 13, 6:11 pm', 'Mon Oct 12, 6:09 pm', 'Sat Oct 10, 6:30 pm', 'Fri Oct 9, 6:12 pm', 'Thu Oct 8, 6:12 pm'];
+const COST = ['1.2¢', '1.1¢', '1.3¢', '1.2¢', '1.1¢', '1.2¢', '1.4¢', '1.2¢', '1.1¢'];
+const receipts = () => `<div class="abs lab" style="left:22px;top:58px">‹ SETTINGS</div><div class="abs title">Plan my day</div>
+  <div class="abs b" style="left:22px;top:146px;color:var(--ctx)">9 calls in the last 30 days</div>
+  <div class="abs" style="left:22px;right:22px;top:200px">${DAYS.map((d, i) => `<div class="rr"><span>${d}</span><em>${COST[i]}</em></div>`).join('')}</div><div class="cvB" style="top:640px"></div>`;
+
+// The side (WK rows of sheet 77, windowed to 30 days). Counts match the front's list.
+const sideGlance = () => `<div class="gl"><div class="gk">WHAT LEAVES<br>THE PHONE</div><div class="big">38<small>calls</small></div><div class="gr s2" style="margin-top:0;font-size:19px">in 30 days</div><div class="gr">Today's lines, 21</div><div class="gr">Titles, counts, <em>recipe text</em></div><div class="more">ALL FACTS<i></i></div></div>`;
+const sideFull = () => `<div class="abs lab" style="left:22px;top:58px;opacity:0">.</div><div class="sd" style="top:138px"><div class="ctxl"><span>38 calls in 30 days</span><b>SETTINGS</b></div></div>
+  <div class="sd" style="top:206px">${JOBS.map(([n, c, k]) => `<div class="sr"><div class="l1"><span>${n}</span><em>${c} calls</em></div><div class="l2">${k}</div></div>`).join('')}</div>`;
+const sideEmpty = () => `<div class="sd" style="top:138px"><div class="ctxl"><span>0 calls in 30 days</span><b>SETTINGS</b></div></div><div class="abs b s2" style="left:22px;right:30px;top:206px">Nothing has gone to Claude in 30 days.</div>`;
+
+const ph = (cls, inner, opt, h, p) => `<div><div class="ph ${cls}">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+const fingerAt = (x, y) => `<div class="finger" style="left:${x}px;top:${y}px;opacity:1"></div>`;
+
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 80: What was sent, and what a copy holds</h1><p>Two Settings elements. D1: under the Claude section, WHAT WAS SENT lists the jobs Claude was asked to do in the last 30 days, a name and a count each and never any text; money, health and Private note can't appear because they never leave the phone. A tap on a job opens its receipts. D2: the Backups section says in one plain line that a copy holds everything. Settings declares its side (WHAT LEAVES THE PHONE, right edge).</p></div><div class="grid">`;
+  b += ph('por', page(claude(), {id: 's1'}) + band(), 'D1 · PORCELAIN', 'The list under Claude', 'Four jobs, most calls first, a name and a count each. The line under the count says it once: 38 calls in the last 30 days. The walls line sits under its evidence.');
+  b += ph('por', page(claude({ empty: 1 })) + band(), 'D1 · NOTHING SENT', 'Empty, key on', 'One line stands where the list would be. No job lines, no Tess line (a zero is not hers to say).');
+  b += ph('por', page(claude({ off: 1, ans: ANS_NO })) + fingerAt(190, 163) + band(), 'D1 · "TESS ASKS CLAUDE: NO"', 'The past stays', 'Off stops new asks, not the record. Names dim, the context line opens with "Off now." Lines still open their receipts.');
+  b += ph('por', receipts() + band(), 'D1 · A TAP ON A JOB', 'Plan my day, its receipts', 'One layer down, back word ‹ SETTINGS, the job as the title, the count as the context. Times and cents only.');
+  b += ph('por', `<div style="opacity:.3">${page(claude(), {id: 's5'})}</div>${sideGlance()}${fingerAt(380, 600)}` + band(TESS_SIDE), 'THE SIDE, STOP 1', 'The glance: 38 calls', 'Settings declares WHAT LEAVES THE PHONE on the right edge. Its big fact is the front\'s own number; its foot word is ALL FACTS.');
+  b += ph('por', `<div style="position:absolute;inset:0">${sideFull()}</div>` + back.replace('‹ REVIEW', '‹ REVIEW').replace('z-index:4', 'z-index:4;opacity:0') + band(TESS_SIDE), 'THE SIDE, STOP 2 · FACTS', 'What each job sends', 'Sheet 77\'s rows, on the same 30 days. Kinds in words, counts as on the front; no controls.');
+  b += ph('por', page(backups(), {align: 'backups'}) + band(), 'D2 · PORCELAIN', 'The Backups line', 'Body 19, ink, the last prose line above the label words. It sits next to the folder line because the folder is his choice.');
+  b += ph('por', page(backups({ nofolder: 1 }), {align: 'backups'}) + band(), 'D2 · NO FOLDER', 'Same line, same place', 'With no folder the line still holds: a copy on the phone holds everything too.');
+  b += ph('obs', page(claude(), {id: 's9'}) + band(), 'D1 · OBSIDIAN', 'The list at night', 'Ink 245,242,236 on #121014. Secondary text at 72%. Cobalt stays Tess\'s.');
+  b += ph('obs', page(claude({ off: 1, ans: ANS_NO })) + band(), 'D1 · OBSIDIAN, OFF', 'The past stays', 'Names at 72%, counts at 60%: still above 4.5 to 1.');
+  b += ph('obs', page(backups(), {align: 'backups'}) + band(), 'D2 · OBSIDIAN', 'The Backups line', 'Full ink, not dimmed, no icon, no colour. Nothing else in the section changes.');
+  b += ph('por ax', page(claude(), {id: 's12', align: 'sent'}) + band(), 'D1 · DYNAMIC TYPE AX3', 'One column, counts under names', 'Rows grow to their text; the count drops under the name. The page scrolls; nothing truncates.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => {
+    document.querySelectorAll('[data-align]').forEach(s => {
+      const t = s.dataset.align === 'backups' ? s.querySelector('[data-sec=backups]') : s.querySelector('.sub');
+      if (t) s.style.transform = `translateY(${-(t.offsetTop - (s.dataset.align === 'backups' ? 0 : 150))}px)`;
+    });
+    document.body.dataset.done = '1';
+  });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph">
+    <div class="abs" id="pS" style="inset:0">${page(claude({ ans: null }) + backups(), {id: 'scr'})}</div>
+    <div class="abs" id="pR" style="inset:0;opacity:0;background:var(--bg)">${receipts()}</div>
+    <div class="abs" id="gb" style="inset:0;opacity:0">${sideGlance()}</div>
+    <div class="abs" id="fb" style="inset:0;opacity:0;background:var(--bg)">${sideFull()}</div>
+    <div class="abs soul"></div><div class="tl" id="t3" style="opacity:0">${TESS_SIDE}</div>
+    <div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const fg = $('fg');
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const HOUSE = 'cubic-bezier(.2,.9,.25,1)';
+  const sc = $('sc'), ans = $('ans'), sw = $('sw'), ctx = $('ctx'), scr = $('scr'), pS = $('pS'), pR = $('pR'), gb = $('gb'), fb = $('fb');
+  async function setOff(off, text) {
+    sc.classList.toggle('off', off);
+    sw.animate([{ filter: 'blur(0)', opacity: 1 }, { filter: 'blur(3px)', opacity: 0 }], { duration: 120, fill: 'forwards' }).onfinish = () => {
+      sw.textContent = off ? 'no' : 'yes'; sw.animate([{ filter: 'blur(3px)', opacity: 0 }, { filter: 'blur(0)', opacity: 1 }], { duration: 180, fill: 'forwards' }); };
+    ctx.style.opacity = 0; await wait(150); ctx.textContent = ctxLine(off); ctx.style.opacity = 1;
+    ans.textContent = text; const h = text.length > 40 ? 56 : 28;
+    ans.animate([{ height: ans.style.height, opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 320, delay: 80, easing: HOUSE, fill: 'forwards' });
+    ans.style.height = h + 'px'; ans.style.opacity = 1;
+  }
+  const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+    pS.style.opacity = 1 - .7 * p1 - .3 * p2; pS.style.transform = `translateX(${-44 * p2}px)`;
+    gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+    fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`; $('t3').style.opacity = p1; };
+  const toR = q => { pS.style.opacity = 1 - q; pS.style.transform = `scale(${1 + .04 * q})`; pS.style.filter = `blur(${3 * q}px)`;
+    pR.style.opacity = q; pR.style.transform = `translateY(${16 * (1 - q)}px)`; };
+  const bkTop = () => $('bk').offsetTop - 0;
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1200);
+    // 1. Tess asks Claude: yes -> no. The list dims, the context opens with "Off now."
+    finger(300, 190); await tween(300, q => finger(300 - 110 * q, 190 - 27 * q)); await wait(100);
+    await setOff(true, ANS_NO); finger(190, 163, 0); await wait(2100);
+    // 2. and back to yes
+    finger(190, 163); await wait(160); await setOff(false, ANS_YES); finger(190, 163, 0); await wait(1500);
+    // 3. A tap on a job: its receipts, one layer down.
+    const row = document.querySelector('.jr[data-j="Plan my day"]'); const r = row.getBoundingClientRect(), pr = $('ph').getBoundingClientRect();
+    const sc2 = document.body.classList.contains('x2') ? 2 : 1;
+    const ry = (r.top - pr.top) / sc2 + 22;
+    finger(300, ry + 60); await tween(300, q => finger(300 - 170 * q, ry + 60 - 60 * q)); await wait(80);
+    row.querySelector('i').animate([{ width: '0px' }, { width: '100%' }], { duration: 150, fill: 'forwards' }); await wait(220); finger(130, ry, 0);
+    await tween(380, toR); await wait(2000);
+    pR.querySelector('.lab').animate([{ opacity: 1 }, { opacity: .4 }, { opacity: 1 }], { duration: 200 });
+    await tween(380, q => toR(1 - q)); row.querySelector('i').getAnimations().forEach(a => a.cancel()); await wait(500);
+    // 4. Scroll to Backups: the one line
+    const off = bkTop() - 0;
+    finger(200, 600); await tween(700, q => { scr.style.transform = `translateY(${-off * q}px)`; finger(200, 600 - 220 * q); }); finger(0, 0, 0); await wait(2000);
+    await tween(560, q => { scr.style.transform = `translateY(${-off * (1 - q)}px)`; }); await wait(300);
+    // 5. The right edge: the glance, then the full side
+    await tween(380, q => { finger(386 - 150 * q, 420); inn(q); }); finger(0, 0, 0); await wait(1700);
+    await tween(380, q => { finger(300 - 170 * q, 420); inn(1 + q); }); finger(0, 0, 0); await wait(2300);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

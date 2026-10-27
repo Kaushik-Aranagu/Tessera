@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>M3 entry points</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/m3-entry-points.md (Design item 26): the two M3 doors drawn in place on Today, on the build's own Home frame (tabs, day label, day stroke, context line, hero). 1, the weigh-in: a bare "78.6" written to Tess waits as a cobalt ghost row at the top of Next; a tap dries it to ink, the row folds away, and a sage mark lands on the day stroke at now. 2, the Habits word on Today's foot line, zooming into the Habits page with ‹ TODAY. Porcelain, one base. ?play records the whole run; add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--ctx:#6A4C9C;--liveInk:#C23A22;--health:18,147,106;--train:204,63,104;--hair:rgba(23,20,31,.14);color:rgb(var(--ink))}
+.pg{position:absolute;inset:0}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.vw{font-weight:600}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px}
+.tabs{left:22px;right:22px;top:78px;display:flex;justify-content:space-between}
+.tabs span{font-weight:700;font-size:16px;letter-spacing:.06em;color:rgba(var(--ink),.38)}
+.tabs span.on{color:rgb(var(--ink))}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.say{right:71px;width:270px;text-align:right;color:var(--tess);font-size:21px;line-height:28px}
+.ghost{color:var(--tess);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:.66}}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1260px;line-height:24px}
+.dab{position:absolute;width:30px;height:26px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(.8px)}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const soul=`<div class="soul" id="SOUL"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const NOWX=86; // 07:12 on a 04:00 to 04:00 day, along 30 to 358
+// the day stroke: painted from the day's start to now, then the dashed guide
+const stroke=(L)=>`<svg class="abs" style="left:0;top:182px;overflow:visible" width="390" height="20">
+ <defs><linearGradient id="${L}sp" x1="30" x2="${NOWX}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FB7D6"/><stop offset="1" stop-color="#7CC3B0"/></linearGradient></defs>
+ <path d="M30 9 L${NOWX} 9" stroke="url(#${L}sp)" stroke-width="6" stroke-linecap="round" opacity=".6"/>
+ <path d="M${NOWX-14} 9 L${NOWX} 9" stroke="#7CC3B0" stroke-width="7.5" stroke-linecap="round" opacity=".75"/>
+ <path d="M${NOWX+8} 9 L358 9" stroke="rgba(23,20,31,.22)" stroke-width="1.5" stroke-dasharray="4 5"/>
+ <rect id="${L}mark" x="${NOWX-1.5}" y="2" width="3" height="14" rx="1.5" fill="rgb(18,147,106)" opacity="0"/></svg>`;
+const qrow=(y,t,time,id)=>`<div class="abs b" ${id?`id="${id}"`:''} style="left:22px;top:${y}px">${t}</div><div class="abs b vw" style="right:22px;top:${y}px;font-variant-numeric:tabular-nums;letter-spacing:.04em;font-size:18px;color:rgba(var(--ink),var(--s2))">${time}</div>`;
+function today(L,state){ // state: 'ghost' | 'kept' | 'rest'
+ const g=state==='ghost';
+ return `<div class="pg" id="${L}today">
+ <div class="abs tabs"><span>REVIEW</span><span class="on">TODAY</span><span>TRAINING</span><span>KITCHEN</span></div>
+ <div class="abs" style="left:0;right:0;top:104px;display:flex;justify-content:center"><div style="width:44px;height:2px;background:rgb(var(--ink));margin-left:-34px"></div></div>
+ <div class="abs b" style="left:22px;top:138px">Friday morning</div>
+ ${stroke(L)}
+ <div class="abs b" style="left:22px;top:246px;color:var(--ctx)">first today</div>
+ <div class="abs hero" style="left:22px;top:280px">Pull A</div>
+ <div class="abs" style="left:22px;top:356px"><span style="font-size:34px;font-weight:500;letter-spacing:-.03em;position:relative">Start<svg style="position:absolute;left:-2px;top:38px;overflow:visible" width="80" height="12"><path d="M0 6 Q 33.6 3.5 80 5.6 Q 46.4 8.5 0 6 Z" fill="rgba(var(--train),.75)"/></svg></span><span class="lbl" style="margin-left:16px;position:relative;top:-6px">07:30 · 5 EXERCISES</span></div>
+ <div class="abs t34" style="left:22px;top:448px">Next</div>
+ <div id="${L}q" class="abs" style="left:0;right:0;top:500px;height:200px">
+  <div class="abs" id="${L}g" style="left:0;right:0;top:0;height:46px;${state==='ghost'?'':'display:none'}"><div class="abs b ghost" id="${L}gt" style="left:22px;top:0">Body weight <span class="vw">78.6</span> kg?</div></div>
+  <div class="abs" id="${L}rows" style="left:0;right:0;top:${g?46:0}px">${qrow(0,'Reply to landlord','08:00')}${qrow(46,'Book physio','08:15')}${qrow(92,'Call Mum','10:00')}</div>
+ </div>
+ <div class="abs b vw" id="${L}foot" style="left:22px;top:700px">Habits<svg id="${L}fl" style="position:absolute;left:-2px;top:30px;overflow:visible" width="0" height="12"><path d="M0 6 Q 30 4.5 72 5.6 Q 42 7.5 0 6 Z" fill="rgb(var(--ink))"/></svg></div>
+ <div class="abs say" id="${L}say" style="top:765px;opacity:${g?1:0}">${g?'Tap to keep it.':''}</div>
+ <div class="abs lbl" id="${L}undo" style="right:71px;top:797px;color:var(--liveInk);opacity:0">UNDO</div>
+ </div>`}
+const X=i=>22+346/7*(i+.5);
+function habitBlock(y,name,n,target,rule,pig,done,today_){
+ const dabs=[...Array(7)].map((_,i)=>{const d=done.includes(i);return `<div class="dab" style="left:${X(i)-15}px;top:${y+92}px;background:${d?`radial-gradient(closest-side,rgba(${pig},.72),rgba(${pig},0))`:`radial-gradient(closest-side,rgba(var(--ink),.1),rgba(var(--ink),0))`}"></div>`}).join('');
+ const letters='MTWTFSS'.split('').map((c,i)=>`<div class="abs lbl ${i===today_?'':'s2'}" style="left:${X(i)-6}px;top:${y+126}px;${i===today_?'color:rgb(var(--ink))':''}">${c}</div>`).join('');
+ return `<div class="abs t34" style="left:22px;top:${y}px">${name}</div><div class="abs b" style="right:22px;top:${y+8}px"><span class="vw">${n}</span> of ${target}</div><div class="abs lbl" style="left:22px;top:${y+50}px">${rule}</div>${dabs}${letters}`}
+const habits=L=>`<div class="pg" id="${L}hab">
+ <div class="abs lbl" style="left:22px;top:58px">‹ TODAY</div>
+ <div class="abs t44" id="${L}ht" style="left:22px;top:84px">This week</div>
+ <div class="abs b" style="left:22px;top:144px;color:var(--ctx)">Friday, 2 days to go</div>
+ ${habitBlock(200,'Read','2',5,'COUNTS BY HAND','240,165,0',[0,2],4)}
+ ${habitBlock(396,'Train','3',3,'COUNTS WHEN A WORKOUT FINISHES','204,63,104',[0,1,3],4)}
+ </div>`;
+const phone=(L,inner,cap)=>`<div><div class="cap" id="${L}cap">${cap}</div><div class="ph" id="${L}ph">${inner}${soul.replace('id="SOUL"','id="'+L+'soul"')}<div id="${L==='A'?'fing':L+'f'}"></div></div></div>`;
+if(PLAY){
+ $('row').innerHTML=phone('A',today('A','rest')+`<div class="pg" id="Ahabwrap" style="opacity:0;pointer-events:none">${habits('A')}</div>`,'07:12 · FRIDAY · TODAY');
+}else{
+ $('row').innerHTML=phone('A',today('A','ghost'),'1 · "78.6" WAITS AT THE TOP OF NEXT')+phone('B',today('B','kept'),'2 · KEPT: A SAGE MARK AT NOW')+phone('C',habits('C'),'3 · HABITS, FROM TODAY\'S FOOT LINE');
+ $('note').innerHTML='BOTH DOORS ON THE BUILD\'S OWN HOME FRAME. A BARE WEIGHT WRITTEN TO TESS WAITS AS A COBALT GHOST ROW; A TAP DRIES IT TO INK, THE ROW FOLDS AWAY AND THE WEIGH-IN LANDS ON THE DAY STROKE. "HABITS" IS TODAY\'S FOOT LINE (BODY 21/600), ABOVE TESS\'S BAND; IT ZOOMS INTO THE PAGE WITH ‹ TODAY.';
+}
+function finger(x,y,t,hold){const f=$('fing');at(t,()=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1});at(t+hold,()=>f.style.opacity=0)}
+const fadeIn=(el,d=260,delay=0)=>el.animate([{opacity:0},{opacity:1}],{duration:d,delay,fill:'forwards'});
+const fadeOut=(el,d=220,delay=0)=>el.animate([{opacity:1},{opacity:0}],{duration:d,delay,fill:'forwards'});
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){ // board 2: the mark rests on the stroke, Tess says it with UNDO
+  $('Bmark').setAttribute('opacity','.45');$('Bsay').textContent='Body weight logged. 78.6 kg.';$('Bsay').style.opacity=1;$('Bsay').style.top='752px';$('Bundo').style.opacity=1;
+  setTimeout(()=>document.body.dataset.done='1',200);return}
+ // 1. Tess opens; he writes 78.6 (the capture, drawn small: the soul's writing line)
+ finger(346,779,700,200);
+ at(800,()=>{$('Asoul').animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:420});
+  const w=document.createElement('div');w.className='abs';w.id='Awl';w.style.cssText='left:22px;right:22px;top:690px;height:120px;background:rgba(255,255,255,.96);opacity:0';
+  w.innerHTML=`<div class="abs b" style="left:0;top:8px;color:var(--tess)">What's on your mind?</div><div class="abs b" id="Atyped" style="left:0;top:56px"></div><div class="abs" style="left:0;right:0;top:90px;height:.5px;background:var(--hair)"></div>`;
+  $('Atoday').appendChild(w);fadeIn(w,300);
+  const s='78.6';[...s].forEach((c,i)=>at(500+i*140,()=>$('Atyped').textContent+=c))});
+ // Return: the capture closes; a bare number waits as a ghost at the top of Next
+ at(2300,()=>{$('Acap').textContent='"78.6" WAITS AT THE TOP OF NEXT';
+  fadeOut($('Awl'),220);
+  $('Ag').style.display='block';$('Ag').animate([{opacity:0,transform:'translateY(-8px)',filter:'blur(3px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:420,delay:200,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'backwards'});
+  $('Arows').animate([{top:'0px'},{top:'46px'}],{duration:420,delay:200,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'});
+  const s=$('Asay');s.textContent='Tap to keep it.';fadeIn(s,260,500)});
+ // tap the ghost: it dries cobalt to ink left to right, then folds away and lands on the stroke at now
+ finger(120,514,4300,180);
+ at(4400,()=>{$('Acap').textContent='TAP: INK, THEN ONTO THE DAY';
+  const g=$('Agt');g.style.animation='none';g.style.opacity=1;
+  g.style.backgroundImage='linear-gradient(90deg,rgb(23,20,31) 50%,#2450D8 50%)';g.style.backgroundSize='200% 100%';g.style.backgroundPosition='100% 0';g.style.webkitBackgroundClip='text';g.style.backgroundClip='text';g.style.color='transparent';
+  g.animate([{backgroundPosition:'100% 0'},{backgroundPosition:'0% 0'}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  fadeOut($('Asay'),180)});
+ at(5300,()=>{ // the row lifts toward now on the stroke, shrinking, while the rows close up
+  const g=$('Ag');const r=g.getBoundingClientRect();
+  g.animate([{transform:'none',opacity:1,filter:'blur(0)'},{transform:`translate(${NOWX-80}px,-320px) scale(.18)`,opacity:0,filter:'blur(3px)'}],{duration:620,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  $('Arows').animate([{top:'46px'},{top:'0px'}],{duration:420,delay:200,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'});
+  const m=$('Amark');at(560,()=>{m.setAttribute('opacity','1');m.animate([{transform:'translateY(-10px)',opacity:0},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.3,1.3,.5,1)'});
+   at(1400,()=>{m.style.transition='opacity 1.1s';m.setAttribute('opacity','.45')})});
+  at(600,()=>{const s=$('Asay');s.style.top='752px';s.textContent='Body weight logged. 78.6 kg.';fadeIn(s,260);fadeIn($('Aundo'),260,100)})});
+ // 2. the Habits word on Today's foot line
+ at(8600,()=>{$('Acap').textContent='"HABITS" ON TODAY\'S FOOT LINE';fadeOut($('Asay'),300);fadeOut($('Aundo'),300)});
+ finger(56,714,9400,180);
+ at(9500,()=>{$('Acap').textContent='TAP: HABITS GROWS FROM THE WORD';
+  const fl=$('Afl');fl.animate([{width:'0px'},{width:'72px'}],{duration:150,fill:'forwards'});fl.setAttribute('width','72');
+  at(160,()=>{$('Atoday').animate([{transform:'none',filter:'blur(0)',opacity:1},{transform:'scale(1.06)',filter:'blur(3px)',opacity:0}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+   const h=$('Ahabwrap');h.style.transformOrigin='56px 714px';h.animate([{transform:'scale(.94)',opacity:0},{transform:'none',opacity:1}],{duration:420,delay:60,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})})});
+ at(11800,()=>{$('Acap').textContent='HABITS, BACK WORD ‹ TODAY'});
+ at(13200,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>

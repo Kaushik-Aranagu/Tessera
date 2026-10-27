@@ -78,12 +78,15 @@ public struct TessBelief: Identifiable, Equatable, Sendable {
 public enum BeliefRefusal {
     public static let noEvidence = "refused: noEvidence"
     public static let alreadyClosed = "refused: alreadyClosed"
+    /// A merge may not close what he told or kept: his words win until he says otherwise.
+    public static let hisOwn = "refused: hisOwn"
 
     public static func line(_ error: any Error) -> String? {
         guard case let ActionError.invalidArguments(_, reason) = error else { return nil }
         switch reason {
         case noEvidence: return "I need something to go on for that."
         case alreadyClosed: return "That one is already closed."
+        case hisOwn: return "You told me that one, so it stays until you change it."
         default: return RememberFact.refusalLine(error)
         }
     }
@@ -350,9 +353,62 @@ public struct ConfirmBelief: EngineAction {
     }
 }
 
-/// His forget gesture: the whole chain the belief is part of (what it replaced, and what replaced it) and the memory
-/// line it was made from are deleted (not closed), so nothing is left linked to a deleted row and nothing is left to
-/// bring it back. After the UNDO window `TessBeliefStore.redact` scrubs the words from every field and op.
+/// The night pass (M5) found two open beliefs that say the same thing, or two usual times that disagree: `close` ends
+/// now and `keep` holds on, resting on what both rested on plus `close` itself. Because `close` is in `keep`'s
+/// evidence, a forget of either takes both (ForgetBelief follows belief evidence like `supersedes`).
+public struct MergeBelief: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "mergeBelief", summary: "Merge two beliefs",
+        parameters: [
+            .init("keep", .object, "The belief that holds on"),
+            .init("close", .object, "The belief that ends"),
+        ]
+    )
+
+    public var keep: UUID
+    public var close: UUID
+    /// When `close` ends; now when nil.
+    public var at: Date?
+
+    public init(keep: UUID, close: UUID, at: Date? = nil) {
+        self.keep = keep
+        self.close = close
+        self.at = at
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let kept = try transaction.object(keep, is: .belief)
+        let closed = try transaction.object(close, is: .belief)
+        let store = transaction.store
+        guard keep != close, store.value("validUntil", of: kept) == nil, store.value("validUntil", of: closed) == nil
+        else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: BeliefRefusal.alreadyClosed)
+        }
+        // The planner never asks for it; this is the second guard. A belief with no source reads as told.
+        let source: TessBelief.Source = store.value("source", of: closed)?.stringValue
+            .flatMap(TessBelief.Source.init(rawValue:)) ?? .told
+        guard source != .told, store.value("kept", of: closed) != .bool(true) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: BeliefRefusal.hisOwn)
+        }
+        var evidence = store.linkedObjects("evidence", of: kept)
+        for object in store.linkedObjects("evidence", of: closed) + [closed]
+            where !evidence.contains(where: { $0.id == object.id })
+        {
+            evidence.append(object)
+        }
+        try transaction.setLinks("evidence", on: kept, to: evidence)
+        try transaction.set("validUntil", to: .date(at ?? .now), on: closed)
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "Merged. \(store.object(id: keep)?.title ?? "That")"
+    }
+}
+
+/// His forget gesture: the whole chain the belief is part of (what it replaced, what replaced it, and what was merged
+/// into it or it into) and the memory line it was made from are deleted (not closed), so nothing is left linked to a
+/// deleted row and nothing is left to bring it back. After the UNDO window `TessBeliefStore.redact` scrubs the words
+/// from every field and op.
 public struct ForgetBelief: EngineAction {
     public static let descriptor = ActionDescriptor(name: "forgetBelief", summary: "Forget a belief",
                                                     parameters: [.init("belief", .object, "The belief")])
@@ -363,9 +419,12 @@ public struct ForgetBelief: EngineAction {
         self.belief = belief
     }
 
-    public func apply(_ transaction: inout Transaction) throws {
-        let start = try transaction.object(belief, is: .belief)
-        let store = transaction.store
+    /// Every belief a forget of `start` deletes: what it replaced, what replaced it, and what was merged into it or it
+    /// into, transitively. The forget path hands these ids to `MemoryEvalRecord.forget(beliefs:)` before it applies.
+    @MainActor
+    public static func chain(of start: ObjectRecord, in store: ObjectStore,
+                             classes: [SystemCatalog.Key: ClassDef]) -> [ObjectRecord]
+    {
         var chain: [ObjectRecord] = []
         var seen = Set<UUID>()
         var queue = [start]
@@ -373,13 +432,22 @@ public struct ForgetBelief: EngineAction {
             guard seen.insert(object.id).inserted else { continue }
             chain.append(object)
             queue += store.linkedObjects("supersedes", of: object)
-            if let beliefClass = transaction.classes[.belief] {
-                queue += store.objects(of: beliefClass).filter {
-                    !$0.isDeleted && store.linkedObjects("supersedes", of: $0).contains { $0.id == object.id }
+            if let beliefClass = classes[.belief] {
+                // A merged belief sits in the evidence of the one that kept on (MergeBelief), both ways.
+                queue += store.linkedObjects("evidence", of: object).filter { $0.classDef?.id == beliefClass.id }
+                queue += store.objects(of: beliefClass).filter { other in
+                    !other.isDeleted && (store.linkedObjects("supersedes", of: other).contains { $0.id == object.id }
+                        || store.linkedObjects("evidence", of: other).contains { $0.id == object.id })
                 }
             }
         }
-        for object in chain {
+        return chain
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let start = try transaction.object(belief, is: .belief)
+        let store = transaction.store
+        for object in Self.chain(of: start, in: store, classes: transaction.classes) {
             // The memory line a belief was made from goes with it, or the next sync would make it again.
             if let rule = store.value("rule", of: object)?.stringValue, rule.hasPrefix("memory:"),
                let id = UUID(uuidString: String(rule.dropFirst("memory:".count))),

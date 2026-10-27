@@ -14,14 +14,14 @@ extension Theme.Colors {
             )
         }
 
-        /// Training: hot red.
+        /// Training: cobalt (sheets 226, 227, 230; the dark half is the Soft palette).
         static var training: Color {
-            tuned(\.training, light: 0xC4472A, dark: 0xEE6A4C)
+            tuned(\.training, light: 0x0B62AE, dark: 0x8FB0EE)
         }
 
         /// Kitchen: ochre.
         static var kitchen: Color {
-            tuned(\.kitchen, light: 0xA8701F, dark: 0xE0A458)
+            tuned(\.kitchen, light: 0xA8701F, dark: 0xD49A52)
         }
 
         /// Money: sage.
@@ -41,12 +41,17 @@ extension Theme.Colors {
 
         /// Routines: dusk rose.
         static var routines: Color {
-            tuned(\.routines, light: 0xA4505F, dark: 0xD79AA6)
+            tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
+        }
+
+        /// Rain (Home 236 v2.1): the colour of a rain highlight, in place of the sunset wash. 557A93 light, 9DBACE dark.
+        static var rain: Color {
+            Color(light: 0x557A93, dark: 0x9DBACE)
         }
 
         /// The sky word's two stops ("Sunset").
         static var skyFrom: Color {
-            tuned(\.skyFrom, light: 0xC9772E, dark: 0xF0A35A)
+            tuned(\.skyFrom, light: 0xC9772E, dark: 0xE8A06A)
         }
 
         static var skyTo: Color {

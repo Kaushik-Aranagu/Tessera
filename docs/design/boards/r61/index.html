@@ -1,0 +1,88 @@
+<title>Word wall</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800;900&family=Archivo:wdth,wght@75,700;75,800;75,900;100,700;100,800;100,900&family=Bricolage+Grotesque:opsz,wght@96,700;96,800&family=Outfit:wght@300;400&display=swap">
+<style>
+:root{--ground:#EFECE6;--ink:#1D1B19;--ink2:#5E5A55;--slate:#34506F;--acc:#7A5A1E;--edge:#DDD8D0;--words:"Figtree",-apple-system,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.head{max-width:1180px;margin:0 auto 22px;display:flex;flex-direction:column;gap:8px}h1{font-size:34px;letter-spacing:-.02em;margin:0}.sub{margin:0;max-width:72ch;color:var(--ink2);font-size:16px;line-height:1.5}
+.lab{margin:0;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--slate)}
+.tools{display:flex;gap:8px 22px;flex-wrap:wrap}.tr{background:none;border:0;font:inherit;font-size:15px;color:var(--acc);padding:10px 0;cursor:pointer}.tr[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.fit{width:min(402px,100%);aspect-ratio:402/874;position:relative}
+/* each phone carries its own look so light and black sit side by side */
+.lite{--c0:#B5452B;--c1:#1E6E77;--c2:#7A5A12;--c3:#5A3F8E;--c4:#2F6A8F;--c5:#8A4570;--c6:#3F6B2A;--c7:#9A2541;--c8:#0F766E;--c9:#92400E;--c10:#1F4E8C;--c11:#1D1B19;--bg:#F7F5F1;--t:#1D1B19;--t2:#5E5A55;--t3:#8E8982;--k1:#B5452B;--k2:#1E6E77;--k3:#7A5A12;--k4:#5A3F8E;--k5:#2F6A8F;--k6:#8A4570;--k7:#3F6B2A;--room:#8A4570}
+.blk{--c0:#F09A7E;--c1:#84C3C9;--c2:#E2C26A;--c3:#B4A3E6;--c4:#8DBAD6;--c5:#E3A3CB;--c6:#A9D48A;--c7:#F08E9C;--c8:#5FD0C0;--c9:#F0B07A;--c10:#9DB8F0;--c11:#F1EEE9;--bg:#000;--t:#F1EEE9;--t2:#ABA6A0;--t3:#78736D;--k1:#F09A7E;--k2:#84C3C9;--k3:#E2C26A;--k4:#B4A3E6;--k5:#8DBAD6;--k6:#E3A3CB;--k7:#A9D48A;--room:#E3A3CB}
+.phone{position:absolute;left:0;top:0;width:402px;height:874px;transform-origin:0 0;background:var(--bg);color:var(--t);border-radius:54px;overflow:hidden;outline:1px solid var(--edge)}
+.z{position:absolute;left:24px;right:24px}
+.wall{position:absolute;left:24px;width:354px;top:150px;height:470px}
+.w{position:absolute;left:0;top:0;white-space:nowrap;cursor:pointer;transform-origin:0 0;will-change:transform;user-select:none;line-height:1}
+.act{background:none;border:0;font:inherit;font-size:20px;font-weight:700;min-height:44px;padding:0;cursor:pointer;color:var(--room)}
+.tess{position:absolute;right:24px;bottom:30px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFB36B,#E8582A 60%,#B2301C)}
+.cap{color:var(--ink2);font-size:14px;max-width:402px;margin:12px 0 0;line-height:1.5}
+.notes{max-width:900px;margin:34px auto 0;color:var(--ink2);font-size:16px;line-height:1.55}.notes b{color:var(--ink)}
+</style>
+<div class="head">
+  <p class="lab">Round 244, Oct 24</p>
+  <h1>Word wall, packed tight</h1>
+  <p class="sub">His 1:05 AM: a band filled like a wall of bricks, each brick a word, different sizes, colours and weights, packed tight with no gaps. Every row is justified to the full width by its own type size, small words stack two or three high inside one brick, and gaps between bricks are 3 pt. Tap Toss to throw them into a pile; they tidy themselves back. Every few seconds one brick changes and the wall re-packs.</p>
+  <div class="tools"><button class="tr" id="toss">Toss and tidy</button><button class="tr" id="swap">Next words</button><button class="tr ff" data-f="Figtree" data-s="100%" aria-pressed="false">Figtree</button><button class="tr ff" data-f="Archivo" data-s="75%" aria-pressed="true">Archivo condensed (pick)</button><button class="tr ff" data-f="Bricolage Grotesque" data-s="100%" aria-pressed="false">Bricolage</button><button class="tr cs" data-c="s" aria-pressed="true">Sentence case</button><button class="tr cs" data-c="u" aria-pressed="false">Capitals</button></div>
+</div>
+<div class="row">
+ <div><div class="fit"><div class="phone lite" id="p1"></div></div><p class="cap">Paper. The biggest bricks take their kind's colour, mid bricks ink, the smallest stacks ink 2.</p></div>
+ <div><div class="fit"><div class="phone blk" id="p2"></div></div><p class="cap">Pure black. The same wall with lighter tints, so nothing glows.</p></div>
+</div>
+<div class="notes"><p><b>How it packs.</b> Words are sorted by weight (pinned, recent, due, how often opened). Rows are built greedily: a row takes words at a target size until it's full, then the row's type size is solved so the words plus 3 pt gaps meet both edges exactly (between 0.8 and 1.3 times the target size; any small remainder goes into letter-spacing). Low-weight words pair or triple into a stacked brick, each line solved to the brick's width. Row height is the cap-and-descender box (0.86 of the size), so rows sit 3 pt apart. <b>Type:</b> Archivo condensed (75% width) packs most and stays legible: 900 on rows set above 60 px, 800 below, 700 in stacks; nothing under 13 px; stacked words are paired by length so no line shrinks to nothing. Figtree and Bricolage are on the toggles to compare. <b>Colours (his 1:05 AM: as many as it likes):</b> every brick its own colour from a twelve-colour set, stepped so neighbours never match; deep tones on paper, light tints on black. Tap a word to open it. <b>Liveness:</b> every 6 s a word changes and every brick glides to its new place (spring 0.6 s). <b>Toss:</b> bricks fall into a heap at the bottom, tilted, then tidy into the wall. Reduce Motion: no drift or toss, just a cross-fade.</p></div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const POOL=[['Trip packing',9,1],['Mom’s birthday',9,6],['Tacos',8,3],['Garage',7,2],['Book ideas',8,4],['Passport',7,1],['Work notes',6,5],['Gift list',6,6],['Dreams',5,4],['Run plan',6,7],['Recipes',6,3],['Plumber',4,2],['Tess said',5,4],['Voice memo',4,5],['Wifi code',3,2],['Movies',4,4],['Sleep log',3,7],['Paint colors',4,2],['Kids’ sizes',3,6],['Coffee beans',3,3],['Quotes',3,4],['Bike fit',3,7],['Taxes',4,5],['Doctor',4,7],['Neighbors',2,6],['Podcasts',2,4],['Seeds',2,2],['Spices',2,3],['Shoes',2,6],['Old phone',2,2],['Jokes',2,4],['Stretch',2,7],['Wine',2,3],['Fonts',2,4],['Keys',2,2]];
+let caps=false,start=0,FACE='Archivo',STR='75%';const FW={stack:700};
+const cv=document.createElement('canvas').getContext('2d');
+const W=354,H=470,GAP=3;
+function wd(t,size,wt){cv.font=`${STR==='75%'?'condensed ':''}${wt} ${size}px '${FACE}'`;return cv.measureText(caps?t.toUpperCase():t).width}
+// Rows solve their own height: a single word's width is a*h/.86, and a stack of n words, each line sized to fill the
+// brick's width, is (h-(n-1)GAP)/(.86*sum(1/a_i)) wide, so a row's width is (almost) linear in h. Each row picks bricks
+// until it reaches its target height's width, then h is solved so the row meets both edges exactly. Nothing is stretched.
+const unit=(t,wt)=>wd(t,100,wt)/100;// width per px of font size
+function brickW(b,h){if(!b.stack)return b.a/.86*h;const n=b.lines.length;return (h-(n-1)*GAP)/(.86*b.lines.reduce((s,l)=>s+1/l.a,0))}
+function solveH(bricks){let lo=4,hi=400;for(let k=0;k<40;k++){const m=(lo+hi)/2,w=bricks.reduce((s,b)=>s+brickW(b,m),0)+GAP*(bricks.length-1);if(w>W)hi=m;else lo=m}return lo}
+const MINFS=13;// nothing smaller than 13 px, so the smallest bricks still read
+function layout(words){const s0=[...words].sort((a,b)=>b[1]-a[1]),hi=s0.filter(x=>x[1]>3),lo=s0.filter(x=>x[1]<=3).sort((a,b)=>b[0].length-a[0].length);// stacks pair words of like length, so no line shrinks to nothing
+  const items=hi.concat(lo);const out=[];let y=0,f=0,e=items.length-1,r=0;
+  const T=[74,52,62,46,68,50,58,44];const PAT=[['B','S'],['S','B','S'],['B','B','S'],['S','B'],['B','S','B']];
+  const mk=(x,wt)=>({t:x[0],k:x[2],wt,a:unit(x[0],wt)});
+  while(f<=e&&y<H-14){const tgt=Math.min(T[r%T.length],H-y),pat=PAT[r%PAT.length],bricks=[];let wsum=0,p=0;
+    while(f<=e){const kind=pat[p%pat.length];p++;let b;
+      if(kind==='B'){const wt=tgt>=60?900:800;b={lines:[mk(items[f],wt)],wt};b.a=b.lines[0].a;f++}
+      else{let n=tgt>=60?3:2;while(n>1&&(tgt-(n-1)*GAP)/n<MINFS*.86/.75)n--;const L=[];for(let q=0;q<n&&e>=f;q++)L.push(mk(items[e--],FW.stack));b=L.length>1?{stack:true,lines:L,wt:FW.stack}:{lines:L,wt:FW.stack,a:L[0].a}}
+      bricks.push(b);wsum+=brickW(b,tgt)+(bricks.length>1?GAP:0);if(wsum>=W*.95)break}
+    let h=solveH(bricks);
+    if(y+h>H){h=H-y}
+    let x=0;bricks.forEach(b=>{const bw=brickW(b,h);
+      if(!b.stack){const fs=h/.86;out.push({t:b.lines[0].t,x,y,fs,wt:b.wt,h,ls:0})}
+      else{let yy=y;b.lines.forEach(l=>{const fs=bw/l.a,lh=fs*.86;out.push({t:l.t,x,y:yy,fs,wt:l.wt,h:lh,ls:0});yy+=lh+GAP})}
+      x+=bw+GAP});
+    y+=h+GAP;r++}
+  return out}
+function render(P){let wall=P.querySelector('.wall');const vis=POOL.slice(start).concat(POOL.slice(0,start));const L=layout(vis);
+  const old={};wall.querySelectorAll('.w').forEach(e=>old[e.dataset.t]=e);const keep=new Set();let ci=0;
+  L.forEach((o,idx)=>{let e=old[o.t];if(!e){e=document.createElement('div');e.className='w';e.dataset.t=o.t;e.style.opacity=0;wall.appendChild(e);e.onclick=()=>{e.animate([{filter:'none'},{opacity:.4},{opacity:1}],{duration:300})}}
+    keep.add(o.t);e.textContent=caps?o.t.toUpperCase():o.t;e.style.font=`${o.wt} ${o.fs}px '${FACE}'`;e.style.fontStretch=STR;e.style.letterSpacing=(o.ls||0)+'px';e.style.height=o.h+'px';e.style.lineHeight=o.h+'px';
+    e.style.color=`var(--c${(idx*5)%12})`;
+    const tr=`translate(${o.x}px,${o.y}px)`;
+    if(RM){e.style.transform=tr;e.style.opacity=1}else{e.style.transition='transform .6s cubic-bezier(.2,.9,.25,1.05),opacity .4s';e.style.transform=tr;requestAnimationFrame(()=>e.style.opacity=1)}});
+  Object.keys(old).forEach(t=>{if(!keep.has(t)){old[t].style.opacity=0;setTimeout(()=>old[t].remove(),450)}})}
+function build(P){P.innerHTML=`<div class="z" style="top:54px;font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:44px;color:var(--room)">Notes</div><div class="z" style="top:104px;font-size:16px;color:var(--t2)">Three new today, one from Tess.</div><div class="wall"></div><div class="z" style="top:640px;font-size:15px;line-height:22px;color:var(--t2)">Pinned: <b style="color:var(--t);font-weight:600">Trip packing</b>, <b style="color:var(--t);font-weight:600">Mom’s birthday</b>.</div><div class="z" style="left:28px;bottom:30px;height:44px;display:flex;align-items:center"><button class="act">New note</button></div><span class="tess"></span>`}
+const PH=[document.getElementById('p1'),document.getElementById('p2')];PH.forEach(build);
+function all(){PH.forEach(render)}
+function toss(){if(RM){all();return}PH.forEach(P=>{P.querySelectorAll('.w').forEach((e,i)=>{e.style.transition='transform .55s cubic-bezier(.5,0,.75,0)';const x=(i*53)%240,y=360+((i*37)%90);e.style.transform=`translate(${x}px,${y}px) rotate(${((i*29)%50)-25}deg)`})});setTimeout(all,900)}
+function fit(){document.querySelectorAll('.fit').forEach(f=>{f.firstElementChild.style.transform=`scale(${f.clientWidth/402})`})}addEventListener('resize',fit);fit();
+document.getElementById('toss').onclick=toss;document.getElementById('swap').onclick=()=>{start=(start+3)%POOL.length;all()};
+document.querySelectorAll('.ff').forEach(b=>b.onclick=()=>{FACE=b.dataset.f;STR=b.dataset.s;document.querySelectorAll('.ff').forEach(x=>x.setAttribute('aria-pressed',x===b));const st=STR==='75%'?'condensed ':'';Promise.all(['700','800','900'].map(w=>document.fonts.load(`${st}${w} 40px '${FACE}'`,'Ab'))).then(all,all)});
+document.querySelectorAll('.cs').forEach(b=>b.onclick=()=>{caps=b.dataset.c==='u';document.querySelectorAll('.cs').forEach(x=>x.setAttribute('aria-pressed',x===b));all()});
+(document.fonts?Promise.all(['700','800','900'].map(w=>document.fonts.load(`condensed ${w} 40px 'Archivo'`,'Ab'))).then(()=>document.fonts.ready):Promise.resolve()).then(()=>{all();if(!RM)setTimeout(toss,600)});
+setInterval(()=>{if(RM)return;start=(start+1)%POOL.length;all()},6000);
+})();
+</script>

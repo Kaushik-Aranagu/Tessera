@@ -1,85 +1,82 @@
 import SwiftUI
 import TesseraCore
 
-/// One thing on Home (sheet 213): a name or number in three tiers, no card and no frame. Core ranks them; until its
-/// feed
-/// lands the stand-in below reads the ranker's picks and the apps' own lines.
+/// One thing on Home (sheet 213): a name or number in three tiers, no card and no frame. Core ranks them
+/// (`OneThings.ranked`, on the phone, at most seven); this is the host's copy of one, with its accent as a colour.
 struct HomeThing: Identifiable, Equatable {
-    enum Kind: Equatable {
-        case task, app(HomeApp)
+    enum Accent: Equatable {
+        /// Ink: a task.
+        case ink
+        case app(HomeApp)
+        /// The rose family, never cobalt.
+        case birthday
+        /// The sky: the weather.
+        case sky
     }
 
     let id: String
-    let kind: Kind
-    /// Outfit 200 at 66 pt when a number (a time, a count), else Figtree 500 at 36 pt.
+    /// What kind of thing this is: the sign the mosaic builds for it (sheet 213).
+    var kind: OneThing.Kind
     var big: String
+    /// Outfit 200 at 60 pt for a short value (a time, a count, degrees), at 44 pt for words.
     var bigIsNumber: Bool
-    /// The accent of the big line; ink for a task.
-    var accent: HomeApp?
+    var accent: Accent
     var mid: String
-    /// The app word in the mid line (a 205 keyword), if it names one.
+    /// The thing's own word in the mid line, highlighted; nil for a plain or private one.
     var keyword: String?
     var small: String
-    /// The task a hold on the big line finishes.
+    /// The task a hold on the big line finishes (only a task can be struck through).
     var taskID: UUID?
-    var opens: HomeSentence.Opens?
+    var target: OneThing.Target
+    /// "Pack the charger, done." or "Private, done.": the one Undo line.
+    var undoLine: String?
+
+    var accentColor: Color {
+        switch accent {
+        case .ink: Theme.Colors.ink
+        case let .app(app): app.accent
+        case .birthday: Color(light: 0xB0466A, dark: 0xE07A9A)
+        case .sky: Theme.Colors.Accent.skyTo
+        }
+    }
 
     var spoken: String {
         [big, mid, small].filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
+    init(_ thing: OneThing) {
+        id = thing.id
+        kind = thing.kind
+        big = thing.big
+        bigIsNumber = thing.big.count <= 8 && thing.big.contains(where: \.isNumber)
+        accent = switch thing.accent {
+        case .ink: .ink
+        case let .app(app): HomeApp(appID: app).map(Accent.app) ?? .ink
+        case .birthday: .birthday
+        case .sky: .sky
+        }
+        mid = thing.mid
+        keyword = thing.midKeyword
+        small = thing.small
+        taskID = if case let .task(id)? = thing.done {
+            id
+        } else {
+            nil
+        }
+        target = thing.target
+        undoLine = thing.undoLine
     }
 }
 
 @MainActor
 enum HomeThings {
-    static let maxThings = 7
-    static let holdHint = "Hold to strike it through"
-
-    /// The thing's own word in a line: its first one or two words, up to a connecting word, a comma or a figure
-    /// ("Push day" in "Push day at 6:30 pm", "Groceries" in "Groceries, 4 to get").
-    static func keyword(in text: String) -> String? {
-        // A private thing reads "Private" and has no keyword to underline.
-        guard !text.hasPrefix("Private") else { return nil }
-        let stops: Set = ["at", "is", "on", "in", "turns", "to", "for", "and", "of"]
-        var words: [String] = []
-        for raw in text.split(separator: " ") {
-            let word = String(raw)
-            let bare = word.trimmingCharacters(in: .punctuationCharacters)
-            if stops.contains(bare.lowercased()) || bare.contains(where: \.isNumber) {
-                break
-            }
-            words.append(bare)
-            if word.last == "," || word.last == "." || words.count == 2 {
-                break
-            }
-        }
-        let joined = words.joined(separator: " ")
-        return joined.isEmpty ? nil : joined
-    }
-
-    /// The stand-in feed: the ranker's task picks first (a private one reads by its shown label), then each app's own
-    /// line, up to seven.
-    static func standIn(model: AppModel, lines: [AppSummaryLine], now: Date) -> [HomeThing] {
-        var out: [HomeThing] = []
-        let picks = NowPage.rank(model: model, now: now, incumbent: nil)
-        for pick in picks where pick.item.kind == .task && out.count < 3 {
-            let shown = ObjectPrivacy.shownLabel(of: pick.item.object, in: model.store, classes: model.classes)
-                ?? pick.item.title
-            let private_ = ObjectPrivacy
-                .shownLabel(of: pick.item.object, in: model.store, classes: model.classes) != nil
-            out.append(HomeThing(id: pick.item.id.uuidString, kind: .task, big: shown, bigIsNumber: false,
-                                 accent: nil, mid: private_ || pick.why.isEmpty ? "Today" : pick.why,
-                                 keyword: private_ || pick.why.isEmpty ? nil : keyword(in: pick.why),
-                                 small: holdHint, taskID: pick.item.id, opens: .object(pick.item.id)))
-        }
-        for line in lines where out.count < maxThings && line.text != AppSummaryLines.nothingPlanned {
-            let app = AppsListRows.home(line.app)
-            let time = line.text.split(separator: " ").first { $0.contains(":") }.map(String.init)
-            out.append(HomeThing(id: "app-\(app.rawValue)", kind: .app(app), big: time ?? app.rawValue,
-                                 bigIsNumber: time != nil, accent: app, mid: line.text, keyword: keyword(in: line.text),
-                                 small: "",
-                                 taskID: nil, opens: line.opens))
-        }
-        return Array(out.prefix(maxThings))
+    /// Core's ranked things for the space. The weather stays out until it is real (Apple weather is not entitled yet,
+    /// and
+    /// a sample would read as a fact); birthdays have no source on the phone yet.
+    static func make(model: AppModel, facts: MosaicFacts, routines: HomeSentence.RoutinesPart) -> [HomeThing] {
+        let unit = MassUnit(rawValue: model.displayUnits.unit(for: .weight) ?? "") ?? .kilograms
+        return OneThings.ranked(engine: model.engine, facts: facts, plan: model.plan, routines: routines, unit: unit)
+            .map(HomeThing.init)
     }
 }
 
@@ -99,6 +96,8 @@ struct HomeOneThing: View {
     /// The hold finished this task: whether it was marked done.
     let done: (HomeThing) -> Bool
     let open: (HomeThing) -> Void
+    /// The sign slot's global frame, for the mosaic to build the sign in (sheet 213).
+    var onSlot: (CGRect) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var strike: Double = 0
@@ -109,29 +108,33 @@ struct HomeOneThing: View {
     @State private var turns = 0
     @State private var finishes = 0
 
-    static let height: CGFloat = 196
+    /// Sheet 283 v4: the widget place is 200 tall (412 to 612).
+    static let height: CGFloat = 200
     static let swipeDistance: CGFloat = 50
+    /// Home 236: the 80 pt sign is centred on the big and mid tiers (4 to 150 pt), so its top sits at 37.
+    static let signTop: CGFloat = 32
+    /// The sign's width plus the 12 pt that every tier's text stops short of it.
+    static let signRoom: CGFloat = 80 + 12
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             if things.indices.contains(index) {
                 let thing = things[index]
                 page(thing)
-                // A's 72 pt pixel sign sits at the top right; its slot is left clear here.
-                Color.clear.frame(width: 72, height: 72)
+                // A's 80 pt pixel sign sits at the top right; its slot is left clear here.
+                Color.clear.frame(width: 80, height: 80)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    .accessibilityHidden(true)
-                Text("\(index + 1) of \(things.count)")
-                    .font(Theme.numeral(14, weight: .light))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    // Home 236: the sign is centred on the big and mid tiers and never moves with the pages.
+                    .padding(.top, Self.signTop)
                     .accessibilityHidden(true)
             }
         }
         .frame(maxWidth: .infinity, minHeight: Self.height, alignment: .topLeading)
         .contentShape(Rectangle())
-        .simultaneousGesture(swipe)
-        .tesseraFeedback(.selection, trigger: turns)
+        // High priority: a swipe that starts on the space turns the page, and the page scrolls from anywhere else.
+        .highPriorityGesture(swipe)
+        .tesseraFeedback(.pageTurn, trigger: turns)
         .tesseraFeedback(.setLogged, trigger: finishes)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("One thing at a time")
@@ -145,17 +148,32 @@ struct HomeOneThing: View {
     // MARK: Page
 
     private func page(_ thing: HomeThing) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            tier(thing, delay: 0.2, height: 84) { big(thing) }
-            tier(thing, delay: 0.28, height: 56) { mid(thing) }
-            tier(thing, delay: 0.36, height: 22) {
-                Text(thing.small)
-                    .font(Theme.voice(size: 15))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
+        // Sheet 283 section 5, Bridge's one-thing box: header (13 pt 600 caps, tracked .12 em) at 429, the Big line in
+        // a
+        // 64 pt slot at 444, the Middle line (20 pt) at 522, the Small line (15 pt 500 ink 2) at 554. Fixed slots: text
+        // cuts on whole words and never wraps; the type stops growing at AX1 so nothing overlaps.
+        ZStack(alignment: .topLeading) {
+            tier(thing, delay: 0.12, height: 20) {
+                Text(Self.header(thing.kind).uppercased())
+                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.semibold))
+                    .tracking(13 * 0.12)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
+            .offset(y: 17)
+            tier(thing, delay: 0.2, height: 64) { big(thing) }
+                .frame(height: 64, alignment: .leading)
+                .offset(y: 32)
+            tier(thing, delay: 0.28, height: 28) { mid(thing) }
+                .offset(y: 110)
+            tier(thing, delay: 0.36, height: 22) {
+                FitLine(forms: FitLine.cuts(thing.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+            }
+            .offset(y: 142)
         }
-        .padding(.top, 4)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .frame(height: Self.height, alignment: .topLeading)
+        .padding(.trailing, Self.signRoom)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(thing.spoken)
@@ -194,13 +212,14 @@ struct HomeOneThing: View {
 
     @ViewBuilder
     private func big(_ thing: HomeThing) -> some View {
-        let colour = thing.accent?.accent ?? Theme.Colors.ink
-        let text = Text(thing.bigIsNumber ? thing.big : AppsListRows.fit(thing.big, limit: 28))
-            // Always Outfit 200: 60 pt for a short value, 44 pt for words (which may wrap to two lines).
-            .font(Theme.numeral(thing.bigIsNumber ? 60 : 44))
+        let colour = thing.accentColor
+        // Sheet 283: a word at Figtree 38 700 on one line (cut on whole words), or an Outfit 56 number.
+        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, size: 38, width: 262))
+            .font(thing.bigIsNumber ? .custom("Outfit", size: 56, relativeTo: .largeTitle).weight(.light)
+                : .custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
             .foregroundStyle(colour)
+            .lineLimit(1)
             .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
-            .fixedSize(horizontal: false, vertical: true)
         if thing.taskID != nil {
             text.simultaneousGesture(hold(thing))
         } else {
@@ -211,9 +230,8 @@ struct HomeOneThing: View {
     private func mid(_ thing: HomeThing) -> some View {
         Button { open(thing) } label: {
             Text(Self.midText(thing))
-                .multilineTextAlignment(.leading)
+                .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .buttonStyle(.plain)
     }
@@ -222,34 +240,73 @@ struct HomeOneThing: View {
     /// (ink
     /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
-        var text = AttributedString(thing.mid)
+        midText(thing.mid, keyword: thing.keyword, accent: thing.accentColor)
+    }
+
+    static func midText(_ mid: String, keyword: String?, accent: Color) -> AttributedString {
+        var text = AttributedString(mid)
         text.font = Theme.voice(size: 20)
         text.foregroundColor = Theme.Colors.ink
-        if let keyword = thing.keyword, let range = text.range(of: keyword) {
-            let accent = thing.accent?.accent ?? Theme.Colors.ink
-            text[range].font = Theme.voice(size: 22).weight(.semibold)
+        if let keyword, let range = text.range(of: keyword) {
+            // Sheet 283: no decorative underline; the key word is 600 in its accent at the line's own size.
+            text[range].font = Theme.voice(size: 20).weight(.semibold)
             text[range].foregroundColor = accent
-            text[range].underlineStyle = Text.LineStyle(pattern: .solid, color: accent)
         }
         return text
     }
 
+    /// The widget header (283): the room the thing belongs to, by its ship name.
+    static func header(_ kind: OneThing.Kind) -> String {
+        switch kind {
+        case .training: "Deck"
+        case .groceries: "Galley"
+        case .birthday: "Birthday"
+        case .task: "To do"
+        case .list: "Log"
+        case .weather: "Lookout"
+        case .routine: "Watch"
+        }
+    }
+
+    /// The longest whole-word cut of `text` that fits `width` at Figtree `size` 700; never an ellipsis.
+    static func cut(_ text: String, size: CGFloat, width: CGFloat) -> String {
+        let descriptor = UIFontDescriptor(fontAttributes: [
+            .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
+        ])
+        let font = UIFont(descriptor: descriptor, size: size)
+        for form in FitLine.cuts(text) where (form as NSString).size(withAttributes: [.font: font]).width <= width {
+            return form
+        }
+        return FitLine.cuts(text).last ?? text
+    }
+
     // MARK: Gestures
 
+    /// A swipe in any of the four directions (sheet 220): left or up goes to the next thing, right or down to the
+    /// previous. The dominant axis wins; it commits past 50 pt or on a flick faster than 300 pt/s.
     private var swipe: some Gesture {
-        DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                // A sideways drag is a swipe, not a hold: the strike retracts.
-                if abs(value.translation.width) > abs(value.translation.height) {
-                    cancelHold()
-                }
+        DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
+            .onChanged { _ in
+                // A drag in any direction is a swipe, not a hold: the strike retracts.
+                cancelHold()
             }
             .onEnded { value in
-                let across = value.translation.width
-                guard abs(across) > Self.swipeDistance, abs(across) > abs(value.translation.height) else { return }
+                let sideways = abs(value.translation.width) >= abs(value.translation.height)
+                // A diagonal has no clear direction: the dominant axis must lead by 1.3x or the swipe is ignored.
+                let lead = sideways
+                    ? abs(value.translation.width) / max(abs(value.translation.height), 1)
+                    : abs(value.translation.height) / max(abs(value.translation.width), 1)
+                guard lead >= 1.3 else { return }
+                // `turn` reads a negative value as next: left (negative) and up (negative) are both next.
+                let across = sideways ? value.translation.width : value.translation.height
+                let speed = (sideways ? value.velocity.width : value.velocity.height) * (across < 0 ? -1 : 1)
+                // Past the distance, or a real flick (fast and past the flick travel); a twitch or a swipe taken back
+                // at lift turns nothing.
+                guard GestureTuning.commits(distance: Double(abs(across)), velocity: Double(speed),
+                                            arm: Double(Self.swipeDistance)) else { return }
                 // The tiers' own transitions carry the animation; this only lets them run.
                 withTesseraAnimation(.linear(duration: 0.01), reduceMotion: reduceMotion) {
-                    if turn(across) {
+                    if turn(across < 0 ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {
                         turns += 1
                     }
                 }

@@ -26,7 +26,16 @@ struct MosaicSentence: View {
     var facts: MosaicFacts?
     /// The rotation stops in the background and during a doorway.
     var paused = false
+    /// Home 236: the notice the board shows on its second line now, for the Now face to play as its flap turns.
+    var onAnnouncement: ((HomeNotice?) -> Void)?
     @State private var rotation = 0
+    /// The row's measured width; lines and the date are chosen to fit it.
+    @State private var rowWidth = HomeBoard.defaultWidth
+
+    private struct AnnounceKey: Hashable {
+        let rotation: Int
+        let count: Int
+    }
 
     private struct RotationKey: Hashable {
         let paused: Bool
@@ -43,14 +52,18 @@ struct MosaicSentence: View {
                                                                                                    now: AppClock.now)))
         if HomeMosaic.moodsIsOn {
             // Sheet 212: the date, then two notices that roll every 6 s; every change letter-flips on the board.
-            let notices = HomeBoard.notices(from: noticeList)
-            let board = HomeBoard.lines(date: HomeBoard.date(now: AppClock.now), notices: notices, rotation: rotation,
-                                        moment: pickedClauses?.first)
+            let notices = HomeBoard.notices(from: noticeList, width: rowWidth)
+            let board = HomeBoard.lines(
+                date: HomeBoard.date(now: AppClock.now, width: rowWidth),
+                notices: notices,
+                rotation: rotation,
+                moment: pickedClauses?.first
+            )
             DepartureBoard(lines: board.map(\.segments)) { index, frame in
                 guard index < board.count else { return }
                 switch board[index].target {
                 case .today:
-                    openLink(.review)
+                    openLink(.today)
                 case let .clause(clause):
                     if let onDoor {
                         onDoor(clause, frame)
@@ -67,6 +80,7 @@ struct MosaicSentence: View {
                         case .money: openLink(.money)
                         case .notes: openLink(.notes)
                         case .lists: openLink(.lists)
+                        case .training: openLink(.training)
                         default: openLink(.review)
                         }
                     }
@@ -75,13 +89,23 @@ struct MosaicSentence: View {
                     if let onSky {
                         onSky()
                     } else {
-                        openLink(.review)
+                        openLink(.today)
                     }
                 }
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
+            .onChange(of: AnnounceKey(rotation: rotation, count: noticeList.count), initial: true) { _, _ in
+                guard !noticeList.isEmpty else {
+                    onAnnouncement?(nil)
+                    return
+                }
+                onAnnouncement?(noticeList[((rotation % noticeList.count) + noticeList.count) % noticeList.count])
             }
             .task(id: RotationKey(paused: paused || reduceMotion, count: notices.count)) {
                 // Under Reduce Motion the rotation is paused: the board swaps plainly only when the top notice changes.
                 guard !paused, !reduceMotion, notices.count > 1 else { return }
+                // The faces read this clock so they never turn in the second a line flips.
+                MosaicLineClock.start()
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .seconds(HomeBoard.rotationSeconds))
                     guard !Task.isCancelled else { return }
@@ -156,6 +180,8 @@ struct MosaicWordStyle: ButtonStyle {
             .overlay(alignment: .bottom) {
                 Rectangle().fill(accent).frame(height: 1)
                     .offset(y: 5)
+                    // At rest there is no line (landing contract §10); it shows only under the finger.
+                    .opacity(configuration.isPressed ? 1 : 0)
             }
             // A touch target past the glyphs, without making the line taller.
             .contentShape(.interaction, Rectangle().inset(by: -8))

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swipe for more</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/swipe-more.md (Design item 71): the routine page's side page, LAST TIMES, and who owns a left swipe. ?play records: a row swipe left is the row's (DROP rises, released short, it springs back); a swipe that starts off the rows slides LAST TIMES in with the routine's name held in place; swipe right goes back; then the word LAST TIMES opens it too. Add ?x2 for 2x. -->
+<style>
+:root{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--ctx:#5A3DAF;--live:#C23A22}
+body{margin:0;background:#E9E6EE;font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px;padding:40px}
+body.play .row{padding:0}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;flex:none}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.62)}
+.hero{left:22px;top:84px;font-size:56px;font-weight:500;letter-spacing:-.025em;line-height:60px}
+.ctx{left:22px;top:150px;font-size:21px;color:var(--ctx)}
+.layer{position:absolute;left:0;top:0;width:393px;height:852px}
+.ex{position:absolute;left:22px;width:349px;height:84px}
+.ex .n{font-size:34px;font-weight:500;letter-spacing:-.01em;line-height:40px}
+.ex .s{font-size:21px;line-height:28px;margin-top:2px}
+.ex .s b{font-weight:600}
+.drop{position:absolute;right:22px;top:24px;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--live);opacity:0}
+.add{left:22px;font-size:21px;color:rgba(var(--ink),.7)}
+.key{left:22px;right:22px;top:664px;display:flex;justify-content:space-between}
+.side{position:absolute;left:0;top:0;width:393px;height:852px;opacity:0;transform:translateX(60px)}
+.t{position:absolute;left:22px;width:349px;font-size:21px;line-height:28px}
+.t .d{font-weight:600}
+.t .m{color:rgba(var(--ink),.62)}
+.band{left:52px;width:270px;top:765px;text-align:right;font-size:21px;line-height:28px;color:var(--tess)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.finger{position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(18,16,22,.12);box-shadow:0 0 0 1px rgba(18,16,22,.1);opacity:0;pointer-events:none}
+.zone{position:absolute;left:0;width:393px;border:1.5px dashed;box-sizing:border-box}
+.zl{position:absolute;font-weight:700;font-size:13px;letter-spacing:.08em}
+#note{padding:0 40px 40px;max-width:1500px;font-weight:700;font-size:14px;letter-spacing:.08em;color:rgba(18,16,22,.6);line-height:22px}
+body.play #note{display:none}
+</style></head><body>
+<div class="row" id="row"></div><div id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');if(PLAY)document.body.classList.add('play');
+const EX=[['Bench press','<b>4</b> × <b>6–8</b> at <b>82.5</b> kg'],['Overhead press','<b>3</b> × <b>8</b> at <b>45</b> kg'],['Incline dumbbell press','<b>3</b> × <b>10</b> at <b>24</b> kg'],['Cable fly','<b>3</b> × <b>12</b> at <b>15</b> kg'],['Rope pushdown','<b>3</b> × <b>12</b> at <b>25</b> kg']];
+const TIMES=[['Thursday, Oct 15','5 of 5, 1,072 kg moved. Bench 82.5\u00A0×\u00A07, best.'],['Monday, Oct 12','5 of 5, 1,040 kg moved.'],['Thursday, Oct 8','4 of 5, 880 kg moved. Cable fly left out.'],['Monday, Oct 5','5 of 5, 1,010 kg moved.']];
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+let k=0;
+function phone(mode){
+  const id='p'+(k++);
+  // The routine's name holds in place: it is the spine for a page with no vertical strip.
+  const exs=EX.map((e,i)=>`<div class="ex" id="${id}x${i}" style="top:${212+i*84}px"><div class="n">${e[0]}</div><div class="s">${e[1]}</div>${i===2?`<div class="drop" id="${id}drop">DROP</div>`:''}</div>`).join('');
+  const times=`<div class="abs" style="left:22px;width:349px;top:236px;display:flex;flex-direction:column;gap:20px">`+TIMES.map(t=>`<div style="font-size:21px;line-height:28px"><div class="d" style="font-weight:600">${t[0]}</div><div class="m" style="color:rgba(var(--ink),.62)">${t[1]}</div></div>`).join('')+`</div>`;
+  return {id,html:`<div class="ph" id="${id}">
+   <div class="abs lbl" style="left:22px;top:58px">‹ TRAINING</div>
+   <div class="abs hero">Push Day A</div>
+   <div class="layer" id="${id}main">
+    <div class="abs ctx">5 exercises, about 55 min</div>
+    ${exs}
+    <div class="abs add" style="top:${212+5*84}px">Add an exercise</div>
+    <div class="abs lbl" id="${id}lt" style="right:22px;top:155px;color:rgb(var(--ink))">LAST TIMES</div>
+   </div>
+   <div class="side" id="${id}side">
+    <div class="abs lbl" style="left:22px;top:196px">LAST 4 TIMES</div>
+    ${times}
+    <div class="abs ctx">5 exercises, about 55 min</div>
+    <div class="abs lbl" style="right:22px;top:155px;color:rgb(var(--ink))">EXERCISES</div>
+   </div>
+   ${soul}
+   <div class="finger" id="${id}f"></div>
+  </div>`};
+}
+const row=document.getElementById('row');
+if(!PLAY){
+  const a=phone(),b=phone(),c=phone();
+  row.innerHTML=a.html+b.html+c.html;
+  // board 1: who owns the swipe
+  const pa=document.getElementById(a.id);
+  pa.insertAdjacentHTML('beforeend',`<div class="zone" style="top:212px;height:420px;border-color:rgba(194,58,34,.55);background:rgba(194,58,34,.04)"></div><div class="zl" style="left:200px;top:600px;color:#C23A22">ON A ROW: THE ROW'S (DROP)</div>
+  <div class="zone" style="top:40px;height:168px;border-color:rgba(36,80,216,.55);background:rgba(36,80,216,.04)"></div><div class="zl" style="left:150px;top:176px;color:#2450D8">OFF THE ROWS: THE PAGE'S</div>
+  <div class="zone" style="top:632px;height:104px;border-color:rgba(36,80,216,.55);background:rgba(36,80,216,.04)"></div>
+  <div class="zone" style="top:736px;height:84px;border-color:rgba(18,16,22,.4);background:rgba(18,16,22,.03)"></div><div class="zl" style="left:22px;top:744px;color:rgba(18,16,22,.6)">TESS'S BAND: HERS</div>
+  <div class="zone" style="top:0;height:852px;width:20px;border-color:rgba(18,16,22,.4)"></div><div class="zl" style="left:26px;top:20px;color:rgba(18,16,22,.6)">LEFT EDGE: BACK</div>`);
+  // board 2: the row's own swipe, mid-drag
+  document.getElementById(b.id+'x2').style.transform='translateX(-104px)';document.getElementById(b.id+'drop').style.opacity=1;document.getElementById(b.id+'drop').style.transform='translateX(104px)';
+  // board 3: the side page
+  document.getElementById(c.id+'main').style.opacity=0;const s=document.getElementById(c.id+'side');s.style.opacity=1;s.style.transform='none';
+  document.getElementById('note').innerHTML='THE ROUTINE PAGE GETS ONE SIDE PAGE, LAST TIMES. A LEFT SWIPE THAT STARTS ON A ROW IS THE ROW\'S (DROP); ONE THAT STARTS OFF THE ROWS OPENS THE SIDE PAGE; TESS\'S BAND IS HERS; THE LEFT EDGE IS BACK. THE NAME HOLDS IN PLACE AS THE SPINE. THE WORD LAST TIMES, AT THE RIGHT OF THE CONTEXT LINE, OPENS IT TOO; EXERCISES COMES BACK.';
+  document.fonts.ready.then(()=>{document.body.dataset.done='1'});
+}else{
+  const p=phone();row.innerHTML=p.html;const id=p.id;
+  const $=x=>document.getElementById(id+x);
+  const E=(el,kf,o)=>el.animate(kf,Object.assign({fill:'forwards'},o));
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const curve='cubic-bezier(.2,.8,.2,1)';
+  async function finger(x0,y0,x1,y1,ms){const f=$('f');f.style.left=x0-22+'px';f.style.top=y0-22+'px';E(f,[{opacity:0},{opacity:1}],{duration:120});await wait(140);E(f,[{transform:'translate(0,0)'},{transform:`translate(${x1-x0}px,${y1-y0}px)`}],{duration:ms,easing:'ease-in-out'});await wait(ms);E(f,[{opacity:1},{opacity:0}],{duration:140});}
+  async function openSide(){E($('main'),[{transform:'translateX(0)',opacity:1},{transform:'translateX(-44px)',opacity:0}],{duration:320,easing:curve});E($('side'),[{transform:'translateX(60px)',opacity:0},{transform:'translateX(0)',opacity:1}],{duration:320,easing:curve,delay:40});}
+  async function closeSide(){E($('side'),[{transform:'translateX(0)',opacity:1},{transform:'translateX(60px)',opacity:0}],{duration:320,easing:curve});E($('main'),[{transform:'translateX(-44px)',opacity:0},{transform:'translateX(0)',opacity:1}],{duration:320,easing:curve,delay:40});}
+  document.fonts.ready.then(async()=>{
+    document.body.dataset.start='1';
+    await wait(900);
+    // 1. a swipe that starts on a row is the row's: DROP rises; released short of 120 pt, it springs back.
+    const r=$('x2'),d=$('drop');
+    finger(320,262+168,220,262+168,520);
+    await wait(140);
+    E(r,[{transform:'translateX(0)'},{transform:'translateX(-100px)'}],{duration:520,easing:'ease-in-out'});
+    E(d,[{opacity:0,transform:'translateX(0)'},{opacity:1,transform:'translateX(100px)'}],{duration:520,easing:'ease-in-out'});
+    await wait(700);
+    E(r,[{transform:'translateX(-100px)'},{transform:'translateX(0)'}],{duration:420,easing:'cubic-bezier(.3,1.3,.5,1)'});
+    E(d,[{opacity:1,transform:'translateX(100px)'},{opacity:0,transform:'translateX(0)'}],{duration:260});
+    await wait(1100);
+    // 2. a swipe that starts off the rows (here, on the context line) opens LAST TIMES; the name stays.
+    finger(330,160,200,160,360);
+    await wait(300);openSide();
+    await wait(2600);
+    // 3. swipe right goes back to the exercises.
+    finger(120,420,280,420,340);await wait(260);closeSide();
+    await wait(1500);
+    // 4. the word opens it too.
+    const lt=$('lt');finger(330,163,330,163,1);await wait(150);
+    E(lt,[{opacity:1},{opacity:.5},{opacity:1}],{duration:220});
+    await wait(120);openSide();
+    await wait(2400);
+    document.body.dataset.done='1';
+  });
+}
+</script></body></html>

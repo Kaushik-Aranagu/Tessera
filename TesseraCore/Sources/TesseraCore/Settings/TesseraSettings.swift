@@ -35,6 +35,19 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     /// What the mosaic shows: nil is "Tess picks" (the default), a scene's name pins it, "stripes" keeps the mood
     /// stripes.
     public var mosaicBackdrop: String?
+    /// "Rain alert" (Lookout): a local notice before rain; nil is off. The lead in minutes, 30 when unset.
+    public var rainAlert: Bool?
+    public var rainAlertLead: Int?
+    /// His looks per room and place (sheet 286), as `RoomLooks` JSON; nil is every place as drawn.
+    public var placeLooks: String?
+
+    public var looks: RoomLooks {
+        RoomLooks(encoded: placeLooks)
+    }
+
+    public var rainAlertMinutes: Int {
+        min(max(rainAlertLead ?? 30, 5), 24 * 60)
+    }
 
     public var backdrop: MosaicBackdrop {
         MosaicBackdrop(encoded: mosaicBackdrop)
@@ -139,8 +152,14 @@ public struct SettingsStore {
         settings.quietEndMinute = store.number("quietEndMinute", of: object).map { Int($0) }
             .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
         settings.mosaicBackdrop = text("mosaicBackdrop")
+        if case let .bool(value)? = store.value("rainAlert", of: object) {
+            settings.rainAlert = value
+        }
+        settings.rainAlertLead = store.number("rainAlertLead", of: object).map { Int($0) }
+            .flatMap { (5 ... 1440).contains($0) ? $0 : nil }
         settings.dayStartHour = store.number("dayStartHour", of: object).map { Int($0) }
             .flatMap { (0 ... 8).contains($0) ? $0 : nil }
+        settings.placeLooks = RoomLooks(encoded: text("placeLooks")).encoded
         return settings
     }
 
@@ -222,11 +241,16 @@ public struct WriteSettings: EngineAction {
         try transaction.set("displayUnits", to: settings.displayUnits.encoded.map(FieldValue.text), on: object)
         try transaction.set("quietStartMinute", to: settings.quietStartMinute.map { .number(Double($0)) }, on: object)
         try transaction.set("quietEndMinute", to: settings.quietEndMinute.map { .number(Double($0)) }, on: object)
+        try transaction.set("rainAlert", to: settings.rainAlert.map(FieldValue.bool), on: object)
+        try transaction.set("rainAlertLead", to: settings.rainAlertLead.map { .number(Double($0)) }, on: object)
         // Whatever is handed in is written as one of the three plain forms, so a stray text never lands.
         try transaction.set("mosaicBackdrop",
                             to: MosaicBackdrop(encoded: settings.mosaicBackdrop).encoded.map(FieldValue.text),
                             on: object)
         try transaction.set("dayStartHour", to: settings.dayStartHour.map { .number(Double($0)) }, on: object)
+        // Re-encoded, so only looks the catalog reads ever land.
+        try transaction.set("placeLooks", to: RoomLooks(encoded: settings.placeLooks).encoded.map(FieldValue.text),
+                            on: object)
         return object
     }
 

@@ -101,7 +101,15 @@ public enum OneThings {
         things += [training(engine, plan, now, unit, calendar), groceries(engine, now, calendar),
                    task(engine, now, calendar), list(engine, now, calendar),
                    routine(engine, routines, now, calendar)].compactMap(\.self)
-        things += birthdays.compactMap { birthday($0, engine: engine, now: now, calendar: calendar) }
+        // The index counts entries sharing the same month and day, in the host's entry order, so adding or removing
+        // someone with another date never shifts an id.
+        var perDate: [String: Int] = [:]
+        things += birthdays.compactMap { entry in
+            let date = "\(entry.month)-\(entry.day)"
+            let index = perDate[date, default: 0]
+            perDate[date] = index + 1
+            return birthday(entry, index: index, engine: engine, now: now, calendar: calendar)
+        }
         if let weather {
             things.append(Self.weather(weather, facts: facts, calendar: calendar))
         }
@@ -272,7 +280,7 @@ public enum OneThings {
         let mid = day.isSameDay(top.1, now) ? "Today at \(HouseTime.clock(top.1, calendar: calendar))"
             : "Since \(weekday)"
         return OneThing(id: "task-\(top.0.id)", kind: .task, big: name.text, mid: mid, midKeyword: nil,
-                        small: "Hold to strike it through", accent: .ink, done: .task(top.0.id), isPrivate: name.1,
+                        small: "", accent: .ink, done: .task(top.0.id), isPrivate: name.1,
                         target: .object(top.0.id), urgency: max(0, Int(top.1.timeIntervalSince(now) / 60)))
     }
 
@@ -283,7 +291,7 @@ public enum OneThings {
         let items = lead.nextItems.map { AppSummaryLines.shown($0, in: engine.store, classes: engine.classes).isPrivate
             ? "a private item" : $0
         }
-        return OneThing(id: "list-\(lead.list)", kind: .list, big: "\(lead.total - lead.left) of \(lead.total)",
+        return OneThing(id: "list-\(lead.list)", kind: .list, big: lead.left == 0 ? "All done" : "\(lead.left) left",
                         mid: name.text, midKeyword: name.1 ? nil : name.text,
                         small: name.1 || items.isEmpty ? "" : "Next up: " + items.prefix(3).joined(separator: ", "),
                         accent: .app(.lists), done: nil, isPrivate: name.1, target: .object(lead.list), urgency: 700)
@@ -306,7 +314,7 @@ public enum OneThings {
                         done: nil, isPrivate: name.1, target: .room(.routines), urgency: gap)
     }
 
-    private static func birthday(_ birthday: OneThingBirthday, engine: ActionEngine, now: Date,
+    private static func birthday(_ birthday: OneThingBirthday, index: Int, engine: ActionEngine, now: Date,
                                  calendar: Calendar) -> OneThing?
     {
         let today = TesseraDay(calendar: calendar).day(of: now)
@@ -331,7 +339,8 @@ public enum OneThings {
             }
         let small = note ?? (days == 0 ? "Today." : days == 1 ? "One day." : "\(word(days).capitalized) days.")
         return OneThing(
-            id: "birthday-\(birthday.month)-\(birthday.day)-\(MosaicMomentSource.hashed(birthday.name))",
+            // Month, day and the place in the list: nothing of the name, not even a hash.
+            id: "birthday-\(birthday.month)-\(birthday.day)-\(index)",
             kind: .birthday,
             big: big,
             mid: mid,

@@ -222,6 +222,12 @@ public struct TrainingStats {
         !privateWorkouts().isPrivate(session.workout)
     }
 
+    /// The counted ones among these sessions, with the privacy rule read once for the whole list.
+    public func counted(_ sessions: [TrainingLedger.Session]) -> [TrainingLedger.Session] {
+        let isPrivate = privateWorkouts().isPrivate
+        return sessions.filter { !isPrivate($0.workout) }
+    }
+
     func counted() -> [(exercise: ClassDef, session: TrainingLedger.Session)] {
         let isPrivate = privateWorkouts().isPrivate
         return ledger.index.allSessions.compactMap { entry in

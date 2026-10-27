@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:18,16,22;--ctx:#5A3DAF;--tess:#2450D8;--bg:#E9E6EE;--page:#FFFEFF}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{font-family:'Inter Tight',sans-serif;color:rgb(var(--ink));width:450px;overflow:hidden}
+.cap{height:97px;display:flex;align-items:flex-end;padding:0 24px 22px;box-sizing:border-box;font-size:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;justify-content:space-between}
+.cap small{font-weight:600;color:rgba(var(--ink),.45);letter-spacing:.08em}
+.card{width:450px;height:978px;background:var(--page);position:relative;box-sizing:border-box}
+.title{position:absolute;left:24px;top:84px;font-size:44px;line-height:48px;font-weight:600;letter-spacing:-.02em}
+.ctx{position:absolute;left:24px;top:146px;font-size:21px;color:var(--ctx)}
+.body{position:absolute;left:24px;right:24px;font-size:21px;line-height:28px}
+.hero{position:absolute;left:24px;top:220px;font-size:56px;line-height:60px;font-weight:600;letter-spacing:-.025em}
+.lbl{position:absolute;left:24px;font-size:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sec{color:rgba(var(--ink),.55)}
+.tess{position:absolute;right:62px;width:270px;top:779px;text-align:right;font-size:21px;color:var(--tess)}
+.soul{position:absolute;left:402px;top:768px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#E2432A,#2450D8 70%,transparent 72%);filter:blur(1px)}
+.icon{position:absolute;left:107px;top:300px;width:236px;height:236px;border-radius:52px;box-shadow:0 18px 40px rgba(18,16,22,.18)}
+</style></head><body>
+<script>
+const caps=["Home, one plain line","Tabs","Routines by day","Training, plan first","Field 18, for your typing","Review, the week","The icon","Return","The looks, recut","What Tess knows","Trip zones"];
+const q=new URLSearchParams(location.search); const k=q.get('k');
+let h='';
+if(k==='cap'){const i=+q.get('i'); h=`<div class="cap"><span>${caps[i]}</span><small>${i+1} of ${caps.length}</small></div>`; document.body.style.height='97px';}
+else if(k==='open'){h=`<div class="card"><div class="ctx" style="top:146px">next build</div><div class="title" style="top:184px">What’s new</div><div class="body sec" style="top:260px">Eleven things, in the order you reviewed them.</div><div class="soul"></div></div>`; document.body.style.height='978px';}
+else if(k==='icon'){h=`<div class="card"><div class="ctx">on the Home Screen</div><div class="title">Tessera</div><img class="icon" src="whats-new-appicon.png"><div class="body sec" style="top:580px;text-align:center">Today’s colours, drawn by the system.</div></div>`; document.body.style.height='978px';}
+else if(k==='trip'){h=`<div class="card"><div class="ctx">Wednesday, in New York</div><div class="title">Day log</div><div class="lbl sec" style="top:220px">6:30 AM THERE</div><div class="body" style="top:250px">Push A, done<span class="sec" style="float:right;font-size:16px;font-weight:600;letter-spacing:.02em;line-height:28px">82.5 × 8 best</span></div><div class="body sec" style="top:330px">A moment files under the day where you were, not the night before at home.</div><div class="soul"></div><div class="tess">Wednesday, kept whole.</div></div>`; document.body.style.height='978px';}
+document.body.innerHTML=h;
+document.fonts.ready.then(()=>setTimeout(()=>document.body.dataset.done='1',300));
+</script></body></html>

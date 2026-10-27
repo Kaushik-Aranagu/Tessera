@@ -108,7 +108,7 @@ struct AppSummaryLinesTests {
         let item = try #require(ListContents(store: store, classes: engine.classes).open(in: list).first)
         try engine.perform(CheckListItem(item: item.object.id), by: .user)
         let lead = try #require(lines(at(12))[.lists])
-        #expect(lead.text == "Packing, 1 of 3 done" && lead.opens == .object(list.id))
+        #expect(lead.text == "Packing, 2 left" && lead.opens == .object(list.id))
     }
 
     @Test func moneyIsWordsOnlyAndAPrivateBillIsPrivate() {

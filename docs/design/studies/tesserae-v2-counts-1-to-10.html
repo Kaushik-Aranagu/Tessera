@@ -1,0 +1,22 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}</style><canvas id=c width=1200 height=1190></canvas>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');const INK=[20,24,31],STAGE=[226,67,42];
+const rgb=(a,al=1)=>`rgba(${a[0]},${a[1]},${a[2]},${al})`;
+// every count is a complete, centred shape (rows of chips offset like brickwork); chip size never changes
+const ROWS={1:[1],2:[2],3:[1,2],4:[2,2],5:[2,3],6:[3,3],7:[3,4],8:[4,4],9:[3,3,3],10:[3,3,4]};
+function mark(x,y,chip,n,st,priv){const rows=ROWS[n],gap=chip*.2,W=Math.max(...rows)*(chip+gap)-gap;let k=0;
+ rows.forEach((cnt,r)=>{const rw=cnt*(chip+gap)-gap,ox=x+(W-rw)/2;
+  for(let i=0;i<cnt;i++){const s=st[k++],cx=ox+i*(chip+gap),cy=y+r*(chip+gap);
+   if(priv){g.strokeStyle=rgb(INK,.55);g.lineWidth=Math.max(1,chip*.08);g.beginPath();g.roundRect(cx+.5,cy+.5,chip-1,chip-1,chip*.14);g.stroke()}
+   else{g.fillStyle=s==='short'?rgb(INK,.2):s==='best'?rgb(STAGE):rgb(INK,.88);g.beginPath();g.roundRect(cx,cy,chip,chip,chip*.14);g.fill()}}});
+ return W}
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+g.fillStyle='#f4f1ea';g.fillRect(0,0,1200,900);
+g.font='600 20px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.9);g.fillText('Tesserae v2: the mark shows how many sets, and every count is a finished shape',30,38);
+g.font='13px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.6);
+g.fillText('Chip size never changes; the mark simply grows by one chip per logged set. No empty corners, no fixed frame. Solid = logged, pale = short, stage colour = best.',30,60);
+const X=[170,520,780,1050];[['LIVE (12 pt chips, 3x)'],['ROW (4.5 pt chips, 3x)'],['PRIVATE live'],['PRIVATE row']].forEach((l,i)=>{g.fillStyle=rgb(INK,.5);g.font='11px -apple-system,Helvetica';g.fillText(l[0],X[i],92)});
+let y=108;for(let n=1;n<=10;n++){const R=ROWS[n].length,h=R*43+18;g.fillStyle=rgb(INK,.7);g.font='600 14px -apple-system,Helvetica';g.fillText(n+(n===1?' set':' sets'),30,y+24);
+ mark(X[0],y,36,n,demo(n),0);mark(X[1],y+4,13.5,n,demo(n),0);mark(X[2],y,36,n,demo(n),1);mark(X[3],y+4,13.5,n,demo(n),1);y+=h}
+g.fillStyle=rgb(INK,.45);g.font='12px -apple-system,Helvetica';g.fillText('Sense of "ideal" comes from the number itself (about 4 is the usual plan), not from a frame to fill. Live: each chip seats with one spring and one haptic. Reduce Motion: 150 ms crossfade.',30,1172);
+</script>

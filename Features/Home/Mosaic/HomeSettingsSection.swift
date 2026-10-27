@@ -9,6 +9,8 @@ struct HomeSettingsSection: View {
     var body: some View {
         let ids = [HomeMosaic.choiceID, HomeMosaic.appsListID]
         let rows = ids.compactMap { id in ReviewChoices.all.first { $0.id == id } }
+        let faces = (MosaicFaceKind.allCases.map(\.switchID) + [HomeMosaic.faceTurnID])
+            .compactMap { id in ReviewChoices.all.first { $0.id == id } }
         frame {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 Text("What Home shows.")
@@ -17,6 +19,15 @@ struct HomeSettingsSection: View {
                     .fixedSize(horizontal: false, vertical: true)
                 ForEach(rows) { choice in
                     row(choice)
+                }
+                if HomeMosaic.moodsIsOn {
+                    Text("Mosaic faces.")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .padding(.top, Theme.Spacing.s)
+                    ForEach(faces) { choice in
+                        row(choice)
+                    }
                 }
             }
         }

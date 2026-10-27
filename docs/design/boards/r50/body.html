@@ -1,0 +1,167 @@
+<div class="head">
+  <p class="lab">Round 235, Oct 23</p>
+  <h1>Notes, one at a time</h1>
+  <p class="sub">The Notes page from the Notes landing (226, 228). A dial of ways to look, the notes on the focus wheel with the top one opened a little, and the note itself on its own page. Three colours on the page plus ink: Notes violet for the room and its actions, slate for labels, sienna for what's fresh today.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+</div>
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <div class="scr" id="lst">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Notes</span><span style="color:var(--ink2)"><span class="n" id="allN">10</span> notes</span></div>
+        <div class="z" style="top:82px;height:196px;overflow:hidden;touch-action:none;cursor:ns-resize" id="dial" role="slider" aria-label="Look" tabindex="0"></div>
+        <div class="z brief" style="top:292px" id="brief"></div>
+        <div class="z" style="top:342px;height:30px;font-size:13px;color:var(--ink2);text-align:right;line-height:30px;white-space:nowrap" id="secL"></div>
+        <div class="z" style="top:376px;height:228px;overflow:hidden;touch-action:none;cursor:ns-resize" id="wheel" role="list" aria-label="Notes"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--acc)">Write</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+
+      <div class="sc2" id="page" hidden>
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span id="pLens">Notes</span><span id="pAge" style="color:var(--ink2)"></span></div>
+        <div class="z" style="top:82px;height:40px;overflow:hidden"><span id="pTitle" style="display:block;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:40px;white-space:nowrap;color:var(--acc)"></span></div>
+        <div class="z" style="top:124px;height:20px;font-size:13px;color:var(--ink2);white-space:nowrap" id="pMeta"></div>
+        <div class="z" style="top:160px;height:286px;overflow:hidden" id="pBodyW"><div id="pBody" style="font-family:'Newsreader',Georgia,serif;font-size:19px;line-height:26px;color:var(--ink);outline:none;white-space:pre-wrap" spellcheck="false"></div></div>
+        <div class="z n" style="top:448px;height:18px;font-size:13px;color:var(--ink2);text-align:right" id="pPg"></div>
+        <div class="z" style="top:476px">
+          <div class="fl"><span class="k">Keep at the top</span><button class="v" id="fPin" style="color:var(--acc)">No</button></div>
+          <div class="fl"><span class="k">Private</span><button class="v" id="fPriv" style="color:var(--acc)">No</button></div>
+        </div>
+        <div class="z" style="top:566px;height:36px;font-size:13px;line-height:18px;color:var(--ink2);overflow:hidden" id="pNote"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="pRc"></div>
+        <div class="z ft"><button class="act" id="pGo" style="color:var(--acc)">Write</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>How it works</h2>
+      <div class="try">
+        <span>1</span><span><b>The dial.</b> Ways to look: This week, Pinned, Private, All. The one you're on sits large in Notes violet with its count. Drag it or tap a neighbour; it snaps one place at a time and loops.</span>
+        <span>2</span><span><b>The wheel.</b> The top note is open a little: its title in violet at 26 pt (down to 21 to fit, then whole words), then how old it is and how long, then its first words. Every other note is a title and its age, a step back: smaller, and softly out of focus (1 pt at most; none with Reduce Motion). Scroll and the next note comes up into the top slot; the one that was there goes round to the back. Tap another note to bring it up, tap the top one to open it.</span>
+        <span>3</span><span><b>Fresh today</b> is the one sienna touch: an age under a day ("2 h") and "today" in the detail line. Labels are slate small capitals. Everything else is ink.</span>
+        <span>6</span><span><b>The action word takes gestures.</b> On the list, tap <i>Write</i> for a new note, drag it right for a <i>Private note</i>. On a note, drag <i>Write</i> left to <i>Delete note</i> (Undo 10 s) or right for a <i>New note</i>; while typing, drag <i>Done</i> left to <i>Put back</i> the words as they were. The word leans with your finger and rolls to the option past 56 pt; a tick as it rolls, a firm tap when it commits.</span>
+        <span>4</span><span><b>The note page.</b> The title in violet, shrinking to fit (28 to 21 pt) before any short form. The words in Newsreader, the way his writing reads, in pages that turn up and down. Tap "Write" to type; the foot becomes "Done". "Keep at the top" and "Private" roll on a tap, with Undo.</span>
+        <span>5</span><span><b>Private.</b> Inside the room a private note reads normally, real title and words. Off the phone, in the landing headline, notices, widgets, Siri and backups, it reads "Private note". The page says so under the switch.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const md=(a,n)=>((a%n)+n)%n;
+const LENS=['This week','Pinned','Private','All'];
+let N;const seed=()=>[
+ {t:'Trip packing',h:2,pin:true,b:'Passports, both chargers and the blue jacket. Ask about the late checkout on Monday. Pack the small bag first so the big one can stay in the car.\n\nFor the drive: water, the podcast queue, sunglasses.'},
+ {t:'Dal, the way Amma makes it',h:20,b:'Toor dal, a pinch of turmeric, pressure cook for three whistles. Temper mustard seeds, cumin, curry leaves and dried chillies in ghee, then pour it over at the end.'},
+ {t:'Questions for the doctor',h:30,priv:true,b:'Ask about the knee after long runs. Bring the list of what I take. Ask whether the morning stiffness is worth a scan.'},
+ {t:'Bench form',h:52,b:'Feet flat, shoulder blades down and back, bar to the lower chest. Pause for a breath at the bottom on the last set.'},
+ {t:'Gift ideas',h:76,pin:true,b:'A good pen for Ravi. The cookbook for Meera. Something for the neighbors who fed the plants.'},
+ {t:'Books to read',h:120,b:'The one about the lighthouse keeper. The essays from the airport shop. Whatever Sam keeps talking about.'},
+ {t:'Money for October',h:190,priv:true,b:'Rent first, then the phone. Move a little into savings after payday.'},
+ {t:'Garden plan',h:260,b:'Basil by the window, mint in its own pot so it stops taking over. Tomatoes need the sunny corner.'},
+ {t:'Morning routine ideas',h:400,b:'Water before coffee. Ten minutes outside. Stretch while the kettle boils.'},
+ {t:'Apartment fixes',h:600,b:'The bathroom tap drips. The closet door sticks. Ask about the window seal before winter.'}];
+const words=x=>x.b.trim()?x.b.trim().split(/\s+/).length:0,wordsL=x=>{const n=words(x);return n===1?'1 word':`${n} words`};
+const ageS=h=>h<1?'now':h<24?`${h} h`:h<48?'1 d':`${Math.floor(h/24)} d`;
+const ageL=h=>h<1?'today, just now':h<24?`today, ${h} h ago`:h<48?'yesterday':`${Math.floor(h/24)} days ago`;
+const inLens=(x,l)=>l==='All'||(l==='This week'&&x.h<24*7)||(l==='Pinned'&&x.pin)||(l==='Private'&&x.priv);
+// first words: whole words that fit, stepping back past a small trailing word, no "..."
+const SMALL=/^(and|the|a|an|of|to|by|in|on|or|for|with|at|is)$/i;
+const mctx=document.createElement('canvas').getContext('2d');
+function firstWords(s,w,font){mctx.font=font;const ws=s.replace(/\n+/g,' ').split(' ');let out=[];for(const x of ws){const t=[...out,x].join(' ');if(mctx.measureText(t).width>w)break;out.push(x)}while(out.length>1&&SMALL.test(out[out.length-1]))out.pop();return out.join(' ').replace(/[,;:.]$/,'')}
+let li=3,off=3,spin=0;
+// ---------- dial (232 spec)
+function renderDial(){const d=$('dial');d.innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap" data-k="${k}" style="position:absolute;left:0;width:100%;height:64px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span class="pn" style="transform-origin:left center;display:inline-block;font-size:44px;letter-spacing:-.03em"></span><span class="pc n" style="transform-origin:right center;display:inline-block;font-size:44px"></span></button>`).join('');paintDial();
+  [...d.children].forEach(b=>b.onclick=()=>{if(dragged)return;if(+b.dataset.k!==0)spinTo(Math.round(off)+(+b.dataset.k))})}
+function paintDial(){const base=Math.round(off);[...$('dial').children].forEach(b=>{const k=+b.dataset.k,i=base+k,dd=i-off,a=Math.abs(dd),l=LENS[md(i,4)],c=N.filter(x=>inLens(x,l)).length;
+  b.style.transform=`translateY(${98-32+dd*64}px)`;b.style.visibility=a>1.6?'hidden':'';const sc=1-(1-26/44)*Math.min(a,1);b.firstChild.textContent=l;b.lastChild.textContent=c;
+  b.firstChild.style.transform=b.lastChild.style.transform=`scale(${sc})`;const f=a<.5;b.firstChild.style.color=f?'var(--acc)':'var(--ink2)';b.firstChild.style.fontWeight=f?600:400;b.lastChild.style.color=f?'var(--ink)':'var(--ink2)';b.lastChild.style.fontWeight=f?200:300});
+  $('dial').setAttribute('aria-valuetext',`${LENS[md(Math.round(off),4)]}, ${N.filter(x=>inLens(x,LENS[md(Math.round(off),4)])).length} notes`)}
+let pdir=1;function spinTo(t,dur=.42){const from=off,id=++spin;pdir=t>=from?1:-1;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(t-from)*spring(u);paintDial()},()=>{if(id!==spin)return;off=t;paintDial();setLens(md(t,4))})}
+let dragged=false;(()=>{const d=$('dial');let sy=null,so=0,vy=0,ly=0,lt=0;
+  d.onpointerdown=e=>{sy=e.clientY;so=off;dragged=false;vy=0;ly=e.clientY;lt=performance.now();spin++};
+  d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!dragged){dragged=true;d.setPointerCapture(e.pointerId)}if(!dragged)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;off=so-dy/64;paintDial()};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(dragged){spinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off),.36);setTimeout(()=>dragged=false,0)}else spinTo(Math.round(off))};
+  d.onkeydown=e=>{if(e.key==='ArrowDown'){spinTo(Math.round(off)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.round(off)-1,.36);e.preventDefault()}}})();
+function briefOf(l){const it=N.filter(x=>inLens(x,l)),wk=N.filter(x=>x.h<168).length,pn=N.filter(x=>x.pin).length,t=it[0];
+  if(!it.length)return l==='Private'?'No private notes.<br>Mark one private from its page.':'Nothing here yet.<br>Write the first thing down.';
+  if(l==='Pinned')return `${pn} pinned, three at most.<br>${t.t} is on top.`;
+  if(l==='Private')return `${it.length} private notes.<br>Off the phone they read "Private note".`;
+  return `${wk} notes this week, ${pn} pinned.<br>${t.t} changed ${ageL(t.h).replace('today, ','')}.`}
+function setLens(i,force){if(i===li&&!force)return;li=i;$('brief').innerHTML=briefOf(LENS[li]);clipIn($('brief'));wOff=0;renderWheel(pdir)}
+// ---------- the wheel (233 v5): the top note open, the rest titles; loops
+const RH=38,FX=58;let wOff=0,wSpin=0,wDrag=false;
+const items=()=>{const it=N.filter(x=>inLens(x,LENS[li]));return [...it.filter(x=>x.pin),...it.filter(x=>!x.pin)]};
+function wD(i,n){let d=md(i-wOff,n);if(d>n-.5)d-=n;return d}
+const wPos=d=>d<=0?d*RH:d<1?d*(RH+FX):RH+FX+(d-1)*RH;
+function renderWheel(dir){const W=$('wheel'),it=items();$('secL').innerHTML=it.length?`${it.length} ${it.length===1?'note':'notes'}, ${it.some(x=>x.pin)?'pinned first, then ':''}newest first`:'';
+  W.innerHTML=it.map((x,i)=>`<div class="wr" data-i="${i}" role="listitem" style="position:absolute;left:0;right:0;top:0;height:${RH}px;cursor:pointer"><div class="wt" style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;white-space:nowrap;height:${RH}px;line-height:${RH}px"><span class="tt" style="overflow:hidden;transform-origin:left center">${x.t}</span><span class="ag n" style="font-size:13px;flex:none"></span></div><div class="dt" hidden style="font-size:13px;line-height:20px;color:var(--ink2)"><div class="d1" style="white-space:nowrap;overflow:hidden"></div><div class="d2" style="white-space:nowrap;overflow:hidden;font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:15px"></div></div></div>`).join('');
+  // the focused title fits: 26 pt down to 21 pt, then whole words (never "...")
+  [...W.children].forEach(r=>{const x=it[+r.dataset.i],w=W.clientWidth*.9;let fz=26;const m=(t,z)=>{mctx.font=`600 ${z}px Figtree, system-ui, sans-serif`;return mctx.measureText(t).width};while(fz>21&&m(x.t,fz)>w)fz--;let ft=x.t;while(m(ft,fz)>w&&ft.includes(' ')){ft=ft.slice(0,ft.lastIndexOf(' ')).replace(/,$/,'')}while(ft.includes(' ')&&SMALL.test(ft.slice(ft.lastIndexOf(' ')+1))&&ft!==x.t)ft=ft.slice(0,ft.lastIndexOf(' '));r.dataset.fz=fz;r.dataset.ft=ft});
+  [...W.children].forEach(r=>r.onclick=()=>{if(wDrag)return;const i=+r.dataset.i,d=Math.round(wD(i,it.length));if(d===0)openNote(it[i]);else wSpinTo(Math.round(wOff)+d)});
+  paintWheel(true);if(dir&&!RM){W.style.clipPath=dir>0?'inset(0 0 100% 0)':'inset(100% 0 0 0)';W.style.transform=`translateY(${dir*24}px)`;anim(.46,(e,u)=>{W.style.transform=`translateY(${dir*24*(1-spring(u))}px)`;W.style.clipPath=dir>0?`inset(0 0 ${(1-e)*100}% 0)`:`inset(${(1-e)*100}% 0 0 0)`},()=>{W.style.clipPath='';W.style.transform=''})}}
+let lastF=-1;function paintWheel(force){const W=$('wheel'),it=items(),n=it.length;if(!n){W.innerHTML=`<div style="font-size:17px;color:var(--ink2);line-height:38px">Nothing here yet.</div>`;$('act').textContent='Write';return}
+  [...W.children].forEach(r=>{const i=+r.dataset.i,d=wD(i,n),a=Math.abs(d),x=it[i],f=Math.max(0,1-a);
+    r.style.transform=`translateY(${wPos(d)}px)`;r.style.visibility=(d<-1||wPos(d)+RH>230)?'hidden':'';
+    const tt=r.querySelector('.tt'),ag=r.querySelector('.ag'),fz=+r.dataset.fz;const size=d<0?17:a<1?17+(fz-17)*f:Math.max(15,17-(a-1)*1);tt.style.fontSize=size+'px';tt.style.fontWeight=a<.5?600:400;tt.style.color=a<.5?'var(--acc)':'var(--ink2)';tt.textContent=a<.5?r.dataset.ft:x.t;
+    const bl=RM?0:Math.min(1,.65*Math.min(a,1)+.35*Math.max(0,Math.min(a-1,1)));r.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+    ag.textContent=a<.5?'':ageS(x.h);ag.style.color=x.h<24?'var(--warm)':'var(--ink2)';ag.style.fontWeight=x.h<24?500:300;
+    r.setAttribute('aria-label',`${x.t}, ${ageL(x.h)}${x.pin?', pinned':''}${x.priv?', private':''}`)});
+  const fi=md(Math.round(wOff),n);if(force||fi!==lastF){lastF=fi;[...W.children].forEach(r=>{const dt=r.querySelector('.dt');const on=+r.dataset.i===fi;if(on){const x=it[fi];const w=W.clientWidth;
+    dt.querySelector('.d1').innerHTML=`${x.h<24?'<span style="color:var(--warm);font-weight:500">today</span>, '+ageL(x.h).replace('today, ',''):ageL(x.h)}, ${wordsL(x)}${x.pin?', pinned':''}${x.priv?', private':''}`;
+    dt.querySelector('.d2').textContent=firstWords(x.b,w,"italic 15px Newsreader, Georgia, serif");if(dt.hidden){dt.hidden=false;clipIn(dt,120)}}else dt.hidden=true})}}
+function wSpinTo(t,dur=.42){const from=wOff,id=++wSpin;anim(dur,(e,u)=>{if(id!==wSpin)return;wOff=from+(t-from)*spring(u);paintWheel()},()=>{if(id!==wSpin)return;wOff=t;paintWheel()})}
+(()=>{const W=$('wheel');let sy=null,so=0,vy=0,ly=0,lt=0;
+  W.onpointerdown=e=>{sy=e.clientY;so=wOff;wDrag=false;vy=0;ly=e.clientY;lt=performance.now();wSpin++};
+  W.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!wDrag){wDrag=true;W.setPointerCapture(e.pointerId)}if(!wDrag)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;wOff=so-dy/RH;paintWheel()};
+  W.onpointerup=W.onpointercancel=()=>{if(sy==null)return;sy=null;if(wDrag){wSpinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(wOff),.36);setTimeout(()=>wDrag=false,0)}};
+  let wt=null;W.addEventListener('wheel',e=>{e.preventDefault();wSpin++;wOff+=e.deltaY/120;paintWheel();clearTimeout(wt);wt=setTimeout(()=>wSpinTo(Math.round(wOff),.36),120)},{passive:false})})();
+const sayT={};function say(t,undo,el='receipt'){const r=$(el);r.innerHTML=t+(undo?' <button class="tap un" style="color:var(--acc);font-weight:600;margin-left:6px">Undo</button>':'');clipIn(r);clearTimeout(sayT[el]);sayT[el]=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)r.querySelector('.un').onclick=()=>{r.textContent='';undo()}}
+function rollText(el,t){if(el.textContent===t)return;const old=el.textContent;if(RM){el.textContent=t;return}el.innerHTML=`<span style="display:block">${old}</span><span style="display:block">${t}</span>`;const a=el.firstChild,b=el.lastChild;anim(.36,(e,u)=>{const k=spring(u);a.style.transform=b.style.transform=`translateY(${-26*k}px)`},()=>{el.textContent=t})}
+function fitTitle(el,max,min){el.style.fontSize=max+'px';const w=el.parentElement.clientWidth;let f=max;while(el.scrollWidth>w&&f>min){f--;el.style.fontSize=f+'px'}if(el.scrollWidth>w){let s=el.textContent;while(el.scrollWidth>w&&s.includes(' ')){s=s.slice(0,s.lastIndexOf(' '));el.textContent=s.replace(/,$/,'')}}}
+// ---------- the note page
+let cur=null,pg=0,editing=false;
+function openNote(x){cur=x;pg=0;editing=false;$('pLens').textContent=LENS[li];$('pAge').innerHTML=x.h<24?`<span style="color:var(--warm);font-weight:500">Today</span>, ${ageL(x.h).replace('today, ','')}`:`Edited ${ageL(x.h)}`;
+  $('pTitle').textContent=x.t;$('pBody').textContent=x.b;$('pBody').contentEditable='false';$('pGo').textContent='Write';$('pRc').textContent='';
+  $('fPin').textContent=x.pin?'Yes':'No';$('fPriv').textContent=x.priv?'Yes':'No';meta();const P=$('page');P.hidden=false;fitTitle($('pTitle'),28,21);paginate();
+  if(!RM){P.style.transform='translateX(100%)';anim(.4,(e,u)=>P.style.transform=`translateX(${(1-spring(u))*100}%)`,()=>P.style.transform='')}}
+function meta(){const x=cur;$('pMeta').innerHTML=`<span style="font-variant-caps:all-small-caps;font-weight:600;letter-spacing:.015em;color:var(--sec);font-size:15px">${x.priv?'Private':'Note'}</span>&nbsp; ${wordsL(x)}${x.pin?', kept at the top':''}`;
+  $('pNote').textContent=x.priv?'Off the phone this reads "Private note": the Notes landing, notices, widgets, Siri and backups.':''}
+function paginate(){const B=$('pBody'),H=286,pages=Math.max(1,Math.ceil(B.scrollHeight/H));pg=Math.min(pg,pages-1);B.style.transform=`translateY(${-pg*H}px)`;$('pPg').textContent=pages>1?`${pg+1} of ${pages}`:''}
+(()=>{const W=$('pBodyW');let sy=null;W.addEventListener('pointerdown',e=>{if(!editing)sy=e.clientY});W.addEventListener('pointerup',e=>{if(sy==null)return;const dy=e.clientY-sy;sy=null;if(Math.abs(dy)>40)turnP(dy<0?1:-1)});
+  W.addEventListener('wheel',e=>{if(editing)return;e.preventDefault();if(Math.abs(e.deltaY)>20&&!W.dataset.lock){W.dataset.lock=1;turnP(e.deltaY>0?1:-1);setTimeout(()=>delete W.dataset.lock,500)}},{passive:false})})();
+function turnP(d){const B=$('pBody'),H=286,pages=Math.ceil(B.scrollHeight/H),np=pg+d;if(np<0||np>=pages)return;const from=-pg*H,to=-np*H;pg=np;$('pPg').textContent=`${pg+1} of ${pages}`;anim(.42,(e,u)=>B.style.transform=`translateY(${from+(to-from)*spring(u)}px)`)}
+$('pGo').onclick=()=>{const B=$('pBody');if(!editing){editing=true;B.contentEditable='true';B.style.transform='';B.focus();const r=document.createRange();r.selectNodeContents(B);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);$('pGo').textContent='Done';$('pPg').textContent='';return}
+  editing=false;B.contentEditable='false';const was=cur.b;cur.b=B.innerText.trim();$('pGo').textContent='Write';if(was!==cur.b){cur.h=0;$('pAge').innerHTML='<span style="color:var(--warm);font-weight:500">Today</span>, just now'}meta();paginate();if(was!==cur.b)say(`${cur.t}, saved.`,()=>{cur.b=was;B.textContent=was;meta();paginate()},'pRc')};
+$('fPin').onclick=()=>{const x=cur;if(!x.pin&&N.filter(y=>y.pin).length>=3){say('Three kept at the top already. Unpin one first.',null,'pRc');return}x.pin=!x.pin;rollText($('fPin'),x.pin?'Yes':'No');meta();say(`${x.t}, ${x.pin?'kept at the top':'unpinned'}.`,()=>{x.pin=!x.pin;rollText($('fPin'),x.pin?'Yes':'No');meta()},'pRc')};
+$('fPriv').onclick=()=>{const x=cur;x.priv=!x.priv;rollText($('fPriv'),x.priv?'Yes':'No');meta();clipIn($('pNote'));say(`${x.t}, ${x.priv?'private':'not private'}.`,()=>{x.priv=!x.priv;rollText($('fPriv'),x.priv?'Yes':'No');meta()},'pRc')};
+function closeNote(){const P=$('page');if(editing)pGoTap();const back=()=>{P.hidden=true;P.style.transform='';paintDial();$('brief').innerHTML=briefOf(LENS[li]);renderWheel(0)};if(RM){back();return}anim(.3,e=>P.style.transform=`translateX(${e*100}%)`,back)}
+(()=>{const P=$('page');let sx=null;P.addEventListener('pointerdown',e=>{const r=P.getBoundingClientRect();sx=e.clientX-r.left<24?e.clientX:null});P.addEventListener('pointerup',e=>{if(sx!=null&&e.clientX-sx>60)closeNote();sx=null})})();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('page').hidden)closeNote()});
+const newNote=priv=>{const x={t:priv?'Private note':'New note',h:0,b:'',priv:!!priv};N.unshift(x);$('allN').textContent=N.length;openNote(x);pGoTap()};
+// the action word takes gestures (his 9:21 PM, every room): tap does it, drag left or right for its other options.
+// It leans 18 pt at most; past 56 pt it rolls to the option (selection tick); release commits (firm tap) with Undo 10 s.
+const haptic=k=>{try{navigator.vibrate&&navigator.vibrate(k==='commit'?14:5)}catch(_){}};
+function actionWord(btn,o){let sx=null,dx=0,arm=null,base='',baseC='';const set=(t,c)=>{btn.textContent=t;btn.style.color=c};btn.style.touchAction='none';btn.style.display='inline-block';btn.onclick=null;
+  btn.onpointerdown=e=>{sx=e.clientX;dx=0;arm=null;base=btn.textContent;baseC=btn.style.color;btn.setPointerCapture(e.pointerId)};
+  btn.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;const side=dx<0?(o.left&&o.left()):(o.right&&o.right());btn.style.transform=`translateX(${Math.sign(dx)*Math.min(side?18:6,Math.abs(dx)*(side?.25:.1))}px)`;
+    const want=side&&Math.abs(dx)>56?side:null;if((want&&want.label)!==(arm&&arm.label)){arm=want;want?set(want.label,want.color):set(base,baseC);clipIn(btn);haptic('tick')}};
+  btn.onpointerup=btn.onpointercancel=e=>{if(sx==null)return;sx=null;const x0=parseFloat((btn.style.transform.match(/-?[\d.]+/)||[0])[0]);anim(.36,(q,u)=>btn.style.transform=`translateX(${x0*(1-spring(u))}px)`,()=>btn.style.transform='');
+    if(arm){const a=arm;arm=null;set(base,baseC);haptic('commit');a.fn()}else if(Math.abs(dx)<6&&e.type==='pointerup')o.tap()};
+  btn.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){o.tap();e.preventDefault()}const q=e.key==='ArrowLeft'?o.left&&o.left():e.key==='ArrowRight'?o.right&&o.right():null;if(q){q.fn();e.preventDefault()}}}
+const pGoTap=$('pGo').onclick;
+function delNote(){const x=cur,i=N.indexOf(x);editing=false;$('pBody').contentEditable='false';N.splice(i,1);$('allN').textContent=N.length;closeNote();setTimeout(()=>say(`${x.t}, deleted.`,()=>{N.splice(i,0,x);$('allN').textContent=N.length;paintDial();$('brief').innerHTML=briefOf(LENS[li]);renderWheel(0)}),RM?0:320)}
+function discard(){const B=$('pBody');editing=false;B.contentEditable='false';B.textContent=cur.b;$('pGo').textContent='Write';paginate();say('Changes, put back.',null,'pRc')}
+actionWord($('act'),{tap:()=>newNote(false),right:()=>({label:'Private note',color:'var(--acc)',fn:()=>newNote(true)})});
+actionWord($('pGo'),{tap:()=>pGoTap(),left:()=>editing?{label:'Put back',color:'var(--ink)',fn:discard}:{label:'Delete note',color:'var(--ink)',fn:delNote},right:()=>editing?null:{label:'New note',color:'var(--acc)',fn:()=>{closeNote();setTimeout(()=>newNote(false),RM?0:340)}}});
+function reset(){N=seed();li=3;off=3;$('page').hidden=true;$('allN').textContent=N.length;$('receipt').textContent='';renderDial();setLens(3,true);clipIn($('dial'))}
+$('reset').onclick=reset;$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+(document.fonts?document.fonts.ready:Promise.resolve()).then(reset);
+})();
+</script>

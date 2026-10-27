@@ -55,10 +55,10 @@ final class HomeStub: URLProtocol, @unchecked Sendable {
     static func session() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [HomeStub.self]
-        // The stub answers at once, but a busy suite can starve the loader for minutes, so the default 60 s request
-        // timeout is not what is under test. Ten minutes still ends a real hang.
-        configuration.timeoutIntervalForRequest = 600
-        configuration.timeoutIntervalForResource = 600
+        // The stub answers at once, but a busy gate can starve the loader for longer than ten minutes (integ/77's full
+        // run took 811 s), so no clock decides this test: a day, which still ends a real hang.
+        configuration.timeoutIntervalForRequest = 86400
+        configuration.timeoutIntervalForResource = 86400
         return URLSession(configuration: configuration)
     }
 
@@ -144,9 +144,10 @@ struct HomeDoneWordingTests {
                                  cacheURL: cache) { allowed }
         job.now = { Self.ended.addingTimeInterval(600) }
         job.calendar = Self.calendar
-        // The deadline races the main actor, which the full suite keeps busy for long stretches; it isn't under test
-        // here (the 6 s deadline is the app's).
-        job.timeout = 600
+        // The deadline races the main actor, which the full suite keeps busy for long stretches (811 s on integ/77,
+        // longer than the old 600 s, so the deadline fired and the words came back nil). It isn't under test here
+        // (the 6 s deadline is the app's), so it is a day.
+        job.timeout = 86400
         job.fileProtection = [] // a locked Mac refuses protected writes
         return job
     }
@@ -202,7 +203,7 @@ struct HomeDoneWordingTests {
         let detail = "3 exercises, 12 sets, 1 new bench best."
         HomeStub.reply = (200, Self.reply(context: nil, detail: detail))
         #expect(await job().words(for: line, dayLabel: "Thursday evening", store: store)
-            == HomeDoneWords(detail: detail), "\(line.detail ?? "-")")
+            == HomeDoneWords(detail: "3 exercises, 12 sets, 1 new bench best"), "\(line.detail ?? "-")")
     }
 
     @Test func aLineThatFailsLeavesTheRulesAndIsNeverAskedAgain() async {

@@ -78,7 +78,16 @@ final class MosaicScreenEngine {
     private(set) var laid: [MosaicScreenLaid] = []
     private var laidIndexes: Set<Int> = []
     private(set) var flight: MosaicScreenFlight?
+
+    // Sheet 213: the sign the mosaic lends its tiles to, and the old one collapsing where it stood.
+    private(set) var signRequest: MosaicSignRequest?
+    private(set) var signLend: MosaicSignLend?
+    private(set) var signOld: (tiles: [MosaicSignTile], start: TimeInterval)?
+    private var lentTiles: [Int: Int] = [:]
     private(set) var landings = 0
+    /// Home 236: a built sign tile (index into the lend's tiles) trading places with a mosaic tile.
+    private(set) var signTrade: (index: Int, start: TimeInterval)?
+    private var nextTrade: TimeInterval = 0
 
     static let rippleRadius: CGFloat = 140
     static let leanRadius: CGFloat = 36
@@ -207,10 +216,12 @@ final class MosaicScreenEngine {
             land(flight, at: time)
             self.flight = nil
         }
+        stepTrade(at: time)
     }
 
     var isBusy: Bool {
         !pops.isEmpty || flight != nil || touchPoint != nil || leaning || clock - morphStart < morphDuration + 1
+            || signIsMoving
     }
 
     private var morphDuration: TimeInterval {
@@ -458,7 +469,7 @@ final class MosaicScreenEngine {
 
     /// What to draw for a tile of the window or its rim, or nil when nothing is there (outside the rim, or a rim tile
     /// still at the page's own level). Every tile is full size and one solid colour.
-    func tile(column: Int, row: Int, nowColumn: Int?) -> MosaicScreenTile? {
+    func tile(column: Int, row: Int, nowColumn: Int?, ignoringGap: Bool = false) -> MosaicScreenTile? {
         let core = liveCore
         let sd = MosaicRim.signedDistance(column: column, row: row, core: core)
         guard sd < Double(MosaicRim.reach), let ownIndex = regionIndex(column: column, row: row) else { return nil }
@@ -489,6 +500,9 @@ final class MosaicScreenEngine {
         // Under words the mosaic keeps a fifth of itself, feathering back over 5 tiles: the words always read.
         if let kept = shield[own] {
             scene = MosaicColour.mix(ground, scene, kept)
+        }
+        if !ignoringGap, let gap = signGap(at: own) {
+            scene = MosaicColour.mix(scene, ground, gap)
         }
         var scale = 1.0
         var offset = leaning ? lean[ownIndex] : .zero
@@ -726,6 +740,10 @@ extension MosaicScreenEngine {
     }
 
     func reset() {
+        signRequest = nil
+        signLend = nil
+        signOld = nil
+        lentTiles = [:]
         laid = []
         laidIndexes = []
         flight = nil
@@ -750,5 +768,132 @@ struct MosaicScreenFlight: Equatable {
 
     func index(in grid: MosaicScreenGrid) -> Int {
         grid.index(column: column, row: row)
+    }
+}
+
+// MARK: - The sign
+
+/// What Home asks the mosaic to build: the kind of sign, where its top-left tile sits on the screen grid, and its
+/// colours. Only the share and the kind are data; a sign never carries an amount or a name.
+struct MosaicSignRequest: Equatable {
+    var kind: ThingSignKind
+    var share: Double = 0.5
+    var column: Int
+    var row: Int
+    var accent: MosaicTriple
+    var alt: MosaicTriple?
+    /// Which thing this is: a new one collapses the old sign and lends again, even of the same kind.
+    var token = ""
+
+    /// The same sign: where it sits may move with the scroll without lending again.
+    func isSameSign(as other: Self) -> Bool {
+        kind == other.kind && share == other.share && token == other.token
+    }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.isSameSign(as: rhs) && lhs.column == rhs.column && lhs.row == rhs.row
+    }
+}
+
+extension MosaicScreenEngine {
+    /// A new request collapses the old sign where it stands, then 140 ms later lends the mosaic's tiles to the new one.
+    /// Under Reduce Motion the sign is simply there.
+    func showSign(_ request: MosaicSignRequest?) {
+        guard request != signRequest else { return }
+        if let request, let current = signRequest, request.isSameSign(as: current), let lend = signLend {
+            // Only its place moved (a scroll): the same sign again at once, no flight.
+            signRequest = request
+            let core = liveCore
+            let tiles = MosaicSignLend.lend(
+                cells: ThingSignArt.cells(request.kind, elapsed: 0, share: request.share, still: true),
+                originColumn: request.column, originRow: request.row, core: (
+                    core.left,
+                    core.top,
+                    core.width,
+                    core.height
+                )
+            )
+            let landed = clock >= lend.landedAt
+            signLend = MosaicSignLend(tiles: tiles, start: landed ? clock - 10 : lend.start, kind: request.kind,
+                                      share: request.share)
+            return
+        }
+        let old = signLend
+        signRequest = request
+        lentTiles = [:]
+        guard let request else {
+            signLend = nil
+            signOld = nil
+            return
+        }
+        let cells = ThingSignArt.cells(request.kind, elapsed: 0, share: request.share, still: true)
+        let core = liveCore
+        let tiles = MosaicSignLend.lend(
+            cells: cells, originColumn: request.column, originRow: request.row,
+            core: (core.left, core.top, core.width, core.height)
+        )
+        if reduceMotion {
+            signOld = nil
+            signLend = MosaicSignLend(tiles: tiles, start: clock - 10, kind: request.kind, share: request.share)
+            return
+        }
+        var start = clock
+        if let old, !old.tiles.isEmpty {
+            signOld = (old.tiles, clock)
+            start = clock + MosaicSignLend.feedDelay
+        } else {
+            signOld = nil
+        }
+        signLend = MosaicSignLend(tiles: tiles, start: start, kind: request.kind, share: request.share)
+        for (index, tile) in tiles.enumerated() {
+            lentTiles[grid.index(column: tile.sourceColumn, row: tile.sourceRow)] = index
+        }
+    }
+
+    /// Once the sign has landed a tile trades with the mosaic every 4 to 7 s (not under Reduce Motion).
+    private func stepTrade(at time: TimeInterval) {
+        guard !reduceMotion, let lend = signLend, !lend.tiles.isEmpty, time >= lend.landedAt else {
+            signTrade = nil
+            nextTrade = 0
+            return
+        }
+        let range = MosaicSignLend.tradeRange; func gap() -> TimeInterval {
+            range.lowerBound + Double(random.int(1001)) / 1000 * (range.upperBound - range.lowerBound)
+        }
+        if let trade = signTrade, time - trade.start >= MosaicSignLend.flightSeconds {
+            signTrade = nil
+        }
+        if nextTrade <= lend.landedAt, signTrade == nil {
+            nextTrade = lend.landedAt + gap()
+        } else if signTrade == nil, time >= nextTrade {
+            signTrade = (random.int(lend.tiles.count), time)
+            nextTrade = time + MosaicSignLend.flightSeconds + gap()
+        }
+    }
+
+    var signIsMoving: Bool {
+        !reduceMotion && signLend != nil
+    }
+
+    /// How far toward the page a lent mosaic tile is right now, or nil when it is not lent.
+    func signGap(at absoluteIndex: Int) -> Double? {
+        guard let signLend, let index = lentTiles[absoluteIndex] else { return nil }
+        if let trade = signTrade, trade.index == index {
+            let gap = MosaicSignLend.tradeGap(elapsed: clock - trade.start)
+            return gap > 0.001 ? gap : nil
+        }
+        let gap = signLend.gap(sourceIndex: absoluteIndex, tile: index, at: clock)
+        return gap > 0.001 ? gap : nil
+    }
+
+    /// The old sign's tiles that are still on the screen, with how far each has collapsed.
+    func collapsingSign() -> [(tile: MosaicSignTile, scale: CGFloat, sink: CGFloat)] {
+        guard let signOld else { return [] }
+        let elapsed = clock - signOld.start
+        guard elapsed < MosaicSignLend.collapseTotal else { return [] }
+        return signOld.tiles.compactMap { tile in
+            let state = MosaicSignLend.collapse(cell: tile.cell, elapsed: elapsed)
+            return state.scale > 0 ? (tile, state.scale, state.sink) : nil
+        }
     }
 }

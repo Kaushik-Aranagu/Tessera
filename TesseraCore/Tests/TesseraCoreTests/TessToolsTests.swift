@@ -17,7 +17,10 @@ struct TessToolsTests {
         #expect(TessTools.all.map(\.name) == ["logSet", "createTask", "completeTask", "rescheduleTask",
                                               "addGroceries", "addToList", "createList", "createNote",
                                               "createRecipe", "query", "startShop", "cookTogether",
-                                              "setServeTime"])
+                                              "setServeTime", "checkListItem", "startWorkout", "startCooking",
+                                              "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine",
+                                              "plantRoutine",
+                                              "pauseRoutine"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
@@ -71,7 +74,11 @@ struct TessToolsTests {
 
         // Read-only: an answer, no ops.
         do {
-            _ = try call("query", #"{"from":["notes"],"during":{"range":"thisWeek","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
+            _ = try call(
+                "query",
+                #"{"from":["notes"],"during":{"range":"thisWeek","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#,
+                engine
+            )
             Issue.record("query should answer, not log")
         } catch let answer as TessToolAnswer {
             #expect(answer.line == "1 note this week.")
@@ -80,7 +87,11 @@ struct TessToolsTests {
         store.createClass(name: "Spend", parent: nil)
         for from in ["spend", "settings", "tess memory", "tess call"] {
             #expect(throws: TessToolError.self, "\(from)") {
-                try call("query", #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
+                try call(
+                    "query",
+                    #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#,
+                    engine
+                )
             }
         }
         #expect(throws: TessToolError.self) {
@@ -100,7 +111,11 @@ struct TessToolsTests {
         try engine.perform(CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake."), by: .user)
         for (from, line) in [("notes", "1 note."), ("tasks", "1 task."), ("recipes", "1 recipe.")] {
             do {
-                _ = try call("query", #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
+                _ = try call(
+                    "query",
+                    #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#,
+                    engine
+                )
                 Issue.record("query should answer, not log")
             } catch let answer as TessToolAnswer {
                 #expect(answer.line == line, "\(from): \(answer.line)")
@@ -113,7 +128,11 @@ struct TessToolsTests {
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
         func count(_ from: String) throws -> Int {
             do {
-                _ = try call("query", #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
+                _ = try call(
+                    "query",
+                    #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#,
+                    engine
+                )
             } catch let answer as TessToolAnswer {
                 return Int(answer.line.prefix { $0.isNumber }) ?? -1
             }
@@ -175,7 +194,8 @@ struct TessToolsTests {
     @Test func claudeGetsStrictSchemas() throws {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
-        #expect(tools.count == 13)
+        // Claude's list: every tool but the device-only ones (logSpend is money).
+        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" })
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {
                 #expect(schema["additionalProperties"] as? Bool == false, "\(path) must be closed")

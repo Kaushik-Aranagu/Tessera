@@ -7,11 +7,42 @@ import TesseraCore
 @MainActor
 enum AppsListRows {
     struct Row: Identifiable, Equatable {
+        /// Bridge's dial also holds two doors that are not apps (sheet 283): the weather landing and Settings.
+        enum Extra: String { case lookout, settings }
+
         let app: HomeApp
         let summary: String
         let opens: HomeSentence.Opens?
-        var id: HomeApp {
-            app
+        var extra: Extra?
+
+        var id: String {
+            extra?.rawValue ?? app.rawValue
+        }
+
+        /// The ship name on the dial (sheet 281).
+        var name: String {
+            switch extra {
+            case .lookout: "Lookout"
+            case .settings: "Settings"
+            case nil: app.shipName
+            }
+        }
+
+        var accent: Color {
+            switch extra {
+            case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
+            case .settings: Theme.Colors.ink
+            case nil: app.accent
+            }
+        }
+
+        /// What opening it shows.
+        var door: HomeV2Door {
+            switch extra {
+            case .lookout: .lookout
+            case .settings: .settings
+            case nil: .app(app)
+            }
         }
     }
 
@@ -31,12 +62,19 @@ enum AppsListRows {
 
     /// One row per app, in Core's order. An app whose line is missing (Core omits Money and Routines when it did not
     /// read their source) still has its row, name only, and still opens. A private top item already reads "Private".
-    static func make(_ lines: [AppSummaryLine]) -> [Row] {
-        AppSummaryApp.allCases.map { app in
+    /// The dial's order (sheet 283): Log, Lookout, Deck, Galley, Watch, Purse, then To do and Settings. Lists folded
+    /// into the Log (sheet 280), so it has no row of its own; To do stays until Tasks has another door.
+    static let order: [AppSummaryApp?] = [.notes, nil, .training, .kitchen, .routines, .money, .tasks]
+
+    static func make(_ lines: [AppSummaryLine], weather: String = "") -> [Row] {
+        var rows: [Row] = order.map { app in
+            guard let app else { return Row(app: .tasks, summary: weather, opens: nil, extra: .lookout) }
             let line = lines.first { $0.app == app }
             return Row(app: home(app), summary: line.map { $0.text.isEmpty ? quiet : $0.text } ?? "",
                        opens: line?.opens)
         }
+        rows.append(Row(app: .tasks, summary: "", opens: nil, extra: .settings))
+        return rows
     }
 
     /// A fact that fits one short line: cut at a word edge, never with an ellipsis.
@@ -82,12 +120,28 @@ enum AppsListRows {
 /// middle. Reduce Motion: no swell and no slide.
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.playDoorway) private var playDoorway
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
     @State private var middle = 0
     @State private var drag: CGFloat = 0
     @State private var ticks = 0
+    /// Rows the wheel has already turned during this hold.
+    @State private var consumed = 0
+    /// Held for scrolling (the pick sits at 1.06x), a soft haptic on pick up.
+    @GestureState private var held = false
+    /// A hold that scrolled (it moved past the tap slop or turned a row) has just ended: its lift is not a tap. A hold
+    /// that stayed put is a slow tap and still opens the row.
+    @State private var holdSuppress = false
+    /// Whether the wheel is held, so the page can stop scrolling under the same finger.
+    var onHold: (Bool) -> Void = { _ in }
+    @State private var holdBeats = 0
+    /// A snap is running; flicks that arrive meanwhile wait here (at most three).
+    @State private var snapping = false
+    @State private var queued: [Int] = []
+    /// Bumped by each settle, so an older settle's unlock never clears a newer snap.
+    @State private var snapGeneration = 0
     /// Whether the list has been moved: the glance plays after a settle, not on the first draw.
     @State private var moved = false
     /// Builder A's hook (sheet 206): each pick plays that app's glance in the mosaic, 240 ms after the list settles.
@@ -95,7 +149,8 @@ struct AppsListSlot: View {
     /// The rows, read once per change in the model and not on every drag frame.
     @State private var rows: [AppsListRows.Row] = []
     /// 40 pt at the default size; the rows grow with the text.
-    @ScaledMetric(relativeTo: .body) private var rowHeight: CGFloat = 40
+    /// Sheet 283: three 40 pt places; the dial's type stops growing at AX1, so the places stay 40 pt.
+    private let rowHeight: CGFloat = 40
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
@@ -115,21 +170,60 @@ struct AppsListSlot: View {
             .frame(height: rowHeight * 3, alignment: .top)
             .clipped()
             .contentShape(Rectangle())
+            // Sheet 220. Hold 180 ms without moving more than 6 pt: a soft haptic and the pick eases to 1.06x; then a
+            // vertical drag tracks 1:1 (40 pt is one row, a tick as each crosses the middle) and a release snaps to the
+            // nearest row with no momentum.
+            // Simultaneous, never high priority: a plain tap still reaches its row's button (QA plan G13). A hold that
+            // went on to scroll does not also open the app on lift: the tap is held back for a moment after it.
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.18, maximumDistance: 6)
+                    .sequenced(before: DragGesture(minimumDistance: 0))
+                    .updating($held) { value, state, _ in
+                        if case .second(true, _) = value {
+                            state = true
+                        }
+                    }
+                    .onChanged { value in
+                        if case let .second(true, drag?) = value {
+                            wheel(to: drag.translation.height)
+                        }
+                    }
+            )
+            // A flick with no hold moves exactly one row (up shows the next, down the previous), with the same snap and
+            // one tick. At most three wait while a snap runs.
             .gesture(
                 DragGesture(minimumDistance: 8)
-                    .onChanged { drag = $0.translation.height.clamped(to: -rowHeight * 2 ... rowHeight * 2) }
                     .onEnded { value in
-                        let steps = Int((-value.predictedEndTranslation.height / rowHeight).rounded())
-                        settle(by: max(-2, min(2, steps)), count: rows.count)
+                        let travel = abs(value.translation.height) > 20 || abs(value.velocity.height) > 300
+                        guard travel, abs(value.translation.height) >= abs(value.translation.width) else { return }
+                        flick(value.translation.height < 0 ? 1 : -1)
                     }
             )
         }
         .tesseraFeedback(.selection, trigger: ticks)
+        .tesseraFeedback(.made, trigger: holdBeats)
+        // The hold ends however it ends (lifted or cancelled): the gesture state resets, the list snaps and the pick
+        // eases back from 1.06x.
+        .onChange(of: held) { _, isHeld in
+            onHold(isHeld)
+            if isHeld {
+                holdBeats += 1
+            } else {
+                finishWheel()
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(250))
+                    holdSuppress = false
+                }
+            }
+        }
+        .animation(MotionPolicy.resolve(.easeOut(duration: 0.12), reduceMotion: reduceMotion), value: held)
         .task(id: middle) {
             guard moved, rows.indices.contains(middle) else { return }
             try? await Task.sleep(for: .milliseconds(240))
             guard !Task.isCancelled else { return }
-            onGlance?(rows[middle].app)
+            if rows[middle].extra == nil {
+                onGlance?(rows[middle].app)
+            }
         }
         // Read again when the model changes and when the day turns over.
         .task(id: "\(model.revision)-\(Calendar.current.startOfDay(for: AppClock.now).timeIntervalSince1970)") {
@@ -146,75 +240,132 @@ struct AppsListSlot: View {
             settle(by: direction == .increment ? 1 : -1, count: rows.count)
         }
         .fullScreenCover(item: $door) { door in
+            // No visible "‹ Home" (Kaushik): the edge swipe goes back, and VoiceOver has a hidden Back to Home.
             HomeV2DoorPage(door: door)
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    HStack {
-                        Button { self.door = nil } label: {
-                            Text("‹ Home")
-                                .frame(minWidth: 72, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(InkLabelWordStyle())
-                        .accessibilityLabel("Back to Home")
-                        Spacer()
+                .background { EdgeSwipeBack() }
+                // Sheet 283: Tess bottom right on the room's landing, in the room's colour.
+                .overlay(alignment: .bottomTrailing) {
+                    if LandingSwitch.isOn, door != .settings {
+                        BottomChrome(onSoulDoubleTap: { playDoorway(door.accent, true) { self.door = nil } },
+                                     room: door.roomID)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     }
-                    .padding(.horizontal, Theme.Spacing.gutter - 8)
+                }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
+                        if value.startLocation.x < 28, value.translation.width > 80 {
+                            playDoorway(door.accent, true) { self.door = nil }
+                        }
+                    }
+                )
+                .accessibilityAction(.escape) { playDoorway(door.accent, true) { self.door = nil } }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    Button("Back to Home") { playDoorway(door.accent, true) { self.door = nil } }
+                        .frame(width: 1, height: 1)
+                        .opacity(0.01)
+                        .accessibilityLabel("Back to Home")
                 }
         }
     }
 
     private func line(_ row: AppsListRows.Row, isMiddle: Bool, offset: Int) -> some View {
         Button {
+            guard !holdSuppress else { return }
             if isMiddle {
                 open(row)
             } else {
                 settle(by: offset, count: rows.count)
             }
         } label: {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-                Text(row.app.rawValue)
-                    // Laid out at the swelled size always, so the width is reserved; the others sit scaled down and
-                    // the pick springs up to full size.
-                    .font(Theme.voice(size: reduceMotion ? 18 : 18 * 1.3).weight(isMiddle ? .semibold : .regular))
-                    .scaleEffect(isMiddle || reduceMotion ? 1 : 1 / 1.3, anchor: .leading)
-                    .foregroundStyle(isMiddle ? row.app.accent : Theme.Colors.inkTertiary)
-                    .fixedSize()
+            // Sheet 283 section 6: the dial on the left (x 24-184), focus 26 pt 700 in its colour, neighbours 20 pt
+            // with a 1.6 pt depth blur; the focus's one fact at x 186, left-aligned, 15 pt ink 2, cut on whole words.
+            ZStack(alignment: .leading) {
+                Text(row.name)
+                    .font(.custom("Figtree", size: isMiddle ? 26 : 20, relativeTo: .title3)
+                        .weight(isMiddle ? .bold : .regular))
+                    .scaleEffect(isMiddle && held && !reduceMotion ? 1.06 : 1, anchor: .leading)
+                    .foregroundStyle(isMiddle ? row.accent : Theme.Colors.inkSecondary)
+                    .blur(radius: isMiddle || reduceMotion ? 0 : 1.6)
+                    .lineLimit(1)
+                    .frame(width: 160, alignment: .leading)
                 if isMiddle, !row.summary.isEmpty {
-                    Spacer(minLength: Theme.Spacing.s)
-                    NumberedText(text: AppsListRows.fit(row.summary, limit: typeSize.isAccessibilitySize ? 22 : 38),
-                                 size: 16)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.trailing)
-                        .minimumScaleFactor(0.8)
-                        .id(row.app)
-                        .transition(reduceMotion ? .identity : .reveal)
+                    FitLine(forms: FitLine.cuts(row.summary), size: 15, color: Theme.Colors.inkSecondary)
+                        .frame(width: 192, alignment: .leading)
+                        .offset(x: 162)
+                        .id(row.id)
+                        .transition(.offset(y: reduceMotion ? 0 : 6))
                 }
             }
             .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.app.rawValue), \(row.summary)" : row.app.rawValue)
-        .accessibilityHint(isMiddle ? "Opens \(row.app.rawValue)" : "Brings it to the middle")
+        .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.name), \(row.summary)" : row.name)
+        .accessibilityHint(isMiddle ? "Opens \(row.name)" : "Brings it to the middle")
     }
 
     /// A tap on the middle row: the object its line names, else the app.
     private func open(_ row: AppsListRows.Row) {
-        if case let .object(id)? = row.opens {
+        if row.extra == nil, case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
         } else {
-            door = .app(row.app)
+            playDoorway(row.accent, false) { door = row.door }
         }
     }
 
+    /// The held finger is `translation` points from where it began: whole rows turn the ring (a tick each) and the rest
+    /// follows the finger 1:1.
+    private func wheel(to translation: CGFloat) {
+        guard !rows.isEmpty else { return }
+        moved = true
+        let total = Int((-translation / rowHeight).rounded(.towardZero))
+        if abs(translation) > GestureTuning.tapSlop || total != consumed {
+            holdSuppress = true
+        }
+        if total != consumed {
+            middle = AppsListRows.wrapped(middle, total - consumed, count: rows.count)
+            consumed = total
+            ticks += 1
+        }
+        drag = translation + CGFloat(consumed) * rowHeight
+    }
+
+    /// The finger lifted: spring-snap to the nearest row, no momentum.
+    private func finishWheel() {
+        let nearest = drag < -rowHeight / 2 ? 1 : drag > rowHeight / 2 ? -1 : 0
+        consumed = 0
+        settle(by: nearest, count: rows.count)
+    }
+
+    private func flick(_ direction: Int) {
+        guard !rows.isEmpty else { return }
+        if snapping {
+            if queued.count < 3 {
+                queued.append(direction)
+            }
+            return
+        }
+        settle(by: direction, count: rows.count)
+    }
+
     private func settle(by steps: Int, count: Int) {
+        snapping = true
+        snapGeneration += 1
+        let generation = snapGeneration
         defer {
-            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drag = 0 }
+            withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { drag = 0 }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(reduceMotion ? 20 : 350))
+                guard generation == snapGeneration else { return }
+                snapping = false
+                if !queued.isEmpty {
+                    flick(queued.removeFirst())
+                }
+            }
         }
         guard steps != 0, count > 0 else { return }
         moved = true
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+        withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
             middle = AppsListRows.wrapped(middle, steps, count: count)
             drag = 0
         }

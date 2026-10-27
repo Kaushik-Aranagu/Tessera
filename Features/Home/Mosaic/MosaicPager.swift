@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import TesseraCore
 
 /// The mosaic's pages on Home (sheet 209): a horizontal swipe that starts on the mosaic, or within 30 pt of it, and
 /// travels more than 40 pt changes the page: left goes to the next, right to the previous, and it wraps round. The
@@ -23,7 +24,10 @@ struct MosaicPager: Equatable {
                         reach: CGFloat = MosaicPager.reach) -> Bool
     {
         mosaic.insetBy(dx: -reach, dy: -reach).contains(start)
-            && abs(translation.width) > travel && abs(translation.width) > abs(translation.height)
+            && abs(translation.width) > travel
+            && GestureTuning.axis(dx: translation.width, dy: translation.height, bias: GestureTuning.pagerBias)
+            == .horizontal
+            && (translation.width < 0 || GestureTuning.clearsBackEdge(startX: start.x))
     }
 
     /// Applies a swipe by `dx` (left is negative: next). Returns whether the page changed.

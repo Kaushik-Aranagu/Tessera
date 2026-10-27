@@ -12,8 +12,11 @@ struct SettingsPage: View {
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
-        // Sheet 203: with Settings v2 On (the default) the overhauled page; Off keeps the older stack of sections.
-        if SettingsV2.isOn {
+        // With Landing pages On, the landing (contract §12); its title opens the hub. Sheet 203: with Settings v2 On
+        // (the default) the overhauled page; Off keeps the older stack of sections.
+        if LandingSwitch.isOn {
+            SettingsLandingPage()
+        } else if SettingsV2.isOn {
             SettingsHub(cameFrom: cameFrom == "Review" ? "Home" : cameFrom)
         } else {
             legacy
@@ -109,6 +112,18 @@ struct SettingsPage: View {
                     .settingsWordStyle()
                     .padding(.top, Theme.Spacing.xxl)
                     .accessibilityHint("Where your history is kept")
+
+                    #if DEBUG
+                        // Design 283 v8: the shared landing layout as raised glass, read-only. A debug surface.
+                        NavigationLink {
+                            LayoutModeView()
+                        } label: {
+                            Text("Layout mode")
+                        }
+                        .settingsWordStyle()
+                        .padding(.top, Theme.Spacing.l)
+                        .accessibilityHint("Every landing screen as panes of glass")
+                    #endif
 
                     // Privacy (179, walledPageV2): what stays on this phone, in counts. Drawn only while its switch is
                     // On.
@@ -209,6 +224,7 @@ private struct TessKnowsDoor: View {
 /// "Rest timer: On.", whose value word cycles on a tap. The row he touched says what changed in one line, before and
 /// after. A switch whose feature hasn't landed shows today's value, quietly, and doesn't move.
 struct ReviewSection: View {
+    @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
     /// The switch he touched last and its value before the touch.
@@ -269,6 +285,7 @@ struct ReviewSection: View {
                             Button(ReviewSwitchCopy.everythingAsBefore) {
                                 withTesseraAnimation(reduceMotion: reduceMotion) {
                                     choices.resetAll()
+                                    model.resetMosaicSetting()
                                     touched = nil
                                     resetLine = ReviewSwitchCopy.reset
                                 }
