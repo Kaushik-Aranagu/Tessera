@@ -106,7 +106,7 @@ Each has a pass line set before it runs. A failure gets written up here too.
      an exact index: it opens every child holding a matching leaf, so keys rank and never hide. `TopicMemory` keeps
      one tree per policy, and the strict one is built only from claude-safe leaves. Each night starts with a prune,
      outside the cap: a leaf deleted, or walled after it was filed, leaves the trees that may no longer see it, and an
-     emptied holder goes. The trees store node and leaf ids, never a word.
+     emptied holder goes; a leaf plain again is filed again. The trees store node and leaf ids, never a word.
    - Add class, entity and room, plus lateral links. Then conversation turns and told lines as free-text leaves,
      with topic and entity learned from their words.
    - Pass: cross-context questions are answered with cites from two axes, and the pyramid beats flat recall on

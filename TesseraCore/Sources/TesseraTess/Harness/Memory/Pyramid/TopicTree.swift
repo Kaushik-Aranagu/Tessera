@@ -424,7 +424,7 @@ public struct TopicTree: Codable, Sendable, Equatable {
 
 /// The topic axis under the walls: one tree per policy. Lab files every leaf; strict files only claude-safe ones, so
 /// its shape, keys and finds read exactly as if the walled leaves never happened. A leaf walled or deleted later
-/// leaves at the next night's prune.
+/// leaves at the next night's prune, and one plain again is filed again that night.
 public struct TopicMemory: Codable, Sendable, Equatable {
     public private(set) var lab = TopicTree()
     public private(set) var strict = TopicTree()
@@ -454,11 +454,22 @@ public struct TopicMemory: Codable, Sendable, Equatable {
         }
     }
 
+    /// The night: first any leaf a tree may see but hasn't filed is filed (one missed by `add`, or one walled and
+    /// plain again), then each tree's upkeep.
     @discardableResult
     public mutating func night(_ all: [PyramidLeaf], now: Date)
         -> (lab: [TopicTree.Change], strict: [TopicTree.Change])
     {
-        (lab.night(words: TopicWords(all, policy: .lab), now: now),
-         strict.night(words: TopicWords(all, policy: .strict), now: now))
+        let labWords = TopicWords(all, policy: .lab), strictWords = TopicWords(all, policy: .strict)
+        let inLab = Set(lab.leaves(under: TopicTree.root)), inStrict = Set(strict.leaves(under: TopicTree.root))
+        for leaf in all.sorted(by: { ($0.at, $0.id) < ($1.at, $1.id) }) {
+            if !inLab.contains(leaf.id) {
+                lab.insert(leaf.id, words: labWords)
+            }
+            if leaf.taint == .claudeSafe, !inStrict.contains(leaf.id) {
+                strict.insert(leaf.id, words: strictWords)
+            }
+        }
+        return (lab.night(words: labWords, now: now), strict.night(words: strictWords, now: now))
     }
 }

@@ -203,6 +203,19 @@ struct TopicTreeTests {
         #expect(strict.nodes[holder]?.leaves.contains(walled) == false)
         #expect(memory.lab.leaves(under: TopicTree.root).contains(walled))
         #expect(strict.log.contains { $0.change == .drop(leaf: walled, from: holder) })
+        // Plain again, it is filed again.
+        memory.night(all, now: now.addingTimeInterval(2 * 86400))
+        #expect(memory.strict.holder(of: walled) != nil)
+        #expect(memory.strict.nodes.values.reduce(0) { $0 + $1.leaves.count } == all.count)
+    }
+
+    @Test func theNightFilesALeafAddMissed() {
+        let all = leaves()
+        var memory = TopicMemory()
+        memory.add(Array(all.dropLast()), all: all)
+        memory.night(all, now: now)
+        let last = all.last?.id ?? ""
+        #expect(memory.lab.holder(of: last) != nil && memory.strict.holder(of: last) != nil)
     }
 
     @Test func aDeletedLeafLeavesBothTrees() {
