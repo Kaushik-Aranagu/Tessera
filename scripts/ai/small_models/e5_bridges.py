@@ -72,12 +72,29 @@ def load(path, model):
     return chats
 
 
-class Bridge(torch.nn.Module):
-    def __init__(self, dim):
+class LowRank(torch.nn.Module):
+    """Identity plus a rank-r change: far fewer weights than a full head, for small training sets."""
+    def __init__(self, dim, rank):
         super().__init__()
-        self.state = torch.nn.Linear(dim, dim, bias=False); self.action = torch.nn.Linear(dim, dim, bias=False)
-        for m in (self.state, self.action):
-            torch.nn.init.eye_(m.weight)
+        self.u = torch.nn.Parameter(torch.zeros(dim, rank)); self.v = torch.nn.Parameter(torch.randn(rank, dim) * 0.01)
+
+    @property
+    def weight(self):
+        return torch.eye(self.u.shape[0]) + self.u @ self.v
+
+    def forward(self, x):
+        return x + (x @ self.v.T) @ self.u.T
+
+
+class Bridge(torch.nn.Module):
+    def __init__(self, dim, rank=0):
+        super().__init__()
+        if rank:
+            self.state, self.action = LowRank(dim, rank), LowRank(dim, rank)
+        else:
+            self.state = torch.nn.Linear(dim, dim, bias=False); self.action = torch.nn.Linear(dim, dim, bias=False)
+            for m in (self.state, self.action):
+                torch.nn.init.eye_(m.weight)
         self.scale = torch.nn.Parameter(torch.tensor(math.log(20.0)))
 
     def s(self, x):
@@ -87,9 +104,9 @@ class Bridge(torch.nn.Module):
         return torch.nn.functional.normalize(self.action(x), dim=-1)
 
 
-def train(chats, dim, epochs, seed):
+def train(chats, dim, epochs, seed, rank=0):
     torch.manual_seed(seed)
-    b = Bridge(dim); opt = torch.optim.AdamW(b.parameters(), lr=1e-3, weight_decay=0.0)
+    b = Bridge(dim, rank); opt = torch.optim.AdamW(b.parameters(), lr=1e-3, weight_decay=0.0)
     eye = torch.eye(dim)
     data = [(torch.tensor(c["nodes"]), torch.tensor(c["asks"]), c["qs"]) for c in chats]
     for _ in range(epochs):
