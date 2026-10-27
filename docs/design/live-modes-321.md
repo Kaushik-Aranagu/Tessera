@@ -269,3 +269,13 @@ The last "Pay" in shopping mode tears the list off the rail instead of swapping 
 - One short double buzz as it tears.
 - Reduce Motion: no tear, the paid ticket simply replaces the list.
 - Test: t67 paper and black green; ptr.js shows one torn copy mid-tear and none after.
+
+## Sheet 335: Lights dims the room
+
+The last routine step, Lights ("Phone away"), turns the screen down with it.
+
+- Over that step's minute the dusk sky and the words dim together to 62% brightness, following the countdown (linear, 0.3 s between ticks so it never steps).
+- The "Evening tended" screen stays at that dimmer level: the evening ends quiet, not with a bright screen.
+- Every line stays readable at the dim level (checked in DM2.png); the verb and Undo keep their colour.
+- Reduce Motion keeps the dimming (it is light, not motion).
+- Test: t67 paper and black green; pdim.js reads --dim 0 on Tidy, 0.53 halfway through Lights, 1 when tended.

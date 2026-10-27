@@ -1,0 +1,11 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
+await pg.evaluate(()=>go('tend'));await pg.waitForTimeout(900);
+const d=[];d.push(await pg.evaluate(()=>getComputedStyle(document.querySelector('.fulldusk')).getPropertyValue('--dim')));
+await pg.evaluate(()=>{const r=window.__rt;r.S.done.add(0);r.S.done.add(1);r.S.done.add(2);r.S.done.add(3);r.S.i=4;r.S.j=0;r.S.left=30});await pg.waitForTimeout(400);
+d.push(await pg.evaluate(()=>getComputedStyle(document.querySelector('.fulldusk')).getPropertyValue('--dim')));
+await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));await pg.screenshot({path:'DM1.png'});
+await pg.evaluate(()=>window.__rt.next());await pg.waitForTimeout(400);await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));
+d.push(await pg.evaluate(()=>getComputedStyle(document.querySelector('.fulldusk')).getPropertyValue('--dim')));await pg.screenshot({path:'DM2.png'});
+console.log(d,errs);await b.close()})();

@@ -1485,7 +1485,7 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
   if(v==='back')return back();if(v==='next')return next();if(v==='pause'){S.pause=!S.pause;return paint(1)}if(v==='skip'){S.skip.add(S.i);receipt(el,ST[S.i].k+', tomorrow, the streak is kept');return step()}if(v.startsWith('st')){go2(+v.slice(2))}};
  function go2(i){S.i=i;S.j=0;S.left=ST[i].mv[0][1];paint()}
  let lastKey='';
- function paint(force){const s=ST[S.i],mv=s.mv[S.j];const night=(S.done.size+S.skip.size)/ST.length;sky.style.setProperty('--n',night);
+ function paint(force){const s=ST[S.i],mv=s.mv[S.j];const night=(S.done.size+S.skip.size)/ST.length;sky.style.setProperty('--n',night);const dim=S.fin?1:S.i===ST.length-1?1-S.left/mv[1]:0;el.style.setProperty('--dim',dim.toFixed(3));
   const key=S.i+'|'+S.j+'|'+S.fin+'|'+S.done.size+'|'+S.pause;const breath=((Date.now()-S.b0)/1000)%10;const inh=breath<4;
   if(key!==lastKey||force){P.innerHTML=(S.fin?'<div class="dk-top"><span data-a="back">Watch</span><span>Evening tended</span></div><div class="dk-h">Evening</div><div class="dk-big">Tended</div><div class="dk-cue">Six days in a row now. Sleep well</div><div class="dk-time o">'+S.done.size+'<span>of '+ST.length+'</span></div><div class="dk-verb" data-a="back">Back</div><div class="dk-sub">to the Watch</div>':
    '<div class="dk-top"><span data-a="back">Watch</span><span>'+S.done.size+' of '+ST.length+' tended, bed about '+clock(new Date(Date.now()+minsLeft()*60000))+'</span></div>'+
@@ -1703,6 +1703,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .fulldusk{background:var(--p-bg)!important;color:#F4EEF2;--ink:#F4EEF2;--ink2:rgba(244,238,242,.68);--rt:#F0B9DD}
 .fulldusk .dk-sky{position:absolute;inset:0;--n:0;background:linear-gradient(180deg,color-mix(in srgb,#2a2140 calc(100% - var(--n)*40%),#0c0b14) 0%,color-mix(in srgb,#5b3a62 calc(100% - var(--n)*70%),#151224) 55%,color-mix(in srgb,#c98472 calc(100% - var(--n)*85%),#1d1830) 100%);transition:background 2s}
 .fulldusk .dk-paper{position:absolute;left:24px;right:24px;top:52px;bottom:0;font-family:var(--sans)}
+.fulldusk .dk-sky,.fulldusk .dk-paper{filter:brightness(calc(1 - var(--dim,0)*.38));transition:filter .3s linear}
 .fulldusk .dk-pad{position:absolute;inset:0;z-index:5;touch-action:none;cursor:pointer}
 .dk-top{display:flex;justify-content:space-between;font-size:14px;color:var(--ink2);height:20px;white-space:nowrap}
 .dk-top span:first-child{color:var(--rt);font-weight:600}
