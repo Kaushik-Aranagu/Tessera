@@ -391,6 +391,11 @@ final class ReviewChoices {
                says: ["Off": "Tess answers only with the phone's own model, and makes no changes by asking",
                       "On": "Ask Tess a question or for a small change; Claude may answer, and changes wait for your OK"],
                needsClaude: true, readiness: .live),
+        // The Chart room (R1): a room Tess builds by talking; experimental, ships On.
+        Choice(id: "chartRoom", name: "Chart room", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "No Chart room on the apps list",
+                      "On": "The Chart room: say what a room is for and Tess builds it a piece at a time"],
+               readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes"],
@@ -440,7 +445,7 @@ final class ReviewChoices {
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
         ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
         // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
-        ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
+        ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks", "chartRoom"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

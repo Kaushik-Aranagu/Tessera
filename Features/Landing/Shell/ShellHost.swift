@@ -99,6 +99,7 @@ enum ShellRoomIDs {
         case .review: "watch"
         case .lookout: "lookout"
         case .settings: "settings"
+        case .chart: "chart"
         case let .app(app):
             switch app {
             case .notes: NotesRoomContent.room

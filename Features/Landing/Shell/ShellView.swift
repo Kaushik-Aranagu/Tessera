@@ -315,7 +315,9 @@ struct ShellPlan {
     private let newSlots: [Place: SlotContent]
 
     /// Bridge's apps, for the dial's reel when a room's doors come in from Bridge's dial.
-    static let bridgeApps = ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse", "Settings"]
+    static var bridgeApps: [String] {
+        ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse"] + (ChartRoomFlag.isOn ? ["Chart room"] : []) + ["Settings"]
+    }
 
     init(from old: Screen, to new: Screen) {
         oldLayout = old.layout
