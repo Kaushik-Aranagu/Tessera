@@ -289,3 +289,14 @@ When a logged set's estimated max (Epley) beats the lift's best, the board says 
 - The line clears when the rest ends. A later set only writes it again if it beats the new best.
 - The Done board lists what beat its best this session ("New best, bench est. 216 lb") or says "No new bests, steady work". It no longer shows a fixed line.
 - Test: t67 paper and black green; ppr.js logs bench 185 × 5 (est. 216 over best 212) and reads S.pr 216, newBest 216.
+
+## Sheet 337: Serve puts the ticket on the spike
+
+The last "Serve" in cooking mode files the ticket away the way a kitchen does, then prints the summary.
+
+- The finished ticket is pulled up into the rail clip: it narrows and flattens toward the clip (scale 0.18 wide, 0.06 tall, origin the clip at top centre), rises 24 pt and fades over 400 ms, easing in.
+- 300 ms in, the "Eat" summary prints down out of the same rail, revealed top to bottom in eight steps over 620 ms.
+- One short buzz (10 ms) as the ticket goes up.
+- Reduce Motion: the summary simply replaces the ticket.
+- This differs from the shopping tear (334) on purpose: a shopping list is torn off and thrown away, a cooked order is spiked.
+- Test: t67 paper and black green; psp.js shows one spiked copy mid-way and none after, S.fin 1.

@@ -1,0 +1,11 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+__dirname+'/index.html'+(process.argv[2]==='black'?'?theme=black':''));await pg.waitForTimeout(600);
+await pg.evaluate(()=>go('cook'));await pg.waitForTimeout(900);
+await pg.evaluate(()=>{for(let i=0;i<4;i++)window.__ck.next()});await pg.waitForTimeout(500);await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));
+await pg.evaluate(()=>window.__ck.next());await pg.waitForTimeout(30);
+await pg.evaluate(()=>document.getAnimations().forEach(a=>{a.pause();a.currentTime=200}));await pg.screenshot({path:'SP1.png'});
+const n=await pg.evaluate(()=>document.querySelectorAll('.tk-torn').length);
+await pg.evaluate(()=>document.getAnimations().forEach(a=>{a.currentTime=650}));await pg.screenshot({path:'SP2.png'});
+await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));await pg.waitForTimeout(100);
+console.log('mid',n,'after',await pg.evaluate(()=>document.querySelectorAll('.tk-torn').length),'fin',await pg.evaluate(()=>window.__ck.S.fin),errs);await b.close()})();

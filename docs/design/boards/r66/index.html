@@ -1544,8 +1544,13 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
  /* 333: when a pan timer runs out the printer feeds: the whole ticket slides down one line and a new line prints at the
     top in wine, "Chicken ready, off the heat", with one tick. It stays until the next tap. */
  function feed(){if(navigator.vibrate)try{navigator.vibrate([6,60,6])}catch(e){}if(!RM)P.animate([{transform:'translateY(-30px)'},{transform:'translateY(4px)',offset:.7},{transform:'none'}],{duration:520,easing:'steps(5)'})}
+ /* 337: Serve puts the ticket on the spike. The finished ticket is pulled up into the rail clip, narrowing as it goes,
+    then the summary prints down out of the same rail. */
+ function spike(){if(RM)return paint();const g=P.cloneNode(true);g.classList.add('tk-torn');g.style.transformOrigin='50% -18px';P.after(g);if(navigator.vibrate)try{navigator.vibrate([10])}catch(e){}
+  g.animate([{transform:'none',opacity:1},{transform:'translateY(-24px) scale(.18,.06)',opacity:0}],{duration:400,easing:'cubic-bezier(.55,0,.8,.4)',fill:'forwards'}).onfinish=()=>g.remove();
+  lastKey='';paint();P.animate([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:620,delay:300,easing:'steps(8)',fill:'backwards'})}
  function next(){S.alert=null;if(S.fin)return back();const was=S.i;if(!S.done.has(was)){S.done.add(was);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);S.fin=0;S.i=was;paint()})}
-  if(S.done.size===ST.length){S.fin=1;paint();return}let n=was;for(let k=1;k<=ST.length;k++){const q=(was+k)%ST.length;if(!S.done.has(q)){n=q;break}}S.i=n;const s=ST[n];if(s.tm&&S.T[s.k]==null)S.T[s.k]=s.tm;paint()}
+  if(S.done.size===ST.length){S.fin=1;return spike()}let n=was;for(let k=1;k<=ST.length;k++){const q=(was+k)%ST.length;if(!S.done.has(q)){n=q;break}}S.i=n;const s=ST[n];if(s.tm&&S.T[s.k]==null)S.T[s.k]=s.tm;paint()}
  paint();const iv=setInterval(()=>{if(!document.contains(el))return;let ch=0;for(const k in S.T){if(S.T[k]>0){S.T[k]--;if(!S.T[k]){ch=1;S.alert=k;feed()}}}paint(ch)},1000);
  window.__ck.fast=n=>{for(const k in S.T)if(S.T[k]>0)S.T[k]=Math.max(1,S.T[k]-n)};window.__ck.next=next;return ()=>clearInterval(iv)}};
 
