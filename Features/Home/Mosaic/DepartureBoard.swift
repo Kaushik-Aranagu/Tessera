@@ -148,8 +148,8 @@ struct DepartureBoard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(finalText)
+        // One element for the whole board (its flap letters never surface one by one), with each door an action.
+        .accessibilityRepresentation { Text(finalText) }
         .accessibilityActions {
             // Each door is a button: "Push day, opens Training".
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
