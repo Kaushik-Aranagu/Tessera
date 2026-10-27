@@ -172,10 +172,12 @@ struct TessLiveEvalTests {
                 continue
             }
             _ = conversation.clear()
+            // Spans are stamped with the Door's pinned clock, so they are told apart by question, not by time: the
+            // trace starts empty for each one.
+            await trace.clear()
             var reply = ""
             var firstWord: Int?
             let started = ContinuousClock.now
-            let startedAt = Date.now
             for turn in question.turns {
                 var failedLine: String?
                 for await event in run.ask(turn) {
@@ -198,7 +200,7 @@ struct TessLiveEvalTests {
                     }
                 }
             }
-            let spans = await trace.all().filter { $0.at >= startedAt.addingTimeInterval(-1) }
+            let spans = await trace.all()
             let tools = spans.filter { $0.kind == .tool }.map(\.name)
             let rung = spans.last { $0.kind == .brain }?.brain
             let cost = spans.reduce(Int64(0)) { $0 + $1.costNano }
