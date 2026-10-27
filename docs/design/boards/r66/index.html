@@ -1843,6 +1843,14 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
  const neu={};Object.keys(SECT).forEach(k=>{neu[k]=sectOf(to,k).filter(e=>!old[k].includes(e))});
  // a place whose content is the same on both sides is not touched (the contract: same identity, nothing moves)
  ['masthead','caption'].forEach(k=>{old[k]=old[k].filter(o=>{const m=neu[k].find(n=>n.className===o.className&&n.textContent===o.textContent);if(m){neu[k]=neu[k].filter(x=>x!==m);o.remove();return false}return true})});
+ /* 312: only the word that changes moves. When the title stays (a room and its door pages), the masthead does not
+    flap: the old one is dropped and the Nav word changes its letters, as in sheet 309 ("Bridge" to "Doors" keeps its r,
+    and back). */
+ old.masthead=old.masthead.filter(o=>{if(!o.classList.contains('ltop'))return true;const ot=o.querySelector('.ttl');
+  const m=neu.masthead.find(n=>n.classList.contains('ltop')&&ot&&n.querySelector('.ttl')&&n.querySelector('.ttl').textContent===ot.textContent);if(!m)return true;
+  const on=o.querySelector('.lnav'),nn=m.querySelector('.lnav');if(!on||!nn)return true;
+  const was=on._word||on.textContent,to=nn._word||nn.textContent;neu.masthead=neu.masthead.filter(x=>x!==m);o.remove();
+  if(was!==to){nn._word=was;nn.textContent=was;navMorph(nn,to)}return false});
  const drop=(e,ms)=>setTimeout(()=>e.remove(),ms);
  // masthead: fold away and fold open, like the board's letters
  old.masthead.forEach((e,i)=>{A(e,[{transform:'perspective(500px) rotateX(0)',opacity:1},{transform:'perspective(500px) rotateX(88deg)',opacity:.2}],{duration:200,delay:i*50,easing:'cubic-bezier(.5,0,.9,.5)',fill:'both'});drop(e,200+i*50)});

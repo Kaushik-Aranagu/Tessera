@@ -187,3 +187,24 @@ The new forms each need a row in `ElementForms`:
 - **System changes:**
   - The shell holds `.system` changes while a touch is down on the place (2 s at most), and coalesces changes
     within 1 s.
+
+## Sheet 312: only the word that changes moves (Oct 26)
+
+Opening a door used to flap the whole masthead, the room's title with it, although only the Nav word changed
+("Bridge" to "Doors", then "Doors" to the door's name). That broke the contract that a place whose identity stays
+does not move.
+
+- **Same title, no flap.** When the old and new screens share the title (a room, its doors page and a door page), the
+  masthead stays exactly where it is. The title never moves.
+- **The Nav word changes its letters,** as in sheet 309: shared letters (in order, same case) slide to their new
+  places, the rest leave upward, and the new ones rise in after. "Bridge" to "Doors" keeps its r, "Doors" to
+  "Today" keeps its o, and the same plays backwards on Back.
+- **Different title, as before.** Between rooms (Deck to Galley) the masthead still flaps like the departure board.
+- Reduce Motion: the word changes in place.
+- Measured on the board (`t56.js`): Deck in paper and Watch in black, landing to doors to a door and back twice;
+  one masthead throughout, the title never animates, and the Nav word always ends whole. `t39.js` finds no cut
+  words and `t45.js` no stops.
+
+For the builders: the masthead is one view across a room's levels, outside the level's own transition. Give the
+Title `.id(room)` so it only transitions when the room changes, and let the Nav word use the letter morph from
+sheet 309 keyed on its text.
