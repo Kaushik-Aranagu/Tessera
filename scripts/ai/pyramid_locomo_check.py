@@ -17,19 +17,26 @@ It prints recall@k (the share of a question's evidence turns in the top k, avera
 how much evidence the candidates could reach at all, and items scored per question.
 
 Usage: python3 scripts/ai/pyramid_locomo_check.py [--data locomo10.json] [--sessions 3] [--split 24] [--nights 10]
-The data file is not kept in the repo. With no --data it is downloaded to a temporary folder from
-https://raw.githubusercontent.com/snap-research/locomo/main/data/locomo10.json (about 2.8 MB).
+The data file is never kept in the repo (CC BY-NC 4.0). With no --data it is downloaded from the pinned commit below
+(about 2.8 MB) into a temporary folder, its sha256 checked, and the folder removed after the run. A --data file is
+checked against the same sha256.
 """
 import argparse
 import collections
+import hashlib
 import json
 import math
 import os
 import re
+import shutil
+import sys
 import tempfile
 import urllib.request
 
-DATA_URL = "https://raw.githubusercontent.com/snap-research/locomo/main/data/locomo10.json"
+DATA_URL = (
+    "https://raw.githubusercontent.com/snap-research/locomo/3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376/data/locomo10.json"
+)
+DATA_SHA256 = "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
 # PyramidAsk.stopWords.
 STOP = set(
     "a about am an and are at be been did do does far for how i in is it many me much my of on or so that the to was "
@@ -348,10 +355,20 @@ def main():
     parser.add_argument("--split", type=int, default=24)
     parser.add_argument("--nights", type=int, default=10)
     args = parser.parse_args()
-    if not args.data:
-        args.data = os.path.join(tempfile.mkdtemp(prefix="locomo-"), "locomo10.json")
-        urllib.request.urlretrieve(DATA_URL, args.data)
-    run(args)
+    folder = None
+    try:
+        if not args.data:
+            folder = tempfile.mkdtemp(prefix="locomo-")
+            args.data = os.path.join(folder, "locomo10.json")
+            urllib.request.urlretrieve(DATA_URL, args.data)
+        with open(args.data, "rb") as handle:
+            digest = hashlib.sha256(handle.read()).hexdigest()
+        if digest != DATA_SHA256:
+            sys.exit(f"{args.data}: sha256 {digest}, expected {DATA_SHA256}; the numbers in the doc are for that file")
+        run(args)
+    finally:
+        if folder:
+            shutil.rmtree(folder, ignore_errors=True)
 
 
 if __name__ == "__main__":
