@@ -3,8 +3,8 @@ import Foundation
 @testable import TesseraTess
 import Testing
 
-/// Input hygiene H8 (docs/ai/harness/input-hygiene.md): forgetting is exact. Each night summary cites the objects
-/// it was built from; deleting one rebuilds every summary that cites it, so a deleted name never stays in memory.
+/// Input hygiene H8 (docs/ai/harness/input-hygiene.md): forgetting is exact. Each night every kept summary is
+/// rewritten from what is there now, so a name that was deleted, made private or lost with its recipe never stays.
 @MainActor
 struct NightForgetTests {
     let store = ObjectStore.open(inMemory: true)
@@ -83,16 +83,53 @@ struct NightForgetTests {
         #expect(record.summaries["/summaries/day/2026-10-25"] == "1 workout: Push Day")
     }
 
-    @Test func aDayWithNothingLeftReadsQuietAndAnOldSummaryIsLeftAlone() async throws {
+    @Test func aDayWithNothingLeftReadsQuiet() async throws {
         let only = try workout("Leg Day", at: at(23, 18))
-        var record = NightRecord(summaries: ["/summaries/day/2026-10-01": "1 workout: Old Day"])
+        var record = NightRecord()
         await run(24, &record)
         store.softDelete(only)
         await run(25, &record)
         #expect(record.summaries["/summaries/day/2026-10-23"] == "A quiet day.")
         #expect(record.cites?["/summaries/day/2026-10-23"] == [])
-        // A summary written before the cite index has no cites, so nothing says it is stale.
-        #expect(record.summaries["/summaries/day/2026-10-01"] == "1 workout: Old Day")
+    }
+
+    @Test func aThingMadePrivateLosesItsName() async throws {
+        let push = try workout("Push Day", at: at(23, 18))
+        var record = NightRecord()
+        await run(24, &record)
+        let routine = try store.create(#require(classes[.routine]), title: "Knee rehab day")
+        try store.setLinks("routine", on: push, to: [routine])
+        let report = try #require(await run(25, &record))
+        #expect(report.rebuilt == ["/summaries/day/2026-10-23"])
+        let summary = try #require(record.summaries["/summaries/day/2026-10-23"])
+        #expect(summary.hasPrefix("1 workout") && !summary.contains("Push Day") && !summary.contains("rehab"))
+    }
+
+    @Test func aCookForgetsItsDeletedRecipe() async throws {
+        let recipe = try store.create(#require(classes[.recipe]), title: "Nut soup")
+        let cook = try store.create(#require(classes[.cook]), title: "")
+        try store.set("cookedAt", to: .date(at(23, 19)), on: cook)
+        try store.setLinks("recipe", on: cook, to: [recipe])
+        var record = NightRecord()
+        await run(24, &record)
+        #expect(record.summaries["/summaries/day/2026-10-23"] == "1 cook: Nut soup")
+        #expect(Set(record.cites?["/summaries/day/2026-10-23"] ?? []) == [cook.id, recipe.id])
+        store.softDelete(recipe)
+        await run(25, &record)
+        #expect(record.summaries["/summaries/day/2026-10-23"]?.contains("Nut soup") == false)
+    }
+
+    @Test func aSummaryFromBeforeTheCiteIndexIsRewrittenToo() async throws {
+        try workout("Pull Day", at: at(20, 7))
+        // Written before cites existed, naming a thing since deleted outright.
+        var record = NightRecord(summaries: ["/summaries/day/2026-10-20": "2 workouts: Pull Day, Gone Day"])
+        let report = try #require(await run(24, &record))
+        #expect(report.rebuilt == ["/summaries/day/2026-10-20"])
+        #expect(record.summaries["/summaries/day/2026-10-20"] == "1 workout: Pull Day")
+        #expect(record.cites?["/summaries/day/2026-10-20"]?.count == 1)
+        // Rewriting what is already right changes nothing and reports nothing.
+        let again = try #require(await run(25, &record))
+        #expect(again.rebuilt.isEmpty)
     }
 
     @Test func aPathItCannotReadIsDroppedNotKept() async throws {
