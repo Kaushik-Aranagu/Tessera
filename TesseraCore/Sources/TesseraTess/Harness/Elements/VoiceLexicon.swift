@@ -74,9 +74,12 @@ public struct VoiceLexicon: Sendable, Equatable {
         if heard == key { return 1 }
         let squashedHeard = heard.replacingOccurrences(of: " ", with: "")
         let squashedKey = key.replacingOccurrences(of: " ", with: "")
-        guard squashedKey.count >= 5, squashedHeard.count >= 4 else { return nil }
+        // A run that starts on a different letter is a neighbouring word, not a mishearing ("log romanian…").
+        guard squashedKey.count >= 5, squashedHeard.count >= 4, squashedHeard.first == squashedKey.first else {
+            return nil
+        }
         let distance = editDistance(squashedHeard, squashedKey)
-        let allowed = squashedKey.count >= 9 ? 3 : 2
+        let allowed = max(1, squashedKey.count / 6)
         guard distance <= allowed else { return nil }
         return 0.9 - Double(distance) * 0.1
     }
