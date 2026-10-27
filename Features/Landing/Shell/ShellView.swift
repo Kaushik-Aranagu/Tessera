@@ -26,6 +26,9 @@ struct ShellView<Room: RoomContent>: View {
     @State private var changing = false
     /// The back edge's pull in points (sheet 283 v6): the screen never moves; content softens as it grows.
     @State private var pull: CGFloat = 0
+    /// Sheet 302: one soft haptic as the pull crosses the commit point (once per pull).
+    @State private var pullCue = HapticCue()
+    @State private var pullArmed = false
 
     private var reduceMotion: Bool {
         systemReduceMotion || ShellProbe.reduceMotion
@@ -82,7 +85,8 @@ struct ShellView<Room: RoomContent>: View {
 
     /// How far the pull has gone, 0 to 1 (full at 120 pt).
     private var pullAmount: CGFloat {
-        min(max(pull, 0) / ShellBack.full, 1)
+        // Reduce Motion: no pull effect at all, so there is nothing to resist.
+        reduceMotion ? 0 : min(max(ShellBack.resisted(pull), 0) / ShellBack.full, 1)
     }
 
     /// The back edge, x 0 to 24 (sheet 283 v6). The pull never drags the page: content blurs and fades with it and
@@ -95,14 +99,22 @@ struct ShellView<Room: RoomContent>: View {
                 .onChanged { value in
                     guard abs(value.translation.height) < 120 else { return }
                     pull = value.translation.width
+                    // The commit is still the raw 80 pt of the finger; the haptic plays once as it crosses.
+                    let past = ShellBack.commits(value.translation)
+                    if past, !pullArmed {
+                        pullCue.play(.bound)
+                    }
+                    pullArmed = past
                 }
                 .onEnded { value in
+                    pullArmed = false
                     let commit = ShellBack.commits(value.translation)
                     withTesseraAnimation(.easeOut(duration: ShellBack.settle), reduceMotion: reduceMotion) { pull = 0 }
                     if commit {
                         act(.back)
                     }
                 })
+            .tesseraFeedback(pullCue)
             .accessibilityHidden(true)
     }
 
@@ -383,6 +395,18 @@ enum ShellBack {
     static let blur: CGFloat = 2.4
     static let fade = 0.4
     static let grow: CGFloat = 0.18
+
+    /// Sheet 302: where the page starts to answer less, and the share it keeps (70%) up to the commit.
+    static let resistFrom: CGFloat = 72
+    static let resistKeeps: CGFloat = 0.7
+
+    /// The finger's pull as the page shows it: the same up to 72 pt, 70% of the finger from 72 to 80 (so the
+    /// loosening and the nav word's growth slow just before the commit), then following the finger again, 2.4 pt
+    /// behind. It never moves the commit point, which stays the raw 80 pt.
+    static func resisted(_ pull: CGFloat) -> CGFloat {
+        guard pull > resistFrom else { return pull }
+        return resistFrom + (min(pull, commit) - resistFrom) * resistKeeps + max(pull - commit, 0)
+    }
 
     static func commits(_ translation: CGSize) -> Bool {
         translation.width > commit && abs(translation.height) < 120
