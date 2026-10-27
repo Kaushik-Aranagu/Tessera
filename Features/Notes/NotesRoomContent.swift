@@ -242,7 +242,7 @@ final class NotesRoomDriver: ShellRoomDriver {
             }
         case let .action(id):
             if id == "speak" {
-                TessVoice.shared.say("Say \"note: ...\" and I'll keep it.")
+                TessVoice.shared.say("Say \"note: ...\" and I'll keep it")
             } else {
                 draft = ""
                 writing = true
@@ -265,7 +265,7 @@ final class NotesRoomDriver: ShellRoomDriver {
             return
         }
         guard let result = try? model.engine.perform(CreateNote(body: text), by: .user) else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         let isPrivate = model.store.value("isPrivate", of: result.output) == .bool(true)
@@ -273,7 +273,7 @@ final class NotesRoomDriver: ShellRoomDriver {
             draft = ""
             model.touch()
         }
-        TessVoice.shared.say(isPrivate ? "Private note, kept." : "Note kept.", undo: result.record)
+        TessVoice.shared.say(isPrivate ? "Private note, kept" : "Note kept", undo: result.record)
     }
 }
 

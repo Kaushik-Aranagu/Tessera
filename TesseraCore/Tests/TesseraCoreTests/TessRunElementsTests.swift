@@ -92,8 +92,8 @@ struct TessRunElementsTests {
     // MARK: Through the model
 
     @Test func anOpenAskGetsTheFramesFragmentsAndOnlyTheScreensTools() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Two tasks.")]])
-        let sonnet = ScriptedBrain(.sonnet, rounds: [[.text("Two tasks.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Two tasks")]])
+        let sonnet = ScriptedBrain(.sonnet, rounds: [[.text("Two tasks")]])
         let r = try helper.rig([.haiku: haiku, .sonnet: sonnet])
         let task = try makeTask(r, "Call the bank")
         let item = ElementItem(id: task.id, kind: "task", name: "Call the bank",
@@ -121,7 +121,7 @@ struct TessRunElementsTests {
 
     @Test func aShellCallFromTheModelIsHandedToTheHost() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [helper.use("t1", "openItem", #"{"item":"o1"}"#)], [.text("Opened.")],
+            [helper.use("t1", "openItem", #"{"item":"o1"}"#)], [.text("Opened")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let task = try makeTask(r, "Pack the charger")
@@ -174,7 +174,7 @@ struct TessRunElementsTests {
         let haiku = ScriptedBrain(.haiku, rounds: [
             [helper.use("t1", "logSpend", #"{"amount":12,"note":"lunch"}"#),
              helper.use("t2", "startCooking", #"{"recipe":"x","serves":null}"#)],
-            [.text("Could not.")],
+            [.text("Could not")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let task = try makeTask(r, "Pack the charger")
@@ -195,13 +195,13 @@ struct TessRunElementsTests {
                 nil
             }
         } ?? []
-        #expect(results.count == 2 && results.allSatisfy { $0.1 && $0.0 == "That isn't a call I can make here." })
+        #expect(results.count == 2 && results.allSatisfy { $0.1 && $0.0 == "That isn't a call I can make here" })
     }
 
     @Test func aShellCallPointsOnlyAtAHandleOfThisPack() async throws {
         let other = UUID()
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [helper.use("t1", "openItem", #"{"item":"\#(other.uuidString)"}"#)], [.text("Done.")],
+            [helper.use("t1", "openItem", #"{"item":"\#(other.uuidString)"}"#)], [.text("Done")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let task = try makeTask(r, "Pack the charger")

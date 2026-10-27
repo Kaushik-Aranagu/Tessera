@@ -141,23 +141,23 @@ public enum MosaicMoodPicker {
         let time = plain(facts.caption(for: .time))
         switch mood {
         case .running:
-            let words = "\(input.runningLabel ?? "Something") is running."
+            let words = "\(input.runningLabel ?? "Something") is running"
             let line = input.runningLabel.flatMap { label in
                 input.runningApp.map { MosaicMomentSource.accented(words, key: label, app: $0) }
             } ?? plain(words)
             return [time, line, nextClause(facts)]
         case .done:
-            return [time, plain("Everything due today is done."), plain(facts.caption(for: .done))]
+            return [time, plain("Everything due today is done"), plain(facts.caption(for: .done))]
         case .back:
-            return [time, plain("Welcome back."), dayClause(facts)]
+            return [time, plain("Welcome back"), dayClause(facts)]
         case .rest:
-            return [time, plain("Today is a rest day."), dayClause(facts)]
+            return [time, plain("Today is a rest day"), dayClause(facts)]
         case .night, .golden:
             return [time, plain(facts.caption(for: .sky)), plain(facts.caption(for: .done))]
         case .morning:
             return [time, plain(facts.caption(for: .sky)), dayClause(facts)]
         case .rain:
-            return [time, plain("Rain is on its way."), dayClause(facts)]
+            return [time, plain("Rain is on its way"), dayClause(facts)]
         case .day:
             return [time, dayClause(facts), plain(facts.caption(for: .done))]
         }

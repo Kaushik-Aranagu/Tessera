@@ -22,7 +22,7 @@ struct TwinsTests {
         _ = try make(.task, "Buy stamps")
         let offer = try #require(Twins.next(engine: engine))
         #expect(offer.keep == first.id && offer.other == second.id)
-        #expect(offer.sentence == "Two tasks called Call the landlord.")
+        #expect(offer.sentence == "Two tasks called Call the landlord")
         #expect(Twins.offers(engine: engine).count == 1)
     }
 
@@ -76,7 +76,7 @@ struct TwinsTests {
         try store.set("body", to: .text("a boat"), on: two)
         #expect(Twins.next(engine: engine) == nil)
         try store.set("body", to: .text("a boat"), on: one)
-        #expect(Twins.next(engine: engine)?.sentence == "Two notes say the same.")
+        #expect(Twins.next(engine: engine)?.sentence == "Two notes say the same")
     }
 
     @Test func aThingWithChildrenIsNotOffered() throws {

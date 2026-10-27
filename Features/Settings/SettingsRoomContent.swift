@@ -10,7 +10,7 @@ struct SettingsRoomContent: RoomContent {
     static let room = "settings"
     static let title = "Settings"
     static let wallLabel = "Setting areas"
-    static let caption = ["Tap an area to open it.", "Tap an area."]
+    static let caption = ["Tap an area to open it", "Tap an area"]
     static let firstDoor = SettingsArea.tess.rawValue
 
     struct Facts: Equatable {
@@ -71,7 +71,11 @@ struct SettingsRoomContent: RoomContent {
             .title: title,
             .navWord: SlotContent(id: "settings.nav.settings", kind: .text, payload: .navWord(Self.title)),
             .doorTitle: SlotContent(id: ContentID("settings.door.\(id).title"), kind: .text,
-                                    payload: .doorTitle(name: area.title, line: door?.label ?? door?.lines.first ?? "",
+                                    payload: .doorTitle(name: area.title,
+                                                        line: SettingsLandingWords.doorLine(
+                                                            area,
+                                                            facts: facts.settings
+                                                        ),
                                                         color: door?.color ?? accent)),
             .keystone: keystone,
             .caption: caption,

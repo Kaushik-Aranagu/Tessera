@@ -26,7 +26,7 @@ struct TessBeliefTests {
     }
 
     @discardableResult
-    func record(_ words: String = "You train after work.", key: TessBelief.Key = .usualTime,
+    func record(_ words: String = "You train after work", key: TessBelief.Key = .usualTime,
                 source: TessBelief.Source = .noticed, evidence: [UUID]? = nil) throws -> ObjectRecord
     {
         let ids = try evidence ?? [evidenceObject().id]
@@ -35,14 +35,14 @@ struct TessBeliefTests {
 
     @Test func aBeliefWithNoEvidenceIsRefused() throws {
         #expect(throws: ActionError.self) {
-            try engine.perform(RecordBelief(words: "You train after work.", key: .usualTime, source: .noticed),
+            try engine.perform(RecordBelief(words: "You train after work", key: .usualTime, source: .noticed),
                                by: .tess)
         }
         let error = #expect(throws: ActionError.self) {
-            try engine.perform(RecordBelief(words: "You train after work.", key: .usualTime, source: .noticed,
+            try engine.perform(RecordBelief(words: "You train after work", key: .usualTime, source: .noticed,
                                             evidence: [UUID()]), by: .tess)
         }
-        #expect(error.flatMap(BeliefRefusal.line) == "I need something to go on for that.")
+        #expect(error.flatMap(BeliefRefusal.line) == "I need something to go on for that")
         #expect(beliefs.all().isEmpty)
     }
 
@@ -50,7 +50,7 @@ struct TessBeliefTests {
         let workout = try evidenceObject()
         let op = try #require(store.context.operations.values.first?.id ?? UUID())
         _ = workout
-        let made = try engine.perform(RecordBelief(words: "You train after work.", key: .usualTime, source: .noticed,
+        let made = try engine.perform(RecordBelief(words: "You train after work", key: .usualTime, source: .noticed,
                                                    evidenceOps: [op]), by: .tess).output
         #expect(beliefs.belief(made.id)?.evidenceOps == [op])
     }
@@ -59,17 +59,17 @@ struct TessBeliefTests {
         let made = try record()
         let belief = try #require(beliefs.belief(made.id))
         #expect(belief.key == .usualTime && belief.source == .noticed && belief.subject == .you)
-        #expect(belief.isOpen && belief.evidence.count == 1 && belief.words == "You train after work.")
-        #expect(belief.value == "{\"text\":\"You train after work.\"}")
+        #expect(belief.isOpen && belief.evidence.count == 1 && belief.words == "You train after work")
+        #expect(belief.value == "{\"text\":\"You train after work\"}")
         #expect(beliefs.open().map(\.id) == [made.id])
     }
 
     @Test func aChangeClosesTheOldBeliefAndLinksTheNewOne() throws {
-        let old = try record("You train after work.")
+        let old = try record("You train after work")
         let start = Date(timeIntervalSince1970: 1_700_000_000)
         let change = start.addingTimeInterval(86400 * 30)
         store.context.operations.values.first.map { _ in }
-        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before work.", at: change),
+        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before work", at: change),
                                          by: .tess).output
         let oldBelief = try #require(beliefs.belief(old.id))
         let newBelief = try #require(beliefs.belief(revised.id))
@@ -81,14 +81,14 @@ struct TessBeliefTests {
         // Closed, not deleted: it can still say what held before.
         #expect(oldBelief.isValid(at: start.addingTimeInterval(3600)) || oldBelief.validFrom > start)
         let closedTwice = #expect(throws: ActionError.self) {
-            try engine.perform(ReviseBelief(belief: old.id, words: "You train at noon."), by: .tess)
+            try engine.perform(ReviseBelief(belief: old.id, words: "You train at noon"), by: .tess)
         }
-        #expect(closedTwice.flatMap(BeliefRefusal.line) == "That one is already closed.")
+        #expect(closedTwice.flatMap(BeliefRefusal.line) == "That one is already closed")
     }
 
     @Test func forgetDeletesTheChainAndRedactsTheWords() throws {
-        let old = try record("You train after work.")
-        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before dawn."), by: .tess)
+        let old = try record("You train after work")
+        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before dawn"), by: .tess)
             .output
         let result = try engine.perform(ForgetBelief(belief: revised.id), by: .user)
         #expect(beliefs.all().isEmpty)
@@ -111,23 +111,23 @@ struct TessBeliefTests {
     }
 
     @Test func aMaybeIsSpokenWithIThinkUntilConfirmedTwiceOrKept() throws {
-        let made = try record("You rest on Sundays.", source: .inferred)
+        let made = try record("You rest on Sundays", source: .inferred)
         var belief = try #require(beliefs.belief(made.id))
-        #expect(belief.isMaybe && belief.spoken == "I think you rest on Sundays.")
+        #expect(belief.isMaybe && belief.spoken == "I think you rest on Sundays")
         try engine.perform(ConfirmBelief(belief: made.id), by: .tess)
         belief = try #require(beliefs.belief(made.id))
         #expect(belief.isMaybe && belief.confirmations == 1)
         try engine.perform(ConfirmBelief(belief: made.id), by: .tess)
         belief = try #require(beliefs.belief(made.id))
-        #expect(!belief.isMaybe && belief.spoken == "You rest on Sundays.")
-        let other = try record("You skip Fridays.", source: .inferred)
+        #expect(!belief.isMaybe && belief.spoken == "You rest on Sundays")
+        let other = try record("You skip Fridays", source: .inferred)
         try engine.perform(ConfirmBelief(belief: other.id, keep: true), by: .user)
         #expect(try #require(beliefs.belief(other.id)).isMaybe == false)
     }
 
     @Test func theWallsStillApplyToBeliefs() throws {
         let object = try evidenceObject()
-        for words in ["Rent is $2000.", "You live at 12 Oak Street.", "Your PIN is 0420.", "You weighed 82 kg."] {
+        for words in ["Rent is $2000", "You live at 12 Oak Street", "Your PIN is 0420", "You weighed 82 kg"] {
             #expect(throws: ActionError.self) {
                 try engine.perform(RecordBelief(words: words, key: .fact, source: .told, evidence: [object.id]),
                                    by: .tess)
@@ -139,7 +139,7 @@ struct TessBeliefTests {
                                by: .tess)
         }
         // A health word is kept, on this phone only.
-        let sore = try engine.perform(RecordBelief(words: "Your knee hates deep squats.", key: .avoids,
+        let sore = try engine.perform(RecordBelief(words: "Your knee hates deep squats", key: .avoids,
                                                    source: .told, evidence: [object.id]), by: .tess).output
         #expect(beliefs.belief(sore.id)?.isPrivate == true)
     }
@@ -151,16 +151,16 @@ struct TessBeliefTests {
         #expect(beliefs.belief(told.id)?.words == "mom means Lakshmi")
         let noticed = try engine.perform(RecordBelief(words: "I train after work", key: .usualTime,
                                                       source: .noticed, evidence: [object.id]), by: .tess).output
-        #expect(beliefs.belief(noticed.id)?.words == "You train after work.")
+        #expect(beliefs.belief(noticed.id)?.words == "You train after work")
     }
 
     @Test func aSubjectIsYouAClassOrAnObject() throws {
         let workout = try evidenceObject()
         let exercise = try #require(classes[.exercise])
-        let onObject = try engine.perform(RecordBelief(words: "You do this on Mondays.", key: .cadence,
+        let onObject = try engine.perform(RecordBelief(words: "You do this on Mondays", key: .cadence,
                                                        source: .noticed, subject: workout.id,
                                                        evidence: [workout.id]), by: .tess).output
-        let onClass = try engine.perform(RecordBelief(words: "You like sets of five.", key: .prefers,
+        let onClass = try engine.perform(RecordBelief(words: "You like sets of five", key: .prefers,
                                                       source: .noticed, subjectClass: exercise.id,
                                                       evidence: [workout.id]), by: .tess).output
         #expect(beliefs.belief(onObject.id)?.subject == .object(workout.id))
@@ -204,9 +204,9 @@ struct TessBeliefTests {
     }
 
     @Test func forgettingScrubsTheWordsFromEveryFieldAndEveryOp() throws {
-        let words = "You train before dawn zeppelin."
+        let words = "You train before dawn zeppelin"
         let made = try record(words, source: .noticed)
-        let revised = try engine.perform(ReviseBelief(belief: made.id, words: "You train at midnight zeppelin."),
+        let revised = try engine.perform(ReviseBelief(belief: made.id, words: "You train at midnight zeppelin"),
                                          by: .tess).output
         try engine.perform(ConfirmBelief(belief: revised.id), by: .tess)
         #expect(!leaks(["zeppelin"]).isEmpty)
@@ -231,16 +231,16 @@ struct TessBeliefTests {
         #expect(memory.lines(of: .told).isEmpty && beliefs.all().isEmpty)
         #expect(leaks(["after work"]) == [])
         // Even if the line came back (a restored backup), sync refuses to make a belief of forgotten words.
-        #expect(memory.write(kind: .told, area: .about, text: "You train after work.", evidence: [], day: nil) == nil)
+        #expect(memory.write(kind: .told, area: .about, text: "You train after work", evidence: [], day: nil) == nil)
         try engine.perform(RememberFact(text: "You rest on Sundays"), by: .user)
-        memory.logForgotten("You rest on Sundays.")
+        memory.logForgotten("You rest on Sundays")
         beliefs.syncFromMemory()
-        #expect(!beliefs.all().contains { $0.words == "You rest on Sundays." })
+        #expect(!beliefs.all().contains { $0.words == "You rest on Sundays" })
     }
 
     @Test func forgettingAClosedBeliefTakesTheNewerOneToo() throws {
-        let old = try record("You train after work.")
-        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before work."), by: .tess)
+        let old = try record("You train after work")
+        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before work"), by: .tess)
             .output
         try engine.perform(ForgetBelief(belief: old.id), by: .user)
         #expect(beliefs.all().isEmpty)
@@ -252,8 +252,8 @@ struct TessBeliefTests {
     }
 
     @Test func aRestoredBackupForgetsAgainWithoutCrashing() throws {
-        let made = try record("You train after work.")
-        memory.logForgotten("You train after work.", now: .now.addingTimeInterval(60))
+        let made = try record("You train after work")
+        memory.logForgotten("You train after work", now: .now.addingTimeInterval(60))
         #expect(beliefs.reapplyForgets() == 1)
         #expect(store.object(id: made.id)?.title == TessMemoryStore.redacted)
         #expect(beliefs.reapplyForgets() == 0)
@@ -267,7 +267,7 @@ struct TessBeliefTests {
     // MARK: Migration
 
     @Test func theMigrationKeepsEveryToldLinesWords() throws {
-        let words = ["You train after work.", "mom means Lakshmi", "You like the window seat."]
+        let words = ["You train after work", "mom means Lakshmi", "You like the window seat"]
         for text in words {
             try engine.perform(RememberFact(text: text), by: .user)
         }
@@ -284,13 +284,13 @@ struct TessBeliefTests {
     }
 
     @Test func aNoticedLineThatChangesClosesItsBeliefAndOpensTheNext() throws {
-        let line = try #require(memory.write(kind: .noticed, area: .training, text: "You train after work.",
+        let line = try #require(memory.write(kind: .noticed, area: .training, text: "You train after work",
                                              evidence: [], day: nil, rule: "training.hours"))
         beliefs.syncFromMemory()
-        line.title = "You train before work."
+        line.title = "You train before work"
         beliefs.syncFromMemory(now: .now.addingTimeInterval(86400))
         let all = beliefs.all()
-        #expect(all.count == 2 && all.filter(\.isOpen).map(\.words) == ["You train before work."])
+        #expect(all.count == 2 && all.filter(\.isOpen).map(\.words) == ["You train before work"])
         #expect(all.first { $0.isOpen }?.supersedes == all.first { !$0.isOpen }?.id)
         // The line goes away (the rule no longer holds): the belief closes too.
         memory.remove(line.id)
@@ -321,7 +321,7 @@ struct TessBeliefTests {
     @Test func forgetAllTakesTheBeliefsToo() throws {
         try engine.perform(RememberFact(text: "You train after work"), by: .user)
         beliefs.syncFromMemory()
-        try record("You rest on Sundays.", source: .inferred)
+        try record("You rest on Sundays", source: .inferred)
         let all = try engine.perform(ForgetAllMemory(), by: .user)
         #expect(beliefs.all().isEmpty && memory.all().isEmpty)
         #expect(all.output == 2)
@@ -329,7 +329,7 @@ struct TessBeliefTests {
 
     @Test func aPrivateBeliefReadsAsPrivateMemoryOutsideThePage() throws {
         let object = try evidenceObject()
-        let made = try engine.perform(RecordBelief(words: "Your knee hates deep squats.", key: .avoids,
+        let made = try engine.perform(RecordBelief(words: "Your knee hates deep squats", key: .avoids,
                                                    source: .told, evidence: [object.id]), by: .user).output
         #expect(ObjectPrivacy.label(of: made, in: store, classes: classes) == ObjectPrivacy.memoryLabel)
     }

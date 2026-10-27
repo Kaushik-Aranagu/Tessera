@@ -38,7 +38,7 @@ public enum LegacyStore {
         } catch {
             // Leave the old store where it is so the next launch tries again, and say so.
             TesseraSchema.setLaunchNote("Your older history hasn't moved across yet. It's safe, and I'll try again "
-                + "next time the app opens.")
+                + "next time the app opens")
             throw error
         }
         _ = TesseraSchema.moveStoreAsideForLegacy(url)

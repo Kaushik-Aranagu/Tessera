@@ -83,13 +83,13 @@ struct MoneyPhrasesTests {
     @Test func receiptsNameTheThingFirstAndTheSignSitsAgainstTheAmount() async {
         let tess = TessCaptureEngine(engine: engine)
         let coffee = await tess.capture("spent 12.40 on coffee", context: context)
-        #expect(coffee.line == "Coffee, 12.40." && coffee.records.map(\.action) == ["logSpend"])
+        #expect(coffee.line == "Coffee, 12.40" && coffee.records.map(\.action) == ["logSpend"])
         let euro = await tess.capture("€8 parking", context: context)
-        #expect(euro.line == "Parking, €8.00.")
+        #expect(euro.line == "Parking, €8.00")
         let bare = await tess.capture("spent 12.40", context: context)
-        #expect(bare.line == "Spent 12.40.")
+        #expect(bare.line == "Spent 12.40")
         let walled = await tess.capture("spent 90 on lexapro", context: context)
-        #expect(walled.line == "Private spend, 90.00." && !walled.line.lowercased().contains("lexapro"))
+        #expect(walled.line == "Private spend, 90.00" && !walled.line.lowercased().contains("lexapro"))
         // No copy claims that money never goes anywhere.
         #expect(![coffee, euro, bare, walled].contains { $0.line.lowercased().contains("never") })
     }
@@ -98,12 +98,12 @@ struct MoneyPhrasesTests {
         let tess = TessCaptureEngine(engine: engine)
         try finishedShop(at: context.now.addingTimeInterval(-3600))
         let logged = await tess.capture("shop total 84.10", context: context)
-        #expect(logged.line == "Groceries, 84.10." && logged.records.map(\.action) == ["logShopTotal"])
+        #expect(logged.line == "Groceries, 84.10" && logged.records.map(\.action) == ["logShopTotal"])
         // Asked once: it is not awaited any more.
         #expect(ShopReceipt(store: store, classes: engine.classes).awaiting(at: context.now) == nil)
         try finishedShop(at: context.now.addingTimeInterval(-600))
         let skipped = await tess.capture("skip", context: context)
-        #expect(skipped.line == "Groceries total, skipped." && skipped.records.map(\.action) == ["skipShopTotal"])
+        #expect(skipped.line == "Groceries total, skipped" && skipped.records.map(\.action) == ["skipShopTotal"])
         #expect(ShopReceipt(store: store, classes: engine.classes).awaiting(at: context.now) == nil)
     }
 
@@ -176,7 +176,7 @@ struct MoneyPhrasesTests {
     @Test func receiptsGroupThousandsAndTheMonthLineShowsTheTopTwo() async throws {
         let tess = TessCaptureEngine(engine: engine)
         let rent = await tess.capture("paid rent 2100", context: context)
-        #expect(rent.line == "Rent, 2,100.00.")
+        #expect(rent.line == "Rent, 2,100.00")
         try engine.perform(LogSpend(amount: 80, typed: "80", note: "groceries", spentAt: context.now), by: .user)
         try engine.perform(LogSpend(amount: 20, typed: "20", note: "lunch", spentAt: context.now), by: .user)
         try engine.perform(LogSpend(amount: 5, typed: "5", note: "coffee", spentAt: context.now), by: .user)

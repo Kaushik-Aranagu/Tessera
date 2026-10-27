@@ -57,7 +57,7 @@ public enum TessOpener {
             if !TessAskRouter.isUnnameable(changed, classes: classes), passes(changed.title, store: store) {
                 let name = shownName(changed, store: store, classes: classes)
                 let conflict = conflictLine(for: name, in: events, now: now)
-                let line = (["Since then, \(name) changed."] + (conflict.map { [$0] } ?? [])).joined(separator: " ")
+                let line = (["Since then, \(name) changed"] + (conflict.map { [$0] } ?? [])).joined(separator: ". ")
                 if passes(line, store: store) {
                     let replies = conflict == nil ? ["Show me", "Fine as it is"] : [
                         "Move it later",
@@ -108,7 +108,7 @@ public enum TessOpener {
         let other = events.first { event in
             event.label != name && event.end > now && event.start < mine.end && event.end > mine.start
         }
-        return other.map { "\($0.label) may run into it." }
+        return other.map { "\($0.label) may run into it" }
     }
 
     /// The walls, for a line she is about to say and store.

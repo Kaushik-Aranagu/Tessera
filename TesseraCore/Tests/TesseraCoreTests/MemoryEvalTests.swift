@@ -82,31 +82,31 @@ struct MemoryEvalTests {
 
     @Test func numbersScoreInEitherUnit() {
         let question = EvalQuestion(id: "find/x", kind: .find, text: "", expected: .number(92.5, unit: "kg"))
-        #expect(eval.isRight("92.5 kg for 5 on Oct 3.", for: question))
-        #expect(eval.isRight("About 204 lb.", for: question))
-        #expect(!eval.isRight("90 kg for 5.", for: question))
-        #expect(!eval.isRight("I don't know, maybe 92.5 kg.", for: question))
+        #expect(eval.isRight("92.5 kg for 5 on Oct 3", for: question))
+        #expect(eval.isRight("About 204 lb", for: question))
+        #expect(!eval.isRight("90 kg for 5", for: question))
+        #expect(!eval.isRight("I don't know, maybe 92.5 kg", for: question))
     }
 
     @Test func daysScoreInTheUsualForms() {
         let question = EvalQuestion(id: "when/x", kind: .when, text: "", expected: .day(day(9, 28)))
-        #expect(eval.isRight("You first cooked it on Sep 28.", for: question))
-        #expect(eval.isRight("On 28 September.", for: question))
-        #expect(!eval.isRight("On Oct 2.", for: question))
+        #expect(eval.isRight("You first cooked it on Sep 28", for: question))
+        #expect(eval.isRight("On 28 September", for: question))
+        #expect(!eval.isRight("On Oct 2", for: question))
         let second = EvalQuestion(id: "when/y", kind: .when, text: "", expected: .day(day(9, 2)))
-        #expect(!eval.isRight("On Sep 28.", for: second) && eval.isRight("On Sep 2.", for: second))
+        #expect(!eval.isRight("On Sep 28", for: second) && eval.isRight("On Sep 2", for: second))
     }
 
     @Test func aChangeNeedsTheCurrentBeliefNotTheOldOne() {
         let question = EvalQuestion(id: "changed/x", kind: .changed, text: "", expected: .text("evening"))
-        #expect(eval.isRight("These days you train in the evening.", for: question, old: "6 am"))
-        #expect(!eval.isRight("You train at 6 am, or sometimes in the evening.", for: question, old: "6 am"))
+        #expect(eval.isRight("These days you train in the evening", for: question, old: "6 am"))
+        #expect(!eval.isRight("You train at 6 am, or sometimes in the evening", for: question, old: "6 am"))
     }
 
     @Test func dontKnowIsTheOnlyRightAnswerWhenNothingIsKept() {
         let question = EvalQuestion(id: "unknown/x", kind: .dontKnow, text: "", expected: .dontKnow)
-        #expect(eval.isRight("I don't know yet.", for: question))
-        #expect(!eval.isRight("Probably Thai food.", for: question))
+        #expect(eval.isRight("I don't know yet", for: question))
+        #expect(!eval.isRight("Probably Thai food", for: question))
     }
 
     // MARK: The record

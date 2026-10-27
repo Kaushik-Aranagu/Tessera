@@ -103,18 +103,18 @@ struct TodayLinesTests {
         let notices = HomeNotices.ranked(engine: engine, facts: facts(at(12)), plan: nil, calendar: calendar)
         #expect(notices.count <= 6 && !notices.isEmpty)
         for notice in notices {
-            #expect(notice.text.hasSuffix(".") && !notice.text.hasSuffix(".."), "\(notice.text)")
+            #expect(!notice.text.hasSuffix("."), "\(notice.text)")
             if let range = notice.clause.keyWord {
                 let key = String(notice.text.utf16.dropFirst(range.lowerBound).prefix(range.count)) ?? ""
                 #expect(!key.isEmpty && notice.text.hasPrefix(key))
             }
         }
         let texts = notices.map(\.text)
-        #expect(texts.contains("Packing, 2 left."), "\(texts)")
+        #expect(texts.contains("Packing, 2 left"), "\(texts)")
         let packing = try #require(notices.first { $0.text.hasPrefix("Packing") })
         #expect(packing.clause.app == .lists && packing.clause.keyWord == 0 ..< 7)
         // The soonest timed thing comes first; the sun's turn is a notice too.
-        #expect(texts.first == "Mail forms at 3 pm.")
+        #expect(texts.first == "Mail forms at 3 pm")
         #expect(texts.contains { $0.hasPrefix("Sunset at ") })
         // Targets: a static map. Sunset goes to the weather, a task to Today, an app's own line to its room.
         #expect(notices.first { $0.text.hasPrefix("Sunset") }?.target == .weather)
@@ -127,14 +127,14 @@ struct TodayLinesTests {
         try engine.perform(AddGroceries(lines: ["milk", "eggs", "rice", "butter"]), by: .user)
         let first = HomeNotices.ranked(engine: engine, facts: facts(at(12)), plan: nil, calendar: calendar)
         let groceries = try #require(first.first { $0.text.hasPrefix("Groceries") })
-        #expect(groceries.text == "Groceries, 4 to get." && groceries.clause.app == .kitchen)
+        #expect(groceries.text == "Groceries, 4 to get" && groceries.clause.app == .kitchen)
         #expect(groceries.clause.keyWord == 0 ..< 9)
         let secretList = try store.create(#require(engine.classes[.list]), title: "Lexapro refills")
         _ = try engine.perform(AddListItem(list: secretList.id, text: "pharmacy"), by: .user)
         _ = try engine.perform(CreateTask(title: "Lexapro refill", startsAt: at(14)), by: .user)
         let masked = HomeNotices.ranked(engine: engine, facts: facts(at(12)), plan: nil, calendar: calendar)
         #expect(!masked.map(\.text).joined().lowercased().contains("lexapro"))
-        #expect(masked.contains { $0.text == "Private." && $0.clause.keyWord == nil })
+        #expect(masked.contains { $0.text == "Private" && $0.clause.keyWord == nil })
     }
 
     @Test func noMoneyAmountOrCalendarTitleOrBodyFactIsEverANotice() throws {
@@ -144,7 +144,7 @@ struct TodayLinesTests {
                                          calendar: calendar)
         let joined = notices.map(\.text).joined(separator: " ")
         #expect(!joined.contains("1850") && !joined.contains("Dentist"))
-        #expect(joined.contains("A bill is due Friday."))
+        #expect(joined.contains("A bill is due Friday"))
     }
 
     @Test func noticesStopAtSixAndTheLimitIsHonoured() throws {

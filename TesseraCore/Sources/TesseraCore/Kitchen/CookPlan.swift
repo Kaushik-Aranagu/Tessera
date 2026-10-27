@@ -276,10 +276,10 @@ public struct CookPlan: Sendable, Equatable {
 
     /// "Tacos and rice tonight, start at 6:05." The first start is the earliest dish's.
     public func landing(calendar: Calendar = .current) -> String {
-        guard !placements.isEmpty else { return "Nothing planned for tonight." }
+        guard !placements.isEmpty else { return "Nothing planned for tonight" }
         let ordered = placements.sorted { $0.dish.order < $1.dish.order }.map(\.dish.name)
         let start = placements.map(\.start).min() ?? serveAt
-        return "\(Self.names(ordered)) tonight, start at \(HouseTime.clock(start, calendar: calendar))."
+        return "\(Self.names(ordered)) tonight, start at \(HouseTime.clock(start, calendar: calendar))"
     }
 
     /// "Cooking A and B, 12 min left."
@@ -289,13 +289,13 @@ public struct CookPlan: Sendable, Equatable {
         if let minutesLeft, minutesLeft > 0 {
             text += ", \(minutesLeft) min left"
         }
-        return text + "."
+        return text
     }
 
     /// "Serve at 7:00. Start Chicken at 6:17." The dish to start first is the earliest start.
     public func serveLine(calendar: Calendar = .current) -> String {
         guard let first = placements.min(by: { $0.start < $1.start }) else { return "" }
-        return "Serve at \(HouseTime.clock(serveAt, calendar: calendar)). Start \(first.dish.name) at \(HouseTime.clock(first.start, calendar: calendar))."
+        return "Serve at \(HouseTime.clock(serveAt, calendar: calendar)). Start \(first.dish.name) at \(HouseTime.clock(first.start, calendar: calendar))"
     }
 
     /// One line for each dish that has to wait or move, in the order the dishes were added.
@@ -305,17 +305,17 @@ public struct CookPlan: Sendable, Equatable {
             let minutes = Int((place.heldSec / 60).rounded())
             let name = place.dish.name
             if place.overHold {
-                return ["\(name) would wait \(minutes) min."]
+                return ["\(name) would wait \(minutes) min"]
             }
             let plural = Self.isPlural(place.dish)
-            return ["\(name) will wait \(minutes) min.",
-                    "\(name) \(plural ? "start" : "starts") \(minutes) min early so your hands are free."]
+            return ["\(name) will wait \(minutes) min",
+                    "\(name) \(plural ? "start" : "starts") \(minutes) min early so your hands are free"]
         }
     }
 
     /// "Serving about 7:02." only when the plan runs late.
     public func lateLine(calendar: Calendar = .current) -> String? {
-        projectedServe.map { "Serving about \(HouseTime.clock($0, calendar: calendar))." }
+        projectedServe.map { "Serving about \(HouseTime.clock($0, calendar: calendar))" }
     }
 
     /// An explicit flag on the dish wins over the house rule.

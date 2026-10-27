@@ -173,7 +173,7 @@ public struct TessRouter {
 
     /// "<phrase>, kept to sort later.": a note, as a ghost row with one UNDO (committed at once for Siri). A phrase
     /// with a secret word, money or a body fact becomes a private note and reads "Private note, kept to sort later."
-    static let keptLine = "kept to sort later."
+    static let keptLine = "kept to sort later"
 
     private func keepToSort(_ request: TessRequest) -> TessCapture? {
         let phrase = request.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -188,7 +188,7 @@ public struct TessRouter {
         let isPrivate = ObjectPrivacy.label(of: made.output, in: engine.store, classes: engine.classes) != nil
             || SecretWords.mentions(phrase) || PrivateFacts.isWalled(phrase, lastWeightKg: lastKg)
             || ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: lastKg)
-        let line = isPrivate ? "Kept to sort later." : "\(made.output.title), \(Self.keptLine)"
+        let line = isPrivate ? "Kept to sort later" : "\(made.output.title), \(Self.keptLine)"
         made.record.receipt = line
         var kept = TessCapture(records: [made.record], line: line, source: .grammar)
         kept.keptToSort = true

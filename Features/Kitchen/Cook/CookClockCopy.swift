@@ -43,7 +43,7 @@ enum CookClockCopy {
     static let listen = "Listen"
     static let listening = "Listening"
     static let listeningLabel = "Listening for next, back and timer"
-    static let noMic = "Tap the page instead."
+    static let noMic = "Tap the page instead"
     static let ingredients = "Ingredients"
     static let steps = "Steps"
     static let timers = "Timers"

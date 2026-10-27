@@ -29,14 +29,13 @@ public enum LandingSentences {
     public static func training(session: String?, minutes: Int?, opener: (exercise: String, weight: String)?)
         -> LandingSentence
     {
-        guard let session else { return LandingSentence(text: "Nothing planned today.", key: nil) }
+        guard let session else { return LandingSentence(text: "Nothing planned today", key: nil) }
         var text = "\(session) today"
         if let minutes, minutes > 0 {
             text += ", about \(HouseTime.minutes(minutes))"
         }
-        text += "."
         if let opener {
-            text += " \(opener.exercise) opens at \(opener.weight)."
+            text += ". \(opener.exercise) opens at \(opener.weight)"
         }
         return LandingSentence(text: text, key: session)
     }
@@ -46,14 +45,13 @@ public enum LandingSentences {
     /// "Tacos tonight, start at 6:05. Lemon is short." The dish leads; the start and the one short thing follow when
     /// they are known.
     public static func kitchen(dish: String?, start: String?, shortOf: String?) -> LandingSentence {
-        guard let dish else { return LandingSentence(text: "Nothing planned for tonight.", key: nil) }
+        guard let dish else { return LandingSentence(text: "Nothing planned for tonight", key: nil) }
         var text = "\(dish) tonight"
         if let start {
             text += ", start at \(start)"
         }
-        text += "."
         if let shortOf {
-            text += " \(shortOf) \(HouseWords.isPlural(shortOf) ? "are" : "is") short."
+            text += ". \(shortOf) \(HouseWords.isPlural(shortOf) ? "are" : "is") short"
         }
         return LandingSentence(text: text, key: dish)
     }
@@ -64,7 +62,7 @@ public enum LandingSentences {
         if let minutesLeft, minutesLeft > 0 {
             text += ", \(HouseTime.minutes(minutesLeft)) left"
         }
-        return text + "."
+        return text
     }
 
     public static func toGet(_ count: Int) -> String? {
@@ -84,21 +82,21 @@ public enum LandingSentences {
     {
         var sentences: [String] = []
         if nothingLate {
-            sentences.append("Nothing is late.")
+            sentences.append("Nothing is late")
         }
         switch (due, trend) {
-        case let (due?, trend?): sentences.append("\(due.name) is due \(due.weekday), and \(trend).")
-        case let (due?, nil): sentences.append("\(due.name) is due \(due.weekday).")
-        case let (nil, trend?): sentences.append(capitalised(trend) + ".")
+        case let (due?, trend?): sentences.append("\(due.name) is due \(due.weekday), and \(trend)")
+        case let (due?, nil): sentences.append("\(due.name) is due \(due.weekday)")
+        case let (nil, trend?): sentences.append(capitalised(trend))
         case (nil, nil): break
         }
-        let text = sentences.isEmpty ? "Nothing to report." : sentences.joined(separator: " ")
+        let text = sentences.isEmpty ? "Nothing to report" : sentences.joined(separator: ". ")
         return LandingSentence(text: text, key: due?.name ?? (nothingLate ? "Nothing is late" : nil))
     }
 
     // MARK: Notes
 
-    public static let notesPrompt = LandingSentence(text: "Search or write. @ links a thing.", key: "@")
+    public static let notesPrompt = LandingSentence(text: "Search or write. @ links a thing", key: "@")
     public static let linkThem = "Link them"
     public static let makeAThing = "Make it a thing"
 
@@ -106,11 +104,11 @@ public enum LandingSentences {
 
     /// T-N1, T-N2, T-N3, T-N4: the subtitle. Names are masked by the caller; no digit ever appears.
     public static func notesSubtitle(hasNotes: Bool, top: [String]) -> LandingSentence {
-        guard hasNotes else { return LandingSentence(text: "A place for loose thoughts.", key: nil) }
+        guard hasNotes else { return LandingSentence(text: "A place for loose thoughts", key: nil) }
         switch top.count {
-        case 0: return LandingSentence(text: "Your notes are on their own.", key: "own")
-        case 1: return LandingSentence(text: "\(top[0]) comes up most.", key: top[0])
-        default: return LandingSentence(text: "\(top[0]) and \(top[1]) come up most.", key: top[0])
+        case 0: return LandingSentence(text: "Your notes are on their own", key: "own")
+        case 1: return LandingSentence(text: "\(top[0]) comes up most", key: top[0])
+        default: return LandingSentence(text: "\(top[0]) and \(top[1]) come up most", key: top[0])
         }
     }
 
@@ -119,33 +117,33 @@ public enum LandingSentences {
         let list = Array(names.prefix(4))
         switch list.count {
         case 0: return nil
-        case 1: return LandingSentence(text: "You write about \(list[0]).", key: nil)
-        case 2: return LandingSentence(text: "You write about \(list[0]) and \(list[1]).", key: nil)
+        case 1: return LandingSentence(text: "You write about \(list[0])", key: nil)
+        case 2: return LandingSentence(text: "You write about \(list[0]) and \(list[1])", key: nil)
         default:
             let head = list.dropLast().joined(separator: ", ")
-            return LandingSentence(text: "You write about \(head), and \(list[list.count - 1]).", key: nil)
+            return LandingSentence(text: "You write about \(head), and \(list[list.count - 1])", key: nil)
         }
     }
 
     /// T-N6: nothing matches what was typed.
     public static func noThingCalled(_ typed: String) -> LandingSentence {
-        LandingSentence(text: "No thing called \"\(typed)\". Return writes it as a note.", key: nil)
+        LandingSentence(text: "No thing called \"\(typed)\". Return writes it as a note", key: nil)
     }
 
     /// T-N7: a note is open. "Private note" for a walled one.
     public static func noteOpen(title: String, isPrivate: Bool) -> LandingSentence {
         let name = isPrivate ? "Private note" : title
-        return LandingSentence(text: "\(name) is open.", key: name)
+        return LandingSentence(text: "\(name) is open", key: name)
     }
 
     /// T-N8.
     public static func notesNames(day: String, thing: String) -> LandingSentence {
-        LandingSentence(text: "Your note from \(day) names \(thing).", key: thing)
+        LandingSentence(text: "Your note from \(day) names \(thing)", key: thing)
     }
 
     /// T-N9.
     public static func notThingYet(_ word: String) -> LandingSentence {
-        LandingSentence(text: "@\(word) is not a thing yet.", key: "@\(word)")
+        LandingSentence(text: "@\(word) is not a thing yet", key: "@\(word)")
     }
 
     /// T-N10: "A new note about A.", "A new note about A and B.", "New notes about A and B.", "A new loose note."
@@ -153,10 +151,10 @@ public enum LandingSentences {
         let list = Array(names.prefix(2))
         let joined = list.joined(separator: " and ")
         if list.isEmpty {
-            return count == 1 ? LandingSentence(text: "A new loose note.", key: nil)
-                : LandingSentence(text: "New loose notes.", key: nil)
+            return count == 1 ? LandingSentence(text: "A new loose note", key: nil)
+                : LandingSentence(text: "New loose notes", key: nil)
         }
-        let text = count == 1 ? "A new note about \(joined)." : "New notes about \(joined)."
+        let text = count == 1 ? "A new note about \(joined)" : "New notes about \(joined)"
         return LandingSentence(text: text, key: list[0])
     }
 
@@ -179,22 +177,22 @@ public enum LandingSentences {
 
     // MARK: Lists (T-L1 to T-L13)
 
-    public static let startOneList = LandingSentence(text: "Start one with a few words.", key: nil)
+    public static let startOneList = LandingSentence(text: "Start one with a few words", key: nil)
     public static let resetIt = "Reset it"
 
     /// T-L2 and T-L5 (a walled name arrives as "Private list").
     public static func listRunning(_ name: String, left: Int) -> LandingSentence {
-        LandingSentence(text: "\(name) is running, \(left) left.", key: name)
+        LandingSentence(text: "\(name) is running, \(left) left", key: name)
     }
 
     /// T-L3.
     public static func listDue(_ name: String, day: String) -> LandingSentence {
-        LandingSentence(text: "\(name) is due \(day).", key: name)
+        LandingSentence(text: "\(name) is due \(day)", key: name)
     }
 
     /// T-L4.
     public static func listTouchedLast(_ name: String) -> LandingSentence {
-        LandingSentence(text: "\(name) is the one you touched last.", key: name)
+        LandingSentence(text: "\(name) is the one you touched last", key: name)
     }
 
     /// T-L6.
@@ -214,7 +212,7 @@ public enum LandingSentences {
 
     /// T-L11.
     public static func itemDueTomorrow(_ item: String, on list: String) -> LandingSentence {
-        LandingSentence(text: "\(item) is due tomorrow on \(list).", key: item)
+        LandingSentence(text: "\(item) is due tomorrow on \(list)", key: item)
     }
 
     /// T-L12.
@@ -225,7 +223,7 @@ public enum LandingSentences {
     /// T-L13: "Groceries has 4 new, from Tacos." or "Groceries has 4 new."
     public static func listHasNew(_ name: String, count: Int, from source: String?) -> LandingSentence {
         let tail = source.map { ", from \($0)" } ?? ""
-        return LandingSentence(text: "\(name) has \(count) new\(tail).", key: name)
+        return LandingSentence(text: "\(name) has \(count) new\(tail)", key: name)
     }
 
     // MARK: Routines

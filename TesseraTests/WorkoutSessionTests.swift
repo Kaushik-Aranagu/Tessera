@@ -132,7 +132,7 @@ struct WorkoutSessionTests {
 
         session.logSet()
         #expect(session.lastSeated?.records.isEmpty == false) // the one celebration
-        #expect(WorkoutLines.tess(session, phase: session.phase(), summary: nil).hasPrefix("New best: 85 × 7."))
+        #expect(WorkoutLines.tess(session, phase: session.phase(), summary: nil).hasPrefix("New best: 85 × 7"))
         session.skipRest()
         session.weight = 87.5
         session.reps = 7
@@ -157,7 +157,7 @@ struct WorkoutSessionTests {
         #expect(session.setRows(of: entry).first?.weight == 85)
         #expect(session.setRows(of: entry).first?.reps == 6)
         #expect(!session.isEditing && session.weight == next.0 && session.reps == next.1) // the next set is back
-        #expect(session.editNote == "Set 1 is 85 × 6 now.")
+        #expect(session.editNote == "Set 1 is 85 × 6 now")
 
         // Undo takes the latest action first: the edit, then the set.
         #expect(session.canUndoLast)
@@ -178,7 +178,7 @@ struct WorkoutSessionTests {
         session.removeEditing()
         #expect(session.setRows(of: entry).isEmpty)
         #expect(!session.isEditing)
-        #expect(session.editNote == "Set 1 removed.")
+        #expect(session.editNote == "Set 1 removed")
 
         #expect(session.canUndoLast)
         session.undoLast()
@@ -278,10 +278,10 @@ struct WorkoutSessionTests {
         let before = try #require(session.restEndsAt)
         session.extendRest(by: 15)
         #expect(session.restEndsAt == before.addingTimeInterval(15))
-        #expect(session.restNote == "+15. Drag again for more.")
+        #expect(session.restNote == "+15. Drag again for more")
         session.skipRest()
         #expect(session.phase() == .set)
-        #expect(session.restNote == "Rest skipped. Set 2 is up.")
+        #expect(session.restNote == "Rest skipped. Set 2 is up")
     }
 
     @Test func aHeavyFirstSetOffersADropForTheRest() throws {
@@ -372,7 +372,7 @@ struct WorkoutSessionTests {
         #expect(!session.canUndo)
         let summary = session.summary
         #expect(summary.sets == 1 && summary.exercises == 1)
-        #expect(summary.line == "1 exercise, 1 set. New best: 82.5 × 8.")
+        #expect(summary.line == "1 exercise, 1 set. New best: 82.5 × 8")
         #expect(session.workout.title == "Push Day A")
     }
 

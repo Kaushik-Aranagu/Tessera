@@ -180,10 +180,14 @@ struct HomeOneThing: View {
                     .tracking(13 * 0.12)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    // The header ends where the Big line starts (429 + 15 = 444): fixed size, never over it.
+                    .dynamicTypeSize(...DynamicTypeSize.large)
+                    .frame(height: 15, alignment: .top)
             }
-            .offset(y: 17)
-            tier(thing, delay: 0.2, height: 64, inset: 32) { big(thing) }
-                .frame(height: 64, alignment: .leading)
+            // 428: its 15.7 pt line ends before the Big line at 444 (no overlap, bounds check).
+            .offset(y: 16)
+            tier(thing, delay: 0.2, height: Self.bigSlot, inset: 32) { big(thing) }
+                .frame(height: Self.bigSlot, alignment: .leading)
                 .offset(y: 32)
             tier(thing, delay: 0.28, height: 28, inset: 110) { mid(thing) }
                 .offset(y: 110)
@@ -246,9 +250,9 @@ struct HomeOneThing: View {
     private func big(_ thing: HomeThing) -> some View {
         let colour = thing.accentColor
         // Sheet 283: a word at Figtree 38 700 on one line (cut on whole words), or an Outfit 56 number.
-        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, size: 38, width: 262, typeSize: typeSize))
-            .font(thing.bigIsNumber ? .custom("Outfit", size: 56, relativeTo: .largeTitle).weight(.light)
-                : .custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
+        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, width: 262, typeSize: typeSize))
+            .font(thing.bigIsNumber ? .custom("Outfit", fixedSize: 56).weight(.light)
+                : .custom("Figtree", fixedSize: Self.bigSize(typeSize)).weight(.bold))
             .foregroundStyle(colour)
             .lineLimit(1)
             .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink, lift: lift))
@@ -268,7 +272,8 @@ struct HomeOneThing: View {
         .buttonStyle(.plain)
     }
 
-    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x with an underline in its accent
+    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x in its accent, no underline
+    /// (Kaushik, Oct 23)
     /// (ink
     /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
@@ -300,16 +305,36 @@ struct HomeOneThing: View {
         }
     }
 
-    /// The longest whole-word cut of `text` that fits `width` at Figtree `size` 700; never an ellipsis. It measures at
-    /// the size the line draws at: scaled with the reader's text size, but clamped to AX1 like the page (so a larger
-    /// size never cuts words that still fit).
-    static func cut(_ text: String, size: CGFloat, width: CGFloat, typeSize: DynamicTypeSize = .large) -> String {
+    /// The Big word's size: Figtree 38 scaled with the reader's text size, clamped to AX1 like the page, and stepped
+    /// down so its line fits the 64 pt slot (sheet 288: size first), so it never reaches the line below.
+    static let bigSlot: CGFloat = 64
+
+    static func bigSize(_ typeSize: DynamicTypeSize) -> CGFloat {
+        let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
+        let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: 38, compatibleWith: traits)
+        // Never under the sheet's 38 pt, at the small text sizes too.
+        var size = max(scaled, 38)
+        while size > 38, bigFont(size).lineHeight > bigSlot {
+            size -= 1
+        }
+        return size
+    }
+
+    /// The height of the Big line at `size`, for the no-overlap check.
+    static func bigLineHeight(_ size: CGFloat) -> CGFloat {
+        bigFont(size).lineHeight
+    }
+
+    private static func bigFont(_ size: CGFloat) -> UIFont {
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
         ])
-        let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
-        let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: size, compatibleWith: traits)
-        let font = UIFont(descriptor: descriptor, size: scaled)
+        return UIFont(descriptor: descriptor, size: size)
+    }
+
+    /// The longest whole-word cut of `text` that fits `width` at the Big size; never an ellipsis.
+    static func cut(_ text: String, width: CGFloat, typeSize: DynamicTypeSize = .large) -> String {
+        let font = bigFont(bigSize(typeSize))
         for form in FitLine.cuts(text) where (form as NSString).size(withAttributes: [.font: font]).width <= width {
             return form
         }

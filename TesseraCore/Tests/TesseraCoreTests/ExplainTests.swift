@@ -59,14 +59,14 @@ struct ExplainTests {
         #expect(explain(.nextWeight(exercise: bench)) == nil)
         try session(daysAgo: 3, sets: [(80, 12), (80, 12), (80, 12)])
         let text = try #require(explain(.nextWeight(exercise: bench)))
-        #expect(text.hasPrefix("82.5: your last Bench Press, 80 for 12, plus one 2.5 step."))
+        #expect(text.hasPrefix("82.5: your last Bench Press, 80 for 12, plus one 2.5 step"))
     }
 
     @Test func aWeightHeldUntilTheRangeTopSaysSo() throws {
         try session(daysAgo: 3, sets: [(80, 6), (80, 6), (80, 6)])
         let text = try #require(explain(.nextWeight(exercise: bench)))
         #expect(text ==
-            "80: your last Bench Press, 80 for 6, the same weight until every set reaches the top of the range.")
+            "80: your last Bench Press, 80 for 6, the same weight until every set reaches the top of the range")
     }
 
     @Test func sessionLengthNamesThePlainRoutineAndSaysNothingOfAPrivateOne() throws {
@@ -74,7 +74,7 @@ struct ExplainTests {
         for day in [9.0, 6.0, 3.0] {
             try session(daysAgo: day, sets: [(60, 5), (60, 5)], routine: routine, minutes: 45)
         }
-        #expect(explain(.sessionLength(routine: routine.id)) == "about 45 min: your last 3 Push A sessions.")
+        #expect(explain(.sessionLength(routine: routine.id)) == "about 45 min: your last 3 Push A sessions")
         let secret = try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user).output
         for day in [9.0, 6.0] {
             try session(daysAgo: day, sets: [(60, 5), (60, 5)], title: "Knee rehab day", routine: secret, minutes: 30)
@@ -86,10 +86,10 @@ struct ExplainTests {
     @Test func theBestSetNamesTheSetAndIgnoresPrivateWorkouts() throws {
         #expect(explain(.bestSet(exercise: bench)) == nil)
         try session(daysAgo: 5, sets: [(80, 5)])
-        #expect(explain(.bestSet(exercise: bench)) == "93 kg: your best Bench Press, 80 for 5, as a one-rep estimate.")
+        #expect(explain(.bestSet(exercise: bench)) == "93 kg: your best Bench Press, 80 for 5, as a one-rep estimate")
         try session(daysAgo: 2, sets: [(120, 5)], title: "Knee rehab day")
         // The private 120 changes nothing.
-        #expect(explain(.bestSet(exercise: bench)) == "93 kg: your best Bench Press, 80 for 5, as a one-rep estimate.")
+        #expect(explain(.bestSet(exercise: bench)) == "93 kg: your best Bench Press, 80 for 5, as a one-rep estimate")
     }
 
     @Test func theRunNeedsAFinishedRunOfThreeOrMoreWeeks() throws {
@@ -98,7 +98,7 @@ struct ExplainTests {
             try session(daysAgo: Double(week * 7 + 1), sets: [(60, 5)])
         }
         let text = try #require(explain(.streak(habit: .training)))
-        #expect(text == "5 weeks: the most weeks in a row with a session, counting only runs that have ended.")
+        #expect(text == "5 weeks: the most weeks in a row with a session, counting only runs that have ended")
         #expect(!text.lowercased().contains("streak"))
     }
 
@@ -126,7 +126,7 @@ struct ExplainTests {
             }
         }
         let text = try #require(explain(.coversDinners))
-        #expect(text == "covers 3 dinners: tacos, soup and Private recipe have all they need.")
+        #expect(text == "covers 3 dinners: tacos, soup and Private recipe have all they need")
         #expect(!text.contains("Lexapro"))
     }
 
@@ -138,7 +138,7 @@ struct ExplainTests {
         try engine.perform(CreatePool(name: "India account", currency: "INR", opening: "8300"), by: .user)
         let rateDay = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 12)))
         try engine.perform(RecordRate(pair: "USD/INR", value: "83", at: rateDay), by: .user)
-        #expect(explain(.moneyAboutTotal) == "1,100: dollars plus rupees at the Oct 18 rate.")
+        #expect(explain(.moneyAboutTotal) == "1,100: dollars plus rupees at the Oct 18 rate")
     }
 
     @Test func aNegativeAboutTotalKeepsItsSign() throws {
@@ -148,14 +148,14 @@ struct ExplainTests {
         let rateDay = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 12)))
         try engine.perform(RecordRate(pair: "USD/INR", value: "83", at: rateDay), by: .user)
         // -300 dollars plus 8300 rupees at 83 is -200: the sign stays.
-        #expect(explain(.moneyAboutTotal) == "-200: dollars plus rupees at the Oct 18 rate.")
+        #expect(explain(.moneyAboutTotal) == "-200: dollars plus rupees at the Oct 18 rate")
         #expect(PoolFormat.wholeNumber(-40) == "-40" && PoolFormat.wholeNumber(1100) == "1,100")
     }
 
     @Test func aPoolBalanceUsesTheLabelNeverTheName() throws {
         let pool = try engine.perform(CreatePool(name: "US checking", opening: "250"), by: .user).output
         let text = try #require(explain(.poolBalance(pool: pool.id)))
-        #expect(text == "$250.00: what Private pool started with, plus what came in, minus what went out.")
+        #expect(text == "$250.00: what Private pool started with, plus what came in, minus what went out")
         #expect(!text.contains("checking"))
         #expect(explain(.poolBalance(pool: UUID())) == nil)
     }
@@ -163,7 +163,7 @@ struct ExplainTests {
     @Test func theMonthSpendIsPerCurrencyAndNilWithNone() throws {
         #expect(explain(.monthSpend(currency: "USD")) == nil)
         try engine.perform(LogSpend(amount: 12.4, typed: "12.40", spentAt: now.addingTimeInterval(-86400)), by: .user)
-        #expect(explain(.monthSpend(currency: "USD")) == "12.40: what you logged this month in dollars.")
+        #expect(explain(.monthSpend(currency: "USD")) == "12.40: what you logged this month in dollars")
         #expect(explain(.monthSpend(currency: "INR")) == nil)
     }
 

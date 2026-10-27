@@ -39,7 +39,7 @@ public enum HomeSentence {
     }
 
     public static let maxClauses = 4
-    public static let quietDay = "A quiet day."
+    public static let quietDay = "A quiet day"
 
     /// What each app has to say, already as clauses. An app with nothing gives `nil`.
     public struct Inputs: Sendable {
@@ -81,8 +81,8 @@ public enum HomeSentence {
         return timed + untimed
     }
 
-    /// The whole line: the clauses joined, or "A quiet day." when no app has anything.
+    /// The whole line: the clauses joined, or "A quiet day" when no app has anything.
     public static func text(_ clauses: [Clause]) -> String {
-        clauses.isEmpty ? quietDay : clauses.map(\.text).joined(separator: " ")
+        clauses.isEmpty ? quietDay : clauses.map(\.text).joined(separator: ". ")
     }
 }

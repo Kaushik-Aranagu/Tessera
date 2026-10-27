@@ -146,7 +146,7 @@ struct RoutinesPage: View {
         making = false
         // Making a routine is two ops; UNDO takes both back and leaves the new routine's page if he's on it.
         let route = Route.object(made.output.id)
-        said("\(title) made.", records: [made.record, added.record], haptic: .made) { [model] in
+        said("\(title) made", records: [made.record, added.record], haptic: .made) { [model] in
             if model.path.last == route {
                 model.path.removeLast()
             }
@@ -185,7 +185,7 @@ struct RoutinesPage: View {
             return
         }
         said(
-            "\(plan.title) \(mode == .fixed ? "on fixed days" : "rolls on").",
+            "\(plan.title) \(mode == .fixed ? "on fixed days" : "rolls on")",
             records: [result.record],
             haptic: .selection
         ) { Receipt.takenBack(plan.title) }
@@ -215,7 +215,7 @@ struct RoutinesPage: View {
                       let result = try? model.engine.perform(MoveRoutineInPlan(plan: plan.id, routine: routine.id,
                                                                                to: target), by: .user)
                 else { return }
-                said("\(routine.title) moved.", records: [result.record], haptic: .selection) {
+                said("\(routine.title) moved", records: [result.record], haptic: .selection) {
                     Receipt.takenBack(routine.title)
                 }
             }

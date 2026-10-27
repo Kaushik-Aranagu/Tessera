@@ -37,9 +37,9 @@ struct SetLoggerTests {
         .init("K782", "24", .dumbbell, "ask 24: 24 kg, or 24 reps?"),
         .init("K783", "81", .barbell, "ask 81 for how many reps?"),
         .init("K784", "55", .machine, "ask 55 for how many reps?"),
-        .init("K785", "+5", .barbell, "ask Say the set, like 85 × 8."),
-        .init("K786", "-5", .barbell, "ask Say the set, like 75 × 8."),
-        .init("K787", "+2.5", .barbell, "ask Say the set, like 82.5 × 8."),
+        .init("K785", "+5", .barbell, "ask Say the set, like 85 × 8"),
+        .init("K786", "-5", .barbell, "ask Say the set, like 75 × 8"),
+        .init("K787", "+2.5", .barbell, "ask Say the set, like 82.5 × 8"),
         .init("K788", "drop to 70 for 10", .barbell, "set 70x10 drop"),
         .init("K789", "drop to 72 for 10", .barbell, "set 72.5x10 drop (said 72)"),
         .init("K790", "81 for 8", .barbell, "set 80x8 (said 81)"),
@@ -55,7 +55,7 @@ struct SetLoggerTests {
         .init("K801", "fail at 6", .barbell, "ask Fail at 6: rep 6, or 6 reps?"),
         .init("K802", "80 x 6 to failure", .barbell, "set 80x6 failure"),
         .init("K803", "warmup 60x5", .barbell, "set 60x5 warmup"),
-        .init("K804", "skip", .barbell, "ask Skip is on the workout screen."),
+        .init("K804", "skip", .barbell, "ask Skip is on the workout screen"),
         .init("K805", "bodyweight 12", .barbell, "nil"),
         .init("K806", "bodyweight 12", .bodyweight, "set 0x12"),
         .init("K807", "+10 for 6", .bodyweight, "set 10x6"),
@@ -69,11 +69,11 @@ struct SetLoggerTests {
         .init("H625", "38", .barbell, "set 80x38 reps"),
         // QA on #205: dictation (Q1), commas (Q2), non-RPE "at" (Q3), bodyweight reps (Q4), kind with RPE (Q5),
         // below the bar (Q6).
-        .init("Q1a", "Same at 9.", .barbell, "set 80x8 same @9"),
-        .init("Q1b", "8 at 9.", .barbell, "set 80x8 reps @9"),
-        .init("Q1c", "Fail at 6.", .barbell, "ask Fail at 6: rep 6, or 6 reps?"),
-        .init("Q1d", "-5.", .barbell, "ask Say the set, like 75 × 8."),
-        .init("Q1e", "+5.", .barbell, "ask Say the set, like 85 × 8."),
+        .init("Q1a", "Same at 9", .barbell, "set 80x8 same @9"),
+        .init("Q1b", "8 at 9", .barbell, "set 80x8 reps @9"),
+        .init("Q1c", "Fail at 6", .barbell, "ask Fail at 6: rep 6, or 6 reps?"),
+        .init("Q1d", "-5", .barbell, "ask Say the set, like 75 × 8"),
+        .init("Q1e", "+5", .barbell, "ask Say the set, like 85 × 8"),
         .init("Q2a", "100 for 5, at 8", .barbell, "set 100x5 @8"),
         .init("Q2b", "8, 81", .barbell, "set 80x8 reps + ask 81 for how many reps?"),
         .init("Q3a", "same at 11", .barbell, "nil"),
@@ -83,8 +83,8 @@ struct SetLoggerTests {
         .init("Q6", "0 x 8", .barbell, "nil"),
         .init("Q5b", "warmup 60x5 at 8", .barbell, "set 60x5 warmup @8"),
         // QA Q10: no yes/no asks; a bare "yes" or "81 kg" never becomes a task.
-        .init("Q10a", "yes", .barbell, "ask Say the set, like 80 × 8."),
-        .init("Q10b", "ok", .noSets, "ask Say the set, like 80 × 8."),
+        .init("Q10a", "yes", .barbell, "ask Say the set, like 80 × 8"),
+        .init("Q10b", "ok", .noSets, "ask Say the set, like 80 × 8"),
         .init("Q10c", "81 kg", .barbell, "ask 81 kg for how many reps?"),
         // Design's × ruling: typed or spoken "by" reads as x (Research item 100).
         .init("BY1", "80 by 8", .barbell, "set 80x8"),
@@ -175,7 +175,7 @@ struct SetLoggerTests {
         let focus = try entry(.barbell)
         let capture = await TessCaptureEngine(engine: engine)
             .capture("81 for 8", context: TessContext(entry: focus.id, process: focus.parent?.id))
-        #expect(capture.line == "Set 2 logged. 80 × 8, nearest load to 81.")
+        #expect(capture.line == "Set 2 logged. 80 × 8, nearest load to 81")
         #expect(capture.records.count == 1)
     }
 }

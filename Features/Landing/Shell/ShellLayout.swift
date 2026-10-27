@@ -62,11 +62,12 @@ enum ShellLayout {
     /// element's frame, in any look or Dynamic Type size).
     static let pageFootGap: CGFloat = 10
 
-    /// The action word's slot height at a Dynamic Type size: the verb line (24 pt, 32 line) over the object line
-    /// (13 pt, 18 line), both scaled, never less than the design frame. The word grows upward from its bottom edge.
+    /// The action word's slot height at a Dynamic Type size. The word keeps its 64 pt slot (verb and object when they
+    /// fit, the verb alone when they do not, see `LandingActionWord`), so only a verb taller than the slot adds to it.
+    /// The word grows upward from its bottom edge and the Page stops above whatever it needs.
     static func actionSlotHeight(typeSize: DynamicTypeSize) -> CGFloat {
         let size = min(typeSize, .accessibility2)
-        return max(Foot.designHeight, (32 * titleScale(size)).rounded(.up) + (18 * captionScale(size)).rounded(.up))
+        return max(Foot.designHeight, (32 * titleScale(size)).rounded(.up))
     }
 
     private typealias Foot = LandingPlace.Foot
@@ -83,20 +84,6 @@ enum ShellLayout {
         case .xxxLarge: 1.21
         case .accessibility1: 1.32
         default: 1.5
-        }
-    }
-
-    private static func captionScale(_ size: DynamicTypeSize) -> CGFloat {
-        switch size {
-        case .xSmall: 0.92
-        case .small: 0.96
-        case .medium: 0.98
-        case .large: 1
-        case .xLarge: 1.08
-        case .xxLarge: 1.17
-        case .xxxLarge: 1.25
-        case .accessibility1: 1.4
-        default: 1.6
         }
     }
 

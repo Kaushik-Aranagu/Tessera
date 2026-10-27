@@ -70,7 +70,7 @@ public struct RepeatWorkout: EngineAction {
 
     public func receipt(in store: ObjectStore, output copy: ObjectRecord) -> String? {
         let classes = PrivateWords.systemClasses(in: store.context)
-        return "\(name(of: copy, in: store, classes: classes)), started."
+        return "\(name(of: copy, in: store, classes: classes)), started"
     }
 
     public func receipt(in _: ObjectStore) -> String? {

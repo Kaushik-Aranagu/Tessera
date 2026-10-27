@@ -97,7 +97,7 @@ struct ShoppingIdleTests {
         let (engine, _, table) = try shop()
         _ = table.suspendIfIdle(now: t0 + 3600 + idle + 60, idleLimit: idle)
         let notes = table.tidyNotes(now: t0 + 3600 + ProcessTable.Limits.putAway + 60)
-        #expect(notes.map(\.line) == ["Shopping moved to Later. 12 in the basket."])
+        #expect(notes.map(\.line) == ["Shopping moved to Later. 12 in the basket"])
         #expect(notes.first?.undo == nil)
         #expect(table.later().count == 1)
         #expect(engine.classes.isEmpty == false)
@@ -107,7 +107,7 @@ struct ShoppingIdleTests {
         let (_, _, table) = try shop(checked: 0)
         _ = table.suspendIfIdle(now: t0 + idle + 60, idleLimit: idle)
         let notes = table.tidyNotes(now: t0 + ProcessTable.Limits.putAway + 60)
-        #expect(notes.map(\.line) == ["One thing moved to Later."])
+        #expect(notes.map(\.line) == ["One thing moved to Later"])
     }
 
     @Test func putAwayShopKeepsRowsForPantry() throws {

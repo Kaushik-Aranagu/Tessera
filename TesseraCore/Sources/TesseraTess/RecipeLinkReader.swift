@@ -3,36 +3,36 @@ import TesseraCore
 
 /// Tess's lines for a recipe link, in one table (Design 32, Research's copy check). Counts are digits.
 public enum RecipeLinkLine {
-    public static let blocked = "That site won't let me read it. Paste the text instead."
-    public static let stepsPaywalled = "The steps are paywalled. Paste them below."
-    public static let paywalled = "That page is paywalled. Paste the text instead."
-    public static let noRecipe = "No recipe on that page. Paste the text instead."
+    public static let blocked = "That site won't let me read it. Paste the text instead"
+    public static let stepsPaywalled = "The steps are paywalled. Paste them below"
+    public static let paywalled = "That page is paywalled. Paste the text instead"
+    public static let noRecipe = "No recipe on that page. Paste the text instead"
     /// "Tess asks Claude" is off: a link read stays on the phone (G32).
-    public static let claudeOff = "Claude is off. Paste the text instead."
-    public static let claudeTimeout = "Claude didn't answer in time. Paste the text instead."
-    public static let videoNoRecipe = "No written recipe in that video. Paste the text instead."
+    public static let claudeOff = "Claude is off. Paste the text instead"
+    public static let claudeTimeout = "Claude didn't answer in time. Paste the text instead"
+    public static let videoNoRecipe = "No written recipe in that video. Paste the text instead"
     /// Offline: the link waits on the shelf and reads only on his tap, never by itself (ER1, K86.7, FG7).
-    public static let offline = "Recipe link, kept for later."
-    public static let tooBig = "Too big to read safely. Paste the text instead."
+    public static let offline = "Recipe link, kept for later"
+    public static let tooBig = "Too big to read safely. Paste the text instead"
     /// A link with a name or password in it ("name:secret@host"): never read, kept or shown (QA on #807).
-    public static let secretLink = "That link has a password in it. Paste the text instead."
-    public static let askingClaude = "Asking Claude to read the recipe."
-    public static let claudeRead = "Claude read it. Check it, then save."
+    public static let secretLink = "That link has a password in it. Paste the text instead"
+    public static let askingClaude = "Asking Claude to read the recipe"
+    public static let claudeRead = "Claude read it. Check it, then save"
     /// A key Claude refused on this read. Never M2 here: "Paste it again?" would invite the key into the recipe field.
     /// The key and the switch stay as they are.
-    public static let badKey = "Claude couldn't use your key. Paste the text instead."
-    public static let claudeBusy = "Claude's busy right now. Paste the text instead."
+    public static let badKey = "Claude couldn't use your key. Paste the text instead"
+    public static let claudeBusy = "Claude's busy right now. Paste the text instead"
     /// A kept link says one of these once, with no UNDO (Kitchen ruling on #845). "Paste the text instead." shows only
     /// when a link is dropped.
-    public static let keptUntilClaude = "Recipe link, kept until Claude is back."
-    public static let keptCheckKey = "Recipe link, kept. Check the Claude key in Settings."
+    public static let keptUntilClaude = "Recipe link, kept until Claude is back"
+    public static let keptCheckKey = "Recipe link, kept. Check the Claude key in Settings"
 
     public static func reading(_ host: String) -> String {
-        "Reading \(host)."
+        "Reading \(host)"
     }
 
     public static func paused(until reset: String) -> String {
-        "Claude's paused until \(reset). Paste the text instead."
+        "Claude's paused until \(reset). Paste the text instead"
     }
 
     /// "7 ingredients, 3 steps, 2 timers."
@@ -43,15 +43,15 @@ public enum RecipeLinkLine {
         if timers > 0 {
             parts.append("\(timers) \(timers == 1 ? "timer" : "timers")")
         }
-        return parts.joined(separator: ", ") + "."
+        return parts.joined(separator: ", ")
     }
 
     public static func several(_ count: Int) -> String {
-        "\(count) recipes on that page. I read the first."
+        "\(count) recipes on that page. I read the first"
     }
 
     public static func fromVideo(_ recipe: ParsedRecipe) -> String {
-        "\(recipe.ingredients.count) ingredients, from the video's description."
+        "\(recipe.ingredients.count) ingredients, from the video's description"
     }
 
     public static func videoLinks(to host: String) -> String {
@@ -59,11 +59,11 @@ public enum RecipeLinkLine {
     }
 
     public static func saved(_ title: String) -> String {
-        "\(title) saved."
+        "\(title) saved"
     }
 
     public static func takenBack(_ title: String) -> String {
-        "\(title), taken back."
+        "\(title), taken back"
     }
 }
 

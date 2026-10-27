@@ -109,7 +109,7 @@ struct LiveTessCorner: View {
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityValue(shownLine ?? "")
-            .accessibilityHint(onOpen == nil ? "" : "Type to Tess.")
+            .accessibilityHint(onOpen == nil ? "" : "Type to Tess")
             .accessibilityAddTraits(onOpen == nil ? [] : .isButton)
             .accessibilityAction { onOpen?() }
             .accessibilityActions {

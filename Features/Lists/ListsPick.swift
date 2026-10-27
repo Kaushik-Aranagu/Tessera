@@ -49,11 +49,11 @@ struct PickMoment: View {
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { picking = nil }
         guard let record = try? model.engine.perform(AcceptPick(item: item.id, time: AppClock.now), by: .user).record
         else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         if let receipt = record.receipt {
-            TessVoice.shared.say(receipt.hasSuffix(".") ? receipt : receipt + ".", undo: record, holds: .seconds(4))
+            TessVoice.shared.say(receipt, undo: record, holds: .seconds(4))
         }
         model.open(.object(item.id))
     }

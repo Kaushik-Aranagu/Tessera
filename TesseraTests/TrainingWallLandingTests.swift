@@ -37,8 +37,8 @@ struct TrainingWallLandingTests {
         calendar.locale = Locale(identifier: "en_US")
         let saturday = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 31, hour: 9)))
         let forms = TrainingWallFacts.stateForms(.rest(next: "Pull B", nextDay: saturday), calendar: calendar)
-        #expect(forms.first == "Rest today. Next is Saturday.", "\(forms)")
-        #expect(forms.last == "Rest today.")
+        #expect(forms.first == "Rest today. Next is Saturday", "\(forms)")
+        #expect(forms.last == "Rest today")
     }
 
     @Test func longestFormsFitAtDefaultAndShortestAtAX5() throws {
@@ -143,9 +143,9 @@ struct TrainingWallLandingTests {
     }
 
     @Test func needsTakeAWholeShortForm() {
-        let forms = ["Rest today. Next is Saturday.", "Rest today."]
-        #expect(TrainingDeckFacts.pick(forms) == "Rest today.")
-        #expect(TrainingDeckFacts.pick(["Push A today.", "Push A."]) == "Push A today.")
+        let forms = ["Rest today. Next is Saturday", "Rest today"]
+        #expect(TrainingDeckFacts.pick(forms) == "Rest today")
+        #expect(TrainingDeckFacts.pick(["Push A today", "Push A"]) == "Push A today")
         #expect(TrainingDeckFacts.pick(["", "Week done"]) == "Week done")
     }
 

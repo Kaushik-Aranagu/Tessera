@@ -20,7 +20,7 @@ struct ReadingTests {
     @Test func queuingBuildsOneBookAndTheThingComesFirst() throws {
         let engine = try engine()
         let made = try engine.perform(QueueBook(title: "Dune", author: "Frank Herbert", pages: 612), by: .user)
-        #expect(made.record.receipt == "Dune, in the queue." && made.record.summary == "Dune, in the queue")
+        #expect(made.record.receipt == "Dune, in the queue" && made.record.summary == "Dune, in the queue")
         #expect(store.value("state", of: made.output)?.stringValue == "queued")
         // Queuing again returns the same book, never a second copy.
         let again = try engine.perform(QueueBook(title: "dune"), by: .user).output
@@ -47,7 +47,7 @@ struct ReadingTests {
         try engine.perform(StartRoutine(routine: routine.id, time: start), by: .user)
         let book = try engine.perform(QueueBook(title: "Dune"), by: .user).output
         let started = try engine.perform(StartReading(book: book.id, time: start), by: .user)
-        #expect(started.record.receipt == "Dune, started.")
+        #expect(started.record.receipt == "Dune, started")
         let table = ProcessTable(engine: engine)
         let process = try #require(table.process(for: book))
         #expect(process.state == .suspended && process.ownerApp == "Reading" && process.nextStep == "Dune, p 0")
@@ -63,7 +63,7 @@ struct ReadingTests {
             SetBookPage(book: book.id, page: 142, time: start.addingTimeInterval(60)),
             by: .user
         )
-        #expect(moved.record.summary == "Dune, p 120 to 142" && moved.record.receipt == "Dune, p 142 of 612.")
+        #expect(moved.record.summary == "Dune, p 120 to 142" && moved.record.receipt == "Dune, p 142 of 612")
         let process = try #require(ProcessTable(engine: engine).process(for: book))
         #expect(process.nextStep == "Dune, p 142" && process.resumePoint?.index == 142 && process.state == .suspended)
         #expect(store.value("state", of: book)?.stringValue == "reading")
@@ -84,7 +84,7 @@ struct ReadingTests {
             by: .user
         )
         #expect(done.record.summary == "Dune, finished: slow start, great end")
-        #expect(done.record.receipt == "Dune, finished: slow start, great end.")
+        #expect(done.record.receipt == "Dune, finished: slow start, great end")
         #expect(ProcessTable(engine: engine).process(for: book) == nil)
         #expect(Bookshelf(store: store, classes: engine.classes).finished().map(\.title) == ["Dune"])
         engine.undo(done.record)
@@ -100,7 +100,7 @@ struct ReadingTests {
         try engine.perform(StartReading(book: book.id, time: start), by: .user)
         try engine.perform(SetBookPage(book: book.id, page: 90), by: .user)
         let aside = try engine.perform(SetBookAside(book: book.id), by: .user)
-        #expect(aside.record.receipt == "Dune, set aside.")
+        #expect(aside.record.receipt == "Dune, set aside")
         #expect(Bookshelf(store: store, classes: engine.classes).dropped().count == 1)
         try engine.perform(StartReading(book: book.id, time: start.addingTimeInterval(3600)), by: .user)
         #expect(store.value("state", of: book)?.stringValue == "reading")

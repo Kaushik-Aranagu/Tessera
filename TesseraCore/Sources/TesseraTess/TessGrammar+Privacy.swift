@@ -44,7 +44,7 @@ extension TessGrammar {
     func parseRememberedMoney(_ phrase: String) -> Parse? {
         guard let match = phrase.firstMatch(of: /^(?i)\s*remember(?:\s+that)?\s+(.+)$/),
               PrivateFacts.isMoneyShaped(String(match.1)) else { return nil }
-        return .ask(TessMemoryScreen.Refusal.money("").line ?? "I don't keep sums of money.")
+        return .ask(TessMemoryScreen.Refusal.money("").line ?? "I don't keep sums of money")
     }
 
     /// A body or health fact nothing else read stays on the phone as a private note (Product on QA L1, Research 138

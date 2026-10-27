@@ -54,7 +54,7 @@ struct GalleyRoomContentTests {
             return
         }
         #expect(name == "Tonight")
-        #expect(line == "2 dinners planned.")
+        #expect(line == "2 dinners planned")
     }
 
     @Test func aWalledDishReadsPrivateRecipeOnThePage() {
@@ -109,7 +109,7 @@ struct GalleyRoomContentTests {
         ]
         facts.needs = [["Tacos tonight", "start 6:05 pm"], ["Nothing planned tomorrow", "Plan it from Recipes"],
                        ["2 dinners planned", "1 to get"]]
-        facts.caption = "Swipe a ticket up for its next page."
+        facts.caption = "Swipe a ticket up for its next page"
         facts.widget = [WidgetItem(id: "dinner", header: "Dinner", big: "Tacos", strikeable: false)]
         facts.cookObject = "Tacos"
         facts.rows = ["tonight": [

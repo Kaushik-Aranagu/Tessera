@@ -12,7 +12,7 @@ public struct TessSentLog {
     /// A payload too large to keep (a recipe page's text): the row shows the job, time, size, model and cost only.
     public static let heldBackPayload = "Held back on this phone"
     /// The receipt for "Clear what was sent": plain, and there is no UNDO.
-    public static let clearedLine = "Cleared what was sent."
+    public static let clearedLine = "Cleared what was sent"
 
     public let store: ObjectStore
     public let classes: [SystemCatalog.Key: ClassDef]

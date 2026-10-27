@@ -35,7 +35,7 @@ public struct TessMemory: Identifiable, Equatable, Sendable {
     public static let maxTextLength = 80
     /// At most this many told lines; at the cap nothing is written and Tess says so (Design 49 addendum S7).
     public static let toldCap = 40
-    public static let capLine = "I keep 40 things. Forget one and say it again."
+    public static let capLine = "I keep 40 things. Forget one and say it again"
     /// Day lines stop at 14 days; the week is computed live by WeekFacts, never stored (AI thread S1).
     public static let recentDays = 14
 
@@ -122,9 +122,9 @@ public enum TessMemoryScreen {
         /// Tess's line when she won't keep it (Design 49 addendum S6, S7); nil for a shape problem.
         public var line: String? {
             switch self {
-            case .money: "I don't keep sums of money."
-            case .place: "I don't keep places."
-            case .secret: "I don't keep passwords."
+            case .money: "I don't keep sums of money"
+            case .place: "I don't keep places"
+            case .secret: "I don't keep passwords"
             case .capFull: TessMemory.capLine
             default: nil
             }
@@ -269,7 +269,7 @@ public struct RememberFact: EngineAction {
         // A private line (a health word, or marked so) says where it stays (arch #357).
         let words = Set(text.lowercased().split { !$0.isLetter }.map(String.init))
         if isPrivate == true || !words.isDisjoint(with: TessMemoryScreen.healthWords) {
-            return "Kept, on this phone only."
+            return "Kept, on this phone only"
         }
         return "Kept. \(TessMemoryStore.secondPerson(text))"
     }
@@ -285,7 +285,7 @@ public struct RememberFact: EngineAction {
             return TessMemoryScreen.Refusal.place("").line
         }
         if reason.contains("secret") {
-            return TessMemoryScreen.Refusal.secret.line // Research BM11: "I don't keep passwords."
+            return TessMemoryScreen.Refusal.secret.line // Research BM11: "I don't keep passwords"
         }
         if reason.contains("capFull") {
             return TessMemory.capLine
@@ -308,13 +308,15 @@ public struct ForgetMemory: EngineAction {
     public func apply(_ transaction: inout Transaction) throws {
         try transaction.delete(transaction.object(memory, is: .tessMemory))
         // The beliefs made from the line go with it (M1): closing one would keep his words.
-        for belief in TessBeliefStore.beliefs(madeFrom: memory, store: transaction.store, classes: transaction.classes) {
+        for belief in TessBeliefStore
+            .beliefs(madeFrom: memory, store: transaction.store, classes: transaction.classes)
+        {
             transaction.delete(belief)
         }
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "\(store.object(id: memory).map { TessMemoryStore.receiptThing(of: $0.title) } ?? "That"), forgotten."
+        "\(store.object(id: memory).map { TessMemoryStore.receiptThing(of: $0.title) } ?? "That"), forgotten"
     }
 }
 
@@ -335,7 +337,9 @@ public struct ForgetAllMemory: EngineAction {
         if let beliefClass = transaction.classes[.belief] {
             for belief in transaction.store.objects(of: beliefClass) where !belief.isDeleted {
                 let rule = transaction.store.value("rule", of: belief)?.stringValue ?? ""
-                if !rule.hasPrefix("memory:") { beliefCount += 1 }
+                if !rule.hasPrefix("memory:") {
+                    beliefCount += 1
+                }
                 transaction.delete(belief)
             }
         }
@@ -345,7 +349,7 @@ public struct ForgetAllMemory: EngineAction {
     public func summary(in store: ObjectStore) -> String {
         // Written right after apply: the lines it just deleted are the ones gone in the last moments.
         let gone = TessMemoryStore.recentlyDeleted(store: store, within: 5).count
-        return gone > 0 ? "Everything forgotten, \(gone) \(gone == 1 ? "thing" : "things")." : "Everything forgotten."
+        return gone > 0 ? "Everything forgotten, \(gone) \(gone == 1 ? "thing" : "things")" : "Everything forgotten"
     }
 }
 
@@ -466,8 +470,8 @@ public struct TessMemoryStore {
     public func countLine() -> String {
         let told = lines(of: .told).count, noticed = lines(of: .noticed).count
         let total = told + noticed
-        guard total > 0 else { return "Nothing kept yet." }
-        return "\(total) \(total == 1 ? "thing" : "things"). \(told) you told me, \(noticed) I noticed."
+        guard total > 0 else { return "Nothing kept yet" }
+        return "\(total) \(total == 1 ? "thing" : "things"). \(told) you told me, \(noticed) I noticed"
     }
 
     /// Settings' value word: "12 things", or "Nothing yet".
@@ -743,7 +747,7 @@ public struct TessMemoryStore {
         var words = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let swaps: [(String, String)] = [("I'm ", "You're "), ("I am ", "You are "), ("I ", "You "), ("my ", "your "),
                                          ("My ", "Your "), ("me ", "you "), (" I'm ", " you're "), (" I ", " you "),
-                                         (" my ", " your "), (" me ", " you "), (" me.", " you.")]
+                                         (" my ", " your "), (" me ", " you "), (" me", " you")]
         for (from, to) in swaps where words.hasPrefix(from) || from.hasPrefix(" ") {
             words = words.hasPrefix(from) ? to + words.dropFirst(from.count) : words.replacingOccurrences(
                 of: from,
@@ -751,7 +755,7 @@ public struct TessMemoryStore {
             )
         }
         words = words.prefix(1).uppercased() + words.dropFirst()
-        return words.hasSuffix(".") ? words : words + "."
+        return words
     }
 
     /// The thing a forget receipt names: two words, or three when the second only joins ("Rest on Sundays", not

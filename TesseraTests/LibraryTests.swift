@@ -34,12 +34,12 @@ struct LibraryTests {
         let noon = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 12)))
         let tried = TriedToday(routineID: UUID(), title: "Upper", replacedTitle: "Push A", minutes: 25,
                                day: TriedToday.dayKey(noon), triedAt: noon)
-        #expect(tried.line(now: noon) == "Trying Upper in 25 today. Push A on Thursday.")
+        #expect(tried.line(now: noon) == "Trying Upper in 25 today. Push A on Thursday")
         #expect(tried.undoIsOpen(now: noon.addingTimeInterval(9)))
         #expect(!tried.undoIsOpen(now: noon.addingTimeInterval(10.5)))
         let alone = TriedToday(routineID: UUID(), title: "Upper", replacedTitle: nil, minutes: 25,
                                day: TriedToday.dayKey(noon), triedAt: noon)
-        #expect(alone.line(now: noon) == "Trying Upper in 25 today.")
+        #expect(alone.line(now: noon) == "Trying Upper in 25 today")
     }
 
     @Test func triedTodayIsOnlyForItsOwnDay() throws {
@@ -195,7 +195,7 @@ struct LibraryTests {
         let pushUp = try #require(items.first { $0.name == "Push-Up" }?.classDef)
         let bench = try #require(items.first { $0.name == "Bench Press" }?.classDef)
         #expect(TrainingPage
-            .firstTimeLine(pushUp, store: model.store) == "First time on push-ups. Keep the first set easy.")
-        #expect(TrainingPage.firstTimeLine(bench, store: model.store) == "First time on bench press. Start light.")
+            .firstTimeLine(pushUp, store: model.store) == "First time on push-ups. Keep the first set easy")
+        #expect(TrainingPage.firstTimeLine(bench, store: model.store) == "First time on bench press. Start light")
     }
 }

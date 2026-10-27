@@ -51,6 +51,6 @@ struct ObjectTitleTests {
         try model.engine.perform(DeleteObject(object: note.id), by: .user)
         #expect(ObjectPage.live(model.object(note.id)) == nil)
         #expect(ObjectPage.live(nil) == nil)
-        #expect(ObjectPageCopy.gone == "Not on this phone anymore.")
+        #expect(ObjectPageCopy.gone == "Not on this phone anymore")
     }
 }

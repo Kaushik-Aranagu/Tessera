@@ -53,7 +53,7 @@ extension WorkoutSession {
         var line: String {
             let head = "\(exercises) \(exercises == 1 ? "exercise" : "exercises"), \(sets) \(sets == 1 ? "set" : "sets")."
             guard let best else { return head }
-            return head + " New best: \(Format.kilograms(best.weight)) × \(Int(best.reps))."
+            return head + " New best: \(Format.kilograms(best.weight)) × \(Int(best.reps))"
         }
     }
 

@@ -116,7 +116,7 @@ struct MakeAKindTests {
         ])
         let textKinds = own.dropLast().map(\.kind)
         #expect(textKinds == [.text, .text] && own.last?.kind == .ref)
-        #expect(result.record.summary == "Kind made" && result.record.receipt == "Landlord, made.")
+        #expect(result.record.summary == "Kind made" && result.record.receipt == "Landlord, made")
         #expect(result.record.ops.count == 1 || result.record.ops
             .allSatisfy {
                 if case .createClass = $0 {
@@ -202,7 +202,7 @@ struct MakeAKindTests {
         let result = try engine.perform(
             KeepAllNotes(notes: [first.id, second.id, hidden.id, gone.id, first.id], kind: kind.id), by: .user
         )
-        #expect(result.output == 2 && result.record.receipt == "2 kept.")
+        #expect(result.output == 2 && result.record.receipt == "2 kept")
         #expect(store.objects(of: kind).count == 2)
         #expect(!store.objects(of: kind).contains { $0.title.contains("Secret") })
         #expect(throws: ActionError.self) { try engine.perform(

@@ -16,17 +16,17 @@ struct CaptureTasksAndNotesTests {
         let context = TessContext(now: wednesday, calendar: calendar)
 
         let call = await tess.capture("call mum thu", context: context)
-        #expect(call.line == "Call mum, tomorrow 9 am.")
+        #expect(call.line == "Call mum, tomorrow 9 am")
         let dentist = await tess.capture("dentist thu 3pm", context: context)
-        #expect(dentist.line == "Dentist, tomorrow 3 pm.")
+        #expect(dentist.line == "Dentist, tomorrow 3 pm")
         let later = await tess.capture("todo sort the garage", context: context)
-        #expect(later.line == "Sort the garage, in Later.")
+        #expect(later.line == "Sort the garage, in Later")
         #expect(TaskList(store: store, classes: classes).later().map(\.title) == ["Sort the garage"])
 
         let note = await tess.capture("note: bar felt heavy on Bench Press", context: context)
-        #expect(note.line == "Noted.")
+        #expect(note.line == "Noted")
         let linked = await tess.capture("Note @Bench Press felt heavy", context: context)
-        #expect(linked.line == "Noted, linked.")
+        #expect(linked.line == "Noted, linked")
         #expect(try NoteList(store: store, classes: classes).notes(about: #require(classes[.benchPress])).count == 1)
 
         // All of them are ghost rows until they commit.

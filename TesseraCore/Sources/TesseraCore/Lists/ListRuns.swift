@@ -155,7 +155,7 @@ public struct FinishListRun: EngineAction {
     /// Done on a list that isn't running (Product 9:45 AM PT, ruling 3): "Packing isn't running."
     @MainActor
     public static func notRunningLine(_ list: ObjectRecord, in store: ObjectStore) -> String {
-        "\(ListContents.shownName(of: list, in: store)) isn't running."
+        "\(ListContents.shownName(of: list, in: store)) isn't running"
     }
 
     public func summary(in store: ObjectStore) -> String {

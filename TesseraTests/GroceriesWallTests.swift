@@ -26,8 +26,8 @@ struct GroceriesAddWallTests {
     }
 
     @Test func linesSayWhyAndNeverEchoTheValue() {
-        #expect(GroceriesWall.line(.money) == "That stays on this phone.")
-        #expect(GroceriesWall.line(.secret) == "That one stays out of Groceries.")
+        #expect(GroceriesWall.line(.money) == "That stays on this phone")
+        #expect(GroceriesWall.line(.secret) == "That one stays out of Groceries")
     }
 
     @Test func aPriceComesOffButTheThingGoesOn() {
@@ -42,7 +42,7 @@ struct GroceriesAddWallTests {
         #expect(GroceriesWall.spoken(split.walled) == claudeKeyLine, "key, then secret, then money")
         #expect(GroceriesWall.heldDraft(split.walled) == "rent $1200, wifi password hunter2")
         let noKey = GroceriesWall.split(["rent $1200", "wifi password hunter2"], store: model.store)
-        #expect(GroceriesWall.spoken(noKey.walled) == "That one stays out of Groceries.")
+        #expect(GroceriesWall.spoken(noKey.walled) == "That one stays out of Groceries")
     }
 
     @Test func sumOnlyAndMedicineLines() {
@@ -56,7 +56,7 @@ struct GroceriesAddWallTests {
         try model.engine.perform(CreateNote(body: "82 kg this morning", isPrivate: true), by: .user)
         let split = GroceriesWall.split(["82.4"], store: model.store)
         #expect(split.kept.isEmpty && split.walled.first?.reason == .money)
-        #expect(GroceriesWall.spoken(split.walled) == "That stays on this phone.")
+        #expect(GroceriesWall.spoken(split.walled) == "That stays on this phone")
     }
 
     @Test func theDraftRoundTrips() {
@@ -71,19 +71,19 @@ struct GroceriesAddWallTests {
     @Test func keptLinesSpeakTheEnginesReceiptWithUndo() {
         let outcome = GroceriesWall.add("milk, eggs", engine: model.engine, store: model.store)
         #expect(outcome.draft.isEmpty && outcome.undo != nil)
-        #expect(outcome.voice == "Milk and eggs, on Groceries.")
+        #expect(outcome.voice == "Milk and eggs, on Groceries")
     }
 
     @Test func aMixedBatchKeepsTheReceiptAndUndoWithTheWallLineAfter() {
         let outcome = GroceriesWall.add("eggs, rent $1200", engine: model.engine, store: model.store)
         #expect(outcome.draft == "rent $1200" && outcome.undo != nil)
-        #expect(outcome.voice == "Eggs, on Groceries. That stays on this phone.")
+        #expect(outcome.voice == "Eggs, on Groceries. That stays on this phone")
     }
 
     @Test func onlyWalledLinesHaveNoUndo() {
         let outcome = GroceriesWall.add("rent $1200", engine: model.engine, store: model.store)
         #expect(outcome.draft == "rent $1200" && outcome.undo == nil)
-        #expect(outcome.voice == "That stays on this phone.")
+        #expect(outcome.voice == "That stays on this phone")
     }
 
     @Test func aKeyIsClearedAndNeverComesBack() {
@@ -101,6 +101,6 @@ struct GroceriesAddWallTests {
 
     @Test func aRefusedWriteStillSaysTheWallLineForWalledSiblings() {
         let outcome = GroceriesWall.add("milk, rent $1200", store: model.store) { _ in nil }
-        #expect(outcome.voice == "Didn't save that. Try again. That stays on this phone.")
+        #expect(outcome.voice == "Didn't save that. Try again. That stays on this phone")
     }
 }

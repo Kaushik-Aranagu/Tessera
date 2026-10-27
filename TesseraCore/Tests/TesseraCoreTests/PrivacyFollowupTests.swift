@@ -39,7 +39,7 @@ struct PrivacyFollowupTests {
     func healthWithNoNumberIsAPrivateNote(_ phrase: String) async {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         let result = await run(phrase)
-        #expect(result.line == "Private note, kept.", "\(phrase): \(result.line)")
+        #expect(result.line == "Private note, kept", "\(phrase): \(result.line)")
         #expect(claude.heard.isEmpty)
     }
 
@@ -90,7 +90,7 @@ struct PrivacyFollowupTests {
     @Test func rememberingASumOfMoneyIsRefusedOnThePhone() async {
         // v9 W10.
         let result = await run("remember my rent is 2100")
-        #expect(result.line == "I don't keep sums of money." && result.records.isEmpty && claude.heard.isEmpty)
+        #expect(result.line == "I don't keep sums of money" && result.records.isEmpty && claude.heard.isEmpty)
     }
 
     @Test func aBareSpendVerbIsATaskOrANoteAgain() async {
@@ -107,7 +107,7 @@ struct PrivacyFollowupTests {
         #expect(await run("buy pins").records.map(\.action) == ["addGroceries"])
         #expect(await run("get a combination lock").records.map(\.action) == ["addGroceries"])
         #expect(claude.heard.isEmpty)
-        #expect(await run("door code 4417").line == "Private note, kept.")
+        #expect(await run("door code 4417").line == "Private note, kept")
     }
 
     @Test func aClaudeKeyNeverBecomesANote() throws {
@@ -142,7 +142,7 @@ struct PrivacyFollowupTests {
 
     @Test func aDatedBodyFactIsAPrivateNoteUnlessItIsSomethingToDo() async {
         // QA R1 on #471.
-        #expect(await run("headache since tuesday").line == "Private note, kept.")
+        #expect(await run("headache since tuesday").line == "Private note, kept")
         #expect(await run("call the doctor about my knee thu 3pm").records.map(\.action) == ["createTask"])
         #expect(claude.heard.isEmpty)
     }
@@ -157,7 +157,7 @@ struct PrivacyFollowupTests {
         // QA F2 on #534: "bought … for N" is a spend; with a day it is a private note on that day.
         #expect(PrivateFacts.isWalled("bought a tv for 800", lastWeightKg: nil))
         let dated = await run("bought a tv for 800 sat")
-        #expect(dated.line == "Private note, kept." && dated.records.map(\.action) == ["createNote"], "\(dated.line)")
+        #expect(dated.line == "Private note, kept" && dated.records.map(\.action) == ["createNote"], "\(dated.line)")
         #expect(claude.heard.isEmpty)
     }
 

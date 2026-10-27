@@ -74,7 +74,7 @@ enum CookSessionRules {
 
     @MainActor
     static func line(_ names: [String], _ tail: String) -> String {
-        "\(CookPlan.names(names)), \(tail)."
+        "\(CookPlan.names(names)), \(tail)"
     }
 }
 
@@ -184,8 +184,8 @@ public struct SetServeTime: EngineAction {
 
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: session),
-              let at = store.value("serveAt", of: object)?.dateValue else { return "Serve time, cleared." }
-        return "Serve at \(HouseTime.clock(at))."
+              let at = store.value("serveAt", of: object)?.dateValue else { return "Serve time, cleared" }
+        return "Serve at \(HouseTime.clock(at))"
     }
 }
 
@@ -242,7 +242,7 @@ public struct AddDish: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output dish: ObjectRecord) -> String? {
-        "\(CookSessionRules.name(of: dish, in: store)), added."
+        "\(CookSessionRules.name(of: dish, in: store)), added"
     }
 }
 
@@ -279,7 +279,7 @@ public struct DropDish: EngineAction {
 
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: dish) else { return nil }
-        return "\(CookSessionRules.name(of: object, in: store)), dropped."
+        return "\(CookSessionRules.name(of: object, in: store)), dropped"
     }
 }
 
@@ -386,7 +386,7 @@ public struct PauseCook: EngineAction {
     }
 
     public func receipt(in _: ObjectStore) -> String? {
-        "Paused."
+        "Paused"
     }
 }
 
@@ -449,7 +449,7 @@ public struct ResumeCook: EngineAction {
     }
 
     public func receipt(in _: ObjectStore) -> String? {
-        "Back on."
+        "Back on"
     }
 }
 

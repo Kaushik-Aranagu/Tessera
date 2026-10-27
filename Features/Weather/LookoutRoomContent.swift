@@ -31,15 +31,19 @@ struct LookoutRoomContent: RoomContent {
 
         var doors: [DialDoor] {
             [
+                // The fact line sits in the summary's label (a text count beside the dial's name hung the shell's
+                // landing on the simulator, so Lookout's dial names stand alone).
                 DialDoor(id: "hours", name: "Hours", count: nil,
                          color: snapshot.kind.colour(night: snapshot.night),
-                         label: snapshot.hours.first.map { _ in "Next hours" },
+                         label: snapshot.hours.first
+                             .map { _ in "Now \(WeatherWords.degrees(snapshot.temperature)), next hours" },
                          lines: WeatherWords.hourLines(snapshot)),
-                DialDoor(id: "week", name: "Week", color: Theme.Colors.Accent.rain, label: "Days to note",
+                DialDoor(id: "week", name: "Week", color: Theme.Colors.Accent.rain,
+                         label: WeatherWords.weekLines(snapshot).isEmpty ? "A steady week" : "Days to note",
                          lines: WeatherWords.weekLines(snapshot)),
                 DialDoor(id: "air", name: "Air",
                          color: snapshot.air == "good" ? WeatherAccent.good : Theme.Colors.ink,
-                         label: "Now", lines: WeatherWords.airLines(snapshot)),
+                         label: "Air, sun and wind now", lines: WeatherWords.airLines(snapshot)),
             ]
         }
 
@@ -76,6 +80,36 @@ struct LookoutRoomContent: RoomContent {
                 }
             case .air:
                 WeatherWords.airLines(snapshot)
+            }
+        }
+
+        /// What a door page row opens: one hour, one day, or the air now (`ShellRow.id` is "door.index").
+        func detail(forRow id: String, calendar: Calendar = .current) -> LookoutDetail? {
+            let parts = id.split(separator: ".")
+            guard parts.count == 2, let door = WeatherDoor(rawValue: String(parts[0])),
+                  let index = Int(parts[1]) else { return nil }
+            switch door {
+            case .hours:
+                guard snapshot.hours.indices.contains(index) else { return nil }
+                let hour = snapshot.hours[index]
+                let wet = WeatherWords.isWet(hour.kind)
+                return LookoutDetail(id: id, title: WeatherWords.hour(hour.date, calendar: calendar), lines: [
+                    "\(WeatherWords.degrees(hour.temperature)), \(WeatherWords.name(hour.kind, night: false).lowercased())",
+                    wet ? "Wet. Take a coat" : "Dry.",
+                    "Wind \(snapshot.wind) \(WeatherWords.windUnit(snapshot.fahrenheit))",
+                ])
+            case .week:
+                let days = Array(snapshot.week.dropFirst())
+                guard days.indices.contains(index) else { return nil }
+                let day = days[index]
+                let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: day.date) - 1]
+                return LookoutDetail(id: id, title: weekday, lines: [
+                    WeatherWords.name(day.kind, night: false),
+                    "High \(WeatherWords.degrees(day.high)), low \(WeatherWords.degrees(day.low))",
+                    WeatherWords.isWet(day.kind) ? "Wet. Plan for rain" : "Dry.",
+                ])
+            case .air:
+                return LookoutDetail(id: id, title: "Air", lines: WeatherWords.airLines(snapshot))
             }
         }
 
@@ -130,9 +164,9 @@ struct LookoutRoomContent: RoomContent {
         let lines = facts.lines(door)
         let rows = lines.enumerated().map { ShellRow(id: "\(door.rawValue).\($0.offset)", title: $0.element) }
         let line = switch door {
-        case .hours: "The next \(lines.count) hours."
-        case .week: lines.isEmpty ? "A steady week." : "The days to note."
-        case .air: "Air, sun and wind now."
+        case .hours: "The next \(lines.count) hours"
+        case .week: lines.isEmpty ? "A steady week" : "The days to note"
+        case .air: "Air, sun and wind now"
         }
         return Screen(layout: .door, slots: [
             .title: title,
@@ -166,6 +200,42 @@ struct LookoutRoomContent: RoomContent {
     }
 }
 
+/// One hour, one day or the air, opened from a door page row: a title and up to three short lines. Never a city.
+struct LookoutDetail: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let lines: [String]
+}
+
+/// The page a door page row opens (shell and scaffold alike): the hour, the day or the air, in the room's type.
+struct LookoutDetailPage: View {
+    let detail: LookoutDetail
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button("Lookout") { dismiss() }
+                .font(.custom("Figtree", size: 17, relativeTo: .body))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .frame(minHeight: 44)
+                .buttonStyle(.plain)
+            Text(detail.title)
+                .font(.custom("Figtree", size: 34, relativeTo: .largeTitle).weight(.bold))
+                .foregroundStyle(WeatherAccent.room)
+                .accessibilityAddTraits(.isHeader)
+            ForEach(Array(detail.lines.enumerated()), id: \.offset) { index, line in
+                FitLine(forms: FitLine.cuts(line), size: 20, color: Theme.Colors.ink,
+                        weight: index == 0 ? .semibold : .regular)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background { ThemedBackground() }
+    }
+}
+
 /// Lookout's foot, shared by the scaffold landing and the shell host: the phone-only rain alert with a take-back,
 /// and Tess's walk line (nothing written, no place named).
 @MainActor
@@ -192,6 +262,7 @@ struct LookoutShellHost: View {
     @Environment(\.colorScheme) private var scheme
     @State private var navigator = ShellNavigator(root: .landing(LookoutRoomContent.room))
     @State private var alertOn = WeatherRainAlert.isOn()
+    @State private var detail: LookoutDetail?
 
     var body: some View {
         let facts = LookoutRoomContent.Facts(snapshot: WeatherSample.snapshot(now: Self.minute(AppClock.now)),
@@ -211,6 +282,7 @@ struct LookoutShellHost: View {
             // The text colour comes from the plate (256), so the page wears the plate's scheme.
             .environment(\.colorScheme, plate.lightInk ? .dark : .light)
             .overlay { LookoutDropHandover() }
+            .sheet(item: $detail) { LookoutDetailPage(detail: $0) }
         #if DEBUG
             .task { await walkForStills() }
         #endif
@@ -242,8 +314,10 @@ struct LookoutShellHost: View {
         case let .openDoor(id):
             navigator.push(.door(LookoutRoomContent.room, id))
         case let .openItem(id):
-            // A widget card opens its door; a page row has nothing deeper yet.
-            if navigator.route.level == 0 {
+            // A widget card opens its door; a page row opens the hour, the day or the air it names.
+            if let opened = facts.detail(forRow: id) {
+                detail = opened
+            } else {
                 navigator.push(.door(LookoutRoomContent.room, facts.door(forItem: id).rawValue))
             }
         case .action("hours"):

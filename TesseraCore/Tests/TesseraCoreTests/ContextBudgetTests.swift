@@ -27,7 +27,7 @@ struct ContextBudgetTests {
         #expect(pack.nothingKept && pack.block(.recall) == ContextPacker.nothingKeptLine)
         let none = ContextPacker(row: row).pack([.recall: []])
         #expect(none.nothingKept)
-        let notAsked = ContextPacker(row: row).pack([.rules: [item("", "Be brief.")]])
+        let notAsked = ContextPacker(row: row).pack([.rules: [item("", "Be brief")]])
         #expect(!notAsked.nothingKept && notAsked.block(.recall) == nil)
     }
 
@@ -45,11 +45,11 @@ struct ContextBudgetTests {
         }
         var small = row
         small.starts[.recall] = 300
-        let pack = ContextPacker(row: small, ceiling: 700).pack([.recall: recall, .rules: [item("", "Rules.")]])
+        let pack = ContextPacker(row: small, ceiling: 700).pack([.recall: recall, .rules: [item("", "Rules")]])
         #expect(pack.dropped.first == "/r/9")
         #expect(pack.included[.recall]?.first == "/r/0")
         #expect(pack.block(.recall)?.hasSuffix(ContextPacker.moreKeptLine) == true)
-        #expect(pack.block(.rules) == "Rules.")
+        #expect(pack.block(.rules) == "Rules")
     }
 
     @Test func expertiseAndWorkingAreNeverTrimmed() {
@@ -76,7 +76,7 @@ struct ContextBudgetTests {
 
     @Test func theSameItemsGiveTheSameBytes() {
         let items: [ContextSection: [ContextItem]] = [
-            .rules: [item("", "Rules.")], .core: [item("/beliefs/you", "Trains at 6.")],
+            .rules: [item("", "Rules")], .core: [item("/beliefs/you", "Trains at 6")],
             .recall: [item("/b", "b", score: 0.7), item("/a", "a", score: 0.7)],
         ]
         let one = ContextPacker(row: row).pack(items), two = ContextPacker(row: row).pack(items)
@@ -85,8 +85,8 @@ struct ContextBudgetTests {
 
     @Test func cacheMarksPutTheHourBeforeTheFiveMinutes() {
         let pack = ContextPacker(row: row).pack([
-            .rules: [item("", "Rules.")], .expertise: [item("", "Exercises.")], .core: [item("/me", "Me.")],
-            .recall: [item("/r", "r", score: 0.9)], .working: [item("/ask", "Ask.")],
+            .rules: [item("", "Rules")], .expertise: [item("", "Exercises")], .core: [item("/me", "Me")],
+            .recall: [item("/r", "r", score: 0.9)], .working: [item("/ask", "Ask")],
         ])
         #expect(pack.cacheMarks == [CacheMark(1, .oneHour), CacheMark(2, .oneHour), CacheMark(3, .fiveMinutes)])
         #expect(pack.blocks.map(\.section) == [.rules, .expertise, .core, .recall, .working])
@@ -220,7 +220,7 @@ struct ContextBudgetTests {
         let fresh = try #require(Recall.activation(uses: [now.addingTimeInterval(-3600)], now: now))
         let stale = try #require(Recall.activation(uses: [now.addingTimeInterval(-30 * 86400)], now: now))
         let often = try #require(Recall.activation(uses: Array(repeating: now.addingTimeInterval(-30 * 86400),
-                                                                count: 5), now: now))
+                                                               count: 5), now: now))
         #expect(fresh > stale && often > stale)
         #expect(Recall.activation(uses: [], now: now) == nil)
     }

@@ -110,7 +110,7 @@ public final class TessCaptureEngine: TessCapturing {
                          context: TessContext) -> TessCapture
     {
         guard let entry = engine.store.object(id: ask.entry) else {
-            return TessCapture(records: [], line: "That exercise is gone.", source: .grammar)
+            return TessCapture(records: [], line: "That exercise is gone", source: .grammar)
         }
         engine.attribution = (.grammar, nil)
         defer { engine.attribution = nil }
@@ -128,7 +128,7 @@ public final class TessCaptureEngine: TessCapturing {
             guard let set = grammar.snap(said, entry: entry) else {
                 return TessCapture(
                     records: [],
-                    line: "\(ask.bodyweight ? "+" : "")\(ask.count) \(unit.symbol) isn't loadable here.",
+                    line: "\(ask.bodyweight ? "+" : "")\(ask.count) \(unit.symbol) isn't loadable here",
                     source: .grammar
                 )
             }
@@ -185,8 +185,8 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
             }
         }
-        let line = [setsLine(parts.filter { !$0.isAsk }) ?? lines.joined(separator: " "), asking]
-            .compactMap(\.self).joined(separator: " ")
+        let line = [setsLine(parts.filter { !$0.isAsk }) ?? lines.joined(separator: ". "), asking]
+            .compactMap(\.self).joined(separator: ". ")
         return TessCapture(records: records, line: line, source: .grammar)
     }
 
@@ -207,16 +207,16 @@ public final class TessCaptureEngine: TessCapturing {
                 default: false
                 }
             }
-            return lifts ? "\(parts.count) sets logged." : nil
+            return lifts ? "\(parts.count) sets logged" : nil
         }
         let last = first.entry.orderedChildren.count
         let from = last - sets.count + 1
         let span = sets.count == 2 ? "\(from) and \(last)" : "\(from) to \(last)"
         guard sets.allSatisfy({ $0.weight == first.weight && $0.reps == first.reps && $0.unit == first.unit }) else {
-            return "Sets \(span) logged."
+            return "Sets \(span) logged"
         }
         return "Sets \(span) logged. \(load(first.weight, unit: first.unit, entry: first.entry)) × "
-            + "\(TessVoice.number(first.reps))."
+            + "\(TessVoice.number(first.reps))"
     }
 
     /// How a set's load reads: "80", "180 lb", and on a bodyweight lift "bodyweight" or "+10".
@@ -263,7 +263,7 @@ public final class TessCaptureEngine: TessCapturing {
                 let hidden = ObjectPrivacy.isPrivateWord(lines[0], in: engine.store)
                     || AddListItem.kept(lines[0], store: engine.store) == nil
                 let name = hidden ? "Private item" : lines[0].prefix(1).uppercased() + lines[0].dropFirst()
-                return TessCapture(records: [], line: "\(name), already on Groceries.", source: .grammar,
+                return TessCapture(records: [], line: "\(name), already on Groceries", source: .grammar,
                                    asking: .line)
             }
             // The same paste twice is one recipe: Tess says so, writes nothing, and the pasted text is not logged as a
@@ -283,7 +283,7 @@ public final class TessCaptureEngine: TessCapturing {
                 var (record, line) = try perform(parse, context: context)
                 // No notifications yet: a reminder is honest about where it will be (late-night #2).
                 if case .task(_, .some) = parse, phrase.lowercased().hasPrefix("remind") {
-                    line += " On Now then."
+                    line += ". On Now then"
                 }
                 return TessCapture(records: [record], line: line, source: .grammar)
             } catch {
@@ -315,8 +315,8 @@ public final class TessCaptureEngine: TessCapturing {
             let scheme = sets > 1 ? "\(sets) × \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
             let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
             // A bodyweight lift has no load to say ("Pull-Up 3 × 8", never "at 0").
-            return (record, weight == 0 ? "\(name) \(scheme). Added to today."
-                : "\(name) \(scheme) at \(load). Added to today.")
+            return (record, weight == 0 ? "\(name) \(scheme). Added to today"
+                : "\(name) \(scheme) at \(load). Added to today")
         case let .set(entry, kilograms, reps, kind, phrase, unit, rpe, saidWeight):
             // Logged in the unit it was said in, so the set keeps its entered unit.
             let said = unit.fromKilograms(kilograms, rounded: false)
@@ -333,9 +333,9 @@ public final class TessCaptureEngine: TessCapturing {
                           saidWeight.map { "nearest load to \(String(format: "%g", $0))" }].compactMap(\.self)
             let tail = extras.map { ", \($0)" }.joined()
             let line = switch phrase {
-            case .same: "Set \(number) logged, same again\(tail)."
-            case .drop: "Drop set logged. \(set)\(tail)."
-            case .repsOnly, .full: "Set \(number) logged. \(set)\(tail)."
+            case .same: "Set \(number) logged, same again\(tail)"
+            case .drop: "Drop set logged. \(set)\(tail)"
+            case .repsOnly, .full: "Set \(number) logged. \(set)\(tail)"
             }
             return (record, line)
         case let .task(title, startsAt):
@@ -346,14 +346,14 @@ public final class TessCaptureEngine: TessCapturing {
             // for Fri."
             let stored = made.output.title
             if stored == SecretWords.title {
-                return (record, "\(SecretWords.title), kept.")
+                return (record, "\(SecretWords.title), kept")
             }
             if stored == ObjectPrivacy.taskLabel
                 || ObjectPrivacy.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
             {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
-            return (record, startsAt.map { "\(stored), \(Self.when($0, context: context))." } ?? "\(stored), in Later.")
+            return (record, startsAt.map { "\(stored), \(Self.when($0, context: context))" } ?? "\(stored), in Later")
         case let .setRestWeekday(weekday):
             var settings = SettingsStore(engine: engine).read()
             settings.restWeekday = weekday
@@ -367,11 +367,11 @@ public final class TessCaptureEngine: TessCapturing {
             )
             .record
             // She never repeats the value (R6).
-            return (record, remembered ? "Private note, kept. I don't keep passwords." : "Private note, kept.")
+            return (record, remembered ? "Private note, kept. I don't keep passwords" : "Private note, kept")
         case let .note(body, on):
             let record = try engine.perform(CreateNote(body: body, on: on), by: .tess, pending: pending).record
             if let on, !context.calendar.isDate(on, inSameDayAs: context.now) {
-                return (record, "Noted for \(Self.when(on, context: context).split(separator: " ").first ?? "then").")
+                return (record, "Noted for \(Self.when(on, context: context).split(separator: " ").first ?? "then")")
             }
             let links = record.ops.count {
                 if case .setLinks = $0 {
@@ -380,7 +380,7 @@ public final class TessCaptureEngine: TessCapturing {
                     false
                 }
             }
-            return (record, links > 0 ? "Noted, linked." : "Noted.")
+            return (record, links > 0 ? "Noted, linked" : "Noted")
         case let .spend(amount, note, on):
             let made = try engine.perform(
                 LogSpend(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
@@ -395,14 +395,14 @@ public final class TessCaptureEngine: TessCapturing {
                           note: note.isEmpty ? nil : note, at: context.now),
                 by: .tess, pending: pending
             )
-            return (made.record, made.record.receipt ?? "Money in, logged.")
+            return (made.record, made.record.receipt ?? "Money in, logged")
         case let .poolMove(from, destination, sent, arrived, fee):
             let made = try engine.perform(
                 LogMove(from: from, to: destination, sent: "\(sent.amount)", arrived: "\(arrived.amount)",
                         fee: fee.map { "\($0.amount)" }, at: context.now),
                 by: .tess, pending: pending
             )
-            return (made.record, made.record.receipt ?? "Money moved.")
+            return (made.record, made.record.receipt ?? "Money moved")
         case let .shopTotal(amount):
             let made = try engine.perform(
                 LogShopTotal(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
@@ -412,7 +412,7 @@ public final class TessCaptureEngine: TessCapturing {
             return (made.record, made.record.receipt ?? SpendLedger.receiptLine(for: made.output, in: engine.store))
         case .skipShopTotal:
             let record = try engine.perform(SkipShopTotal(time: context.now), by: .tess, pending: pending).record
-            return (record, "Groceries total, skipped.")
+            return (record, "Groceries total, skipped")
         default:
             return try performKitchen(parse, pending: pending, context: context)
         }
@@ -427,7 +427,7 @@ public final class TessCaptureEngine: TessCapturing {
         if case let .list(name) = parse,
            CreateList.existing(named: name, in: engine.store, classes: engine.classes) != nil
         {
-            return TessCapture(records: [], line: "\(Self.listName(name, store: engine.store)), already a list.",
+            return TessCapture(records: [], line: "\(Self.listName(name, store: engine.store)), already a list",
                                source: .grammar, asking: .line)
         }
         return nil
@@ -454,13 +454,13 @@ public final class TessCaptureEngine: TessCapturing {
                 }
             }
             if lines.count == 1, !made {
-                return (record, "\(name), already on Groceries.")
+                return (record, "\(name), already on Groceries")
             }
             // The list by name (Product 10:06 PM PT, lists copy sweep); a medicine or body line is never said back.
             if hidden {
-                return (record, "Private item, on Groceries.")
+                return (record, "Private item, on Groceries")
             }
-            return (record, lines.count == 1 ? "\(name), on Groceries." : "\(lines.count) things on Groceries.")
+            return (record, lines.count == 1 ? "\(name), on Groceries" : "\(lines.count) things on Groceries")
         case let .cook(recipe, date?):
             // A private recipe never lends its name to the task title or the receipt (gap hunt G21).
             let hidden = ObjectPrivacy.label(of: recipe, in: engine.store, classes: engine.classes)
@@ -468,51 +468,51 @@ public final class TessCaptureEngine: TessCapturing {
                 CreateTask(title: hidden ?? "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
                 by: .tess, pending: pending
             ).record
-            return (record, "\(hidden ?? recipe.title), \(Self.when(date, context: context)).")
+            return (record, "\(hidden ?? recipe.title), \(Self.when(date, context: context))")
         case let .cook(recipe, nil):
             let record = try engine.perform(StartCooking(recipe: recipe.id), by: .tess, pending: pending).record
             if let hidden = ObjectPrivacy.label(of: recipe, in: engine.store, classes: engine.classes) {
-                return (record, "\(hidden), cooking.")
+                return (record, "\(hidden), cooking")
             }
-            return (record, "Cooking \(recipe.title.lowercased()).")
+            return (record, "Cooking \(recipe.title.lowercased())")
         case let .timer(label, minutes):
             let cook = ProcessTable(engine: engine).running()?.subject
             let cookID = cook.flatMap { $0.classDef?.id == engine.classes[.cook]?.id ? $0.id : nil }
             let record = try engine.perform(StartKitchenTimer(label: label, minutes: minutes, cook: cookID),
                                             by: .tess, pending: pending).record
-            return (record, "\(label), \(TessVoice.number(minutes)) min.")
+            return (record, "\(label), \(TessVoice.number(minutes)) min")
         case let .list(name):
             let record = try engine.perform(CreateList(name: name), by: .tess, pending: pending).record
             // A repeat name opens the list that is there: nothing was made (G40).
             let shown = Self.listName(name, store: engine.store)
             if CreateList.wasRepeat(record) {
-                return (record, "\(shown), already a list.")
+                return (record, "\(shown), already a list")
             }
-            return (record, "\(shown), new list.")
+            return (record, "\(shown), new list")
         case let .copyList(source, name):
             // The source by his words (G40: two matches write nothing and ask which). The copy is the source's name,
             // then his word: "copy packing for lisbon" makes "Packing, Lisbon" (Product's final ruling).
             let from = try ListLookup.find(source, store: engine.store, classes: engine.classes)
             let result = try engine.perform(CopyList(list: from.id, name: "\(from.title), \(name)"), by: .tess,
                                             pending: pending)
-            return (result.record, (result.record.receipt ?? "Copied") + ".")
+            return (result.record, result.record.receipt ?? "Copied")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
-            return (record, "\(line).")
+            return (record, "\(line)")
         case let .reschedule(task, date):
             let record = try engine.perform(MoveTask(task: task.id, to: date), by: .tess, pending: pending).record
-            return (record, "\(task.title), \(Self.when(date, context: context)).")
+            return (record, "\(task.title), \(Self.when(date, context: context))")
         case let .cookStep(cook, next):
             if next {
                 let index = (ProcessTable(engine: engine).running()?.resumePoint?.index ?? 0) + 1
                 let record = try engine.perform(GoToCookStep(cook: cook.id, step: index, time: context.now), by: .tess,
                                                 pending: pending).record
-                return (record, "Step \(index + 1).")
+                return (record, "Step \(index + 1)")
             }
             let record = try engine.perform(FinishCooking(cook: cook.id, time: context.now), by: .tess,
                                             pending: pending).record
-            return (record, "\(cook.title), done.")
+            return (record, "\(cook.title), done")
         case .ignoredInWorkout:
             throw ActionError.invalidArguments(action: "capture", reason: "the rest timer lives on the workout screen")
         case let .recipe(text):
@@ -522,7 +522,7 @@ public final class TessCaptureEngine: TessCapturing {
             let parts = [
                 "\(parsed?.ingredients.count ?? 0) ingredients", "\(parsed?.steps.count ?? 0) steps",
             ] + (timers > 0 ? ["\(timers) \(timers == 1 ? "timer" : "timers")"] : [])
-            return (record, parts.joined(separator: ", ") + ".")
+            return (record, parts.joined(separator: ", "))
         default:
             throw ActionError.invalidArguments(action: "capture", reason: "not a kitchen phrase")
         }
@@ -543,9 +543,9 @@ public final class TessCaptureEngine: TessCapturing {
     /// What Tess says for a task whose title is private: its day, never its words.
     public static func privateTaskLine(_ startsAt: Date?, context: TessContext) -> String {
         guard let startsAt, let day = when(startsAt, context: context).split(separator: " ").first else {
-            return "Task added."
+            return "Task added"
         }
-        return "Task added for \(day)."
+        return "Task added for \(day)"
     }
 
     /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
@@ -585,9 +585,9 @@ public final class TessCaptureEngine: TessCapturing {
             if reason == StartCooking.workoutRunningReason {
                 return StartCooking.workoutRunningLine
             }
-            return "Didn't save that. \(reason.prefix(1).uppercased() + reason.dropFirst())."
+            return "Didn't save that. \(reason.prefix(1).uppercased() + reason.dropFirst())"
         }
-        return "Didn't save that. Tap to retry."
+        return "Didn't save that. Tap to retry"
     }
 }
 

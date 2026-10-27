@@ -32,6 +32,8 @@ struct BridgeBoard: View {
             .mosaicShield()
             .frame(width: BridgePlace.board.width, alignment: .topTrailing)
             .frame(maxHeight: BridgePlace.board.height + 18, alignment: .top)
+            // Nothing draws past the board's place (Kaushik, Oct 26: every element keeps inside its boundary).
+            .clipped()
             .offset(y: -8)
             // The board's rows are fixed 30 pt flaps: its type stops at xLarge so rows never overlap at AX5.
             .dynamicTypeSize(...DynamicTypeSize.xLarge)
@@ -82,7 +84,8 @@ struct BridgeApps: View {
     var body: some View {
         if HomeMosaic.appsListIsOn {
             AppsListSlot(onHold: { stage.wheelHeld = $0 }, onGlance: { stage.playGlance($0) })
-                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                // The dial's names fit their 40 pt places: its type stops at xLarge (bounds check, Oct 26).
+                .dynamicTypeSize(...DynamicTypeSize.xLarge)
                 .frame(width: BridgePlace.doors.width, height: BridgePlace.doors.height, alignment: .top)
                 .mosaicShield()
         }
@@ -130,7 +133,7 @@ struct BridgeTess: View {
         if stage.layerOn, HomeMosaic.appsListIsOn {
             ZStack {
                 if stage.roomOpen {
-                    TessRoom(entries: stage.roomEntries, watching: "Watching today.", undo: { entry in
+                    TessRoom(entries: stage.roomEntries, watching: "Watching today", undo: { entry in
                         switch TessRoomLog.undo(entry, engine: model.engine) {
                         case let .putBack(line): line
                         default: nil
@@ -233,6 +236,7 @@ struct BridgeLife: ViewModifier {
                     stage.endMoment()
                 }
             }
+            .onAppear { openLaunchLink() }
             .onDisappear {
                 stage.onScreen = false
                 stage.endMoment()
@@ -248,6 +252,24 @@ struct BridgeLife: ViewModifier {
                                    reduceMotion: reduceMotion, navigate: { BridgeStage.withoutAnimation(navigate) })
                 stage.doorwayOrigin = nil
             }
+    }
+
+    @MainActor private static var openedLaunchLink = false
+
+    /// `-openLink pantry|recipes|notes|...` opens that screen once per launch (simulator only, for UI tests): in the
+    /// standing shell when it holds the room, else on its own page.
+    private func openLaunchLink() {
+        #if DEBUG
+            guard !Self.openedLaunchLink, let value = LaunchFlags.value(after: "-openLink"),
+                  let target = HomeLink.allCases.first(where: { value == "\($0)" }) else { return }
+            Self.openedLaunchLink = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5))
+                if stage.openInShell?(target) != true {
+                    stage.link = target
+                }
+            }
+        #endif
     }
 
     private func wire() {

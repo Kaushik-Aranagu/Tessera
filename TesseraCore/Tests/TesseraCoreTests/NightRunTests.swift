@@ -60,13 +60,13 @@ struct NightRunTests {
         for day in [14, 16, 20, 23] {
             try workout(at(10, day, 18, 30), kg: 82.5, from: push)
         }
-        let six = try engine.perform(RecordBelief(words: "You usually train around 6 am.", key: .usualTime,
+        let six = try engine.perform(RecordBelief(words: "You usually train around 6 am", key: .usualTime,
                                                   source: .noticed, value: "{\"hour\":6}",
                                                   subjectClass: workoutClass.id, evidence: [early.id],
                                                   validFrom: at(9, 1, 9)), by: .system).output
         var rice: [UUID] = []
         for (month, source) in [(3, TessBelief.Source.told), (5, .noticed)] {
-            let belief = try engine.perform(RecordBelief(words: "You like rice.", key: .prefers, source: source,
+            let belief = try engine.perform(RecordBelief(words: "You like rice", key: .prefers, source: source,
                                                          value: "{\"text\":\"rice\"}", evidence: [push.id],
                                                          validFrom: at(month, 1, 9)), by: .system).output
             rice.append(belief.id)
@@ -81,7 +81,7 @@ struct NightRunTests {
         var asked: [String] = []
         let report = try #require(await run.run(record: &record, eval: &eval) { question, model in
             asked.append("\(model.rawValue) \(question.id)")
-            return "I don't know yet."
+            return "I don't know yet"
         })
 
         #expect(report.night == "2026-10-23")
@@ -95,7 +95,7 @@ struct NightRunTests {
         #expect(!open.contains { $0.id == sixAM })
         let current = try #require(open.first { $0.key == .usualTime })
         #expect(current.value == "{\"hour\":18.5}" && current.supersedes == sixAM)
-        #expect(current.words == "You usually train around 6:30 pm.")
+        #expect(current.words == "You usually train around 6:30 pm")
 
         // The noticed rice line merged into the one he told; it is closed and is its evidence.
         #expect(open.filter { $0.key == .prefers }.map(\.id) == [rice[0]])
@@ -117,7 +117,7 @@ struct NightRunTests {
         var record = NightRecord()
         var eval = MemoryEvalRecord()
         let report = try #require(await run.run(record: &record, eval: &eval) { _, model in
-            model == .haiku ? "I don't know yet." : nil
+            model == .haiku ? "I don't know yet" : nil
         })
         #expect(report.eval.last?.asked.isEmpty == true)
         #expect(eval.kept.isEmpty && eval.streaks.isEmpty)
@@ -185,9 +185,9 @@ struct NightRunTests {
     @Test func theRecordKeepsSixtyDaysOfSummaries() {
         var record = NightRecord()
         for day in 1 ... 70 {
-            record.summaries[String(format: "/summaries/day/2026-%03d", day)] = "A quiet day."
+            record.summaries[String(format: "/summaries/day/2026-%03d", day)] = "A quiet day"
         }
-        record.summaries["/summaries/week/2026-W43"] = "A quiet week."
+        record.summaries["/summaries/week/2026-W43"] = "A quiet week"
         record.trim()
         #expect(record.summaries.count == 61)
         #expect(record.summaries["/summaries/day/2026-001"] == nil)

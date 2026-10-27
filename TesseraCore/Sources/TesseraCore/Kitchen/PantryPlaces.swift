@@ -188,7 +188,7 @@ public struct CreatePlace: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output place: ObjectRecord) -> String? {
-        "\(PantryPlaces.shown(place, in: store)), new place."
+        "\(PantryPlaces.shown(place, in: store)), new place"
     }
 }
 

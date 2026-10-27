@@ -25,15 +25,15 @@ struct PantryCopyTests {
     }
 
     @Test func tessNamesWhatTheLastCookUsedUp() {
-        #expect(PantryCopy.tess(recipe: "Tacos", names: ["cilantro", "limes"]) == "Tacos took the cilantro and limes.")
-        #expect(PantryCopy.tess(recipe: "Tacos", names: ["a", "b", "c"]) == "Tacos took the a, b and c.")
-        #expect(PantryCopy.tess(recipe: "Tacos", names: ["a", "b", "c", "d", "e"]) == "Tacos took 5 things.")
+        #expect(PantryCopy.tess(recipe: "Tacos", names: ["cilantro", "limes"]) == "Tacos took the cilantro and limes")
+        #expect(PantryCopy.tess(recipe: "Tacos", names: ["a", "b", "c"]) == "Tacos took the a, b and c")
+        #expect(PantryCopy.tess(recipe: "Tacos", names: ["a", "b", "c", "d", "e"]) == "Tacos took 5 things")
         #expect(PantryCopy.list(["a", "b", "c"]) == "a, b and c")
         #expect(PantryCopy.list(["rice", "coffee", "milk", "eggs"]) == "rice, coffee and 2 more")
     }
 
     @Test func receiptsNameTheThingFirst() {
-        #expect(PantryCopy.added("Milk") == "Milk, on Groceries.")
-        #expect(PantryCopy.added("Private item") == "Private item, on Groceries.")
+        #expect(PantryCopy.added("Milk") == "Milk, on Groceries")
+        #expect(PantryCopy.added("Private item") == "Private item, on Groceries")
     }
 }

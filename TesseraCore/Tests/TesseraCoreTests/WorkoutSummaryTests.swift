@@ -30,9 +30,9 @@ struct WorkoutSummaryTests {
         #expect(summary.exercisesDone == 1 && summary.exercisesPlanned == 5)
         #expect(summary.sets == 3 && summary.volume == 82.5 * 8 + 80 * 16)
         #expect(summary.records.count == 1 && summary.records.first?.kind == .e1RM)
-        #expect(summary.line == "1 of 5 exercises, 3 sets, 1 best.")
-        #expect(summary.doneLine == "\(summary.title) done, 1 of 5 exercises.")
-        #expect(summary.doneLine(in: store) == "\(summary.title) done, 1 of 5 exercises.")
+        #expect(summary.line == "1 of 5 exercises, 3 sets, 1 best")
+        #expect(summary.doneLine == "\(summary.title) done, 1 of 5 exercises")
+        #expect(summary.doneLine(in: store) == "\(summary.title) done, 1 of 5 exercises")
         #expect(summary.duration == 3600)
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
@@ -66,9 +66,9 @@ struct WorkoutSummaryTests {
             WorkoutSummary(id: base.id, workout: workout, title: "Push Day A", startedAt: nil, endedAt: nil,
                            exercisesDone: done, exercisesPlanned: planned, sets: 1, volume: 0, records: []).doneLine
         }
-        #expect(line(done: 1, planned: 1) == "Push Day A done, 1 of 1 exercise.")
-        #expect(line(done: 2, planned: 5) == "Push Day A done, 2 of 5 exercises.")
-        #expect(line(done: 0, planned: 0) == "Push Day A done.")
+        #expect(line(done: 1, planned: 1) == "Push Day A done, 1 of 1 exercise")
+        #expect(line(done: 2, planned: 5) == "Push Day A done, 2 of 5 exercises")
+        #expect(line(done: 0, planned: 0) == "Push Day A done")
     }
 
     @Test func theDoneHeroMasksAPrivateRoutineTitle() {

@@ -76,7 +76,7 @@ public enum Twins {
         default: "notes"
         }
         // A note's title can be its first line, so a note is never named.
-        return key == .note ? "Two notes say the same." : "Two \(kind) called \(object.title)."
+        return key == .note ? "Two notes say the same" : "Two \(kind) called \(object.title)"
     }
 }
 
@@ -149,7 +149,7 @@ public struct JoinTwins: EngineAction {
     }
 
     public func receipt(in _: ObjectStore) -> String? {
-        "Joined."
+        "Joined"
     }
 }
 

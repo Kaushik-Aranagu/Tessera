@@ -103,7 +103,7 @@ struct BackupTests {
         try FileManager.default.copyItem(at: newer, to: TesseraBackup.pendingURL(for: storeURL))
         #expect(!TesseraBackup.applyPendingRestore(to: storeURL, keepIn: dir.appendingPathComponent("Kept")))
         #expect(TesseraSchema.launchNote
-            == "That backup is from a newer Tessera, so your data is as it was. Update the app first.")
+            == "That backup is from a newer Tessera, so your data is as it was. Update the app first")
         #expect(!TesseraDatabaseSchema.isNewer(at: storeURL))
         TesseraSchema.clearLaunchNote()
     }

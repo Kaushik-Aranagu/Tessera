@@ -14,7 +14,7 @@ struct DaySentenceEntry: TimelineEntry {
 struct DaySentenceProvider: TimelineProvider {
     func placeholder(in _: Context) -> DaySentenceEntry {
         DaySentenceEntry(date: .now, clauses: [
-            SurfaceClause(app: "training", text: "Push A today.", keyFrom: 0, keyTo: 6, at: nil),
+            SurfaceClause(app: "training", text: "Push A today", keyFrom: 0, keyTo: 6, at: nil),
         ])
     }
 
@@ -45,7 +45,7 @@ struct DaySentenceWidget: Widget {
                 .containerBackground(.background, for: .widget)
         }
         .configurationDisplayName("Today")
-        .description("The day in one sentence.")
+        .description("The day in one sentence")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline])
     }
 }

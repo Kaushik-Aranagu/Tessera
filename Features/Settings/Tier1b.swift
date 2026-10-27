@@ -8,6 +8,25 @@ enum Tier1b {
     nonisolated static let backupsID = "backupsV2"
     nonisolated static let undoID = "undoLogV2"
 
+    nonisolated static let quietID = "quietHoursV2"
+    nonisolated static let kitchenID = "kitchenRoomsV2"
+    nonisolated static let depthID = "depthOnWheels"
+
+    /// Depth on wheels (Settings > Look): On unless he turned it Off.
+    @MainActor static var depthIsOn: Bool {
+        ReviewChoices.shared.value(of: depthID) != "Off"
+    }
+
+    /// The Kitchen rooms (231 to 233): On unless he turned them Off.
+    @MainActor static var kitchenRoomsIsOn: Bool {
+        ReviewChoices.shared.value(of: kitchenID) != "Off"
+    }
+
+    /// Quiet hours (167): On unless he turned it Off.
+    @MainActor static var quietIsOn: Bool {
+        ReviewChoices.shared.value(of: quietID) != "Off"
+    }
+
     @MainActor static var walledIsOn: Bool {
         ReviewChoices.shared.value(of: walledID) == "On"
     }
@@ -25,13 +44,13 @@ enum Tier1b {
 enum UndoWords {
     static let undo = "Undo"
     static let recentTitle = "Recent changes"
-    static let empty = "Nothing changed lately."
+    static let empty = "Nothing changed lately"
 
-    /// The sentence said after an Undo: Core's own line, "Put back." or "Can't put that back.", and "Reversed." for
+    /// The sentence said after an Undo: Core's own line, "Put back." or "Can't put that back.", and "Reversed" for
     /// money. A change that is already gone says nothing.
     static func said(_ outcome: UndoOutcome, money: Bool) -> String? {
         switch outcome {
-        case let .putBack(line): money ? "Reversed." : line
+        case let .putBack(line): money ? "Reversed" : line
         case let .blocked(line): line
         case .gone: nil
         }

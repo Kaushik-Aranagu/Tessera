@@ -548,7 +548,7 @@ public struct TessGrammar {
             remembered = true
         }
         if Self.isQuestion(text) || body.hasSuffix("?") {
-            return .ask("It's in your private notes.")
+            return .ask("It's in your private notes")
         }
         if !SecretWords.hasValue(body), !remembered, let task = parseTask(phrase, context: context) {
             return task

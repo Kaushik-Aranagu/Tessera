@@ -7,8 +7,9 @@ import TesseraTess
 /// Kaushik, Oct 21: "fill in model data so I can understand how things would look". The Review switch "Sample data"
 /// swaps the whole app onto a second store, in memory only, filled with example content (US words, dollars, his
 /// phone's time zone, no city). His own store is never written while it is on, never mixed with the sample, and
-/// comes back untouched when it is off. The sample is never backed up (backups read his store, not this one), sends
-/// nothing to Claude, schedules no notifications and exports nothing to Health.
+/// comes back untouched when it is off. The sample is never backed up (backups read his store, not this one),
+/// schedules no notifications and exports nothing to Health. It may ask Claude (Kaushik, Oct 24: the stamped test
+/// world), within the lab rules and following his own "Tess asks Claude" choice; demos and the launch flags never do.
 @MainActor
 @Observable
 final class SampleData {
@@ -38,10 +39,12 @@ final class SampleData {
         // Its own defaults too, so a first-launch receipt or a remembered page never touches his.
         let defaults = UserDefaults(suiteName: "com.kaushikaranagu.tessera.sample") ?? .standard
         defaults.removePersistentDomain(forName: "com.kaushikaranagu.tessera.sample")
-        // Not his settings: no Claude, no timer alerts, no settings writes reach anything of his.
+        // Not his settings: no timer alerts and no settings writes reach anything of his.
         let model = AppModel(context: container.mainContext, launchDefaults: defaults, seedsStarterLists: true,
                              isSample: true)
         DemoData.prepareSample(model)
+        // Sample data may ask Claude (Kaushik, Oct 24), following his own "Tess asks Claude" choice.
+        model.claudeOwner = real
         self.container = container
         sample = model
         return model

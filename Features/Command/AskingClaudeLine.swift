@@ -2,7 +2,7 @@ import SwiftUI
 
 /// "Asking Claude." with Cancel, under the Ask while a capture is on the network (batch 3, CL31). It shows only
 /// once a request has really left the phone (Core's willSend), never for a grammar answer; Core's one 8 s deadline
-/// ends it, and Cancel ends it at once with "Cancelled.". VoiceOver hears it once, as one element with a Cancel action.
+/// ends it, and Cancel ends it at once with "Cancelled". VoiceOver hears it once, as one element with a Cancel action.
 struct AskingClaudeLine: View {
     let cancel: () -> Void
 
@@ -26,10 +26,10 @@ struct AskingClaudeLine: View {
 }
 
 enum AskingClaudeCopy {
-    static let line = "Asking Claude."
+    static let line = "Asking Claude"
     static let cancel = "Cancel"
     /// One element, spoken once (CL31).
-    static let spoken = "Asking Claude. Cancel."
+    static let spoken = "Asking Claude. Cancel"
 }
 
 /// What a newline in the Ask's draft means: Return's own (one character added, at the end) sends; any other line break,

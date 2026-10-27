@@ -63,9 +63,13 @@ enum CookFace {
     /// only (never an ellipsis).
     static func shortStep(_ text: String, most: Int = 80) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let sentence = trimmed.range(of: ". ")
-            .map { String(trimmed[..<$0.upperBound]).trimmingCharacters(in: .whitespaces) }
+        // The first sentence, shown with no closing stop (Kaushik, Oct 26).
+        var sentence = trimmed.range(of: ". ")
+            .map { String(trimmed[..<$0.lowerBound]).trimmingCharacters(in: .whitespaces) }
             ?? trimmed
+        if sentence.hasSuffix("."), !sentence.hasSuffix("..") {
+            sentence.removeLast()
+        }
         guard sentence.count > most else { return sentence }
         var line = ""
         for word in sentence.split(separator: " ") {

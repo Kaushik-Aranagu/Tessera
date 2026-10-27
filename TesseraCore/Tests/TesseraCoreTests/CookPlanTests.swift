@@ -56,7 +56,7 @@ struct CookPlanTests {
         #expect(start(of: "Spaghetti", in: plan) == at(18, 40))
         let spaghettiPlace = plan.placements[1]
         #expect(spaghettiPlace.heldSec == m(6) && !spaghettiPlace.overHold)
-        #expect(plan.notes() == ["Spaghetti will wait 6 min.", "Spaghetti starts 6 min early so your hands are free."])
+        #expect(plan.notes() == ["Spaghetti will wait 6 min", "Spaghetti starts 6 min early so your hands are free"])
         // No two hands stretches overlap.
         let hands = plan.segs.filter { $0.kind == .hands }
         for (index, lhs) in hands.enumerated() {
@@ -88,7 +88,7 @@ struct CookPlanTests {
         // Rice's last hands (18:58-19:00) overlap Stew's last (18:40-19:00): it moves 20 min earlier to clear.
         let place = plan.placements[1]
         #expect(place.heldSec == m(20) && place.overHold)
-        #expect(plan.notes() == ["Rice would wait 20 min."])
+        #expect(plan.notes() == ["Rice would wait 20 min"])
         #expect(start(of: "Rice", in: plan) == at(18, 18))
     }
 
@@ -104,7 +104,7 @@ struct CookPlanTests {
         let plan = CookPlan.make(dishes: [chicken(startedAt: at(18, 17), extra: 2), spaghetti()],
                                  serveAt: at(19, 0), now: at(18, 30))
         #expect(plan.projectedServe == at(19, 2))
-        #expect(plan.lateLine(calendar: calendar) == "Serving about 7:02 pm.")
+        #expect(plan.lateLine(calendar: calendar) == "Serving about 7:02 pm")
         // Running timers never move.
         #expect(start(of: "Chicken", in: plan) == at(18, 17))
     }
@@ -193,14 +193,14 @@ struct CookPlanTests {
         let flagged = CookPlan.Dish(name: "Couscous", order: 0, local: [], isPlural: true)
         #expect(CookPlan.isPlural(flagged))
         let plan = CookPlan.make(dishes: [chicken(), spaghetti(plural: true)], serveAt: at(19, 0), now: at(17, 0))
-        #expect(plan.notes().last == "Spaghetti start 6 min early so your hands are free.")
+        #expect(plan.notes().last == "Spaghetti start 6 min early so your hands are free")
     }
 
     @Test func landingAndRunningSentences() {
         let plan = CookPlan.make(dishes: [chicken(), spaghetti()], serveAt: at(19, 0), now: at(17, 0))
-        #expect(plan.landing(calendar: calendar) == "Chicken and Spaghetti tonight, start at 6:17 pm.")
-        #expect(plan.running(minutesLeft: 12) == "Cooking Chicken and Spaghetti, 12 min left.")
-        #expect(plan.serveLine(calendar: calendar) == "Serve at 7 pm. Start Chicken at 6:17 pm.")
+        #expect(plan.landing(calendar: calendar) == "Chicken and Spaghetti tonight, start at 6:17 pm")
+        #expect(plan.running(minutesLeft: 12) == "Cooking Chicken and Spaghetti, 12 min left")
+        #expect(plan.serveLine(calendar: calendar) == "Serve at 7 pm. Start Chicken at 6:17 pm")
         #expect(CookPlan.names(["A", "B", "C"]) == "A, B and C")
         #expect(CookPlan.names(["A", "B", "C", "D", "E"]) == "A, B and 3 more")
         #expect(CookPlan.names(["A", "B", "C", "D"]) == "A, B and 2 more")

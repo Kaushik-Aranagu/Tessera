@@ -149,7 +149,7 @@ public struct DropRoutineFromPlan: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "\(store.object(id: routine)?.title ?? "Routine") dropped."
+        "\(store.object(id: routine)?.title ?? "Routine") dropped"
     }
 }
 
@@ -176,7 +176,7 @@ public struct SetScheduleMode: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         let title = store.object(id: plan)?.title ?? "The plan"
-        return mode == .fixed ? "\(title) on fixed days." : "\(title) rolls on."
+        return mode == .fixed ? "\(title) on fixed days" : "\(title) rolls on"
     }
 }
 
@@ -188,7 +188,7 @@ public struct WeekdayHandoff: Equatable, Sendable {
 
     /// "Thursday was Pull A's. Push A has it now."
     public func line(to routine: String) -> String {
-        "\(Weekdays.name(weekday)) was \(fromTitle)'s. \(routine) has it now."
+        "\(Weekdays.name(weekday)) was \(fromTitle)'s. \(routine) has it now"
     }
 }
 
@@ -221,8 +221,8 @@ public struct SetRoutineWeekdays: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         let title = store.object(id: routine)?.title ?? "Routine"
-        guard !weekdays.isEmpty else { return "\(title), no fixed days." }
-        return "\(title) on \(Weekdays.plural(Weekdays.ordered(Set(weekdays))))."
+        guard !weekdays.isEmpty else { return "\(title), no fixed days" }
+        return "\(title) on \(Weekdays.plural(Weekdays.ordered(Set(weekdays))))"
     }
 }
 

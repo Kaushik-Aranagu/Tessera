@@ -98,7 +98,7 @@ struct ClaudeRouteTests {
         engine = ActionEngine(store: store, classes: classes)
         defaults = try #require(UserDefaults(suiteName: "claude-route-\(UUID().uuidString)"))
         flags = ClaudeMissFlags(defaults: defaults)
-        RouteStub.reply = (200, Self.answer("Logged."))
+        RouteStub.reply = (200, Self.answer("Logged"))
         RouteStub.queue = []
         RouteStub.failure = nil
         RouteStub.requests = []
@@ -142,12 +142,12 @@ struct ClaudeRouteTests {
         // (QA on #860). Claude's reply here repeats the phrase; what is spoken is the records' receipt.
         let phrase = "could you log that I paid 40 for gas earlier?"
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil))
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted, paid 40 for gas."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted, paid 40 for gas"))]
         let capture = await tess().capture(phrase, context: context)
         #expect(capture.source == .claude && capture.records.count == 1, "\(capture.line)")
-        #expect(capture.line == "Sent that to Claude. Turn this off in Settings: Claude.", "\(capture.line)")
+        #expect(capture.line == "Sent that to Claude. Turn this off in Settings: Claude", "\(capture.line)")
         // The next miss, no notice: still not Claude's words.
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted, wifi code 4821 and paid 40 for gas."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted, wifi code 4821 and paid 40 for gas"))]
         let second = await tess().capture(phrase, context: context)
         #expect(!second.line.contains("4821") && !second.line.contains("gas") && !second.line.contains("40"),
                 "\(second.line)")
@@ -204,7 +204,7 @@ struct ClaudeRouteTests {
         let long = String(repeating: "could you log the bench ", count: 40)
         let capture = await tess().capture(long, context: context)
         #expect(
-            capture.line == "That's too long to send. Say it shorter." && capture.records.isEmpty,
+            capture.line == "That's too long to send. Say it shorter" && capture.records.isEmpty,
             "\(capture.line)"
         )
         #expect(RouteStub.requests.isEmpty)
@@ -213,7 +213,7 @@ struct ClaudeRouteTests {
     @Test func theReceiptsHoldNoWordOfAWalledPhrase() async {
         // "What was sent" lists the ledger's rows (time, job, model, cost): none holds the phrase, masked or not.
         let phrase = "could you log that I paid 40 for gas earlier?"
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted"))]
         _ = await tess().capture(phrase, context: context)
         let calls = ledger.calls()
         #expect(!calls.isEmpty)
@@ -228,13 +228,13 @@ struct ClaudeRouteTests {
     }
 
     @Test func aMissGoesToClaudeAndLandsAsAPendingGhost() async throws {
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged"))]
         let capture = await tess().capture(miss, context: context)
         #expect(capture.source == .claude && capture.records.count == 1)
         #expect(capture.records.first?.state == .pending)
         #expect(capture.records.first?.route == .claude && capture.records.first?.model == ClaudeTessModel.model)
         // The first miss ever sent says so, once.
-        #expect(capture.line == "Sent \u{201C}\(miss)\u{201D} to Claude. Turn this off in Settings: Claude.")
+        #expect(capture.line == "Sent \u{201C}\(miss)\u{201D} to Claude. Turn this off in Settings: Claude")
         #expect(flags.noticeShown)
         // Two rounds: the tool result went back.
         #expect(RouteStub.requests.count == 2)
@@ -250,8 +250,8 @@ struct ClaudeRouteTests {
 
     @Test func afterTheNoticeClaudesOwnLineShowsIfItPassesTheVoiceChecks() async {
         flags.noticeShown = true
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
-        #expect(await tess().capture(miss, context: context).line == "Bench 80 × 8 logged.")
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged"))]
+        #expect(await tess().capture(miss, context: context).line == "Bench 80 × 8 logged")
         RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Great job, logged it all for you!"))]
         let loud = await tess().capture(miss, context: context)
         #expect(loud.records.count == 1 && TessVoice.violations(in: loud.line).isEmpty)
@@ -277,13 +277,13 @@ struct ClaudeRouteTests {
                       costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
                       at: context.now)
         let capture = await tess().capture(miss, context: context)
-        #expect(capture.keptToSort && capture.records.count == 1 && capture.line == "\(miss), kept to sort later.",
+        #expect(capture.keptToSort && capture.records.count == 1 && capture.line == "\(miss), kept to sort later",
                 "\(capture.line)")
         let note = try #require(capture.records.first?.objectIDs.first.flatMap(store.object(id:)))
         #expect(store.isKeptToSort(note))
         // A walled phrase over the cap is kept without an echo.
         let walled = await tess().capture("could you log that I paid 40 for gas earlier?", context: context)
-        #expect(walled.keptToSort && walled.line == "Kept to sort later.", "\(walled.line)")
+        #expect(walled.keptToSort && walled.line == "Kept to sort later", "\(walled.line)")
         #expect(RouteStub.requests.isEmpty)
     }
 
@@ -299,7 +299,7 @@ struct ClaudeRouteTests {
         var live = context
         live.entry = entry.id
         let capture = await tess().capture(miss, context: live)
-        #expect(!capture.keptToSort && capture.records.isEmpty && capture.line == "Claude paused until Nov 1.",
+        #expect(!capture.keptToSort && capture.records.isEmpty && capture.line == "Claude paused until Nov 1",
                 "\(capture.line)")
         #expect(try store.objects(of: #require(classes[.note])).isEmpty)
     }
@@ -312,17 +312,17 @@ struct ClaudeRouteTests {
         let again = await tess.capture(miss, context: context)
         #expect(again.line == ClaudeTessModel.unreachedLine && again.keepsWords && !again.keptToSort,
                 "\(again.line)")
-        #expect(ClaudeTessModel.unreachedLine == "Couldn't reach Claude. Try again.")
+        #expect(ClaudeTessModel.unreachedLine == "Couldn't reach Claude. Try again")
         #expect(again.records.isEmpty && tess.waitingCount == 1)
     }
 
     @Test func offlineOrSlowSaysSoAndWritesNothing() async {
         RouteStub.failure = .notConnectedToInternet
         let offline = await tess().capture(miss, context: context)
-        #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude.")
+        #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude")
         RouteStub.failure = .timedOut
         let slow = await tess().capture(miss, context: context)
-        #expect(slow.line == "Claude didn't answer in time." && slow.keepsWords)
+        #expect(slow.line == "Claude didn't answer in time" && slow.keepsWords)
         // The offline attempt never left, so it wrote no row; the timeout did leave, so it kept its one.
         #expect(ledger.calls().count == 1)
     }
@@ -331,9 +331,9 @@ struct ClaudeRouteTests {
         // The route is unchanged (#860: it goes whole); Claude has no money action to call, so nothing is logged
         // and the phrase is kept to sort later, private, never echoed.
         let phrase = "lunch with sam was about 23 quid I think"
-        RouteStub.queue = [(200, Self.answer("I can't log that."))]
+        RouteStub.queue = [(200, Self.answer("I can't log that"))]
         let capture = await tess().capture(phrase, context: context)
-        #expect(capture.keptToSort && capture.line == "Kept to sort later.", "\(capture.line)")
+        #expect(capture.keptToSort && capture.line == "Kept to sort later", "\(capture.line)")
         #expect(!capture.line.contains("23") && capture.records.map(\.action) == ["createNote"])
         let tools = String(decoding: RouteStub.bodies.last ?? Data(), as: UTF8.self)
         #expect(!tools.contains("logSpend") && !tools.contains("logShopTotal") && !tools.contains("editSpend"))
@@ -350,17 +350,17 @@ struct ClaudeRouteTests {
         #expect(read.source == .grammar && !read.keptToSort)
         #expect(RouteStub.requests.isEmpty)
         // 2. The phone cannot read it and asking Claude is on: Claude is asked exactly once, read-only.
-        RouteStub.queue = [(200, Self.answer("I can't log that."))]
+        RouteStub.queue = [(200, Self.answer("I can't log that"))]
         let asked = await tess().capture(unreadable, context: context)
         #expect(RouteStub.requests.count == 1)
         let tools = String(decoding: RouteStub.bodies.last ?? Data(), as: UTF8.self)
         #expect(!tools.contains("logSpend") && !tools.contains("logShopTotal") && !tools.contains("skipShopTotal"))
         // 3. Claude had nothing to add: kept on the phone.
-        #expect(asked.keptToSort && asked.line == "Kept to sort later.")
+        #expect(asked.keptToSort && asked.line == "Kept to sort later")
         // 4. Asking Claude is off: Claude is never asked, the note is kept.
         RouteStub.requests = []
         let off = await tess(sends: false).capture(unreadable, context: context)
-        #expect(RouteStub.requests.isEmpty && off.keptToSort && off.line == "Kept to sort later.")
+        #expect(RouteStub.requests.isEmpty && off.keptToSort && off.line == "Kept to sort later")
         // 5. No key: the same.
         let keyless = await tess(key: nil).capture(unreadable, context: context)
         #expect(RouteStub.requests.isEmpty && keyless.keptToSort)
@@ -375,7 +375,7 @@ struct ClaudeRouteTests {
         RouteStub.reply = (200, "{}")
         RouteStub.failure = .cancelled
         let cancelled = await tess().capture(miss, context: context)
-        #expect(cancelled.line == "Cancelled." && !cancelled.keepsWords && !cancelled.keptToSort)
+        #expect(cancelled.line == "Cancelled" && !cancelled.keepsWords && !cancelled.keptToSort)
         RouteStub.failure = nil
     }
 
@@ -383,7 +383,7 @@ struct ClaudeRouteTests {
         RouteStub.failure = nil
         RouteStub.reply = (429, "{}")
         let busy = await tess().capture(miss, context: context)
-        #expect(busy.line == "Claude is busy right now." && busy.keepsWords && !busy.keptToSort)
+        #expect(busy.line == "Claude is busy right now" && busy.keepsWords && !busy.keptToSort)
     }
 
     @Test(arguments: [
@@ -396,13 +396,13 @@ struct ClaudeRouteTests {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil) || SecretWords.mentions(phrase), "\(phrase)")
         RouteStub.failure = .notConnectedToInternet
         let capture = await tess().capture(phrase, context: context)
-        #expect(capture.records.isEmpty && capture.line == "Couldn't read that offline. Try again online.",
+        #expect(capture.records.isEmpty && capture.line == "Couldn't read that offline. Try again online",
                 "\(capture.line)")
         #expect(capture.isRefusal && capture.keepsWords && !capture.keptToSort)
         #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
         // A plain miss offline still waits for Claude.
         let plain = await tess().capture(miss, context: context)
-        #expect(plain.line == "No connection. Saved it for Claude.")
+        #expect(plain.line == "No connection. Saved it for Claude")
         #expect(TessInbox(store: store, classes: classes).waiting().count == 1)
     }
 
@@ -417,7 +417,7 @@ struct ClaudeRouteTests {
         #expect(SecretWords.mentions(phrase))
         let result = await claude.run(TessRequest(text: phrase, context: context, use: .capture), engine: engine)
         guard case let .asked(capture) = result else { Issue.record("expected the offline line"); return }
-        #expect(capture.line == "Couldn't read that offline. Try again online." && capture.isRefusal)
+        #expect(capture.line == "Couldn't read that offline. Try again online" && capture.isRefusal)
         #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
     }
 
@@ -425,7 +425,7 @@ struct ClaudeRouteTests {
         // Claude asks for an exercise that doesn't exist, then gives up.
         RouteStub.queue = [
             (200, Self.logBench.replacingOccurrences(of: "Bench Press", with: "Underwater Bench")),
-            (200, Self.answer("Couldn't find that exercise.")),
+            (200, Self.answer("Couldn't find that exercise")),
         ]
         let capture = await tess().capture(miss, context: context)
         #expect(capture.records.isEmpty)
@@ -461,7 +461,7 @@ struct ClaudeRouteTests {
                                                                         with: "\"\(reason)\",\"usage\""))]
             let capture = await tess().capture(miss, context: context)
             // Product ruling, Oct 19: Claude was on and failed, so the words stay for the retry and nothing is kept.
-            #expect(capture.records.isEmpty && capture.line == "Couldn't reach Claude. Try again.", "\(reason)")
+            #expect(capture.records.isEmpty && capture.line == "Couldn't reach Claude. Try again", "\(reason)")
             #expect(capture.keepsWords && !capture.keptToSort, "\(reason)")
         }
     }
@@ -469,7 +469,7 @@ struct ClaudeRouteTests {
     @Test func toolErrorsGoBackAsFixedLines() async throws {
         RouteStub.queue = [
             (200, Self.logBench.replacingOccurrences(of: "Bench Press", with: "Underwater Bench")),
-            (200, Self.answer("Couldn't find that.")),
+            (200, Self.answer("Couldn't find that")),
         ]
         _ = await tess().capture(miss, context: context)
         let second = try #require(String(data: RouteStub.bodies[1], encoding: .utf8))
@@ -478,19 +478,19 @@ struct ClaudeRouteTests {
 
     // MARK: G687, the found key
 
-    @Test func foundKeyOnAFreshStoreSendsNothingUntilAsked() async {
-        // A key in the fake keychain and fresh settings: the one field reads no, so nothing leaves.
+    @Test func foundKeyOnAFreshStoreSendsByDefaultAndANoStopsIt() async {
+        // A key in the fake keychain and fresh settings: the field reads yes (Kaushik, Oct 26), so the miss goes.
         let settings = SettingsStore(engine: engine)
         var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key), ledger: ledger, flags: flags,
                                      session: RouteStub.session()) { settings.read().sendsMissesToClaude }
         claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
         let capture = TessCaptureEngine(engine: engine)
         capture.claude = claude
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged"))]
         _ = await capture.capture(miss, context: context)
-        #expect(RouteStub.requests.isEmpty && !settings.read().sendsMissesToClaude)
-        // Yes: the next miss goes.
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged."))]
-        try? settings.answerClaudeQuestion(true)
+        #expect(RouteStub.requests.count == 2 && settings.read().sendsMissesToClaude)
+        // No: the next miss stays on the phone.
+        try? settings.answerClaudeQuestion(false)
         _ = await capture.capture(miss, context: context)
         #expect(RouteStub.requests.count == 2)
     }
@@ -514,7 +514,7 @@ struct ClaudeRouteTests {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()
         let offline = await tess.capture(miss, context: context)
-        #expect(offline.line == "No connection. Saved it for Claude." && tess.waitingCount == 1)
+        #expect(offline.line == "No connection. Saved it for Claude" && tess.waitingCount == 1)
         // The same phrase twice still waits once.
         _ = await tess.capture(miss, context: context)
         #expect(tess.waitingCount == 1)
@@ -524,10 +524,10 @@ struct ClaudeRouteTests {
         RouteStub.failure = nil
         RouteStub.reply = (529, "{}")
         #expect(await tess.readWaiting(context: context).isEmpty && tess.waitingCount == 1)
-        RouteStub.reply = (200, Self.answer("Logged."))
+        RouteStub.reply = (200, Self.answer("Logged"))
         // Online: read as a pending ghost, and gone from the inbox.
         RouteStub.failure = nil
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged"))]
         let read = await tess.readWaiting(context: context)
         #expect(read.count == 1 && read.first?.records.first?.state == .pending && tess.waitingCount == 0)
     }
@@ -540,7 +540,7 @@ struct ClaudeRouteTests {
         }
         let inbox = TessInbox(store: store, classes: classes)
         #expect(inbox.add("door code 4417", at: .now) == nil && inbox.add("took 2 advil", at: .now) == nil)
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged"))]
         let tess = tess()
         _ = await tess.readWaiting(context: context)
         #expect(tess.waitingCount == 0)
@@ -582,7 +582,7 @@ struct ClaudeRouteTests {
         #expect(RouteStub.requests.isEmpty && tess.waitingCount == 2, "a cook phrase was sent")
         // The cook ends: "stop the rice" goes; a phrase about a timer is never sent.
         try engine.perform(FinishCooking(cook: cook.id, time: context.now), by: .user)
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged"))]
         _ = await tess.readWaiting(context: context)
         let sent = RouteStub.bodies.compactMap { String(data: $0, encoding: .utf8) }.joined()
         #expect(sent.contains("stop the rice") && !sent.contains("timer doing"))
@@ -593,11 +593,11 @@ struct ClaudeRouteTests {
         let inbox = TessInbox(store: store, classes: classes)
         inbox.add(miss, at: context.now - 7200)
         inbox.add("could you log squat 100 for 5 from earlier?", at: context.now - 3600)
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged.")),
-                           (200, Self.logBench), (200, Self.answer("Squat logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged")),
+                           (200, Self.logBench), (200, Self.answer("Squat logged"))]
         let read = await tess().readWaiting(context: context)
         #expect(read.map(\.isNotice) == [true, false], "\(read.map(\.line))")
-        #expect(read.first?.line.contains("Turn this off in Settings: Claude.") == true)
+        #expect(read.first?.line.contains("Turn this off in Settings: Claude") == true)
     }
 
     @Test func aDrainLandsAtMostThreeGhostsAndTheRestKeepWaiting() async {
@@ -605,7 +605,7 @@ struct ClaudeRouteTests {
         for index in 1 ... 5 {
             inbox.add("could you log bench \(70 + index) for 8 from earlier?", at: context.now - Double(6000 - index))
         }
-        RouteStub.queue = Array(repeating: [(200, Self.logBench), (200, Self.answer("Logged."))], count: 5)
+        RouteStub.queue = Array(repeating: [(200, Self.logBench), (200, Self.answer("Logged"))], count: 5)
             .flatMap(\.self)
         let tess = tess()
         #expect(await tess.readWaiting(context: context).count == 3 && tess.waitingCount == 2)

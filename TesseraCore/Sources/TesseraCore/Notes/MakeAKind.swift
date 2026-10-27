@@ -176,7 +176,7 @@ public struct MakeKind: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output kind: ClassDef) -> String? {
-        KindRules.isWalled(kind.name, in: store) ? "Private kind" : "\(kind.name), made."
+        KindRules.isWalled(kind.name, in: store) ? "Private kind" : "\(kind.name), made"
     }
 }
 
@@ -238,8 +238,8 @@ public struct KeepNoteAsObject: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output object: ObjectRecord) -> String? {
-        guard let name = object.classDef?.name, !KindRules.isWalled(name, in: store) else { return "Kept." }
-        return "Kept as \(name)."
+        guard let name = object.classDef?.name, !KindRules.isWalled(name, in: store) else { return "Kept" }
+        return "Kept as \(name)"
     }
 }
 
@@ -287,7 +287,7 @@ public struct KeepAllNotes: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output kept: Int) -> String? {
-        "\(kept) kept."
+        "\(kept) kept"
     }
 }
 

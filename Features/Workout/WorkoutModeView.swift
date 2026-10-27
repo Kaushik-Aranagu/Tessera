@@ -118,7 +118,7 @@ private struct WorkoutContent: View {
                             holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
                                 withTesseraAnimation(reduceMotion: reduceMotion) { session.takeBackFinish() }
-                                let back = "\(session.shownTitle), back on."
+                                let back = "\(session.shownTitle), back on"
                                 askReply = back
                                 undoHaptic += 1
                                 Task { @MainActor in
@@ -492,7 +492,7 @@ extension WorkoutContent {
 
     private func oneTapSwap() {
         guard let top = session.swapOptions().first else {
-            showReceipt("Nothing to swap this for.", takeBack: nil)
+            showReceipt("Nothing to swap this for", takeBack: nil)
             return
         }
         var record: OpRecord?
@@ -502,7 +502,7 @@ extension WorkoutContent {
         soul.handle(.swapped)
         guard let record else { return }
         let name = SwapPanel.short(top.exercise.name)
-        showReceipt("\(name), swapped in.") { [session] in session.undoSwap(record) }
+        showReceipt("\(name), swapped in") { [session] in session.undoSwap(record) }
     }
 
     private func setSwap(open: Bool) {
@@ -613,10 +613,10 @@ extension WorkoutContent {
                     RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set, onBeat: {
                         // "One more than last time.", once per set, only while Tess isn't saying anything else.
                         guard askReply == nil else { return }
-                        askReply = "One more than last time."
+                        askReply = "One more than last time"
                         Task { @MainActor in
                             try? await Task.sleep(for: .seconds(4))
-                            if askReply == "One more than last time." {
+                            if askReply == "One more than last time" {
                                 askReply = nil
                             }
                         }
@@ -850,7 +850,7 @@ extension WorkoutContent {
             return
         }
         moment.play(.selection)
-        showReceipt("\(receipt.name), later.") { [session] in session.undoBusy(receipt) }
+        showReceipt("\(receipt.name), later") { [session] in session.undoBusy(receipt) }
     }
 
     /// Puts `text` in the Tess corner; with something to take back it holds ten seconds with Undo, else four.

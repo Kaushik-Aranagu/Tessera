@@ -33,8 +33,8 @@ enum RoutinesWeekThreadData {
         let names = days.filter(\.ran).map { TesseraDay.weekdayName(of: $0.date, calendar: calendar) }
         // The thread is hidden when no day ran, so there is never a "nothing ran" line to say.
         switch names.count {
-        case 0, 1: return names.first.map { "Ran on \($0)." } ?? ""
-        default: return "Ran on \(names.dropLast().joined(separator: ", ")) and \(names[names.count - 1])."
+        case 0, 1: return names.first.map { "Ran on \($0)" } ?? ""
+        default: return "Ran on \(names.dropLast().joined(separator: ", ")) and \(names[names.count - 1])"
         }
     }
 

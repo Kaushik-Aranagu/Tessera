@@ -33,7 +33,7 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
 
         app.buttons["REMOVE"].tap()
         app.buttons["Remove the Claude key"].tap()
-        XCTAssertTrue(app.staticTexts["Claude key removed. Everything stays on this phone."]
+        XCTAssertTrue(app.staticTexts["Claude key removed. Everything stays on this phone"]
             .waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["UNDO"].exists, "Remove is final: no UNDO")
         let add = app.buttons["Add a Claude key"]
@@ -65,10 +65,10 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         app.swipeUp()
         sleep(1)
         toggle.tap()
-        XCTAssertTrue(app.staticTexts["Tess stays on this phone."].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Tess stays on this phone"].waitForExistence(timeout: 3))
         sleep(2)
         toggle.tap()
-        XCTAssertTrue(app.staticTexts["Tess asks Claude when she's unsure, and for Plan my day."]
+        XCTAssertTrue(app.staticTexts["Tess asks Claude when she's unsure, and for Plan my day"]
             .waitForExistence(timeout: 3))
         sleep(2)
         app.buttons["$0.00"].tap()

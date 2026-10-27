@@ -18,7 +18,7 @@ struct UndoLogTests {
         #expect(entry.id == task.record.id && entry.isRecent && !entry.isMoney)
         #expect(UndoLog.latest(engine: engine, now: .now.addingTimeInterval(11 * 60)) == nil)
         #expect(UndoLog.recent(engine: engine, now: .now.addingTimeInterval(11 * 60)).first?.isRecent == false)
-        #expect(UndoLog.undo(entry.id, engine: engine) == .putBack(line: "Put back."))
+        #expect(UndoLog.undo(entry.id, engine: engine) == .putBack(line: "Put back"))
         #expect(task.output.isDeleted)
         #expect(UndoLog.undo(entry.id, engine: engine) == .gone)
         #expect(UndoLog.latest(engine: engine, now: .now) == nil)
@@ -35,7 +35,7 @@ struct UndoLogTests {
         let first = try engine.perform(MoveTask(task: task.id, to: early), by: .user)
         try engine.perform(MoveTask(task: task.id, to: early.addingTimeInterval(86400)), by: .user)
         let before = store.value("due", of: task)
-        #expect(UndoLog.undo(first.record.id, engine: engine) == .blocked(line: "Can't put that back."))
+        #expect(UndoLog.undo(first.record.id, engine: engine) == .blocked(line: "Can't put that back"))
         #expect(first.record.state == .committed)
         #expect(store.value("due", of: task) == before)
     }
@@ -45,9 +45,9 @@ struct UndoLogTests {
         let two = try engine.perform(CreatePool(name: "Savings", opening: "0"), by: .user).output
         let move = try engine.perform(LogMove(from: one.id, to: two.id, sent: "120", arrived: "120"), by: .user)
         let entry = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == move.record.id })
-        #expect(entry.isMoney && entry.sentence == "Money moved.")
+        #expect(entry.isMoney && entry.sentence == "Money moved")
         #expect(!entry.sentence.contains("120") && !entry.sentence.contains("checking"))
-        #expect(UndoLog.undo(entry.id, engine: engine) == .putBack(line: "Put back."))
+        #expect(UndoLog.undo(entry.id, engine: engine) == .putBack(line: "Put back"))
     }
 
     @Test func aPrivateThingReadsItsGenericSummaryNotItsWords() throws {
@@ -60,7 +60,7 @@ struct UndoLogTests {
         let task = try engine.perform(CreateTask(title: "Quiet thing"), by: .user).output
         let gone = try engine.perform(DeleteObject(object: task.id), by: .user)
         task.title = TessMemoryStore.redacted
-        #expect(UndoLog.undo(gone.record.id, engine: engine) == .blocked(line: "Can't put that back."))
+        #expect(UndoLog.undo(gone.record.id, engine: engine) == .blocked(line: "Can't put that back"))
         #expect(task.isDeleted)
     }
 
@@ -89,10 +89,10 @@ struct UndoLogTests {
             ops: [.setTitle(object: me.id, old: "Me", new: "Me")],
             state: .committed
         )
-        record.receipt = "Height 181 cm, saved."
+        record.receipt = "Height 181 cm, saved"
         store.context.insert(record)
         let entry = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == record.id })
-        #expect(entry.sentence == "Updated you." && !entry.sentence.contains("181"))
+        #expect(entry.sentence == "Updated you" && !entry.sentence.contains("181"))
     }
 
     /// One batch of two ops: the stale one comes first, so undo (newest op first) puts the second back and only then
@@ -107,7 +107,7 @@ struct UndoLogTests {
             state: .committed
         )
         store.context.insert(record)
-        #expect(UndoLog.undo(record.id, engine: engine) == .blocked(line: "Can't put that back."))
+        #expect(UndoLog.undo(record.id, engine: engine) == .blocked(line: "Can't put that back"))
         #expect(one.title == "First" && two.title == "Second" && record.state == .committed)
     }
 
@@ -117,9 +117,9 @@ struct UndoLogTests {
         #expect(!entry.sentence.contains("600") && !entry.sentence.lowercased().contains("calor"))
         let sync = OpRecord(action: "syncCalendar", actor: .user, summary: "Calendar mirrored",
                             ops: [.setTitle(object: made.output.id, old: "x", new: "x")], state: .committed)
-        sync.receipt = "Dentist at 3 pm."
+        sync.receipt = "Dentist at 3 pm"
         store.context.insert(sync)
         let line = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == sync.id })
-        #expect(line.sentence == "Calendar mirrored.")
+        #expect(line.sentence == "Calendar mirrored")
     }
 }

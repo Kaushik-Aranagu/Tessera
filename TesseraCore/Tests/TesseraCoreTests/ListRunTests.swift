@@ -137,7 +137,7 @@ struct ListRunTests {
         let workout = try store.create(#require(fixture.engine.classes[.workout]), title: "Push")
         try fixture.engine.perform(StartProcess(subject: workout.id, time: start), by: .user)
         let before = fixture.engine.history(limit: 500).count
-        #expect(throws: ActionError.invalidArguments(action: "startListRun", reason: "Workout running.")) {
+        #expect(throws: ActionError.invalidArguments(action: "startListRun", reason: "Workout running")) {
             try fixture.engine.perform(StartListRun(list: fixture.packing.id, time: start + 5), by: .user)
         }
         #expect(fixture.engine.history(limit: 500).count == before)
@@ -208,7 +208,7 @@ struct ListRunTests {
     @Test func finishingAListThatIsNotRunningWritesNothing() throws {
         let fixture = try setUp()
         let before = fixture.engine.history(limit: 500).count
-        #expect(throws: ActionError.invalidArguments(action: "finishListRun", reason: "Packing isn't running.")) {
+        #expect(throws: ActionError.invalidArguments(action: "finishListRun", reason: "Packing isn't running")) {
             try fixture.engine.perform(FinishListRun(list: fixture.packing.id), by: .user)
         }
         #expect(fixture.engine.history(limit: 500).count == before)

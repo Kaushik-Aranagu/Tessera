@@ -113,7 +113,7 @@ struct MePage: View {
             }
 
             ForEach(MeCopy.unsaidFields, id: \.self) { field in
-                Text("\(field) \(Text(MeCopy.notSaid).fontWeight(.semibold)).")
+                Text("\(field) \(Text(MeCopy.notSaid).fontWeight(.semibold))")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityElement(children: .ignore)

@@ -26,7 +26,10 @@ public struct TesseraDay: Sendable {
     }
 
     public var calendar: Calendar
-    /// The hour this day turns over: the configured one unless a caller says otherwise (tests, previews).
+    /// The hour this day turns over: the configured one unless a caller says otherwise (tests, previews). It is read
+    /// when
+    /// the instance is made, so a long-lived `TesseraDay` keeps the old hour after a change: build one when it is
+    /// needed (it is a cheap value), do not hold one.
     public var startHour: Int
 
     /// Weeks start on Monday everywhere (the plan, Review and the set counts agree, whatever the locale; QA R5).

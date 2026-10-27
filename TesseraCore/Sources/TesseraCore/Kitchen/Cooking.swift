@@ -68,7 +68,7 @@ public struct CookLog {
             calendar.dateComponents([.year, .month], from: day.day(of: $0.at)) == month
         }
         let name = ObjectPrivacy.isPrivateRecipe(recipe, in: store) ? ObjectPrivacy.recipeLabel : recipe.title
-        return "\(name), \(Self.ordinal(thisMonth)) time this month."
+        return "\(name), \(Self.ordinal(thisMonth)) time this month"
     }
 
     /// "first" to "ninth", then "10th", "11th", "12th", "13th", "21st", "22nd", "23rd", "31st".
@@ -125,7 +125,7 @@ public struct StartCooking: EngineAction {
                                                     ])
 
     /// The refusal line while a workout is running (gap hunt G56, Product 8:16): the Cook key never suspends one.
-    public static let workoutRunningLine = "Workout running."
+    public static let workoutRunningLine = "Workout running"
     /// The `ActionError.invalidArguments` reason of that refusal.
     public static let workoutRunningReason = workoutRunningLine
 
@@ -354,9 +354,9 @@ public struct FinishCooking: EngineAction {
         guard let object = store.object(id: cook) else { return nil }
         let recipe = store.linkedObjects("recipe", of: object).first ?? object
         if ObjectPrivacy.isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store)) {
-            return "\(ObjectPrivacy.recipeLabel) done."
+            return "\(ObjectPrivacy.recipeLabel) done"
         }
-        return "\(object.title), done."
+        return "\(object.title), done"
     }
 }
 

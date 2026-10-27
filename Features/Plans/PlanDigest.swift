@@ -232,13 +232,13 @@ struct PlanMonth: Equatable {
     static func tessLine(done: Int, lastMonth: Int, leftThisWeek: Int, month: String, previous: String) -> String? {
         guard lastMonth > 0 else { return nil }
         if done >= lastMonth {
-            return "\(month) is already level with \(previous). Anything more is extra."
+            return "\(month) is already level with \(previous). Anything more is extra"
         }
         let needed = lastMonth - done
         let words = SpokenTime.number(needed)
         let count = words.prefix(1).uppercased() + words.dropFirst()
         return needed <= leftThisWeek
-            ? "\(count) more this week keeps \(month) level with \(previous)."
-            : "\(count) more keeps \(month) level with \(previous)."
+            ? "\(count) more this week keeps \(month) level with \(previous)"
+            : "\(count) more keeps \(month) level with \(previous)"
     }
 }

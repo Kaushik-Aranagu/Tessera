@@ -56,7 +56,7 @@ public struct LatencyBench {
     }
 
     private func request(prefix: Bool) -> BrainRequest {
-        var system = [TextBlock("You are a latency probe. Answer in about forty words.")]
+        var system = [TextBlock("You are a latency probe. Answer in about forty words")]
         var cache: [CacheMark] = []
         if prefix {
             system.append(TextBlock(Self.filler(words: Self.prefixWords, seed: 7)))
@@ -122,7 +122,7 @@ public struct LatencyBench {
         var ttft: [Int] = [], total: [Int] = []
         for _ in 0 ..< Self.repeats {
             let job = DoorJob(name: "latency-bench", ladder: [.appleOnDevice],
-                              request: BrainRequest(system: [TextBlock("Answer in about forty words.")],
+                              request: BrainRequest(system: [TextBlock("Answer in about forty words")],
                                                     messages: [BrainMessage(.user, text: Self.filler(
                                                         words: Self.promptWords, seed: 3
                                                     ))],

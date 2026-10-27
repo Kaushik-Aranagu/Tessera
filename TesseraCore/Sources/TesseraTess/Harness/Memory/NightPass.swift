@@ -147,7 +147,9 @@ public struct NightPass: Sendable {
         let open = beliefs.filter(\.isOpen)
         let merges = merged(open)
         let closing = Set(merges.compactMap { step -> UUID? in
-            if case let .merge(_, close) = step { return close }
+            if case let .merge(_, close) = step {
+                return close
+            }
             return nil
         })
         var steps = merges
@@ -179,13 +181,19 @@ public struct NightPass: Sendable {
         for key in groups.keys.sorted() {
             guard let group = groups[key], group.count > 1 else { continue }
             let ranked = group.sorted { lhs, rhs in
-                if lhs.kept != rhs.kept { return lhs.kept }
-                if (lhs.source == .told) != (rhs.source == .told) { return lhs.source == .told }
+                if lhs.kept != rhs.kept {
+                    return lhs.kept
+                }
+                if (lhs.source == .told) != (rhs.source == .told) {
+                    return lhs.source == .told
+                }
                 if normalized(lhs.value) != normalized(rhs.value) {
                     // A disagreement: the newer belief is the newer information.
                     return lhs.validFrom > rhs.validFrom
                 }
-                if lhs.confirmations != rhs.confirmations { return lhs.confirmations > rhs.confirmations }
+                if lhs.confirmations != rhs.confirmations {
+                    return lhs.confirmations > rhs.confirmations
+                }
                 return lhs.validFrom < rhs.validFrom
             }
             // Two of his own that disagree: nothing in the group closes until he says which.
@@ -262,7 +270,7 @@ public struct NightPass: Sendable {
                 : (times[times.count / 2 - 1] + times[times.count / 2]) / 2
             let newHour = ((median / 30).rounded() / 2).truncatingRemainder(dividingBy: 24)
             let verb = off.last?.verb ?? "do this"
-            return .revise(belief: belief.id, words: "You usually \(verb) around \(Self.clock(newHour)).",
+            return .revise(belief: belief.id, words: "You usually \(verb) around \(Self.clock(newHour))",
                            value: "{\"hour\":\(MemoryEval.plain(newHour))}", evidence: off.map(\.id))
         }
         let unproven = belief.source == .noticed || belief.source == .inferred
@@ -288,13 +296,13 @@ public struct NightPass: Sendable {
     // MARK: Summaries
 
     func summaries(day: [DayItem], week: [DayItem]) -> [Step] {
-        var steps = [Step.summary(path: "/summaries/day/\(night)", text: Self.lines(day, empty: "A quiet day."))]
+        var steps = [Step.summary(path: "/summaries/day/\(night)", text: Self.lines(day, empty: "A quiet day"))]
         if calendar.component(.weekday, from: closingDay) == 1 {
             var iso = Calendar(identifier: .iso8601)
             iso.timeZone = calendar.timeZone
             let parts = iso.dateComponents([.yearForWeekOfYear, .weekOfYear], from: closingDay)
             let name = String(format: "%04d-W%02d", parts.yearForWeekOfYear ?? 0, parts.weekOfYear ?? 0)
-            steps.append(.summary(path: "/summaries/week/\(name)", text: Self.lines(week, empty: "A quiet week.")))
+            steps.append(.summary(path: "/summaries/week/\(name)", text: Self.lines(week, empty: "A quiet week")))
         }
         return steps
     }

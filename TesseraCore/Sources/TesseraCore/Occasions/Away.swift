@@ -78,9 +78,9 @@ public enum Away {
               let position = day(of: occasion, store: store, now: now, calendar: calendar) else { return nil }
         let title = OccasionRules.plainTitle(occasion.title, in: store, classes: classes) ?? "Away"
         // No "N of M" on Home (landing contract §10): the day, and "the last" on the last one.
-        var text = position.day >= position.of ? "\(title), the last day." : "\(title), day \(position.day)."
+        var text = position.day >= position.of ? "\(title), the last day" : "\(title), day \(position.day)"
         if let packing = packing(of: occasion, store: store, classes: classes) {
-            text += " " + packing
+            text += ". " + packing
         }
         return text
     }
@@ -98,7 +98,7 @@ public enum Away {
             let items = contents.items(of: thing)
             guard !items.isEmpty else { return nil }
             let left = items.count { !$0.isDone }
-            return left == 0 ? "Packing is done." : "Packing, \(left) left."
+            return left == 0 ? "Packing is done" : "Packing, \(left) left"
         }
         return nil
     }

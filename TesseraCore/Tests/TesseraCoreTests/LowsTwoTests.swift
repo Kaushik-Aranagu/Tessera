@@ -13,7 +13,7 @@ struct LowsTwoTests {
         try engine.perform(AddGroceries(lines: ["1 (15 oz) can chickpeas"]), by: .user)
         let tess = TessCaptureEngine(engine: engine)
         let capture = await tess.capture("buy chickpeas", context: TessContext(commitImmediately: true))
-        #expect(capture.line == "Chickpeas, already on Groceries.")
+        #expect(capture.line == "Chickpeas, already on Groceries")
         let groceries = Groceries(store: store, classes: classes)
         let items = groceries.aisles().flatMap(\.items)
         #expect(items.count == 1 && items.first?.quantity == "1 can")
@@ -43,7 +43,7 @@ struct LowsTwoTests {
         try engine.perform(AddGroceries(lines: ["1 (15 oz) can chickpeas"]), by: .user)
         let ops = store.context.all(OpRecord.self).count
         let capture = await TessCaptureEngine(engine: engine).capture("buy chickpeas", context: TessContext())
-        #expect(capture.line == "Chickpeas, already on Groceries.")
+        #expect(capture.line == "Chickpeas, already on Groceries")
         #expect(capture.records.isEmpty)
         #expect(store.context.all(OpRecord.self).count == ops)
         // Something with an amount still adds.

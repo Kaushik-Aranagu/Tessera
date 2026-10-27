@@ -84,17 +84,17 @@ enum RestoreOfferCopy {
     }
 
     /// No copy here: the ruled line (hunt 28 CALL 1 B).
-    static let backups = "Have a copy from before? Backups, Restore."
+    static let backups = "Have a copy from before? Backups, Restore"
     static let backupsHint = "Opens Settings, where Backups is"
 
     /// The warning with the stamp, before anything is staged (sheet 111).
     static func confirm(_ createdAt: Date) -> String {
-        "Restore the \(day(createdAt)) backup? This replaces what is on this phone now."
+        "Restore the \(day(createdAt)) backup? This replaces what is on this phone now"
     }
 
-    static let inIt = "In it: your objects, links, views and settings."
-    static let notInIt = "Not in it: the Claude key, the bookmark, flags, Claude spend, Health and calendar copies."
-    static let walled = "Private words stay walled in every copy."
+    static let inIt = "In it: your objects, links, views and settings"
+    static let notInIt = "Not in it: the Claude key, the bookmark, flags, Claude spend, Health and calendar copies"
+    static let walled = "Private words stay walled in every copy"
 
     static let restore = "Restore"
     /// The second step, in place of Restore: the two-step word is the check (sheet 111).
@@ -103,22 +103,22 @@ enum RestoreOfferCopy {
     static let notNow = "Not now"
 
     /// After staging: Core applies it at the next cold launch.
-    static let staged = "It comes back the next time you open Tessera."
-    static let notStaged = "That copy couldn't be staged. Nothing was replaced."
-    static let newer = "This backup is from a newer Tessera."
-    static let unreadable = "This backup could not be read."
+    static let staged = "It comes back the next time you open Tessera"
+    static let notStaged = "That copy couldn't be staged. Nothing was replaced"
+    static let newer = "This backup is from a newer Tessera"
+    static let unreadable = "This backup could not be read"
 
     /// Refused while something runs (hunt 27 CALL 3 A): one line naming it.
     static func waits(for what: String) -> String {
-        "Restore waits until \(what) is done."
+        "Restore waits until \(what) is done"
     }
 
     /// Core's restored note starts with this; the dated one replaces it (sheet 111).
-    static let coreRestored = "Restored from your backup."
+    static let coreRestored = "Restored from your backup"
 
     /// "Restored the 3 Oct backup."
     static func restored(_ createdAt: Date) -> String {
-        "Restored the \(day(createdAt)) backup."
+        "Restored the \(day(createdAt)) backup"
     }
 
     /// "3 Oct": the copy's own 4 AM day, as in its file name (BackupCopy.fileDay).

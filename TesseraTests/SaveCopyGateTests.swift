@@ -37,7 +37,7 @@ struct SaveCopyGateTests {
             return
         }
         #expect(!asked, "Face ID never asks without a passcode")
-        #expect(BackupKeeper.passcodeLine == "Set a passcode first. This copy has your private words.")
+        #expect(BackupKeeper.passcodeLine == "Set a passcode first. This copy has your private words")
     }
 
     @Test func notPassingFaceIDSavesNothing() async throws {

@@ -66,7 +66,7 @@ struct SchemaFollowupTests {
         let entry = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
                                        by: .user).output
         let capture = await tess.capture("185 lb x 5", context: TessContext(entry: entry.id))
-        #expect(capture.line == "Set 1 logged. 185 lb × 5.")
+        #expect(capture.line == "Set 1 logged. 185 lb × 5")
         let set = try #require(entry.orderedChildren.first)
         #expect(store.value("enteredUnit", of: set) == .choice("lb"))
         #expect(store.number("weight", of: set).map { abs($0 - 83.915) < 0.01 } == true)

@@ -220,12 +220,12 @@ struct CaptureMissLogTests {
         let first = await capture.capture(dal, context: TessContext())
         #expect(first.understood)
         let again = await capture.capture(dal, context: TessContext())
-        #expect(again.line == "Weeknight dal is already on Recipes." && !again.understood && again.isRefusal)
+        #expect(again.line == "Weeknight dal is already on Recipes" && !again.understood && again.isRefusal)
         // A private title reads "Private recipe", and neither paste lands in the miss log.
         let secret = "Lexapro stew\nIngredients\n1 cup red lentils\n1 onion\nMethod\n1. Simmer 20 minutes."
         _ = await capture.capture(secret, context: TessContext())
         let twice = await capture.capture(secret, context: TessContext())
-        #expect(twice.line == "Private recipe is already on Recipes.", "\(twice.line)")
+        #expect(twice.line == "Private recipe is already on Recipes", "\(twice.line)")
         #expect(log.all().isEmpty, "\(log.all().map(\.text))")
         #expect(RecipeBook(store: store, classes: engine.classes).recipes().count == 2)
     }

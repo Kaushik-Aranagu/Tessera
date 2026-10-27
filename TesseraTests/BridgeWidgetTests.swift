@@ -25,11 +25,11 @@ struct BridgeWidgetTests {
     }
 
     @Test func aLongBigLineCutsOnAWholeWordAndNeverEllipsizes() {
-        let cut = HomeOneThing.cut("Call the plumber about the kitchen sink tomorrow", size: 38, width: 262)
+        let cut = HomeOneThing.cut("Call the plumber about the kitchen sink tomorrow", width: 262)
         #expect(!cut.contains("...") && !cut.contains("…"))
         #expect("Call the plumber about the kitchen sink tomorrow".hasPrefix(cut))
         #expect(cut.count < 30)
-        #expect(HomeOneThing.cut("Tacos", size: 38, width: 262) == "Tacos")
+        #expect(HomeOneThing.cut("Tacos", width: 262) == "Tacos")
     }
 
     @Test func theMiddleLinesKeyWordHasNoUnderline() {

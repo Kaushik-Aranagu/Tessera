@@ -6,11 +6,11 @@ import Testing
 @MainActor
 struct CookModeCopyTests {
     @Test func timerLines() {
-        #expect(CookModeCopy.timerDone("Simmer") == "Simmer is done.")
-        #expect(CookModeCopy.timerDoneLine("Simmer") == "Simmer, done.")
-        #expect(CookModeCopy.timerStopped("Simmer") == "Simmer stopped.")
-        #expect(CookModeCopy.timerBack("Simmer") == "Simmer, back.")
-        #expect(CookModeCopy.timeLeft("Simmer", seconds: 8 * 60) == "Simmer, 8 minutes left.")
+        #expect(CookModeCopy.timerDone("Simmer") == "Simmer is done")
+        #expect(CookModeCopy.timerDoneLine("Simmer") == "Simmer, done")
+        #expect(CookModeCopy.timerStopped("Simmer") == "Simmer stopped")
+        #expect(CookModeCopy.timerBack("Simmer") == "Simmer, back")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 8 * 60) == "Simmer, 8 minutes left")
     }
 
     @Test func durationsInWords() {
@@ -40,9 +40,9 @@ struct CookModeCopyTests {
 
     /// G233: at zero the timer reads its done line; the last minute is "under a minute".
     @Test func aTimerAtZeroIsDone() {
-        #expect(CookModeCopy.timeLeft("Simmer", seconds: 0) == "Simmer, done.")
-        #expect(CookModeCopy.timeLeft("Simmer", seconds: 40) == "Simmer, under a minute left.")
-        #expect(CookModeCopy.timeLeft("Simmer", seconds: 480) == "Simmer, 8 minutes left.")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 0) == "Simmer, done")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 40) == "Simmer, under a minute left")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 480) == "Simmer, 8 minutes left")
     }
 
     /// G234, G226: Home's bar speaks minutes, and steps every 5 s, once a minute when calm.
