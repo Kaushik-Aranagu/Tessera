@@ -197,10 +197,9 @@ private struct ListPage: View {
                         // The visible cue that it opens (Design on #806): a small mark that turns as it unfolds.
                         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.xs) {
                             // A run reads "Packing, running" (10.7).
-                            Text(run != nil ? ListsCopy.running(name)
-                                : ListsCopy.pageContext(open: open.count, all: open.count + done.count))
-                                .font(Theme.voice(size: 21))
-                                .foregroundStyle(Theme.Colors.context)
+                            RollingText(line: run != nil ? ListsCopy.running(name)
+                                : ListsCopy.pageContext(open: open.count, all: open.count + done.count),
+                                font: Theme.voice(size: 21), color: Theme.Colors.context)
                             Text("›")
                                 .font(Theme.voice(size: 21))
                                 .foregroundStyle(Theme.Colors.inkSecondary)
@@ -385,13 +384,17 @@ private struct ListPage: View {
     private func row(_ item: ListContents.Item, running: Bool) -> some View {
         let shown = label(item)
         return Button { tap(item) } label: {
-            (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold) + linked(item, shown))
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(2)
-                .textRenderer(StrikeRenderer(progress: striking.contains(item.id) ? 1 : 0, color: Theme.Colors.ink))
-                .frame(maxWidth: .infinity, minHeight: running ? 64 : 48, alignment: .leading)
-                .contentShape(Rectangle())
+            HStack(spacing: Theme.Spacing.s) {
+                // Sheet 300: the faint mark that becomes a drawn tick when it is checked.
+                DrawnTick(checked: striking.contains(item.id))
+                (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold) + linked(item, shown))
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .lineLimit(2)
+                    .textRenderer(StrikeRenderer(progress: striking.contains(item.id) ? 1 : 0, color: Theme.Colors.ink))
+            }
+            .frame(maxWidth: .infinity, minHeight: running ? 64 : 48, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
         .accessibilityHint("Checks it off")
@@ -417,7 +420,10 @@ private struct ListPage: View {
     }
 
     private func tap(_ item: ListContents.Item) {
-        withTesseraAnimation(.smooth(duration: 0.26), reduceMotion: reduceMotion) { _ = striking.insert(item.id) }
+        // The words take their line through 170 ms after the tick starts, once the pen has lifted (sheet 300).
+        withTesseraAnimation(.smooth(duration: 0.26).delay(reduceMotion ? 0 : 0.17), reduceMotion: reduceMotion) {
+            _ = striking.insert(item.id)
+        }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 420))
             _ = try? model.engine.perform(CheckListItem(item: item.id), by: .user)
@@ -743,15 +749,18 @@ extension ListPage {
                         _ = try? model.engine.perform(CheckListItem(item: item.id, done: false), by: .user)
                         model.touch()
                     } label: {
-                        Text(rows.maskedLabel(
-                            for: item,
-                            name: item.text,
-                            lastWeightKg: BodyWeight.lastKg(in: model.store)
-                        ))
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        // The strike as paint, so a reset drains it right to left (10.4).
-                        .modifier(FoldStrike(drain: drain))
+                        HStack(spacing: Theme.Spacing.s) {
+                            DrawnTick(checked: true)
+                            Text(rows.maskedLabel(
+                                for: item,
+                                name: item.text,
+                                lastWeightKg: BodyWeight.lastKg(in: model.store)
+                            ))
+                            .textRole(.body)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            // The strike as paint, so a reset drains it right to left (10.4).
+                            .modifier(FoldStrike(drain: drain))
+                        }
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }
                     .buttonStyle(HandleButtonStyle())
