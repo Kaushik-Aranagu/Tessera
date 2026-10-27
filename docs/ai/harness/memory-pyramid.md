@@ -135,6 +135,46 @@ What it does not show yet:
 - The learned router and the confidence numbers ("Learned weights" in the design doc) are not in it yet. The next
   version adds them, and paraphrased asks, so that routing has to be learned rather than read off the dates.
 
+## P3b simulation (prototype, Oct 27): learned routing weights and confidence
+
+`scripts/ai/pyramid_router_sim.py` uses the same made-up year, with no model and no API call. Asks name their time
+the way people do ("Oct", "October 2026", "last month", "3 months ago", "yesterday", "last Tuesday", "2 Oct"), so
+matching the ask's words against node titles is not enough. A router scores each child of a node with weights on
+(ask word, child feature) pairs; the features are the child's title words, its recency rank among its siblings and
+its level. After every answer the true path is known (hindsight), and one cross-entropy step trains the weights
+along it: real backprop on a linear model. Confidence is the router's own probability.
+
+Three ways, the same 20 asks a night:
+- **words:** the router frozen at its start, where only "the same word in the ask and the title" counts.
+- **learned:** the router trained after every ask, walking level by level.
+- **jump:** learned, plus confidence. When every step of the guessed path is at least 0.9 sure, the reader opens
+  the guessed node directly; if it is wrong, it walks as usual.
+
+Nights 21-30 (opens per ask, first try right at every step, found within 5 tries per step):
+
+| Seed | words | learned | jump |
+|---|---|---|---|
+| 1 | 4.9, 48%, 88% | 3.8, 91%, 100% | 2.1 |
+| 2 | 4.7, 57%, 90% | 3.8, 96%, 100% | 1.7 |
+| 3 | 4.9, 52%, 88% | 3.9, 93%, 98% | 1.8 |
+
+What it shows:
+- **The weights learn what words can't.** The strongest pairs after 30 nights are "oct is october", "sep is
+  september" and "nov goes to last year" (a November ask can only mean 2025 on Oct 23). Words alone miss 10-12% of
+  asks entirely; the learned router finds nearly all.
+- **Confidence pays.** Jumping when sure halves the opens again (about 3.8 to about 2). The threshold is the knob:
+  0.7 gives 1.6 opens with more wrong jumps, 0.97 gives 2.5. A wrong jump costs one open, never a wrong answer,
+  because the walk still runs.
+- **About 4,700 pairs are learned for a year of one person's asks.** Small enough to keep on the phone.
+
+Drawbacks it exposes, with the fix for each:
+- **Recency features drift.** "rank1" means last year today and two years ago next January. Rank weights should be
+  relative ("last month" is rank 1 among months), and a weight tied to an absolute year should decay.
+- **Hindsight needs the true path.** Here it is exact. In the app, the path is the node the answer cited, which the
+  cite check (P1b) already enforces; an answer with no cite trains nothing.
+- **Cold start.** Nights 1-5 are no better than words. The shared per-level prior from P3 and a seed set of date
+  phrasings fix this.
+
 ## Beyond the app: memory for anything Tess lives through
 
 Kaushik's follow-up (Oct 27): the goal is the general memory problem for a personal assistant, not only his app
