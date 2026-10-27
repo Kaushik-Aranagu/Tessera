@@ -64,6 +64,8 @@ final class SpeechListener {
     private var timer: Task<Void, Never>?
     private var cap: Task<Void, Never>?
     private var holdMode = false
+    /// The streaming SpeechAnalyzer listen, when the on-device model is installed; nil falls back to the older path.
+    private var live: TessLiveSpeech?
     /// Bumped by every stop, so a start that was waiting on a system prompt knows it was cancelled.
     private var attempt = 0
 
@@ -102,6 +104,25 @@ final class SpeechListener {
             state = .idle
             return .speechOff
         }
+        if let streaming = await TessLiveSpeech(onWords: { [weak self] words in
+            Task { @MainActor in self?.hear(words) }
+        }) {
+            guard stillMine(mine) else {
+                await streaming.cancel()
+                return nil
+            }
+            do {
+                await streaming.prime(with: lexicon.contextualStrings())
+                try await streaming.start()
+                try beginLive(streaming)
+                return nil
+            } catch {
+                await streaming.cancel()
+                stopAudio()
+                state = .idle
+                return .busy
+            }
+        }
         guard let recognizer = SFSpeechRecognizer(locale: .current) ?? SFSpeechRecognizer(),
               recognizer.supportsOnDeviceRecognition, recognizer.isAvailable
         else {
@@ -133,6 +154,44 @@ final class SpeechListener {
         let finish = onFinish
         onFinish = nil
         finish?(send && !words.isEmpty ? lexicon.resolve(words) : nil)
+    }
+
+    /// Words from the streaming listen, volatile then settled.
+    private func hear(_ words: String) {
+        guard state == .listening, words != heard else { return }
+        heard = words
+        armPause()
+    }
+
+    private func beginLive(_ streaming: TessLiveSpeech) throws {
+        heard = ""
+        endedInSilence = false
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+        guard session.isInputAvailable else { throw ListenError.noInput }
+        live = streaming
+        let input = engine.inputNode
+        let format = input.outputFormat(forBus: 0)
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+            streaming.append(buffer)
+            let rms = Self.rms(buffer)
+            Task { @MainActor [weak self] in self?.level = rms }
+        }
+        engine.prepare()
+        try engine.start()
+        state = .listening
+        timer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.firstWord)
+            guard let self, !Task.isCancelled, heard.isEmpty, !self.holdMode else { return }
+            endedInSilence = true
+            stop(send: false)
+        }
+        cap = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.limit)
+            guard !Task.isCancelled else { return }
+            self?.stop(send: true)
+        }
     }
 
     private func begin(with recognizer: SFSpeechRecognizer) throws {
@@ -207,6 +266,10 @@ final class SpeechListener {
         }
         engine.inputNode.removeTap(onBus: 0)
         request?.endAudio()
+        if let live {
+            self.live = nil
+            Task { await live.cancel() }
+        }
         task?.cancel()
         request = nil
         task = nil
