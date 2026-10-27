@@ -7,6 +7,8 @@ script exits if it does not). Arms over the same turns:
   dense     cosine of the encoder's vectors
   hybrid    reciprocal rank fusion of bm25 and dense (k=60)
   session   the --sessions best sessions by dense score over their turns' mean vector, then dense over their turns
+  pyramid   the --sessions best sessions by BM25 (as #1482 does), then hybrid over their turns
+  twohop    hybrid, then a second read: the question plus the top --hop turns re-encoded, fused with the first
 It prints recall@5/10/20, recall@10 by category, and encode time per turn. Nothing but the public LoCoMo file is read
 (CC BY-NC 4.0, downloaded to a temporary folder, sha256 checked, removed after). No Tessera data, no API call.
 
@@ -107,7 +109,7 @@ def fuse(*rankings, k=60):
 
 def run(args):
     encoder = Hashing() if args.model == "hashing" else Sentence(args.model)
-    arms = ("bm25", "dense", "hybrid", "session")
+    arms = ("bm25", "dense", "hybrid", "session", "pyramid", "twohop")
     ks = (5, 10, 20)
     total, asked, encoded, spent = collections.defaultdict(float), 0, 0, 0.0
     for turns, session, questions in conversations(args.data):
@@ -123,6 +125,7 @@ def run(args):
         for d in ids:
             by_session[session[d]].append(d)
         names = list(by_session)
+        sessions = BM25({s: [w for d in by_session[s] for w in docs[d]] for s in names})
         centers = np.stack([vectors[[row[d] for d in by_session[s]]].mean(axis=0) for s in names])
         queries = encoder.encode([q["question"] for q in questions], args.query_prefix)
         for question, qv in zip(questions, queries):
@@ -136,7 +139,14 @@ def run(args):
             top = [names[i] for i in np.argsort(-(centers @ qv), kind="stable")[: args.sessions]]
             pool = [d for s in top for d in by_session[s]]
             inside = sorted(pool, key=lambda d: (-sims[row[d]], d))
-            ranked = {"bm25": lexical, "dense": dense, "hybrid": fuse(lexical, dense), "session": inside}
+            opened = {d for s in sessions.rank(tokens(question["question"]))[: args.sessions] for d in by_session[s]}
+            hybrid = fuse(lexical, dense)
+            seen = " ".join(turns[d] for d in hybrid[: args.hop])
+            again = encoder.encode([question["question"] + " " + seen], args.query_prefix)[0]
+            dense2 = [ids[i] for i in np.argsort(-(vectors @ again), kind="stable")]
+            second = fuse(lexical, dense2, bm25.rank(tokens(question["question"] + " " + seen)))
+            ranked = {"bm25": lexical, "dense": dense, "hybrid": hybrid, "session": inside,
+                      "pyramid": [d for d in hybrid if d in opened], "twohop": fuse(hybrid, second)}
             category = question["category"]
             total[f"n{category}"] += 1
             for arm, order in ranked.items():
@@ -161,6 +171,7 @@ def main():
     p.add_argument("--query-prefix", default="")
     p.add_argument("--doc-prefix", default="")
     p.add_argument("--sessions", type=int, default=3)
+    p.add_argument("--hop", type=int, default=2)
     p.add_argument("--data")
     args = p.parse_args()
     folder = None
