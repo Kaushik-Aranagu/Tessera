@@ -2,7 +2,8 @@ import Foundation
 import TesseraCore
 
 // The store slice of the memory pyramid (docs/ai/harness/memory-pyramid.md): his own store as leaves, read the way the
-// night pass reads a day. A private thing is its shown label and adds nothing to a claude-safe total. A started
+// night pass reads a day. A private thing is its shown label, walled, and adds nothing to a total, so under strict the
+// pyramid reads exactly as if it never happened. A started
 // workout that never finished, a deleted row and anything after `now` never become a leaf. Workouts with their
 // working sets, cooks, tasks done and notes come first; money, health, body and the calendar wait for their own slice.
 
@@ -36,12 +37,14 @@ public extension MemoryPyramid {
             }
             for session in own {
                 for set in session.sets {
-                    lifts[session.workoutID, default: []].append(
-                        "\(exercise.name) \(PyramidStats.format(set.weight)) kg x\(PyramidStats.format(set.reps))"
-                    )
+                    let weight = PyramidStats.format(set.weight), reps = PyramidStats.format(set.reps)
+                    let lift = "\(exercise.name) \(weight) kg x\(reps)"
+                    // A weight that reads as his body weight is a body fact: the set stays out, text and totals.
+                    guard plain(lift) else { continue }
+                    lifts[session.workoutID, default: []].append(lift)
+                    sets[session.workoutID, default: 0] += 1
+                    volume[session.workoutID, default: 0] += set.volume
                 }
-                sets[session.workoutID, default: 0] += Double(session.sets.count)
-                volume[session.workoutID, default: 0] += session.volume
             }
         }
         if let workoutClass = classes[.workout] {
@@ -50,7 +53,8 @@ public extension MemoryPyramid {
                       let at = past(store.value("startedAt", of: workout)?.dateValue) else { continue }
                 let id = "workout-\(workout.id.uuidString)"
                 guard label(workout) == nil, plain(workout.title) else {
-                    leaves.append(PyramidLeaf(id: id, at: at, kind: "workout", text: ObjectPrivacy.routineLabel))
+                    leaves.append(PyramidLeaf(id: id, at: at, kind: "workout", text: ObjectPrivacy.routineLabel,
+                                              taint: .deviceOnly))
                     continue
                 }
                 let done = lifts[workout.id] ?? []
@@ -69,7 +73,7 @@ public extension MemoryPyramid {
                 let id = "cook-\(cook.id.uuidString)"
                 let walled = plain(name) ? nil : ObjectPrivacy.recipeLabel
                 if let shown = label(cook) ?? recipe.flatMap(label) ?? walled {
-                    leaves.append(PyramidLeaf(id: id, at: at, kind: "cook", text: shown))
+                    leaves.append(PyramidLeaf(id: id, at: at, kind: "cook", text: shown, taint: .deviceOnly))
                 } else {
                     leaves.append(PyramidLeaf(id: id, at: at, kind: "cook", text: "Cooked \(name)",
                                               stats: ["cooks": 1]))
@@ -82,7 +86,7 @@ public extension MemoryPyramid {
                 guard let at = past(store.value("doneAt", of: task)?.dateValue) else { continue }
                 let id = "task-\(task.id.uuidString)"
                 if let shown = label(task) ?? (plain(task.title) ? nil : ObjectPrivacy.taskLabel) {
-                    leaves.append(PyramidLeaf(id: id, at: at, kind: "task", text: shown))
+                    leaves.append(PyramidLeaf(id: id, at: at, kind: "task", text: shown, taint: .deviceOnly))
                 } else {
                     leaves.append(PyramidLeaf(id: id, at: at, kind: "task", text: "Did \(task.title)",
                                               stats: ["tasks": 1]))
@@ -97,7 +101,7 @@ public extension MemoryPyramid {
                 let words = String((body.isEmpty ? note.title : body).prefix(noteCharacters))
                 let id = "note-\(note.id.uuidString)"
                 if let shown = label(note) ?? (plain(note.title) && plain(words) ? nil : ObjectPrivacy.noteLabel) {
-                    leaves.append(PyramidLeaf(id: id, at: at, kind: "note", text: shown))
+                    leaves.append(PyramidLeaf(id: id, at: at, kind: "note", text: shown, taint: .deviceOnly))
                 } else {
                     leaves.append(PyramidLeaf(id: id, at: at, kind: "note", text: words, stats: ["notes": 1]))
                 }

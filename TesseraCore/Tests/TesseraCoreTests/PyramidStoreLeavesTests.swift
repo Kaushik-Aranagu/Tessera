@@ -84,7 +84,45 @@ struct PyramidStoreLeavesTests {
         for walled in ["Knee", "rehab", "Lexapro", "tacocat24", "password", "40 kg"] {
             #expect(!texts.contains { $0.contains(walled) }, "\(walled)")
         }
-        #expect(all.allSatisfy { $0.stats.isEmpty })
+        #expect(all.allSatisfy { $0.stats.isEmpty && $0.taint == .deviceOnly })
+    }
+
+    @Test func strictReadsAsIfThePrivateRowsNeverHappened() throws {
+        try workout("Push Day", on: at(10, 6), sets: [(95, 3)])
+        try workout("Pull Day", on: at(10, 20), sets: [(70, 8)])
+        // One private workout on a day of its own, one beside a plain one, and a walled task.
+        let routine = try make(.routine, "Knee rehab day")
+        for day in [13, 6] {
+            let hidden = try workout("Session", on: at(10, day), sets: [(40, 12)])
+            try store.setLinks("routine", on: hidden, to: [routine])
+        }
+        let task = try make(.task, "Lexapro refill")
+        try store.set("doneAt", to: .date(at(10, 14)), on: task)
+        let all = leaves()
+        let with = MemoryPyramid(leaves: all, calendar: calendar)
+        let without = MemoryPyramid(leaves: all.filter { $0.taint == .claudeSafe }, calendar: calendar)
+        #expect(all.count(where: { $0.taint == .deviceOnly }) == 3)
+        for path in without.nodes.keys.sorted() where without.nodes[path]?.level != .leaf {
+            #expect(with.zoom(path, policy: .strict).text == without.zoom(path, policy: .strict).text, "\(path)")
+        }
+        #expect(with.zoom("/time/2026/10/13", policy: .strict).isError)
+    }
+
+    @Test func everyLiftShownPassesTheBodyWall() throws {
+        // His weigh-in is a private note; a set at that weight may read as his body weight.
+        let weighIn = try make(.note, "Weigh-in")
+        try store.set("body", to: .string("82 kg this morning"), on: weighIn)
+        try store.set("isPrivate", to: .bool(true), on: weighIn)
+        try workout("Push Day", on: at(10, 6), sets: [(82, 5), (60, 8)])
+        let leaf = try #require(leaves().first { $0.kind == "workout" })
+        let lifts = leaf.text.split(separator: ": ", maxSplits: 1).last.map {
+            $0.components(separatedBy: ", ")
+        } ?? []
+        let last = BodyWeight.lastKg(in: store)
+        #expect(lifts.allSatisfy { !ObjectPrivacy.isPrivateTitle($0, lastWeightKg: last) }, "\(lifts)")
+        #expect(leaf.text.contains("60 kg x8"))
+        // What isn't shown isn't counted either.
+        #expect(leaf.stats["sets"] == Double(lifts.count))
     }
 
     @Test func cooksTasksAndNotesComeIn() throws {
