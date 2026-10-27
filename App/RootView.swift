@@ -107,6 +107,13 @@ struct RootView: View {
                 }
             }
         }
+        // Sheet 299: a change of look never replays the page's arrivals. While the old page leaves, the page under it
+        // changes its colours with no animation of its own.
+        .transaction { transaction in
+            if LookInk.shared.pass != nil {
+                transaction.disablesAnimations = true
+            }
+        }
         .fullScreenCover(isPresented: $model.isWorkoutPresented) {
             if model.workoutRisesFromLane {
                 // START on Training: live mode rises out of the first lane (training-mode.md).

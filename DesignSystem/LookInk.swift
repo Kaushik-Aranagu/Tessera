@@ -46,6 +46,15 @@ final class LookInk {
             guard Thread.isMainThread else { return }
             MainActor.assumeIsolated { LookInk.shared.begin(replacing: old) }
         }
+        // Simulator only (LaunchFlags): `-lookFlip` pins Obsidian after 6 s and Porcelain 8 s after that, for stills.
+        if LaunchFlags.has("-lookFlip") {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(6))
+                ThemeStore.shared.pin(.obsidian)
+                try? await Task.sleep(for: .seconds(8))
+                ThemeStore.shared.pin(.porcelain)
+            }
+        }
     }
 
     func begin(replacing old: Look) {

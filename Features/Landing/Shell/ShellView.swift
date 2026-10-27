@@ -134,6 +134,17 @@ struct ShellView<Room: RoomContent>: View {
     // MARK: Changes
 
     private func apply(_ screen: Screen) {
+        if appliedRoute != nil, navigator.route == appliedRoute, !changing, LookInk.shared.pass != nil {
+            // Sheet 299: a change of look only recolours the page; nothing arrives again. The places take their new
+            // content where they stand, with no move.
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) {
+                layout = screen.layout
+                shown = screen.slots
+            }
+            return
+        }
         if appliedRoute == nil {
             open(screen)
         } else if navigator.route != appliedRoute {
