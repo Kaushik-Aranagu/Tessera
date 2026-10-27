@@ -1489,10 +1489,10 @@ SCREENS.lock={title:'Lock screen',accent:'training',tess:'',render(el){el.classL
    (in for four, out for six), and the time left in Outfit. Swipe up or tap Next to move on. */
 SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, then the book. No rush.',render(el){el.classList.add('fulldusk');
  const ST=[{k:'Tidy',m:10,mv:[['Counter',180,'Clear it, then one wipe'],['Sink',300,'Dishes in the rack, nothing left soaking'],['Floor',120,'Shoes by the door']]},
-  {k:'Stretch',m:9,mv:[['Hamstrings',90,'Soft knees, reach long'],['Hips',120,'Knee over ankle, breathe out'],['Back',120,'Round, then arch, slowly'],['Neck',90,'Ear to shoulder, both sides'],['Breathe',120,'In for four, out for six']]},
+  {k:'Stretch',m:9,br:1,mv:[['Hamstrings',90,'Soft knees, reach long'],['Hips',120,'Knee over ankle, breathe out'],['Back',120,'Round, then arch, slowly'],['Neck',90,'Ear to shoulder, both sides'],['Breathe',120,'In for four, out for six']]},
   {k:'Read',m:20,pg:212,ppm:.7,mv:[['The Overstory',1200,'Page 212, chapter nine']]},
   {k:'Journal',m:2,mv:[['One line',120,'What went right today']]},
-  {k:'Lights',m:1,mv:[['Phone away',60,'Lights out at 10:30']]}];
+  {k:'Lights',m:1,br:1,mv:[['Phone away',60,'Lights out at 10:30']]}];
  const S={i:0,j:0,left:ST[0].mv[0][1],done:new Set(),skip:new Set(),fin:0,pause:0,b0:Date.now()};window.__rt={S,ST};
  const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),minsLeft=()=>ST.filter((_,i)=>!S.done.has(i)&&!S.skip.has(i)).reduce((a,x)=>a+x.m,0);
  const clock=d=>(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0');
@@ -1507,13 +1507,15 @@ SCREENS.tend={title:'Evening',accent:'routines',tess:'Nine minutes of stretch, t
   if(key!==lastKey||force){P.innerHTML=(S.fin?'<div class="dk-top"><span data-a="back">Watch</span><span>Evening tended</span></div><div class="dk-h">Evening</div><div class="dk-big">Tended</div><div class="dk-cue">Six days in a row now. Sleep well</div><div class="dk-time o">'+S.done.size+'<span>of '+ST.length+'</span></div><div class="dk-verb" data-a="back">Back</div><div class="dk-sub">to the Watch</div>':
    '<div class="dk-top"><span data-a="back">Watch</span><span>'+S.done.size+' of '+ST.length+' tended, bed about '+clock(new Date(Date.now()+minsLeft()*60000))+'</span></div>'+
    '<div class="dk-h">'+s.k+(s.mv.length>1?', '+(S.j+1)+' of '+s.mv.length:'')+'</div><div class="dk-big">'+mv[0]+'</div><div class="dk-cue">'+mv[2]+'</div>'+
-   '<div class="dk-breath">'+(inh?'breathe in':'breathe out')+'</div>'+
+   /* 347: the breath guide only comes with the steps where breathing is the point (Stretch, Lights); on reading, tidying and
+      writing the line stays empty, so the time sits in the same place on every step */
+   (s.br?'<div class="dk-breath">'+(inh?'breathe in':'breathe out')+'</div>':'<div class="dk-breath" aria-hidden="true"></div>')+
    '<div class="dk-time"><b class="o">'+mm(S.left)+'</b><span>'+(S.pause?'paused':s.pg?'to about page&nbsp;'+(s.pg+Math.round(s.mv[0][1]*s.ppm/60)):s.mv[S.j+1]?'then '+s.mv[S.j+1][0].toLowerCase():'then '+(ST[S.i+1]?ST[S.i+1].k.toLowerCase():'sleep'))+'</span></div>'+
    (s.mv.length>1?'<div class="dk-moves">'+s.mv.map((q,j)=>'<div class="'+(j<S.j?'dn':j===S.j?'on':'')+'"><span>'+q[0]+'</span><span class="o">'+mm(q[1])+'</span></div>').join('')+'</div>':'')+
    '<div class="dk-steps">'+ST.map((x,i)=>'<div data-a="st'+i+'" class="'+(i===S.i?'on':'')+(S.done.has(i)?' dn':S.skip.has(i)?' sk':'')+'">'+(S.skip.has(i)?'<i>tomorrow</i>':'')+x.k+'</div>').join('')+'</div>'+
    '<div class="dk-verb" data-a="next">Next</div><div class="dk-sub"><span data-a="pause">'+(S.pause?'go on':'pause')+'</span><span data-a="skip">not tonight</span></div>');
    if(lastKey&&!RM&&key.split('|').slice(0,2).join()!==lastKey.split('|').slice(0,2).join())P.querySelectorAll('.dk-h,.dk-big,.dk-cue,.dk-time').forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(14px)',filter:'blur(4px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:700,delay:i*90,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key;P.querySelectorAll('.dk-cue,.dk-top span').forEach(fitLine);const bg=P.querySelector('.dk-big');if(bg){let f=84;bg.style.fontSize=f+'px';while(bg.scrollWidth>bg.clientWidth+1&&f>40){f-=4;bg.style.fontSize=f+'px'}}}
-  else{const o=P.querySelector('.dk-time .o');if(o&&!S.fin){const v=mm(S.left);if(o.textContent!==v){const w=o.textContent;o.textContent=v;numRoll(o,w)}}const b=P.querySelector('.dk-breath');if(b){const t=inh?'breathe in':'breathe out';if(b.textContent!==t)b.textContent=t;const f=inh?breath/4:1-(breath-4)/6;b.style.letterSpacing=(.04+f*.5).toFixed(3)+'em';b.style.opacity=(.45+f*.45).toFixed(2)}}}
+  else{const o=P.querySelector('.dk-time .o');if(o&&!S.fin){const v=mm(S.left);if(o.textContent!==v){const w=o.textContent;o.textContent=v;numRoll(o,w)}}const b=P.querySelector('.dk-breath');if(b&&ST[S.i].br){const t=inh?'breathe in':'breathe out';if(b.textContent!==t)b.textContent=t;const f=inh?breath/4:1-(breath-4)/6;b.style.letterSpacing=(.04+f*.5).toFixed(3)+'em';b.style.opacity=(.45+f*.45).toFixed(2)}}}
  function step(){let n=-1;for(let k=1;k<=ST.length;k++){const q=(S.i+k)%ST.length;if(!S.done.has(q)&&!S.skip.has(q)){n=q;break}}if(n<0){S.fin=1;return paint()}go2(n)}
  function next(){if(S.fin)return back();const s=ST[S.i];if(s.mv[S.j+1]){S.j++;S.left=s.mv[S.j][1];return paint()}const was=S.i;S.done.add(was);receipt(el,s.k+', tended'+(s.pg?', about page '+(s.pg+Math.round((s.mv[0][1]-S.left)*s.ppm/60)):''),()=>{S.done.delete(was);S.fin=0;go2(was)});step()}
  paint();const iv=setInterval(()=>{if(!document.contains(el))return;if(!S.fin&&!S.pause&&S.left>0){S.left--;if(!S.left){const s=ST[S.i];if(s.mv[S.j+1]){S.j++;S.left=s.mv[S.j][1]}}}paint()},250);

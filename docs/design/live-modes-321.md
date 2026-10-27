@@ -388,3 +388,11 @@ In cooking mode, tapping a timer row ("5:00, tap to start") starts it with the s
 - Tapping a running timer adds a minute; only the minute digit rolls on, so you can see the minute land.
 - Reduce Motion: the time simply appears.
 - Test: t67 paper and black green; ptm.js taps the chicken timer with a real pointer (5 digit animations), taps again and reads 359 s (5:00 plus a minute, less a second).
+
+## Sheet 347: breathing only where it belongs
+
+The routine's "breathe in / breathe out" guide now shows only on the steps where breathing is the point: Stretch and Lights.
+
+- Tidy, Read and Journal keep the line empty (same 30 pt slot), so the time sits in the same place on every step and nothing jumps between steps.
+- It is a per-step flag in the routine definition (`breath: true`), so a user's own routine can turn it on for, say, a meditation step.
+- Test: t67 paper and black green; prd.js (Read step, RD1.png) shows no breath line; the Stretch probe still shows it.
