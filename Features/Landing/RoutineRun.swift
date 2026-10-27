@@ -32,6 +32,8 @@ struct RoutineModeRun: Equatable {
     private(set) var tended: Set<Int> = []
     private(set) var skipped: Set<Int> = []
     private(set) var finished = false
+    /// Seconds spent in each step (the moves actually gone through), for "about page 219".
+    private(set) var spent: [Int: TimeInterval] = [:]
 
     /// From already-made beats and steps (the tests build their evening this way).
     init(beats: [Beat], steps: [Step]) {
@@ -127,6 +129,9 @@ struct RoutineModeRun: Equatable {
 
     private mutating func advance(at moment: Date) {
         guard let beat else { return }
+        // What the move actually took: its length less what was left of it when it gave way.
+        let left = pausedLeft ?? max(0, (endsAt ?? moment).timeIntervalSince(moment))
+        spent[beat.step, default: 0] += max(0, TimeInterval(beat.seconds) - left)
         let last = steps[beat.step].beats.last
         if index == last {
             tended.insert(beat.step)

@@ -18,6 +18,8 @@ struct RoutineModePage: View {
     @State private var total = 0
     @State private var wrote = false
     @State private var cue = HapticCue()
+    /// The page the book being read stands at (the Read step names the page it will reach).
+    @State private var bookPage: Int?
 
     var body: some View {
         let dusk = run?.dusk ?? 0
@@ -27,7 +29,7 @@ struct RoutineModePage: View {
             if let run {
                 LiveClock(LiveFeatures.routineClock, minimumInterval: 1, paused: scenePhase != .active) { context in
                     let now = AppClock.adjust(context.date)
-                    let data = RoutineScreen(run, name: name, totalMinutes: total, now: now)
+                    let data = RoutineScreen(run, name: name, totalMinutes: total, now: now, bookPage: bookPage)
                     screen(data, now: now)
                         // Sheet 335: the sky and the words dim together on the last step; kept under Reduce Motion.
                         .overlay {
@@ -96,11 +98,16 @@ struct RoutineModePage: View {
                     Text(data.line)
                         .font(.custom("Figtree", fixedSize: 22).weight(.semibold))
                         .foregroundStyle(soft)
-                    Spacer()
+                    Spacer(minLength: 12)
                     if let minutes = data.stepMinutes {
+                        // The label wraps beside the numerals; the numerals never shrink (sheet 341).
                         Text(minutes)
                             .font(.custom("Outfit", fixedSize: 18).weight(.regular))
                             .foregroundStyle(soft)
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 190, alignment: .trailing)
                     }
                 }
                 .padding(.top, 18)
@@ -135,7 +142,7 @@ struct RoutineModePage: View {
                     .foregroundStyle(ink)
                     .contentTransition(.numericText(countsDown: true))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                    .fixedSize()
                     .padding(.top, 10)
                 if let then = data.then {
                     Text("then \(then)")
@@ -287,6 +294,14 @@ struct RoutineModePage: View {
     private func change(_ new: RoutineModeRun) {
         let wasDone = run?.finished ?? false
         let stepped = new.tended.count != (run?.tended.count ?? 0)
+        // A tended Read step says the page it reached, from the minutes actually read (sheet 341).
+        if stepped, let bookPage, let before = run,
+           let step = new.steps.first(where: { new.tended.contains($0.id) && !before.tended.contains($0.id) }),
+           RoutineReading.isReading(step.title)
+        {
+            TessVoice.shared.say(RoutineReading.receipt(title: step.title, last: bookPage,
+                                                        spent: new.spent[step.id] ?? 0))
+        }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { run = new }
         if stepped {
             cue.play(.done)
@@ -323,6 +338,8 @@ struct RoutineModePage: View {
         made.start(at: AppClock.now)
         name = routine.title
         total = book.totalMinutes(of: routine)
+        let shelf = Bookshelf(store: model.store, classes: model.classes)
+        bookPage = shelf.reading().first.map { shelf.page(of: $0) }
         #if DEBUG
             // Simulator only (LaunchFlags): `-routineSkip N` moves N moves on, to see the dusk deepen, for stills.
             if let value = LaunchFlags.value(after: "-routineSkip"), let count = Int(value) {

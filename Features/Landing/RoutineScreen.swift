@@ -40,7 +40,7 @@ struct RoutineScreen: Equatable {
     /// The end: "Tended, 4 of 5 steps".
     var summary = ""
 
-    init(_ run: RoutineModeRun, name: String, totalMinutes: Int, now: Date) {
+    init(_ run: RoutineModeRun, name: String, totalMinutes: Int, now: Date, bookPage: Int? = nil) {
         title = name
         dusk = run.dusk
         finished = run.finished
@@ -53,8 +53,10 @@ struct RoutineScreen: Equatable {
             // Done steps are dimmed ink, not green; a step left for tomorrow is dimmer still.
             let state: Color? = run.tended.contains(step.id) ? RoutineScreen.tended
                 : run.skipped.contains(step.id) ? RoutineScreen.skippedInk : nil
+            let skipped = run.skipped.contains(step.id)
             return GalleyRailItem(id: step.id, label: step.title, detail: "\(step.minutes)",
-                                  current: run.beat?.step == step.id, done: run.tended.contains(step.id), color: state)
+                                  current: run.beat?.step == step.id, done: run.tended.contains(step.id), color: state,
+                                  prefix: skipped ? "tomorrow" : nil, opacity: skipped ? 0.6 : 1)
         }
         if run.finished, run.steps.indices.contains(run.steps.count - 1), run.tended.contains(run.steps.count - 1) {
             brightness = RoutineScreen.dimmest
@@ -73,7 +75,12 @@ struct RoutineScreen: Equatable {
             line = "\(step.title), \(beat.step + 1) of \(run.steps.count)"
         }
         then = run.then
-        stepMinutes = "\(step.minutes) min"
+        // The Read step reads a page, not a time (sheet 341), when there is a book being read.
+        if RoutineReading.isReading(step.title), let bookPage {
+            stepMinutes = RoutineReading.label(last: bookPage, minutes: Double(step.minutes))
+        } else {
+            stepMinutes = "\(step.minutes) min"
+        }
         move = beat.title
         cue = beat.cue
         secondsLeft = Int(run.secondsLeft(at: now).rounded(.up))

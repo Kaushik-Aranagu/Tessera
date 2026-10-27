@@ -152,3 +152,14 @@ struct RoutineDimTests {
             .brightness == RoutineScreen.dimmest)
     }
 }
+
+struct RoutineReadingTests {
+    /// Sheet 341: pages from the minutes, at about 0.7 a minute, and the word before the number never breaks from it.
+    @Test func theReadStepNamesAPageAndItsReceiptTheMinutesRead() {
+        #expect(RoutineReading.isReading("Read") && !RoutineReading.isReading("Reading list"))
+        #expect(RoutineReading.page(after: 20, from: 212) == 226)
+        #expect(RoutineReading.label(last: 212, minutes: 20) == "to about page\u{00A0}226")
+        #expect(RoutineReading.receipt(title: "Read", last: 212, spent: 600) == "Read, tended, about page\u{00A0}219")
+        #expect(!RoutineReading.receipt(title: "Read", last: 212, spent: 0).hasSuffix("."))
+    }
+}

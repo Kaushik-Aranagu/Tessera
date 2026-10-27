@@ -94,6 +94,9 @@ struct GalleyRailItem: Identifiable, Equatable {
     var done = false
     /// The mode's own colour for it (routine mode: tended green, left for tomorrow slate), else the rail's.
     var color: Color?
+    /// A word before the name: a step left for tomorrow reads "tomorrow" (sheet 343).
+    var prefix: String?
+    var opacity = 1.0
 }
 
 /// The steps down the right edge above Tess; tap one to jump. Short names, never cut: a name that is too wide steps
@@ -108,6 +111,12 @@ struct GalleyModeRail: View {
             ForEach(items) { item in
                 Button { tap(item.id) } label: {
                     HStack(spacing: 6) {
+                        if let prefix = item.prefix {
+                            Text(prefix)
+                                .font(TessFont.line(14, relativeTo: .caption).italic())
+                                .foregroundStyle(GalleyPaper.inkSecondary)
+                                .padding(.trailing, 2)
+                        }
                         if let detail = item.detail {
                             Text(detail)
                                 .font(GalleyPaper.number(14, weight: .regular))
@@ -121,6 +130,7 @@ struct GalleyModeRail: View {
                     }
                     .foregroundStyle(item.color ?? (item.current ? tint : item.done
                             ? GalleyPaper.inkSecondary.opacity(0.7) : GalleyPaper.inkSecondary))
+                    .opacity(item.opacity)
                     .frame(minHeight: 30, alignment: .trailing)
                     .contentShape(Rectangle())
                 }
