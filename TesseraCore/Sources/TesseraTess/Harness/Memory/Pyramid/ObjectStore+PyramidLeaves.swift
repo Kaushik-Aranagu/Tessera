@@ -110,9 +110,13 @@ public extension MemoryPyramid {
                 let body = store.value("body", of: note)?.stringValue ?? ""
                 let words = String((body.isEmpty ? note.title : body).prefix(noteCharacters))
                 let id = "note-\(note.id.uuidString)"
-                if let shown = label(note) ?? (plain(note.title) && plain(words) ? nil : ObjectPrivacy.noteLabel) {
-                    leaves.append(PyramidLeaf(id: id, at: at, kind: "note", text: walledText(words, shown),
-                                              taint: .deviceOnly))
+                // A key anywhere in the note, even past the cut (a cut key may not look like one): only its label.
+                let keyed = looksLikeClaudeKey(note.title) || looksLikeClaudeKey(body)
+                if let shown = label(note)
+                    ?? (plain(note.title) && plain(words) && !keyed ? nil : ObjectPrivacy.noteLabel)
+                {
+                    leaves.append(PyramidLeaf(id: id, at: at, kind: "note",
+                                              text: keyed ? shown : walledText(words, shown), taint: .deviceOnly))
                 } else {
                     leaves.append(PyramidLeaf(id: id, at: at, kind: "note", text: words, stats: ["notes": 1]))
                 }

@@ -102,11 +102,17 @@ struct PyramidStoreLeavesTests {
             let keyed = try make(.note, "key")
             try store.set("body", to: .text("my key " + "sk-" + "ant-" + "made-up-for-a-test-0123456789"), on: keyed)
             keyed.createdAt = at(10, 9)
+            // A key past the 280-character cut: the cut could leave a piece that no longer looks like one.
+            let long = try make(.note, "Long")
+            let key = "sk-" + "ant-" + "made-up-for-a-test-0123456789"
+            try store.set("body", to: .text(String(repeating: "a", count: 270) + " " + key), on: long)
+            long.createdAt = at(10, 10)
             let all = leaves()
             let texts = all.map(\.text)
             #expect(texts.contains("Session") && texts.contains("Did Lexapro refill"), "\(texts)")
             #expect(texts.contains("wifi password is tacocat24") && texts.contains("Private note"), "\(texts)")
-            #expect(!texts.contains { $0.contains("sk-" + "ant-") })
+            #expect(!texts.contains { $0.contains("sk-" + "ant-") || $0.contains(String(repeating: "a", count: 50)) })
+            #expect(texts.count(where: { $0 == "Private note" }) == 2, "\(texts)")
             // Walled all the same: no total, and strict never reads them.
             #expect(all.allSatisfy { $0.stats.isEmpty && $0.taint == .deviceOnly })
             let pyramid = MemoryPyramid(leaves: all, calendar: calendar)

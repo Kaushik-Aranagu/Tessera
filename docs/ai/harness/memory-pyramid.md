@@ -300,6 +300,8 @@ Each has a pass line set before it runs. A failure gets written up here too.
      Ask words become weight keys, so `learn` takes only `PyramidTerms.walled`: an ask holding a key, a secret, a
      private title or a private word teaches nothing, key-shaped pieces are dropped, and a word walled later is
      dropped at night. The router's file is excluded from backups and its keys are never logged.
+     Any future file that keeps gists or the topic tree must be excluded from backups the same way: under lab their
+     words can hold a private thing's own words (his Oct 27 ruling), and backups keep their walls.
 4. **P4: more axes and more sources.**
    - **Topic axis (Swift, built; simulated in `scripts/ai/pyramid_topic_sim.py`, #1480):** `TopicTree` files free-text
      leaves by their words. A node past 24 children splits by 2-means. Sibling holders merge when asks keep using both
