@@ -118,3 +118,36 @@ struct RoutineRunTests {
         #expect(RoutineDusk.night(0) == 0 && RoutineDusk.night(1) == 1 && RoutineDusk.night(0.35) == 0)
     }
 }
+
+@MainActor
+struct RoutineDimTests {
+    private let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
+
+    private func run() -> RoutineModeRun {
+        func beat(_ step: Int, _ title: String, _ seconds: Int) -> RoutineModeRun.Beat {
+            RoutineModeRun.Beat(step: step, title: title, cue: nil, breath: nil, seconds: seconds, isMove: false)
+        }
+        var run = RoutineModeRun(beats: [beat(0, "Journal", 300), beat(1, "Lights", 60)],
+                                 steps: [.init(id: 0, title: "Journal", minutes: 5, beats: [0]),
+                                         .init(id: 1, title: "Lights", minutes: 1, beats: [1])])
+        run.start(at: t0)
+        return run
+    }
+
+    /// Sheet 335: full brightness until the last step; there it dims to 62% as the countdown runs, and the closing
+    /// screen stays dim.
+    @Test func theLastStepDimsToSixtyTwoPercent() {
+        var run = run()
+        #expect(RoutineScreen(run, name: "Evening", totalMinutes: 6, now: t0).brightness == 1)
+        run.next(now: t0.addingTimeInterval(10))
+        let start = RoutineScreen(run, name: "Evening", totalMinutes: 6, now: t0.addingTimeInterval(10))
+        #expect(start.brightness == 1 && start.move == "Lights")
+        let half = RoutineScreen(run, name: "Evening", totalMinutes: 6, now: t0.addingTimeInterval(40))
+        #expect(abs(half.brightness - 0.81) < 0.001)
+        let end = RoutineScreen(run, name: "Evening", totalMinutes: 6, now: t0.addingTimeInterval(70))
+        #expect(abs(end.brightness - 0.62) < 0.001)
+        run.tick(now: t0.addingTimeInterval(200))
+        #expect(run.finished && RoutineScreen(run, name: "Evening", totalMinutes: 6, now: t0.addingTimeInterval(200))
+            .brightness == RoutineScreen.dimmest)
+    }
+}

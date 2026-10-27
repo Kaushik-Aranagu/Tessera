@@ -27,7 +27,12 @@ struct RoutineModePage: View {
             if let run {
                 LiveClock(LiveFeatures.routineClock, minimumInterval: 1, paused: scenePhase != .active) { context in
                     let now = AppClock.adjust(context.date)
-                    screen(RoutineScreen(run, name: name, totalMinutes: total, now: now), now: now)
+                    let data = RoutineScreen(run, name: name, totalMinutes: total, now: now)
+                    screen(data, now: now)
+                        // Sheet 335: the sky and the words dim together on the last step; kept under Reduce Motion.
+                        .overlay {
+                            Color.black.opacity(1 - data.brightness).ignoresSafeArea().allowsHitTesting(false)
+                        }
                 }
             }
         }

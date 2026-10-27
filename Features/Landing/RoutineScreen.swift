@@ -32,6 +32,9 @@ struct RoutineScreen: Equatable {
     var paused = false
     var dusk = 0.0
     var finished = false
+    /// Sheet 335: how bright the whole screen is. 1 until the last step; there the sky and the words dim together to
+    /// 62% as the countdown runs, and "Evening tended" stays at 62%.
+    var brightness = 1.0
     /// The end: "Tended, 4 of 5 steps".
     var summary = ""
 
@@ -50,7 +53,15 @@ struct RoutineScreen: Equatable {
             return GalleyRailItem(id: step.id, label: step.title, detail: "\(step.minutes)",
                                   current: run.beat?.step == step.id, done: run.tended.contains(step.id), color: state)
         }
+        if run.finished, run.steps.indices.contains(run.steps.count - 1), run.tended.contains(run.steps.count - 1) {
+            brightness = RoutineScreen.dimmest
+        }
         guard let beat = run.beat else { return }
+        if beat.step == run.steps.count - 1 {
+            let left = run.secondsLeft(at: now)
+            let fraction = 1 - min(max(left / TimeInterval(max(beat.seconds, 1)), 0), 1)
+            brightness = 1 - (1 - RoutineScreen.dimmest) * fraction
+        }
         let step = run.steps[beat.step]
         line = "\(step.title), \(beat.step + 1) of \(run.steps.count)"
         stepMinutes = "\(step.minutes) min"
@@ -67,6 +78,9 @@ struct RoutineScreen: Equatable {
             }
         }
     }
+
+    /// The dimmest the last step and the closing screen get (62% brightness).
+    static let dimmest = 0.62
 
     static let tendedGreen = Color(hex: 0x6FAE7A)
     static let slate = Color(hex: 0x8A93A6)
