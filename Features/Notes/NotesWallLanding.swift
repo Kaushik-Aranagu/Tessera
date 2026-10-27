@@ -42,14 +42,18 @@ struct NotesLandingPage: View {
                         keystone: {
                             LandingKeystone(label: "Your notes") {
                                 WordWallView(words: shown.words) { id in
-                                    if let uuid = UUID(uuidString: id) { openNote(uuid) }
+                                    if let uuid = UUID(uuidString: id) {
+                                        openNote(uuid)
+                                    }
                                 }
                             }
                         },
                         caption: ["Tap a word to open its note."],
                         widget: shown.widget, widgetIndex: $widgetIndex,
                         openWidget: { item in
-                            if let uuid = UUID(uuidString: item.id) { openNote(uuid) }
+                            if let uuid = UUID(uuidString: item.id) {
+                                openNote(uuid)
+                            }
                         },
                         glyph: { item in LandingGlyph(item: item, color: Self.plum(scheme), room: .log) },
                         doors: shown.doors, focus: $focus,
@@ -62,18 +66,22 @@ struct NotesLandingPage: View {
                         },
                         action: LandingFootAction(word: "Write", object: "A note", hint: "Writes a note",
                                                   alternates: [
-                                                      .init(verb: "Speak", object: "To Tess") { TessVoice.shared.say("Say \"note: ...\" and I'll keep it.") },
-                                                      .init(verb: "List", object: "A checklist") { draft = ""; writing = true },
+                                                      .init(verb: "Speak", object: "To Tess") {
+                                                          TessVoice.shared.say("Say \"note: ...\" and I'll keep it.")
+                                                      },
+                                                      .init(verb: "List", object: "A checklist") {
+                                                          draft = ""; writing = true
+                                                      },
                                                   ]) {
                             draft = ""
                             writing = true
                         })
-            .toolbar(.hidden, for: .navigationBar)
-            .alert("New note", isPresented: $writing) {
-                TextField("", text: $draft)
-                Button("Keep") { write() }
-                Button("Cancel", role: .cancel) {}
-            }
+                        .toolbar(.hidden, for: .navigationBar)
+                        .alert("New note", isPresented: $writing) {
+                            TextField("", text: $draft)
+                            Button("Keep") { write() }
+                            Button("Cancel", role: .cancel) {}
+                        }
     }
 
     // MARK: Facts

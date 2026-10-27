@@ -391,4 +391,3 @@ struct GalleyShellHost: View {
         cookCover = .init(id: cook.id)
     }
 }
-

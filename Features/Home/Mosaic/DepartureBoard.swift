@@ -614,7 +614,12 @@ enum CellMetrics {
             return cached
         }
         let family = isNumber ? "Outfit" : "Figtree"
-        guard !UIFont.fontNames(forFamilyName: family).isEmpty else { return nil }
+        guard !UIFont.fontNames(forFamilyName: family).isEmpty else {
+            // The fit and the fixed cells depend on these faces: a build without them must say so, loudly (a unit-test
+            // host does not load the app's fonts, so it estimates).
+            assert(FeatureFlagStore.isTestHost, "\(family) metrics not found: the board cannot be measured")
+            return nil
+        }
         let (size, weight): (CGFloat, UIFont.Weight) = switch kind {
         case .number: (DepartureBoard.size, .light)
         case .app, .sky: (DepartureBoard.size * 1.12, .bold)
