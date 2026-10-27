@@ -36,7 +36,26 @@ struct TessLiveEvalTests {
         var totalMs: Int
         var costNano: Int64
         var score: WorldScore?
+        /// The run's own answer-check span (shadow): "passed" or "failed", and how many numbers it called unsupported.
+        /// Never the numbers or words themselves.
+        var answerCheck: String?
+        var answerCheckUnsupported: Int?
+        /// The runner's own re-check of the reply's numbers against the world key (the question, the exact answer and
+        /// the words it must say): how many it could not find there. Not what Tess was given: what the key knows.
+        var keyUnsupported: Int?
+        /// The check failed on a reply the key scores right: the number the 2% gate counts.
+        var falseFail: Bool?
         var skipped: String?
+    }
+
+    /// The answer check's shadow results over the run (docs/ai/harness/checks.md): false fails are fails on replies the
+    /// key scores right. The gate is under 2% of replies and none on money.
+    struct CheckSummary: Codable {
+        var checked: Int
+        var failed: Int
+        var falseFails: Int
+        var falseFailRate: Double
+        var moneyFalseFails: Int
     }
 
     struct SentScan: Codable {
@@ -56,6 +75,7 @@ struct TessLiveEvalTests {
         var passed: Int
         var stoppedForCap: Bool
         var sent: SentScan
+        var answerCheck: CheckSummary
         var questions: [QuestionResult]
     }
 
@@ -200,9 +220,21 @@ struct TessLiveEvalTests {
                     }
                 }
             }
-            let spans = await trace.all()
+            // The check span is recorded a few milliseconds after the stream ends: wait for it (up to 3 s) whenever a
+            // brain answered, instead of reading the trace once.
+            var spans = await trace.all()
+            var waited = 0
+            while spans.contains(where: { $0.kind == .brain }), !spans.contains(where: { $0.kind == .check }),
+                  waited < 60
+            {
+                try? await Task.sleep(for: .milliseconds(50))
+                waited += 1
+                spans = await trace.all()
+            }
             let tools = spans.filter { $0.kind == .tool }.map(\.name)
             let rung = spans.last { $0.kind == .brain }?.brain
+            let check = spans.last { $0.kind == .check && $0.name == TessRun.answerCheck }
+            let scored = question.kind == .open ? nil : key.score(question, reply: reply, toolsCalled: tools)
             let cost = spans.reduce(Int64(0)) { $0 + $1.costNano }
             if !options.dry {
                 // Written after every question, so a crash doesn't lose this run's spend.
@@ -213,7 +245,9 @@ struct TessLiveEvalTests {
                 id: question.id, kind: question.kind.rawValue, turns: question.turns, reply: reply,
                 toolsCalled: tools, rung: rung, firstWordMs: firstWord,
                 totalMs: Self.milliseconds(clock.now - started), costNano: cost,
-                score: question.kind == .open ? nil : key.score(question, reply: reply, toolsCalled: tools)
+                score: scored, answerCheck: check?.outcome, answerCheckUnsupported: check?.unsupported,
+                keyUnsupported: Self.keyUnsupported(question, reply: reply),
+                falseFail: check.map { $0.outcome == "failed" && scored?.passed == true }
             ))
         }
 
@@ -235,6 +269,14 @@ struct TessLiveEvalTests {
             try JSONEncoder().encode(months).write(to: ledgerFile, options: .atomic)
         }
         let scored = results.compactMap(\.score)
+        let checked = results.filter { $0.answerCheck != nil }
+        let falseFails = checked.filter { $0.falseFail == true }
+        let summary = CheckSummary(
+            checked: checked.count, failed: checked.filter { $0.answerCheck == "failed" }.count,
+            falseFails: falseFails.count,
+            falseFailRate: checked.isEmpty ? 0 : Double(falseFails.count) / Double(checked.count),
+            moneyFalseFails: falseFails.filter { $0.kind == WorldKind.moneyAction.rawValue }.count
+        )
         let day = ISO8601DateFormatter().string(from: .now).prefix(10)
         let report = Report(
             date: String(day), world: options.world.rawValue, policy: options.policy == .strict ? "strict" : "lab",
@@ -242,7 +284,7 @@ struct TessLiveEvalTests {
             asked: results.filter { $0.skipped == nil }.count, passed: scored.filter(\.passed).count,
             stoppedForCap: stopped, sent: SentScan(rows: sentLog.count, walledWordHits: Array(Set(hits)).sorted(),
                                                    keyShaped: keyShaped),
-            questions: results
+            answerCheck: summary, questions: results
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -258,6 +300,19 @@ struct TessLiveEvalTests {
         if options.policy == .strict {
             #expect(report.sent.walledWordHits.isEmpty && report.sent.keyShaped == 0)
         }
+    }
+
+    /// The reply's numbers that the key does not know: checked against the question, the exact answer and the words the
+    /// reply must say, on the runner's side, with the same checker the phone runs.
+    static func keyUnsupported(_ question: WorldQuestion, reply: String) -> Int {
+        var known = question.turns + question.mustSay
+        switch question.expected {
+        case let .number(value, unit)?: known.append("\(value) \(unit ?? "")")
+        case let .text(text)?: known.append(text)
+        case let .day(date)?: known.append(date.formatted(.iso8601))
+        default: break
+        }
+        return AnswerCheck().check(reply: reply, evidence: known).unsupported.count
     }
 
     static func milliseconds(_ duration: Duration) -> Int {
