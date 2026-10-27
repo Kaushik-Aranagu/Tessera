@@ -12,6 +12,12 @@ struct GalleyCookModePage: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var session: CookClockSession?
+    /// Sheet 333: the ticket printer. Timers already printed, the line on the ticket now, and how far the paper has
+    /// fed.
+    @State private var printedTimers: Set<String> = []
+    @State private var printedLine: String?
+    @State private var feed: CGFloat = 0
+    @State private var cue = HapticCue()
 
     var body: some View {
         ZStack {
@@ -25,6 +31,20 @@ struct GalleyCookModePage: View {
         }
         .onAppear(perform: begin)
         .onDisappear { session?.pauseArming() }
+        .task {
+            // A pan timer that has reached zero is printed once: the paper feeds and the line prints.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard scenePhase == .active, let session else { continue }
+                let now = AppClock.now
+                let done = session.timers.filter { $0.isDone(at: now) && !printedTimers.contains($0.id.uuidString) }
+                guard let first = done.first else { continue }
+                printedTimers.formUnion(done.map(\.id.uuidString))
+                await print(GalleyCookWords.readyLine(label: first.label))
+            }
+        }
+        .onChange(of: session?.current) { clearPrinted() }
+        .tesseraFeedback(cue)
     }
 
     private func screen(_ session: CookClockSession, now: Date) -> some View {

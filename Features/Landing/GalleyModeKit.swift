@@ -11,6 +11,8 @@ enum GalleyPaper {
     static let ochre = Color(hex: 0x93611A)
     static let olive = Color(hex: 0x5E6B1F)
     static let wine = Color(hex: 0x9A2541)
+    /// The ready line the printer feeds (sheet 333): clear of Tess's Ember by far (ΔE76 49 or more).
+    static let printed = Color(hex: 0x8C2F39)
 
     static func plex(_ weight: Weight, _ size: CGFloat) -> Font {
         .custom(weight.face, fixedSize: size)
@@ -291,4 +293,16 @@ struct GalleyPenStroke: Shape {
         path.addLine(to: ends.end)
         return path.trimmedPath(from: 0, to: min(max(progress, 0), 1))
     }
+}
+
+/// The ticket printer's feed (sheet 333): the paper drops 30 pt with a 4 pt overshoot, in five steps, then settles.
+enum GalleyPrinter {
+    static let drop: CGFloat = 30
+    static let overshoot: CGFloat = 4
+
+    /// Five even steps to 34 pt, then back to 30 (the settle).
+    static let feedSteps: [CGFloat] = {
+        let top = drop + overshoot
+        return (1 ... 5).map { top * CGFloat($0) / 5 } + [drop]
+    }()
 }
