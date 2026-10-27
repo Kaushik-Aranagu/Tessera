@@ -2378,9 +2378,17 @@ const mixRGB=(a,b,u)=>{const A=a.split(',').map(Number),B=b.split(',').map(Numbe
 /* Deck: Tess writes on the board in blue chalk; it whitens when the Undo window closes. His finger writes white. */
 function thDeckLog(byTess){const el=current,cv=el&&el.querySelector('canvas.tboard');if(!cv)return;
  const st={p:0,dry:byTess?0:1};cv._x=(cv._x||[]).filter(f=>!f._walk);
- const f=ck=>{const a=st.p>0;if(!a&&!(st.g>0))return;ck.save();ck.beginPath();ck.rect(18,300,(a?st.p:1)*230,40);ck.clip();chalk(ck,'Walk, 32 min, Saturday',26,326,19,a?.78+.17*st.dry:st.g,mixRGB(TESSCHALK,C,st.dry));ck.restore()};f._walk=1;cv._x.push(f);
+ /* 305: chalk sheds a little dust as it writes. A few specks fall from the writing tip and fade, a dozen at most,
+    never on a wipe and never under Reduce Motion. */
+ const dust=[];let lastP=0,shed=0;
+ const f=ck=>{const a=st.p>0;
+  if(!RM&&a&&st.p<1&&st.p-lastP>.06&&shed<12){lastP=st.p;shed++;dust.push({x:22+st.p*228+Math.random()*4,y:336+Math.random()*2,vy:.25+Math.random()*.3,vx:(Math.random()-.5)*.12,t:performance.now(),s:Math.random()<.3?1.6:1})}
+  const now=performance.now();for(let i=dust.length-1;i>=0;i--){const d=dust[i],age=(now-d.t)/900;if(age>=1){dust.splice(i,1);continue}
+   d.y+=d.vy;d.x+=d.vx;d.vy*=.985;ck.fillStyle='rgba('+C+','+(.42*(1-age)*(1-age)).toFixed(3)+')';ck.fillRect(d.x,d.y,d.s,d.s)}
+  if(!a&&!(st.g>0))return;/* 305: the line sits in the gap between the week's ticks (to 310) and the lifts (from 342), never on either */
+  ck.save();ck.beginPath();ck.rect(18,316,(a?st.p:1)*230,24);ck.clip();chalk(ck,'Walk, 32 min, Saturday',26,334,17,a?.78+.17*st.dry:st.g,mixRGB(TESSCHALK,C,st.dry));ck.restore()};f._walk=1;cv._x.push(f);
  const write=()=>thTween(byTess?1080:900,u=>{st.p=u},()=>thUndo(el,byTess,byTess?'logged yesterday’s walk, 32 min.':'Walk, 32 min, logged.',()=>thTween(320,u=>{st.p=1-u},()=>{/* 290: a wiped line leaves a faint ghost, like real chalk */if(!RM){st.g=.1;thTween(2600,u=>{st.g=.1*(1-u)})}}),()=>byTess&&thTween(700,u=>{st.dry=u})));
- if(byTess)tessHand({x:20,y:304,w:220,h:30},{hold:1100}).then(write);else write()}
+ if(byTess)tessHand({x:20,y:316,w:220,h:24},{hold:1100}).then(write);else write()}
 function thDeckRefuse(){if(!current)return;tessHand({x:20,y:220,w:340,h:30},{refuse:1}).then(()=>{const el=current;thAside(el,1);tessSay('Pull A is already tomorrow morning, so Push A stays tonight. Want both on one day?');setTimeout(()=>thAside(el,0),7600)})}
 
 /* Galley: Tess hangs a ticket on the rail with a blue clip; the clip turns steel when it dries. */

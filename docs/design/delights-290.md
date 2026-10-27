@@ -132,3 +132,17 @@ No full stops at the end of any of these (sheet 289).
 - Reduce Motion: full strength at once.
 - For the builders: the rain emitter's birth rate is multiplied by the same ramp from the moment the condition turns
   to rain, never on every view of a sky that is already raining.
+
+## 10. Chalk dust, a new detail (sheet 305)
+
+| Move (sheet 287) | The detail | Haptic | Where |
+|---|---|---|---|
+| Deck: a chalk line is written (`add`) | **The chalk sheds a little dust.** As the line writes, a few specks fall from the writing tip, drift down a few points and fade in 0.9 s. A dozen at most, never on a wipe. | none | on the board (305) |
+
+- The dust is the chalk's own colour at 42% and fading, 1 to 1.6 pt square, falling 5 to 9 pt. It never crosses into
+  the next line.
+- Reduce Motion: no dust.
+- Fixed on the way: a line logged on the Deck ("Walk, 32 min, Saturday") was written over the week's ticks. It now
+  sits in the gap between the ticks and the lifts (baseline 334, 17 pt), and Tess's hand covers that gap only.
+- For the builders: a `Canvas` overlay on the board fed by the write progress, spawning a speck every 6% of the line,
+  at most 12.
