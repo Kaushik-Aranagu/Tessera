@@ -2,7 +2,7 @@ const {chromium}=require('/opt/node22/lib/node_modules/playwright');
 (async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
 await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
 await pg.evaluate(()=>go('chart'));await pg.waitForTimeout(800);
-for(let i=0;i<6;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(2300)}
+for(let i=0;i<7;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(2300)}
 await pg.evaluate(()=>__ch.allow());await pg.waitForTimeout(200);
 const ctr=async s=>pg.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]},s);
 const st=()=>pg.evaluate(()=>({order:[...document.querySelectorAll('.ch-key b[data-k]')].map(b=>b.dataset.k+b.textContent),th:document.querySelector('.ch-key .th span')?.textContent||'',line:document.querySelector('.ch-line').textContent,cap:document.querySelector('.ch-cap').textContent,act:document.querySelector('.ch-act').textContent,rc:document.querySelector('.receipt')?.textContent||''}));

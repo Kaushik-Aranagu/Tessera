@@ -119,3 +119,17 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 - Reduce Motion: the outlines are simply there
 - Builder A: a `trim(from:to:)` on each place's rounded-rectangle stroke, started from the top left corner, staggered by place order inside `withTesseraAnimation`; the name uses the same stagger plus 140 ms. No haptic
 - Probe: `docs/design/boards/r66/psk.js` (staggered progress down the screen, done by 1.3 s, no animation with Reduce Motion)
+
+## Sheet 367: a wish, and a look at tomorrow
+
+The board's Chart room now has seven sentences. The new one comes before "Let me mark one watered".
+
+- "Tell me when one goes a week without water" is a wish: a sentence about the future that the room keeps as a rule. It lands like any change (ghost, drying line, set) as its own line at the foot of the widget place, in ink 2: "Tess tells you when one goes a week dry". The receipt reads "Wish, set" with Undo
+- Tess answers in her line: "The orchid gets there tomorrow. Tap the wish to see it"
+- Tapping the wish shows tomorrow. Every number steps one day on and rises a little as it changes (320 ms, 40 ms apart). The line, keystone and caption go ghost, since none of it is true yet. The caption reads "Tomorrow, the orchid has gone a week", and Tess's line is the notice she would send: "Tomorrow morning I'd tell you: the orchid has gone a week without water". The action word reads "Back" with "to today"
+- Nothing is written in the preview, and watering waits until he is back. Back, or tapping the wish again, returns to today
+- History (362) goes back and the wish goes forward, and both show the room as a ghost, so the room has one way of showing a time that isn't now
+- When the wish fires on the phone, it is a notice on Bridge's top lines ("Orchid, a week without water") and a notification. It never counts a run of days (the no-streaks rule): it names one plant and one fact
+- Layout: in the widget place, Tess's line sits at the top, the reach line ("This room can now mark plants watered") below it, and the wish at the foot. The probe checks they never overlap
+- Core (R3 preview, not in R1): a wish is a `wish` part with a condition over a bind (`daysSince(lastWatered) >= 7`), an action (`notify`, with the text built from the bound object), and a check time (morning). The validator treats `notify` as a reach widening, so it waits for Allow the first time, like a write. The tomorrow preview evaluates the condition at now + 1 day without writing. Builder A: the wish line is a `line` part in the widget place, and tapping it toggles a `RoomState.preview(.tomorrow)`
+- Probe: `docs/design/boards/r66/pwi.js`. `pch.js`, `phi.js` and `plv.js` now walk seven sentences

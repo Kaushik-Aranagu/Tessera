@@ -2,7 +2,7 @@ const {chromium}=require('/opt/node22/lib/node_modules/playwright');
 (async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
 await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
 await pg.evaluate(()=>go('chart'));await pg.waitForTimeout(800);
-for(let i=0;i<6;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(2300)}
+for(let i=0;i<7;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(2300)}
 await pg.evaluate(()=>__ch.allow());await pg.waitForTimeout(200);
 const ctr=async s=>pg.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]},s);
 let c=await ctr('.ch-ttl');await pg.mouse.move(c[0],c[1]);await pg.mouse.down();await pg.waitForTimeout(600);await pg.mouse.up();await pg.waitForTimeout(250);

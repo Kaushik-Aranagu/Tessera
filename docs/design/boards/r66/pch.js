@@ -10,7 +10,7 @@ const fit=()=>pg.evaluate(()=>{const scr=document.querySelector('.chart');const 
  scr.querySelectorAll('.ch-c[data-p]').forEach(e=>{const [x,y,w,hh]=PL[e.dataset.p];const r=e.getBoundingClientRect();const L=(r.left-r0.left)/k,T=(r.top-r0.top)/k,R=L+r.width/k,B=T+r.height/k;if(L<x-.5||T<y-.5||R>x+w+.5||B>y+hh+.5)out.push(e.dataset.p+' '+[L,T,R,B].map(Math.round))});
  scr.querySelectorAll('.ch-c').forEach(e=>{if(e.scrollWidth>e.clientWidth+1)out.push('clipped '+e.className)});return out});
 const log=[];
-for(let i=0;i<6;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(900);const gh=await pg.evaluate(()=>document.querySelectorAll('.ch-c.gh').length);if(i===1)await shot(1);await pg.waitForTimeout(1400);
+for(let i=0;i<7;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(900);const gh=await pg.evaluate(()=>document.querySelectorAll('.ch-c.gh').length);if(i===1)await shot(1);await pg.waitForTimeout(1400);
  log.push('say'+(i+1)+' ghosts mid:'+gh+' set:'+await pg.evaluate(()=>document.querySelectorAll('.ch-c.gh').length)+' fit:'+JSON.stringify(await fit()))}
 await shot(2);
 const al=await pg.evaluate(()=>{const b=document.querySelector('[data-a="allow"]').getBoundingClientRect();return [b.x+b.width/2,b.y+b.height/2]});await pg.mouse.click(al[0],al[1]);await pg.waitForTimeout(300);
