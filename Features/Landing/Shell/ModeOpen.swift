@@ -33,30 +33,29 @@ private struct ModeGrowModifier: ViewModifier {
     @State private var grown = false
 
     func body(content: Content) -> some View {
-        GeometryReader { proxy in
-            let full = proxy.frame(in: .global)
-            let rect = grown || reduceMotion || source.isEmpty ? full : source
-            content
-                .frame(width: full.width, height: full.height)
-                // The mask is the keystone's slot and then the screen: a hard clip, no blur or material at its edge.
-                .mask(alignment: .topLeading) {
+        // The content keeps the safe area (the mode's slots sit inside it); only the clip reaches the screen's edges.
+        content
+            .mask {
+                GeometryReader { proxy in
+                    let full = proxy.frame(in: .global)
+                    let rect = grown || reduceMotion || source.isEmpty ? full : source
+                    // The keystone's slot and then the screen: a hard clip, no blur or material at its edge.
                     Rectangle()
                         .frame(width: rect.width, height: rect.height)
                         .offset(x: rect.minX - full.minX, y: rect.minY - full.minY)
                         .frame(width: full.width, height: full.height, alignment: .topLeading)
                 }
                 .ignoresSafeArea()
-        }
-        .ignoresSafeArea()
-        .onAppear {
-            guard !reduceMotion else { grown = true; return }
-            withTesseraAnimation(ModeOpen.growth, reduceMotion: reduceMotion) { grown = true }
-        }
-        .transaction {
-            if reduceMotion {
-                $0.animation = nil
             }
-        }
+            .onAppear {
+                guard !reduceMotion else { grown = true; return }
+                withTesseraAnimation(ModeOpen.growth, reduceMotion: reduceMotion) { grown = true }
+            }
+            .transaction {
+                if reduceMotion {
+                    $0.animation = nil
+                }
+            }
     }
 }
 

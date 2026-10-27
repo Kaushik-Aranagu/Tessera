@@ -28,6 +28,11 @@ struct WorkoutModeScreen: View {
     @State private var finishHold = false
     /// Sheet 336: the clip over the new-best line (0 closed, 1 open), widened over 720 ms.
     @State private var bestReveal = 0.0
+    /// Sheet 338: the rest board as it was, wiped off by the eraser band when the rest ends.
+    @State private var wipeImage: Image?
+    @State private var wipeTime = 0.0
+    @State private var middleSize = CGSize.zero
+    @Environment(\.displayScale) private var displayScale
 
     private static let slate = Color(hex: 0x1F2524)
     private let dragStep: CGFloat = 26
@@ -127,6 +132,12 @@ struct WorkoutModeScreen: View {
                 doneBody(board: board)
             } else {
                 setBody(board: board, lift: lift, now: now)
+            }
+        }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { middleSize = $0 }
+        .overlay(alignment: .topLeading) {
+            if let wipeImage {
+                AnimatedEraserWipe(snapshot: wipeImage, time: wipeTime)
             }
         }
     }
@@ -434,6 +445,7 @@ struct WorkoutModeScreen: View {
             actions.close(); return
         }
         if case .rest = state.phase {
+            wipeRestBoard(now)
             withTesseraAnimation(reduceMotion: reduceMotion) { state.endRest(at: now) }
             actions.changed(state)
             return
@@ -465,7 +477,31 @@ struct WorkoutModeScreen: View {
         actions.finished()
     }
 
+    /// Flattens the rest board and wipes it off with the eraser band (460 ms), revealing the next lift's board, which
+    /// is
+    /// already live behind it. Called just before the rest ends. Reduce Motion: a plain swap (nothing is made).
+    private func wipeRestBoard(_ now: Date) {
+        guard !reduceMotion, case .rest = state.phase, middleSize.width > 0, middleSize.height > 0 else { return }
+        let board = state.scoreboard(at: now)
+        let layer = middle(board: board, now: now)
+            .frame(width: middleSize.width, height: middleSize.height, alignment: .topLeading)
+            .environment(\.colorScheme, .dark)
+        let renderer = ImageRenderer(content: layer)
+        renderer.scale = displayScale
+        guard let image = renderer.uiImage else { return }
+        wipeImage = Image(uiImage: image)
+        wipeTime = 0
+        withAnimation(.linear(duration: EraserBand.duration)) { wipeTime = 1 }
+        Task {
+            try? await Task.sleep(for: .seconds(EraserBand.duration + 0.05))
+            wipeImage = nil
+        }
+    }
+
     private func tick(_ now: Date) {
+        if case let .rest(endsAt, _, _) = state.phase, endsAt <= now {
+            wipeRestBoard(now)
+        }
         let before = state.phase
         state.tick(at: now)
         if before != state.phase {
