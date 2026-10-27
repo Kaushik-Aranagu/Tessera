@@ -52,21 +52,25 @@ struct MemoryPyramidTests {
         }
     }
 
-    @Test func everyResidualIsTrueOfItsSiblings() {
+    @Test(arguments: [DoorPolicy.lab, .strict])
+    func everyResidualIsTrueOfItsSiblings(policy: DoorPolicy) {
         let pyramid = build()
         var checked = 0
         for node in pyramid.nodes.values {
-            let kids = node.children.compactMap { pyramid.nodes[$0] }
-            for (child, lines) in node.residuals {
-                guard let kid = pyramid.nodes[child] else {
-                    Issue.record("\(node.path) has a residual for \(child), which is not its child")
+            // Under strict, only the siblings strict can see.
+            let kids = node.children.compactMap { pyramid.nodes[$0] }.filter { policy == .lab || $0.safeLeaves > 0 }
+            let residuals = node.residualsSeen(by: policy)
+            #expect(Set(residuals.ranked) == Set(residuals.lines.keys))
+            for (child, lines) in residuals.lines {
+                guard let kid = kids.first(where: { $0.path == child }) else {
+                    Issue.record("\(node.path) has a residual for \(child), which is not a child it shows")
                     continue
                 }
                 for line in lines {
                     let shown = PyramidStats.shown.first { line.text.hasPrefix("most \($0.label) (")
                         || line.text.hasPrefix("fewest \($0.label) (") }
-                    guard let shown else {
-                        Issue.record("\(line.text) names no total")
+                    guard let shown, policy == .lab || shown.taint == .claudeSafe else {
+                        Issue.record("\(line.text) names no total \(policy) may read")
                         continue
                     }
                     // A total a child lacks counts as 0, the same as when the residual was made.
@@ -80,7 +84,7 @@ struct MemoryPyramidTests {
             }
         }
         #expect(checked > 20)
-        #expect(!(pyramid.nodes["/time/2026"]?.ranked.isEmpty ?? true))
+        #expect(!(pyramid.nodes["/time/2026"]?.residualsSeen(by: policy).ranked.isEmpty ?? true))
     }
 
     // MARK: Cheap to read
@@ -138,6 +142,28 @@ struct MemoryPyramidTests {
         for child in spendDay.children where pyramid.nodes[child]?.text?.taint == .deviceOnly {
             #expect(!day.contains(child + ":") && pyramid.zoom(child, policy: .strict).isError)
             #expect(!pyramid.zoom(child, policy: .lab).isError)
+        }
+    }
+
+    @Test func strictCannotTellAWalledLeafWasEverThere() {
+        // Strict reads the pyramid exactly as if the walled leaves had never happened: no gap in a path, no shifted
+        // "most" or "fewest", no different count. A node only walled leaves made is not there at all.
+        let leaves = world.pyramidLeaves()
+        let full = build(leaves)
+        let without = build(leaves.filter { $0.taint == .claudeSafe })
+        #expect(leaves.contains { $0.taint == .deviceOnly })
+        for path in full.nodes.keys {
+            let seen = full.zoom(path, policy: .strict)
+            if without.nodes[path] == nil {
+                #expect(seen.isError, "\(path)")
+            } else {
+                #expect(seen.text == without.zoom(path, policy: .strict).text, "\(path)")
+            }
+        }
+        // A leaf's name is a fingerprint, never a count.
+        for node in full.nodes.values where node.level == .leaf {
+            let name = node.path.split(separator: "/").last.map(String.init) ?? ""
+            #expect(name.count == 11 && UInt64(name.dropFirst(5), radix: 16) != nil, "\(name)")
         }
     }
 

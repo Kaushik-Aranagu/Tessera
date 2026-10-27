@@ -39,9 +39,22 @@ public struct PyramidLine: Sendable, Equatable {
     public var taint: Taint
 }
 
+/// What makes each child of a node differ from its siblings, for one policy.
+public struct PyramidResiduals: Sendable, Equatable {
+    /// Best first, by child path.
+    public var lines: [String: [PyramidLine]] = [:]
+    /// The children with a residual, the one that stands out most first: the order a zoom lists them.
+    public var ranked: [String] = []
+}
+
 public struct PyramidNode: Sendable, Equatable {
     public enum Level: String, Sendable {
         case leaf, day, week, month, year, root
+    }
+
+    /// The residuals a policy reads.
+    public func residualsSeen(by policy: DoorPolicy) -> PyramidResiduals {
+        policy == .lab ? residuals : strictResiduals
     }
 
     public var path: String
@@ -54,10 +67,11 @@ public struct PyramidNode: Sendable, Equatable {
     public var also: [String]
     /// Exact totals of everything under it.
     public var stats: [String: Double]
-    /// What makes each child differ from its siblings, best first, by child path.
-    public var residuals: [String: [PyramidLine]]
-    /// The children with a residual, the one that stands out most first: the order a zoom lists them.
-    public var ranked: [String]
+    /// What makes each child differ from all its siblings, over every total: what lab reads.
+    public var residuals: PyramidResiduals
+    /// The same over only the siblings strict can see and only claude-safe totals, so a walled sibling never shapes
+    /// a "most" or "fewest" (or its rank) that strict shows.
+    public var strictResiduals: PyramidResiduals
     /// A fingerprint of everything under it: one edit below changes exactly its own chain of ancestors.
     public var hash: UInt64
     /// A leaf's own words.
@@ -158,13 +172,15 @@ public struct MemoryPyramid: Sendable {
             let sorted = day.leaves.sorted { ($0.at, $0.id) < ($1.at, $1.id) }
             var paths: [String] = []
             for leaf in sorted {
-                // A neutral path: the kind would say there is a spend or a weigh-in even where its words are walled.
-                let path = "\(dayPath)/leaf-\(paths.count + 1)"
+                // An opaque path: a kind would say there is a spend or a weigh-in even where its words are walled,
+                // and a number counted over every leaf would leave a gap where a walled one sits.
+                let path = Self.leafPath(dayPath, leaf.id, taken: paths)
                 paths.append(path)
                 let print = ([leaf.kind, String(leaf.at.timeIntervalSince1970), leaf.text]
                     + leaf.stats.keys.sorted().map { "\($0)=\(leaf.stats[$0] ?? 0)" }).joined(separator: "|")
                 nodes[path] = PyramidNode(path: path, level: .leaf, title: leaf.kind, children: [], also: [],
-                                          stats: leaf.stats, residuals: [:], ranked: [], hash: Self.fnv(print),
+                                          stats: leaf.stats, residuals: PyramidResiduals(),
+                                          strictResiduals: PyramidResiduals(), hash: Self.fnv(print),
                                           text: PyramidLine(text: leaf.text, taint: leaf.taint),
                                           safeLeaves: leaf.taint == .claudeSafe ? 1 : 0)
             }
@@ -202,24 +218,22 @@ public struct MemoryPyramid: Sendable {
             stats.merge(kid.stats, uniquingKeysWith: +)
         }
         let hash = Self.fnv(([path] + kids.map { String($0.hash) }).joined(separator: "|"))
-        let residuals: [String: (lines: [PyramidLine], score: Double)] = level == .day ? [:] : Self.residuals(kids)
+        let lab = level == .day ? PyramidResiduals() : Self.residuals(kids, PyramidStats.shown)
+        let strict = level == .day ? PyramidResiduals()
+            : Self.residuals(kids.filter { $0.safeLeaves > 0 }, PyramidStats.shown.filter { $0.taint == .claudeSafe })
         nodes[path] = PyramidNode(path: path, level: level, title: title, children: children, also: also,
-                                  stats: stats, residuals: residuals.mapValues { $0.lines },
-                                  ranked: residuals.keys.sorted { a, b in
-                                      let left = residuals[a]?.score ?? 0, right = residuals[b]?.score ?? 0
-                                      return left == right ? a < b : left > right
-                                  },
-                                  hash: hash, text: nil, safeLeaves: kids.reduce(0) { $0 + $1.safeLeaves })
+                                  stats: stats, residuals: lab, strictResiduals: strict, hash: hash, text: nil,
+                                  safeLeaves: kids.reduce(0) { $0 + $1.safeLeaves })
     }
 
     // MARK: Residuals
 
     /// For each child, what makes it differ from its siblings: the most or fewest of a total among them, ranked by
     /// how far it sits from their mean. Exact numbers, so a residual can't drift from the leaves.
-    static func residuals(_ kids: [PyramidNode]) -> [String: (lines: [PyramidLine], score: Double)] {
-        guard kids.count >= 3 else { return [:] }
+    static func residuals(_ kids: [PyramidNode], _ totals: [PyramidStats.Shown]) -> PyramidResiduals {
+        guard kids.count >= 3 else { return PyramidResiduals() }
         var out: [String: [(line: PyramidLine, score: Double)]] = [:]
-        for shown in PyramidStats.shown {
+        for shown in totals {
             let values = kids.map { shown.value($0.stats) ?? 0 }
             let mean = values.reduce(0, +) / Double(values.count)
             guard mean > 0 else { continue }
@@ -239,10 +253,13 @@ public struct MemoryPyramid: Sendable {
                                                    abs(value - mean) / spread))
             }
         }
-        return out.mapValues { lines in
-            let best = lines.sorted { $0.score > $1.score }.prefix(maxResiduals)
-            return (best.map { $0.line }, best.first?.score ?? 0)
-        }
+        let best = out.mapValues { lines in lines.sorted { $0.score > $1.score }.prefix(maxResiduals) }
+        let score = best.mapValues { $0.first?.score ?? 0 }
+        return PyramidResiduals(lines: best.mapValues { $0.map(\.line) },
+                                ranked: best.keys.sorted { a, b in
+                                    let left = score[a] ?? 0, right = score[b] ?? 0
+                                    return left == right ? a < b : left > right
+                                })
     }
 
     // MARK: Reading
@@ -279,8 +296,9 @@ public struct MemoryPyramid: Sendable {
             }
         } else {
             var listed = 0
-            for child in node.ranked where visible(child) {
-                let shown = (node.residuals[child] ?? []).filter(allowed).map(\.text)
+            let residuals = node.residualsSeen(by: policy)
+            for child in residuals.ranked where visible(child) {
+                let shown = (residuals.lines[child] ?? []).filter(allowed).map(\.text)
                 guard !shown.isEmpty, listed < Self.maxListed else { continue }
                 lines.append("\(child): \(shown.joined(separator: "; "))")
                 listed += 1
@@ -316,6 +334,19 @@ public struct MemoryPyramid: Sendable {
     }
 
     // MARK: Helpers
+
+    /// A leaf's path: a short fingerprint of its id, so it says nothing of its kind, its place or its neighbors.
+    static func leafPath(_ day: String, _ id: String, taken: [String]) -> String {
+        var salt = 0
+        while true {
+            let print = String(fnv("leaf|\(id)|\(salt)") & 0xFF_FFFF, radix: 16)
+            let path = "\(day)/leaf-\(String(repeating: "0", count: max(0, 6 - print.count)))\(print)"
+            if !taken.contains(path) {
+                return path
+            }
+            salt += 1
+        }
+    }
 
     static func two(_ value: Int) -> String {
         value < 10 ? "0\(value)" : String(value)
