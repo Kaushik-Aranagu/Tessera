@@ -158,14 +158,15 @@ public struct PyramidTerms: Sendable, Equatable {
         return PyramidTerms(words: words)
     }
 
-    /// The same, walled by the store: a key, a secret, a private title and his private words, the reasons
-    /// `Wall.judge(_:in:)` names `.key`, `.secret`, `.privateTitle` and `.privateWord` (one call once the hygiene
-    /// stack and this one meet on master).
+    /// The same, walled by the store: a key, a secret, money, a body fact, calories, a private title and his private
+    /// words, every reason `Wall.judge(_:in:)` names (one call once the hygiene stack and this one meet on master).
     @MainActor
     public static func walled(_ text: String, now: Date, calendar: Calendar, store: ObjectStore) -> PyramidTerms? {
         let lastKg = BodyWeight.lastKg(in: store)
         return walled(text, now: now, calendar: calendar) { piece in
             looksLikeClaudeKey(piece) || SecretWords.mentions(piece)
+                || PrivateFacts.isMoneyShaped(piece) || PrivateFacts.isBodyShaped(piece, lastWeightKg: lastKg)
+                || PrivateFacts.isCalorieShaped(piece)
                 || ObjectPrivacy.isPrivateTitle(piece, lastWeightKg: lastKg)
                 || ObjectPrivacy.containsPrivateWord(piece, in: store)
         }

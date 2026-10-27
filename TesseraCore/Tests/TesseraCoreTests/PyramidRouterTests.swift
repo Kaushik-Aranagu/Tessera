@@ -215,6 +215,8 @@ struct PyramidRouterTests {
             PyramidTerms.walled(text, now: now, calendar: calendar, store: store)?.words
         }
         #expect(terms("how was my lexapro week") == nil)
+        #expect(terms("ate 600 calories today") == nil)
+        #expect(terms("paid $40 at the clinic") == nil)
         #expect(terms("therapy ideas last month") == nil)
         #expect(terms("how was the trip") == ["trip"])
         #expect(terms("Weeknight dal") == ["weeknight", "dal"])
