@@ -88,6 +88,10 @@ public enum ToolPicker {
             // About a look: the two look calls lead, whatever else the screen offers.
             tools = ["setLook", "showLooks"] + tools.filter { !LookWords.calls.contains($0) }
         }
+        if TessGuide.isAbout(ask) {
+            // How the app or she works: the guide rides right after the calls he named, before the cut.
+            tools.insert(TessGuide.name, at: tools.prefix { named.contains($0) }.count)
+        }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks)
     }

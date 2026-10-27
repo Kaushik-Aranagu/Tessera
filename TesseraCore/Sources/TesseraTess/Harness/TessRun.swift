@@ -244,7 +244,7 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec]
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec, TessGuide.spec]
     }
 
     /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
@@ -299,6 +299,10 @@ public final class TessRun {
         }
         let specs = pick.map { Self.toolSpecs(only: $0.tools) }
             ?? Self.toolSpecs()
+        if withTools, pick?.tools.contains(TessGuide.name) == true {
+            // Tier 1 of the guide: what it holds, so she pages in only what the ask needs.
+            fragments.append(PackFragment(TessGuide.contentsLine))
+        }
         return Pack(system: system, cacheAfter: cache, tools: withTools ? specs : [],
                     fragments: fragments, handles: handles)
     }
@@ -505,6 +509,9 @@ public final class TessRun {
                 .flatMap { $0 as? String }?.hasPrefix("/") == true
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar, index: isPath ? memoryIndex(for: runID) : nil)
+        case TessGuide.name:
+            // What the app is, never his data: the same page on every rung and policy.
+            result = TessGuide.run(arguments: input)
         case Self.askAgent:
             // Tess asks her rooms; each runs as itself, in parallel, and its writes land as ghost rows.
             let answer = await askAgents(input, handles: handles, onDevice: onDevice)
@@ -711,7 +718,7 @@ public final class TessRun {
                     if state.doneToolIDs.contains(id), let text = state.toolResults[id] {
                         return .toolResult(id: id, content: text, isError: false)
                     }
-                    if name == TessOpenTool.name || name == "query" {
+                    if name == TessOpenTool.name || name == "query" || name == TessGuide.name {
                         return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
                     }
                     return .toolResult(
