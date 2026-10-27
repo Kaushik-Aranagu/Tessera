@@ -48,7 +48,7 @@ struct RoutinesWoodlandScene: View {
         let families = WoodlandLayout.families(for: places)
         let still = reduceMotion || ProcessInfo.processInfo.isLowPowerModeEnabled
         let light = WoodlandLight.at(hour: hour)
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { timeline in
+        LiveClock(LiveFeatures.watchWoodland, minimumInterval: 1 / 30, paused: still) { timeline in
             let now = timeline.date
             let t = still ? 0 : now.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600)
             Canvas { context, _ in

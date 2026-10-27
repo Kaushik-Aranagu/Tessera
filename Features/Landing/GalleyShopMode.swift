@@ -1,0 +1,133 @@
+import SwiftUI
+import TesseraCore
+
+/// Shopping mode (sheet 322): the Galley's landing while the list is being shopped. The rail holds the aisle you are
+/// in as a long receipt and tonight's ticket, the sentence place leads with the next thing in the aisle, the dial holds
+/// the aisles in store order with the count left in each, the summary is that aisle's list, and the foot does Got, with
+/// Not here and Pay (hold) across (Swap, where Tess suggests a close one, is not built yet). Pure: facts in, a `Screen`
+/// out.
+struct GalleyShopFacts: Equatable {
+    struct Item: Equatable, Identifiable {
+        let id: String
+        /// Already masked: a private item reads "Private item".
+        let name: String
+        /// "1 gal", "2", nil.
+        var amount: String?
+        /// Why it is on the list: "You are low", "For the tacos tonight".
+        var why: String?
+
+        /// "Milk 1 gal".
+        var line: String {
+            amount.map { "\(name) \($0)" } ?? name
+        }
+    }
+
+    struct Aisle: Equatable, Identifiable {
+        let name: String
+        var items: [Item]
+        /// Already in the basket from this aisle, for the struck rows.
+        var got: [Item] = []
+
+        var id: String {
+            name
+        }
+    }
+
+    var aisles: [Aisle] = []
+    /// Aisles with everything in the basket, kept in the aisle list so the pen can strike them (sheet 351).
+    var doneAisles: [String] = []
+    /// What is in the basket so far.
+    var got = 0
+    /// Tonight's dish, short, for the rail's ticket; nil when none is planned.
+    var tonight: String?
+    /// The things on the list for tonight's dish, with the ones already in the basket struck off (by index).
+    var tonightLines: [String] = []
+    var tonightGot: Set<Int> = []
+
+    var left: Int {
+        aisles.reduce(0) { $0 + $1.items.count }
+    }
+
+    /// Everything for tonight's dish is in the basket (sheet 342): a planned dish with things on the list, all got.
+    var tonightCovered: Bool {
+        tonight != nil && !tonightLines.isEmpty && tonightGot.count == tonightLines.count
+    }
+
+    /// "Everything for the tacos", shown for a moment when tonight's dish goes from not covered to covered.
+    var coveredLine: String? {
+        tonight.map { "Everything for the \($0.lowercased())" }
+    }
+}
+
+/// Shopping mode's whole screen as data (sheet 328): the aisle and where it is, the thing at 64 pt with its amount, why
+/// it is on the list and a tip on how to pick it, the aisle's list with dotted leaders (got ones struck), and what is
+/// after this. Pure, so it tests.
+struct GalleyShopScreen: Equatable {
+    struct Line: Equatable, Identifiable {
+        let id: String
+        let name: String
+        let amount: String?
+        let struck: Bool
+    }
+
+    var aisle = ""
+    var spot: String?
+    /// Top right: what is left, and tonight's things.
+    var topRight = ""
+    var thing = ""
+    var amount: String?
+    var why: String?
+    var tip: String?
+    var inAisle: [Line] = []
+    /// "Dairy, along the back wall".
+    var after: String?
+    var verb = "Got"
+    var object = ""
+    var rail: [GalleyRailItem] = []
+    var empty = true
+
+    /// Rail ids from here up are finished aisles (no list to jump to).
+    static let doneIDBase = 1000
+
+    init(_ facts: GalleyShopFacts, aisle index: Int) {
+        let total = facts.left + facts.got
+        var top = total == 0 ? "Nothing to get" : "\(facts.left) of \(total) to get"
+        if facts.tonight != nil, !facts.tonightLines.isEmpty {
+            top += ", tonight \(facts.tonightGot.count) of \(facts.tonightLines.count)"
+        }
+        topRight = top
+        // Finished aisles stay in store order with a stable id (past the open ones) so the pen can strike them.
+        let open = facts.aisles.enumerated().map { offset, aisle in
+            (order: Aisle.order(of: aisle.name),
+             item: GalleyRailItem(
+                 id: offset,
+                 label: aisle.name,
+                 detail: "\(aisle.items.count)",
+                 current: offset == index
+             ))
+        }
+        let finished = facts.doneAisles.map { name in
+            (order: Aisle.order(of: name),
+             item: GalleyRailItem(id: GalleyShopScreen.doneIDBase + Aisle.order(of: name), label: name, done: true))
+        }
+        rail = (open + finished).sorted { $0.order < $1.order }.map(\.item)
+        guard facts.aisles.indices.contains(index), let first = facts.aisles[index].items.first else { return }
+        empty = false
+        let current = facts.aisles[index]
+        aisle = current.name
+        spot = GalleyCues.aisleSpot(current.name)
+        thing = GalleyCookWords.capital(first.name)
+        // A plain count reads "x 1": a lone "1" in the number face is only a stroke.
+        amount = first.amount.map { Double($0) != nil ? "\u{00D7} \($0)" : $0 }
+        why = first.why
+        tip = GalleyCues.pick(first.name)
+        object = GalleyCookWords.capital(first.name)
+        inAisle = (current.items.map { Line(id: $0.id, name: $0.name, amount: $0.amount, struck: false) }
+            + current.got.map { Line(id: $0.id, name: $0.name, amount: $0.amount, struck: true) })
+        if facts.aisles.indices.contains(index + 1) {
+            let next = facts.aisles[index + 1]
+            after = [next.name, GalleyCues.aisleSpot(next.name)?.lowercased()].compactMap(\.self)
+                .joined(separator: ", ")
+        }
+    }
+}

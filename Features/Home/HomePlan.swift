@@ -291,7 +291,7 @@ struct PlanRows: View {
                     .frame(height: QueueWindow.rowHeight, alignment: .leading)
             }
             if model.showsPrivacy {
-                Text("Titles and counts only. Never notes, places, health or money")
+                Text("Everything but your key")
                     .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -329,7 +329,7 @@ struct PlanRow: View {
         ))
         let time = Text(Format.clock(block.start)).font(Theme.Typography.font(Theme.concept.scale.label))
             .monospacedDigit()
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || kept)) { context in
+        LiveClock(LiveFeatures.planBlock, minimumInterval: 1 / 30, paused: reduceMotion || kept) { context in
             words(title: title, time: time,
                   breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }

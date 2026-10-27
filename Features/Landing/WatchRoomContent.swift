@@ -12,6 +12,11 @@ struct WatchRoomContent: RoomContent {
     static let wine = Color(light: 0x9A2541, dark: 0xEE8E9C)
 
     /// Everything the Watch says, read once from the store; the scaffold landing and the shell both use it.
+    struct Begin: Equatable {
+        let id: UUID
+        let name: String
+    }
+
     struct Facts: Equatable {
         var woodland = RoutinesWoodlandFacts(trees: [])
         var entries: [WatchWords.Entry] = []
@@ -23,9 +28,25 @@ struct WatchRoomContent: RoomContent {
         var now = Date.now
         /// The tree named in the caption (the host's first tap); nil at rest.
         var selected: UUID?
+        /// The routine Begin starts (sheet 329): the named tree's if it has steps, else the first that has. Nil when
+        /// none has steps or Routine mode is off.
+        var begin: Begin?
 
         var trees: [WoodlandTree] {
             woodland.trees
+        }
+
+        /// The routine Begin starts: the named tree's if it has steps, else the first that does.
+        @MainActor
+        static func beginTarget(model: AppModel, trees: [WoodlandTree], selected: UUID?) -> Begin? {
+            let book = RoutineSteps(store: model.store, classes: model.classes)
+            let ordered = trees.filter { $0.id == selected } + trees.filter { $0.id != selected }
+            for tree in ordered {
+                guard !tree.isPrivate, let routine = model.store.object(id: tree.id),
+                      !book.steps(of: routine).isEmpty else { continue }
+                return Begin(id: tree.id, name: tree.name)
+            }
+            return nil
         }
 
         /// The two needs lines for one part of the day.
@@ -47,6 +68,9 @@ struct WatchRoomContent: RoomContent {
         /// The foot as data (283 v3): Plant a routine; across, Water the target and Pause (or Resume) today.
         var steps: [ShellStep] {
             var steps = [ShellStep(id: "plant", verb: "Plant", object: "a routine")]
+            if let begin {
+                steps.append(ShellStep(id: "begin", verb: "Begin", object: begin.name, hold: true))
+            }
             if let target = waterTarget {
                 steps.append(ShellStep(id: "water", verb: "Water", object: target.name))
             }
@@ -109,6 +133,8 @@ struct WatchRoomContent: RoomContent {
             facts.paused = WatchPause.isPaused(on: today)
             facts.now = now
             facts.selected = selected
+            facts.begin = Tier1b
+                .routineModeIsOn ? beginTarget(model: model, trees: woodland.trees, selected: selected) : nil
             return facts
         }
     }
@@ -261,6 +287,7 @@ struct WatchShellHost: View {
     @State private var planting = false
     @State private var draft = ""
     @State private var handOver = WatchHandOver.Moment(kind: .bird, at: Date())
+    @State private var routineCover: Opened?
 
     private struct Opened: Identifiable {
         let id: UUID
@@ -284,6 +311,9 @@ struct WatchShellHost: View {
             .onChange(of: navigator.state.widgetIndex) { _, index in
                 handOver = .init(kind: index == 0 ? .bird : .petals, at: Date())
             }
+            // The object page covers the room: the woods wait while it is up.
+            .liveScope(opened == nil && routineCover == nil)
+            .fullScreenCover(item: $routineCover) { RoutineModePage(routineID: $0.id) }
             .sheet(item: $opened) { item in
                 NavigationStack { ObjectPage(route: .object(item.id)) }
             }
@@ -346,6 +376,10 @@ struct WatchShellHost: View {
             if let target = facts.waterTarget {
                 waterRequest = WoodlandWaterRequest(id: target.id, at: Date())
                 WatchActions.watered(target.name)
+            }
+        case .action("begin"):
+            if let begin = facts.begin {
+                routineCover = Opened(id: begin.id)
             }
         case .action("pause"):
             WatchActions.togglePause(model: model)

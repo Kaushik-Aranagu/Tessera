@@ -586,7 +586,7 @@ private struct GhostRow: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+        LiveClock(LiveFeatures.nowBreath, minimumInterval: 1 / 30, paused: reduceMotion) { context in
             words(breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }
         .frame(maxHeight: .infinity)

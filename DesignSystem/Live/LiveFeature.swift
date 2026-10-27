@@ -229,10 +229,20 @@ enum LiveFeatures {
     static let weatherWords = LiveFeature(id: "home.weatherwords", title: "Weather word effects", owner: .builderB,
                                           mode: .uiRead, cost: .frames(perSecond: 30))
 
+    static let cookClock = LiveFeature(id: "cook.clock", title: "Cook clock hand", owner: .builderB, mode: .uiRead,
+                                       cost: .frames(perSecond: 30))
+    static let nowBreath = LiveFeature(id: "home.now.breath", title: "Now page breath", owner: .builderB,
+                                       mode: .uiRead, cost: .frames(perSecond: 30))
+    static let planBlock = LiveFeature(id: "home.plan.block", title: "Plan block title", owner: .builderB,
+                                       mode: .uiRead, cost: .frames(perSecond: 30))
+
+    static let routineClock = LiveFeature(id: "watch.routine.clock", title: "Routine countdown", owner: .builderB,
+                                          mode: .uiRead, cost: .frames(perSecond: 1))
+
     static let all: [LiveFeature] = [
         deckChalk, galleyRail, purseChart, watchWoodland, lookoutSky, mosaicHome, landingGlyph, tessSoul,
         lookoutHandover, wallHandover, watchHandover, thinking,
         tessGlint, tessRoundRobin, processSeam, inkDrops, groundSky, driftWash, soulBreath, doorway, tessConversation,
-        exerciseStrip, workoutSetMarks, swapPanel, weatherWords,
+        exerciseStrip, workoutSetMarks, swapPanel, weatherWords, cookClock, nowBreath, planBlock, routineClock,
     ]
 }

@@ -39,12 +39,14 @@ final class CookActivityDriver {
         let next = session.steps.indices.contains(session.current + 1)
             ? CookFace.shortStep(session.text(of: session.current + 1)) : nil
         let realNow = Date.now
-        guard let state = CookFace.state(timers: inputs, nextStep: next, isPrivate: session.isPrivate,
+        guard var state = CookFace.state(timers: inputs, nextStep: next, isPrivate: session.isPrivate,
                                          appNow: AppClock.adjust(realNow), realNow: realNow)
         else {
             end()
             return
         }
+        // Sheet 344: the link opens the ticket with the alert printed.
+        state.link = CookFace.alertLink(cook: session.cookID, food: state.readyFood)
         let content = ActivityContent(state: state, staleDate: state.endsAt.addingTimeInterval(60))
         if let id = activityID, cookID == session.cookID {
             Task { await Self.push(id: id, content) }

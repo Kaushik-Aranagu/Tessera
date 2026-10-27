@@ -414,7 +414,7 @@ final class CookClockSession {
     /// Done: stops this cook's timers without a confirm, writes the Cook, and Tess says "Paprika chicken, cooked."
     /// with UNDO for 10 s. A note, when he wrote one, rides on the same write (`FinishCooking(note:)`).
     @discardableResult
-    func finish(note: String?) -> Bool {
+    func finish(note: String?, takeBack: (() -> Void)? = nil) -> Bool {
         let trimmed = note?.trimmingCharacters(in: .whitespacesAndNewlines)
         let clean = trimmed.flatMap { $0.isEmpty ? nil : String($0.prefix(280)) }
         guard let result = try? model.engine.perform(FinishCooking(cook: cookID, note: clean), by: .user) else {
@@ -423,7 +423,7 @@ final class CookClockSession {
         model.touch()
         armed?.cancel()
         let line = CookNotes.cookedLine(recipeName)
-        TessVoice.shared.say(line, undo: result.record, holds: .seconds(10))
+        TessVoice.shared.say(line, undo: result.record, holds: .seconds(10), takeBack: takeBack)
         announce(line)
         return true
     }
