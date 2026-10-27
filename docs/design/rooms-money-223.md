@@ -20,7 +20,7 @@ Board: https://claude.ai/artifact/WqsDGCX3gdjG84xK4eG3Wa, Money room. Follows 21
 
 ## Privacy (never relax)
 - The lintel and the room never put an amount on Home, the Lock Screen, widgets, notices, Tess or Claude lines, backups or the doorway wave.
-- Money values and money actions never reach Claude. (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; money write tools for Claude stay not offered; the backup, log, widget and screen walls stay.)
+- Money values and money actions never reach Claude. (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; money tools are offered to Claude as they exist since his 12:28 PM Oct 27 card answer (today logSpend; the rest have no tool yet) (each change pending with 10 s Undo, "Reversed"; room agents have no money tools); the backup, log, widget and screen walls stay.)
 - Amounts appear only on Money's own pages.
 
 ## Reviewer fixes (4:05 PM, folded in; these win over the sections above)

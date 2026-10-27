@@ -130,6 +130,7 @@ Its behavior stands; its look is old. The page is always editable. Hold a row 0.
 - **Undo reads "Reversed."** for 10 s (it is the engine inverse; tested in Tier1bTests).
 - **No money on Home**, the doorway, the Lock Screen, widgets, notices, Live Activities, Siri, Spotlight or the backup log line. Notices name the due word only: "Rent, Friday". A private bill or pool reads "Private bill" / "Private pool" off the phone.
 - **Money actions are never offered to Claude.** The harness refuses them in lab mode, and strict mode drops the Money agent. Under lab mode, money values in call text are allowed by his choice (CODEX.md §7); sheet 223 says money values never reach Claude. See the open questions.
+  (Superseded Oct 27, 12:28 PM, by Kaushik's card answer: Claude may propose money changes, each pending with a 10 s Undo worded "Reversed"; see docs/product/decisions.md. Room agents still have no money tools.)
 
 ### Pools (sheet 133, behind `moneyPools`)
 - Pools are **by currency and source** ("US checking", "India account", "Cash", "Saving"). Every spend comes from a pool. Balances are derived, never stored.
