@@ -58,7 +58,8 @@ public enum CallConformance {
     /// Every Tess tool that no place offers: each must be on some place, or it escapes the checks.
     public static var unregistered: [String] {
         let placed = Set(ElementCatalog.everyCall.map(\.name))
-        return TessTools.all.map(\.name).filter { !placed.contains($0) }
+        // The rehearsal is the harness's own, never a place's call: it writes nothing and is offered by the picker.
+        return TessTools.all.map(\.name).filter { !placed.contains($0) && $0 != RehearseFlags.tool }
     }
 
     /// The argument names a call's tool or shell call takes; nil when it has no schema here (`open`, a proposed tool).

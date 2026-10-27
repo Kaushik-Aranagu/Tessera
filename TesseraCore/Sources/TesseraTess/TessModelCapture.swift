@@ -19,8 +19,8 @@ public final class TessModelCapture: TessModelCapturing {
 
     public func capture(_ phrase: String, context: TessContext, engine: ActionEngine) async -> TessCapture {
         let recorder = TessToolRecorder()
-        // The same tools Claude gets (TessTools), converted to the on-device schema.
-        let tools = TessTools.all.map { tool in
+        // The same tools Claude gets (TessTools), converted to the on-device schema. A quick capture never rehearses.
+        let tools = TessTools.all.filter { $0.name != "rehearse" }.map { tool in
             CatalogTool(tool: tool, engine: engine, pending: !context.commitImmediately, now: context.now,
                         calendar: context.calendar, recorder: recorder)
         }
