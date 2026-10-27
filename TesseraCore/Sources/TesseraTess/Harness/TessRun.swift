@@ -699,7 +699,10 @@ public final class TessRun {
         }
         let unoffered = asked.calls.map(\.name).filter { !offered.contains($0) || $0 == RehearseFlags.tool }
         guard unoffered.isEmpty else {
-            return ("Only calls offered here can be rehearsed, not \(unoffered.joined(separator: ", "))", true)
+            // Only a name Tess has is read back: a made-up one is the model's own words (H5).
+            let named = unoffered.filter { TessTools.tool(named: $0) != nil || ElementCatalog.shellCalls.contains($0) }
+            let which = named.isEmpty ? "" : ", not \(named.joined(separator: ", "))"
+            return ("Only calls offered here can be rehearsed\(which)", true)
         }
         let current: Rehearsal
         if let kept = rehearsal, kept.runID == runID {
@@ -885,7 +888,11 @@ public final class TessRun {
                         return .toolResult(id: id, content: text, isError: false)
                     }
                     if name == TessGuide.name {
-                        // A pure read of what the app is: it runs again rather than reading as interrupted.
+                        // A pure read of what the app is: it runs again rather than reading as interrupted, held to
+                        // its schema like any call (H5).
+                        if let misfit = ToolInputCheck.problem(input, schema: TessGuide.spec.schema) {
+                            return .toolResult(id: id, content: misfit, isError: true)
+                        }
                         let page = TessGuide.run(arguments: input)
                         return .toolResult(id: id, content: page.text, isError: page.isError)
                     }
