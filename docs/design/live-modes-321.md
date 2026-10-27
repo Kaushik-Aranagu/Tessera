@@ -349,3 +349,12 @@ In shopping mode, the moment the last thing for a planned dish goes in the baske
 - Only on the change from not covered to covered; Undo and re-getting does not repeat it unless it was uncovered again.
 - No buzz beyond the normal Got it tick: the words are the reward.
 - Test: t67 paper and black green; ptf.js reads the count, then "Everything for the tacos" on the tortillas, then the count again.
+
+## Sheet 343: a skipped step says when it comes back
+
+In routine mode, a step put off with "not tonight" keeps a small note in the step list instead of only fading.
+
+- The skipped step reads "tomorrow Tidy": the word "tomorrow" in Newsreader italic, 14 pt, ink2, 8 pt before the name; the row sits at 60% opacity.
+- Done steps stay struck (341), the current step stays bold in the routine colour, so the list reads done, now, later at a glance without new colours.
+- The receipt is unchanged: "Tidy, tomorrow, the streak is kept".
+- Test: t67 paper and black green; pst.js taps "not tonight" with a real pointer and reads "tomorrowTidy" in the list (ST1.png).
