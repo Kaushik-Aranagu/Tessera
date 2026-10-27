@@ -65,6 +65,49 @@ public struct RestBook {
     }
 }
 
+public extension RestBook {
+    /// When a routine was last done, from its own log of runs: the newest `doneAt`, else the newest run's day.
+    func lastDone(of routine: UUID) -> Date? {
+        guard let runClass = classes[.routineRun] else { return nil }
+        return store.objects(of: runClass).compactMap { run -> Date? in
+            guard !run.isDeleted, store.linkedObjects("routine", of: run).contains(where: { $0.id == routine })
+            else { return nil }
+            return store.value("doneAt", of: run)?.dateValue ?? store.value("day", of: run)?.dateValue
+        }.max()
+    }
+
+    /// "Last walked yesterday, 6:10 pm", or "Not walked yet" when it never was. `verb` is how the routine says it
+    /// (walked, done, tended).
+    func lastDoneLine(of routine: UUID, verb: String = "done", now: Date, calendar: Calendar = .current) -> String {
+        guard let at = lastDone(of: routine) else { return "Not \(verb) yet" }
+        let tessera = TesseraDay(calendar: calendar)
+        let gap = calendar.dateComponents([.day], from: tessera.day(of: at), to: tessera.day(of: now)).day ?? 0
+        let weekday = DateFormatter()
+        weekday.calendar = calendar
+        weekday.timeZone = calendar.timeZone
+        weekday.locale = Locale(identifier: "en_US")
+        let day: String
+        switch gap {
+        case ..<1: day = "today"
+        case 1: day = "yesterday"
+        case 2 ... 6:
+            weekday.dateFormat = "EEEE"
+            day = weekday.string(from: at)
+        default:
+            weekday.setLocalizedDateFormatFromTemplate("MMMd")
+            day = weekday.string(from: at)
+        }
+        let clock = DateFormatter()
+        clock.calendar = calendar
+        clock.timeZone = calendar.timeZone
+        clock.locale = Locale(identifier: "en_US")
+        clock.amSymbol = "am"
+        clock.pmSymbol = "pm"
+        clock.dateFormat = "h:mm a"
+        return "Last \(verb) \(day), \(clock.string(from: at))"
+    }
+}
+
 enum ElementActionLine {
     /// A title as any surface outside the room says it.
     @MainActor static func shown(_ object: ObjectRecord, in store: ObjectStore) -> String {

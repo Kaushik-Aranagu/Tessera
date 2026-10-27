@@ -1,6 +1,6 @@
 import Foundation
 
-/// The Training landing's stat lines (sheet 230): "3 of 6 this week", "5 weeks in a row on plan" and "+10 lb on bench
+/// The Training landing's stat lines (sheet 230): "3 of 6 this week", "14 sessions since Oct 1" and "+10 lb on bench
 /// since Oct 1". Pure reads from the ledger; no number leads and nothing reads "lost" or "down".
 @MainActor
 public extension TrainingStats {
@@ -31,34 +31,26 @@ public extension TrainingStats {
         return Int(store.number("sessionsPerWeek", of: plan) ?? Double(min(max(routines, 1), 6)))
     }
 
-    /// Weeks in a row on plan: the weeks, newest first from this one, in which the sessions done reached what the plan
-    /// asks for. This week counts once it has reached it; a week still being done never breaks the run. Weeks before
-    /// the
-    /// plan started don't count. A plan with no sessions asked for has no run.
-    func weeksOnPlan(plan: ObjectRecord?, now: Date, calendar: Calendar = .current) -> Int {
-        guard let plan else { return 0 }
-        let expected = sessionsPerWeek(of: plan, now: now, calendar: calendar)
-        guard expected > 0 else { return 0 }
+    /// Sessions done since the 1st of the month, counting up and never resetting: the number, and the day it counts
+    /// from. Days run 04:00 to 04:00 like every day count.
+    struct MonthCount: Equatable, Sendable {
+        public let count: Int
+        public let since: Date
+    }
+
+    func sessionsThisMonth(now: Date, calendar: Calendar = .current) -> MonthCount {
         let tessera = TesseraDay(calendar: calendar)
-        let startsOn = store.value("startsOn", of: plan)?.dateValue.map { tessera.week(containing: $0).start }
+        let today = tessera.today(now)
+        let first = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) ?? today
         var count = 0
-        var cursor = tessera.week(containing: now).start
-        let thisWeek = ledger.week(containing: now, plan: plan, now: now, calendar: calendar)
-        if thisWeek.reduce(0, { $0 + $1.done.count }) >= expected {
-            count += 1
+        var cursor = first
+        while cursor <= today {
+            count += ledger.finishedWorkouts(onDay: tessera.day(of: cursor.addingTimeInterval(3600 * 12)),
+                                             calendar: calendar).count
+            guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = next
         }
-        for _ in 0 ..< 104 {
-            guard let before = calendar.date(byAdding: .day, value: -7, to: cursor) else { break }
-            cursor = tessera.week(containing: before.addingTimeInterval(3600 * 12)).start
-            if let startsOn, cursor < startsOn {
-                break
-            }
-            let week = ledger.week(containing: cursor.addingTimeInterval(3600 * 12), plan: plan, now: now,
-                                   calendar: calendar)
-            guard week.reduce(0, { $0 + $1.done.count }) >= expected else { break }
-            count += 1
-        }
-        return count
+        return MonthCount(count: count, since: first)
     }
 
     /// A lift that went up since a date, in display steps (2.5 kg or 5 lb).
@@ -128,9 +120,19 @@ public extension TrainingSentences {
         count.planned > 0 ? "\(count.done) of \(count.planned) this week" : "\(count.done) this week"
     }
 
-    /// "5 weeks in a row on plan", only from two weeks up.
-    static func weeksInARow(_ weeks: Int) -> String? {
-        weeks >= 2 ? "\(weeks) weeks in a row on plan" : nil
+    /// "since Oct 1": the words after the number, which a screen sets in its own face.
+    static func sinceFirst(_ month: TrainingStats.MonthCount, calendar: Calendar = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.setLocalizedDateFormatFromTemplate("MMMd")
+        return "\(month.count == 1 ? "session" : "sessions") since \(formatter.string(from: month.since))"
+    }
+
+    /// "14 sessions since Oct 1" for a surface that sets one line.
+    static func sessionsSinceFirst(_ month: TrainingStats.MonthCount, calendar: Calendar = .current) -> String {
+        "\(month.count) \(sinceFirst(month, calendar: calendar))"
     }
 
     /// "+10 lb on bench press since Oct 1". Only a gain has a line.

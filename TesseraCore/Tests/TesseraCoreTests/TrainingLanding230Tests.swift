@@ -57,32 +57,31 @@ struct TrainingLanding230Tests {
         #expect(TrainingSentences.weekCount(.init(done: 3, planned: 0)) == "3 this week")
     }
 
-    // MARK: Weeks in a row
+    // MARK: Sessions since the 1st
 
-    @Test func weeksInARowCountBackFromThisWeekAndAWeekStillBeingDoneNeverBreaksIt() throws {
-        let plan = try plan
-        try store.set("sessionsPerWeek", to: .number(2), on: plan)
-        // Three full weeks back, two sessions each: Mondays and Wednesdays.
-        for week in 1 ... 3 {
-            try session(daysAgo: Double(week * 7 + 3), sets: [(80, 5)])
-            try session(daysAgo: Double(week * 7 + 1), sets: [(80, 5)])
+    @Test func sessionsSinceTheFirstCountUpAndNeverReset() throws {
+        // Now is Thursday Oct 22: the 20th, 18th and 5th are in October, the 30th of September is not.
+        for daysAgo in [2.0, 4, 17, 22] {
+            try session(daysAgo: daysAgo, sets: [(80, 5)])
         }
-        try session(daysAgo: 3, sets: [(80, 5)]) // one this week, so far
-        #expect(stats.weeksOnPlan(plan: plan, now: now, calendar: calendar) == 3)
-        try session(daysAgo: 1, sets: [(80, 5)]) // this week reaches its two
-        #expect(stats.weeksOnPlan(plan: plan, now: now, calendar: calendar) == 4)
-        #expect(TrainingSentences.weeksInARow(4) == "4 weeks in a row on plan")
-        #expect(TrainingSentences.weeksInARow(1) == nil)
+        let month = stats.sessionsThisMonth(now: now, calendar: calendar)
+        #expect(month.count == 3)
+        #expect(TrainingSentences.sessionsSinceFirst(month, calendar: calendar) == "3 sessions since Oct 1")
+        #expect(TrainingSentences.sinceFirst(month, calendar: calendar) == "sessions since Oct 1")
+        // A week with nothing in it takes nothing away.
+        let later = now.addingTimeInterval(6 * 86400)
+        #expect(stats.sessionsThisMonth(now: later, calendar: calendar).count == 3)
     }
 
-    @Test func aShortWeekBreaksTheRunAndNoPlanHasNone() throws {
-        let plan = try plan
-        try store.set("sessionsPerWeek", to: .number(2), on: plan)
-        try session(daysAgo: 8, sets: [(80, 5)]) // last week: one only
-        try session(daysAgo: 15, sets: [(80, 5)])
-        try session(daysAgo: 16, sets: [(80, 5)])
-        #expect(stats.weeksOnPlan(plan: plan, now: now, calendar: calendar) == 0)
-        #expect(stats.weeksOnPlan(plan: nil, now: now, calendar: calendar) == 0)
+    @Test func aRoutineSaysWhenItWasLastDone() throws {
+        let routineClass = try #require(classes[.routine])
+        let routine = try #require(store.objects(of: routineClass).first { !$0.isDeleted })
+        let book = RestBook(store: store, classes: classes)
+        #expect(book.lastDoneLine(of: routine.id, verb: "walked", now: now, calendar: calendar) == "Not walked yet")
+        let at = now.addingTimeInterval(-86400 - 6 * 3600 + 600) // yesterday 06:10 UTC
+        _ = try engine.perform(TendRoutine(routine: routine.id, at: at), by: .user)
+        #expect(book.lastDoneLine(of: routine.id, verb: "walked", now: now, calendar: calendar)
+            == "Last walked yesterday, 6:10 am")
     }
 
     // MARK: A lift that went up
