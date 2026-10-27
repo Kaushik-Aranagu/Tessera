@@ -20,7 +20,7 @@ struct TessToolsTests {
                                               "setServeTime", "checkListItem", "startWorkout", "startCooking",
                                               "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine",
                                               "plantRoutine",
-                                              "pauseRoutine"])
+                                              "pauseRoutine", "rehearse"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
@@ -195,7 +195,8 @@ struct TessToolsTests {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
         // Claude's list: every tool but the device-only ones (logSpend is money).
-        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" })
+        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" }
+            && !tools.contains { $0["name"] as? String == "rehearse" })
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {
                 #expect(schema["additionalProperties"] as? Bool == false, "\(path) must be closed")

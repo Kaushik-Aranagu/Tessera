@@ -25,6 +25,10 @@ public enum ToolPicker {
         public var matched: [String]
         /// The ask is about how something looks: the frame sends each place's look line.
         public var looks = false
+        /// The ask is bulk or structural: she rehearses her writes on a copy first (`RehearseFlags`).
+        public var rehearse: RehearseReason?
+        /// The count his ask names ("my 5 tasks"), which the rehearsal checks the changes against.
+        public var count: Int?
     }
 
     /// The most tools one ask carries.
@@ -85,11 +89,17 @@ public enum ToolPicker {
         }
         let plan = matched.isEmpty ? RungPlan.pick(ask) : small(ask)
         if looks {
-            // About a look: the two look calls lead, whatever else the screen offers.
-            tools = ["setLook", "showLooks"] + tools.filter { !LookWords.calls.contains($0) }
+            // About a look: the look calls lead, whatever else the screen offers. An open ask tries looks off screen
+            // first (`tryLook`).
+            tools = ["tryLook", "setLook", "showLooks"] + tools.filter { !LookWords.calls.contains($0) }
+        }
+        // A bulk or structural ask: she rehearses on a copy before she writes, so the rehearsal leads.
+        let rehearse = looks ? nil : RehearseFlags.reason(ask)
+        if rehearse != nil {
+            tools = [RehearseFlags.tool] + tools.filter { $0 != RehearseFlags.tool }
         }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
-                    looks: looks)
+                    looks: looks, rehearse: rehearse, count: rehearse == nil ? nil : RehearseFlags.count(ask))
     }
 
     /// Fills a call's inputs from the frame. Nil when a required input needs his words, or "this" means nothing.

@@ -23,6 +23,11 @@ public final class TesseraContext {
     /// Private labels and past-private labels at a revision (`PrivateWords`), and decoded ops per record, so the
     /// background backup walks the graph once per change, not once per copy.
     var privateLabelsCache: (revision: Int, labels: [UUID: String])?
+    /// How the private labels were worked out, and what changed since, so the next pass relabels only what a write
+    /// touched (`PrivateWords.labels`): the objects written, and whether something wider than objects changed.
+    var labelState: PrivateWords.LabelState?
+    var labelDirty: Set<UUID> = []
+    var labelNeedsFull = false
     var pastPrivateCache: (revision: Int, labels: [UUID: String])?
     /// Items a shop clear or a finished shop took off Groceries, at a revision (`Groceries.shopClears`).
     var shopClearedCache: (revision: Int, ids: Set<UUID>)?
@@ -49,8 +54,8 @@ public final class TesseraContext {
     public let url: URL?
 
     /// Opens (creating and migrating if needed) the database at `url`, or an in-memory one, and loads the graph.
-    public init(url: URL?) throws {
-        self.url = url
+    public convenience init(url: URL?) throws {
+        let database: any DatabaseWriter
         if let url {
             var configuration = Configuration()
             configuration.journalMode = .wal
@@ -60,8 +65,33 @@ public final class TesseraContext {
         } else {
             database = try DatabaseQueue()
         }
+        try self.init(database: database, url: url)
+    }
+
+    init(database: any DatabaseWriter, url: URL?) throws {
+        self.url = url
+        self.database = database
         try TesseraDatabaseSchema.migrator.migrate(database)
         try load()
+    }
+
+    /// A copy of the whole graph in a fresh in-memory database (Tess's rehearsal, docs/ai/harness/rehearsal.md). It is
+    /// built from what is in memory, so unsaved changes come along and the real database is never read or written.
+    /// The copy has no autosave and nothing observes it.
+    public func fork() throws -> TesseraContext {
+        let models: [any TesseraModel] = Array(classes.values) + Array(fields.values) + Array(objects.values)
+            + Array(links.values) + Array(views.values) + Array(operations.values)
+        let rows = models.map(TesseraDatabaseSchema.Row.init)
+        let queue = try DatabaseQueue()
+        try TesseraDatabaseSchema.migrator.migrate(queue)
+        try queue.write { db in
+            for row in rows {
+                try db.cachedStatement(sql: row.sql).execute(arguments: row.arguments)
+            }
+        }
+        let copy = try TesseraContext(database: queue, url: nil)
+        copy.autosaveEnabled = false
+        return copy
     }
 
     /// Folds the write-ahead log back into the file so erased rows leave no copy behind. No-op in memory.
@@ -119,6 +149,7 @@ public final class TesseraContext {
     /// subclasses and objects are detached; an object's children and links go with it.
     public func delete(_ model: some TesseraModel) {
         guard model.context === self else { return }
+        noteLabelChange(model)
         revision += 1
         switch model {
         case let classDef as ClassDef:
@@ -200,8 +231,28 @@ public final class TesseraContext {
 
     // MARK: Change tracking
 
+    /// Notes what the private-label pass must look at again.
+    private func noteLabelChange(_ model: some TesseraModel) {
+        switch model {
+        case let object as ObjectRecord:
+            labelDirty.insert(object.id)
+        case let link as ObjectLink:
+            link.from.map { labelDirty.insert($0.id) }
+            link.toObject.map { labelDirty.insert($0.id) }
+        case is OpRecord:
+            break
+        default:
+            // A class, a field or a view changes what every object means.
+            labelNeedsFull = true
+        }
+        if labelDirty.count > 20000 {
+            labelNeedsFull = true
+        }
+    }
+
     func markDirty(_ model: some TesseraModel) {
         guard !isLoading, model.context === self else { return }
+        noteLabelChange(model)
         revision += 1
         dirty[ObjectIdentifier(model)] = model
         scheduleAutosave()
@@ -209,6 +260,7 @@ public final class TesseraContext {
 
     func rekey(_ model: some TesseraModel, from oldID: UUID) {
         guard model.context === self else { return }
+        labelNeedsFull = true
         let table: Table
         switch model {
         case let classDef as ClassDef:

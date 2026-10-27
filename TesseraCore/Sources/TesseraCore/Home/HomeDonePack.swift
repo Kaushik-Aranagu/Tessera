@@ -89,10 +89,7 @@ public struct HomeDonePack: Equatable, Sendable {
         {
             return true
         }
-        if looksLikeClaudeKey(name) || SecretWords.mentions(name) || PrivateFacts.isWalled(
-            name,
-            lastWeightKg: lastWeightKg
-        ) {
+        if !Wall.judge(name, lastWeightKg: lastWeightKg).isDisjoint(with: [.key, .secret, .money, .body]) {
             return true
         }
         // Set notation never excuses a weigh-in (AI architecture on #643): a weigh word or bmi with a number, or a
