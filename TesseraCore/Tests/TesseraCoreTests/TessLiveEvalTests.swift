@@ -19,7 +19,8 @@ struct TessLiveEvalTests {
         var world: EvalWorld.Size
         var policy: DoorPolicy
         var kinds: Set<String>
-        var phoneSpentDollars: Double
+        /// Nil when not given: a live run refuses to start without it.
+        var phoneSpentDollars: Double?
         var outDir: URL
         var dry: Bool
     }
@@ -67,10 +68,18 @@ struct TessLiveEvalTests {
             world: EvalWorld.Size(rawValue: env["TESSERA_EVAL_WORLD"] ?? "small") ?? .small,
             policy: env["TESSERA_EVAL_POLICY"] == "strict" ? .strict : .lab,
             kinds: Set((env["TESSERA_EVAL_KINDS"] ?? "").split(separator: ",").map(String.init)),
-            phoneSpentDollars: Double(env["TESSERA_EVAL_PHONE_SPENT"] ?? "") ?? 0,
+            phoneSpentDollars: env["TESSERA_EVAL_PHONE_SPENT"].flatMap { Double($0) },
             outDir: env["TESSERA_EVAL_OUT"].map { URL(fileURLWithPath: $0) } ?? outDefault,
             dry: env["TESSERA_EVAL_DRY"] == "1"
         )
+    }
+
+    /// Where the runner's month totals live, whatever the report folder is: not in the repo and not in the app's data.
+    static var ledgerURL: URL {
+        let folder = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/TessEval", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder.appendingPathComponent("ledger.json")
     }
 
     /// $50, or $100 minus the phone's spend if that is smaller, minus what earlier runs spent this month.
@@ -84,13 +93,23 @@ struct TessLiveEvalTests {
         let manager = FileManager.default
         try manager.createDirectory(at: options.outDir, withIntermediateDirectories: true)
         let monthKey = TessSpendFile.monthKey(.now, calendar: .current)
-        let ledgerFile = options.outDir.appendingPathComponent("ledger.json")
+        // One ledger in one fixed place whatever --out says, so no run can hide its spend by moving the report folder.
+        let ledgerFile = Self.ledgerURL
         var months = (try? JSONDecoder().decode([String: Int64].self, from: Data(contentsOf: ledgerFile))) ?? [:]
-        let allowance = Self.allowanceNano(phoneSpentDollars: options.phoneSpentDollars,
-                                           runnerSpentNano: options.dry ? 0 : months[monthKey] ?? 0)
         if !options.dry {
-            #expect(allowance > 0, "the month's allowance for the runner is used up")
-            guard allowance > 0 else { return }
+            // A live run must be told what the phone spent: defaulting it to 0 could take him past his $100 cap.
+            try #require(
+                options.phoneSpentDollars != nil,
+                "a live run needs --phone-spent (what the phone spent this month)"
+            )
+        }
+        let baseSpent = options.dry ? 0 : months[monthKey] ?? 0
+        let allowance = Self.allowanceNano(
+            phoneSpentDollars: options.phoneSpentDollars ?? 0,
+            runnerSpentNano: baseSpent
+        )
+        if !options.dry {
+            try #require(allowance > 0, "the month's allowance for the runner is used up")
         }
 
         // A fresh test store in the temporary folder; never anywhere near the app's own.
@@ -98,7 +117,7 @@ struct TessLiveEvalTests {
         try manager.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? manager.removeItem(at: folder) }
         let appFolder = TesseraSchema.defaultURL.deletingLastPathComponent().resolvingSymlinksInPath().path
-        #expect(!folder.resolvingSymlinksInPath().path.hasPrefix(appFolder))
+        try #require(!folder.resolvingSymlinksInPath().path.hasPrefix(appFolder))
         let storeURL = folder.appendingPathComponent("tessera.sqlite")
         let context = try TesseraContext(url: storeURL)
         let store = ObjectStore(context: context)
@@ -106,7 +125,7 @@ struct TessLiveEvalTests {
         let engine = ActionEngine(store: store, classes: classes)
         let world = EvalWorld.make(options.world)
         try EvalWorldSeeder.seed(world, into: engine)
-        #expect(TestStore.allowsClaude(store))
+        try #require(TestStore.allowsClaude(store))
 
         // The cap: everything above the allowance is already "spent" in this test store's ledger.
         let ledger = TessUsageLedger(store: store, classes: classes)
@@ -115,7 +134,10 @@ struct TessLiveEvalTests {
                           costNano: TessUsageLedger.capNano - allowance, latency: 0, outcome: "works",
                           requestID: nil)
         }
-        let before = ledger.monthTotal()
+        // The Door's clock stays at the run's start, so a run that crosses midnight on the 1st can't start a fresh
+        // month (and a fresh allowance) partway through.
+        let runStart = Date.now
+        let before = ledger.monthTotal(now: runStart)
 
         let trace = RunTrace(url: TestStoreFiles.trace(of: storeURL))
         let keys = TessUsageLedgerKeys.make()
@@ -132,6 +154,7 @@ struct TessLiveEvalTests {
         }
         let door = Door(ledger: ledger, sentLog: TessSentLog(store: store, classes: classes), trace: trace,
                         router: router, policy: { options.policy }, asksClaude: { true })
+        door.now = { runStart }
         let conversation = TessConversation(store: store, classes: classes)
         let run = TessRun(door: door, engine: engine, conversation: conversation,
                           runs: TessRunStore(url: folder.appendingPathComponent("runs.json")))
@@ -179,6 +202,11 @@ struct TessLiveEvalTests {
             let tools = spans.filter { $0.kind == .tool }.map(\.name)
             let rung = spans.last { $0.kind == .brain }?.brain
             let cost = spans.reduce(Int64(0)) { $0 + $1.costNano }
+            if !options.dry {
+                // Written after every question, so a crash doesn't lose this run's spend.
+                months[monthKey] = baseSpent + max(0, ledger.monthTotal(now: runStart) - before)
+                try JSONEncoder().encode(months).write(to: ledgerFile, options: .atomic)
+            }
             results.append(QuestionResult(
                 id: question.id, kind: question.kind.rawValue, turns: question.turns, reply: reply,
                 toolsCalled: tools, rung: rung, firstWordMs: firstWord,
@@ -199,9 +227,9 @@ struct TessLiveEvalTests {
                 keyShaped += 1
             }
         }
-        let spent = max(0, ledger.monthTotal() - before)
+        let spent = max(0, ledger.monthTotal(now: runStart) - before)
         if !options.dry {
-            months[monthKey, default: 0] += spent
+            months[monthKey] = baseSpent + spent
             try JSONEncoder().encode(months).write(to: ledgerFile, options: .atomic)
         }
         let scored = results.compactMap(\.score)
@@ -216,8 +244,14 @@ struct TessLiveEvalTests {
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        // Nothing key-shaped is ever written: the whole encoded report is scanned under both policies.
+        let encoded = try encoder.encode(report)
+        try #require(
+            !looksLikeClaudeKey(String(decoding: encoded, as: UTF8.self)),
+            "the report holds a key-shaped string"
+        )
         let name = "\(report.date)-\(report.world)-\(report.policy)\(options.dry ? "-dry" : "").json"
-        try encoder.encode(report).write(to: options.outDir.appendingPathComponent(name), options: .atomic)
+        try encoded.write(to: options.outDir.appendingPathComponent(name), options: .atomic)
         print("TESS-EVAL \(name): \(report.passed)/\(scored.count) passed, spent \(spent) nano")
         if options.policy == .strict {
             #expect(report.sent.walledWordHits.isEmpty && report.sent.keyShaped == 0)

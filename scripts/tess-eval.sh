@@ -8,14 +8,14 @@
 # --dry answers with a scripted brain: nothing leaves the Mac and nothing is spent. Without it this SPENDS MONEY on the
 # Claude API, from the key in the Mac keychain (item com.kaushikaranagu.tessera.anthropic / api-key; the key is never
 # printed or written). The month's allowance is the smaller of $50 and ($100 minus --phone-spent), minus what earlier
-# runs spent this month (eval-runs/ledger.json); a call that would pass it is refused before it is sent.
+# runs spent this month (~/Library/Application Support/TessEval/ledger.json, one place whatever --out says); a call that would pass it is refused before it is sent.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 world=small
 policy=lab
 kinds=""
-phone=0
+phone=""
 out=""
 dry=0
 while [ $# -gt 0 ]; do
@@ -31,6 +31,11 @@ while [ $# -gt 0 ]; do
 done
 case "$world" in small|big) ;; *) echo "--world must be small or big" >&2; exit 2 ;; esac
 case "$policy" in lab|strict) ;; *) echo "--policy must be lab or strict" >&2; exit 2 ;; esac
+# A live run must be told what the phone spent this month: assuming 0 could take him past his $100 cap.
+if [ "$dry" != 1 ] && [ -z "$phone" ]; then
+  echo "a live run needs --phone-spent DOLLARS (what the phone has spent on Claude this month); use --dry for a free run" >&2
+  exit 2
+fi
 
 # Never anywhere near the app's own data.
 app="$HOME/Library/Application Support/Tessera"
