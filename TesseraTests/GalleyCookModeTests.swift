@@ -218,3 +218,23 @@ struct GalleyTearOffTests {
         #expect(GalleyTearOff.delay < GalleyTearOff.fade)
     }
 }
+
+struct GalleySpikeTests {
+    /// Sheet 337: eight even steps to the whole summary; the ticket narrows to .18 x .06 and rises 24 pt.
+    @Test func theSummaryPrintsDownInEightSteps() {
+        #expect(GalleySpike.reveal.count == 8 && GalleySpike.reveal.last == 1 && GalleySpike.reveal.first == 0.125)
+        #expect(GalleySpike.scaleX == 0.18 && GalleySpike.scaleY == 0.06 && GalleySpike.rise == 24)
+        #expect(GalleySpike.printDelay < GalleySpike.fade)
+    }
+
+    @Test func theEatSummarySaysWhatWasCooked() {
+        var facts = GalleyCookFacts()
+        facts.recipe = "Tacos"
+        facts.serves = 2
+        facts.minutesIn = 38
+        facts.steps = [.init(index: 0, short: "Char", how: ""), .init(index: 1, short: "Serve", how: "")]
+        let eat = GalleyCookEat(facts)
+        #expect(eat.title == "Eat" && eat.dish == "Tacos for 2" && eat.detail == "Cooked in 38 min, 2 steps")
+        #expect(!eat.detail.hasSuffix("."))
+    }
+}

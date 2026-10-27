@@ -247,3 +247,18 @@ struct GalleyCookScreen: Equatable {
         }
     }
 }
+
+/// The "Eat" summary that prints after the last Serve (sheet 337).
+struct GalleyCookEat: Equatable {
+    var title = "Eat"
+    var dish = ""
+    /// "Cooked in 38 min, 5 steps".
+    var detail = ""
+
+    init(_ facts: GalleyCookFacts) {
+        dish = facts.serves.map { "\(facts.recipe) for \($0)" } ?? facts.recipe
+        let minutes = max(facts.minutesIn, 0)
+        let steps = facts.steps.count
+        detail = "Cooked in \(minutes) min, \(steps) \(steps == 1 ? "step" : "steps")"
+    }
+}

@@ -20,6 +20,10 @@ struct GalleyCookModePage: View {
     @State private var printedLine: String?
     @State private var feed: CGFloat = 0
     @State private var cue = HapticCue()
+    /// The last Serve (sheet 337): the ticket spiked, then the Eat summary printing down.
+    @State private var spiked = false
+    @State private var eat: GalleyCookEat?
+    @State private var eatReveal: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -52,9 +56,73 @@ struct GalleyCookModePage: View {
     private func screen(_ session: CookClockSession, now: Date) -> some View {
         let facts = Self.facts(session: session, model: model, now: now, opened: opened)
         let data = GalleyCookScreen(facts)
-        return VStack(spacing: 0) {
-            printer
-            modeScreen(session, facts: facts, data: data)
+        return ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                printer
+                modeScreen(session, facts: facts, data: data)
+            }
+            // The finished ticket is pulled up into the rail clip at top centre.
+            .scaleEffect(x: spiked ? GalleySpike.scaleX : 1, y: spiked ? GalleySpike.scaleY : 1, anchor: .top)
+            .offset(y: spiked ? -GalleySpike.rise : 0)
+            .opacity(spiked ? 0 : 1)
+            .animation(reduceMotion ? nil : .easeIn(duration: GalleySpike.fade), value: spiked)
+            .allowsHitTesting(!spiked)
+            if let eat {
+                eatSummary(eat)
+                    .mask {
+                        GeometryReader { proxy in
+                            Rectangle()
+                                .frame(height: proxy.size.height * eatReveal)
+                                .frame(maxHeight: .infinity, alignment: .top)
+                        }
+                    }
+            }
+        }
+    }
+
+    /// The Eat summary: the dish and how long it took, printed down out of the rail.
+    private func eatSummary(_ eat: GalleyCookEat) -> some View {
+        GalleyModeScreen(room: "Galley", topRight: "Served", back: { dismiss() }, verb: { dismiss() }) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(eat.title)
+                    .font(GalleyPaper.plex(.bold, 64))
+                    .foregroundStyle(GalleyPaper.ink)
+                    .padding(.top, 40)
+                Text(eat.dish)
+                    .font(GalleyPaper.plex(.bold, 26))
+                    .foregroundStyle(GalleyPaper.ochre)
+                    .lineLimit(2)
+                Text(eat.detail)
+                    .font(GalleyPaper.plex(.medium, 20))
+                    .foregroundStyle(GalleyPaper.inkSecondary)
+            }
+        } thumb: {
+            VStack(alignment: .leading, spacing: 0) {
+                GalleyModeReceipt()
+                GalleyModeVerb(word: "Done") { dismiss() }
+            }
+        }
+    }
+
+    /// The last Serve: the cook is written (one Undo), the ticket is pulled up into the clip with one short buzz, and
+    /// 300 ms in the Eat summary prints down in eight steps over 620 ms.
+    private func serve(_ facts: GalleyCookFacts) async {
+        let summary = GalleyCookEat(facts)
+        guard !reduceMotion else {
+            eat = summary
+            eatReveal = 1
+            spiked = true
+            return
+        }
+        cue.play(.selection)
+        spiked = true
+        try? await Task.sleep(for: .milliseconds(Int(GalleySpike.printDelay * 1000)))
+        eatReveal = 0
+        eat = summary
+        let step = GalleySpike.printDuration / Double(GalleySpike.printSteps)
+        for fraction in GalleySpike.reveal {
+            eatReveal = fraction
+            try? await Task.sleep(for: .milliseconds(Int(step * 1000)))
         }
     }
 
@@ -259,8 +327,9 @@ struct GalleyCookModePage: View {
 
     private func primary(_ session: CookClockSession, _ data: GalleyCookScreen) {
         if data.hold {
+            let facts = Self.facts(session: session, model: model, now: AppClock.now, opened: opened)
             if session.finish(note: nil) {
-                dismiss()
+                Task { await serve(facts) }
             }
         } else {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = session.next() }

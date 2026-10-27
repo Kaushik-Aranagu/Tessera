@@ -330,3 +330,19 @@ enum GalleyTearOff {
     /// Six even steps from 40 pt above to 4 pt past home, then the settle at 0.
     static let steps: [CGFloat] = (1 ... 6).map { from + (0 - from + overshoot) * CGFloat($0) / 6 } + [0]
 }
+
+/// Cooking's last Serve (sheet 337): the finished ticket is pulled up into the rail clip (it narrows to .18 wide and
+/// .06 tall toward the clip at top centre, rises 24 pt and fades over 400 ms, easing in), and from 300 ms in the Eat
+/// summary prints down out of the same rail, revealed top to bottom in eight steps over 620 ms. A plain swap under
+/// Reduce Motion.
+enum GalleySpike {
+    static let scaleX: CGFloat = 0.18
+    static let scaleY: CGFloat = 0.06
+    static let rise: CGFloat = 24
+    static let fade: TimeInterval = 0.4
+    static let printDelay: TimeInterval = 0.3
+    static let printSteps = 8
+    static let printDuration: TimeInterval = 0.62
+    /// The fraction of the summary revealed after each step.
+    static let reveal: [CGFloat] = (1 ... printSteps).map { CGFloat($0) / CGFloat(printSteps) }
+}
