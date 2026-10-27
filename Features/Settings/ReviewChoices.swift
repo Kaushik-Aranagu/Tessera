@@ -445,7 +445,7 @@ final class ReviewChoices {
         ),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
-        ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks", "routineMode"]),
+        ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
@@ -453,7 +453,7 @@ final class ReviewChoices {
         ("Kitchen v2", ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch", "galleyCookMode", "galleyShopMode"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
-        ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
+        ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn", "routineMode"]),
         // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
         ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
