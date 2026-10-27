@@ -22,3 +22,24 @@ The design and its reasons are on the Tess-built rooms page (`index.html` here; 
 - Reduce Motion: the outline only fades, 200 ms
 - Builder A: the same transition on `SlotKind.parts` places, through `MotionPolicy`
 - Probe: `docs/design/boards/r66/psc.js`
+
+## Sheet 359: a built room looks like a designed one
+
+- Board map entry "Chart room (experimental)", screen "After a dozen sentences". This is the plant room after twelve sentences, and it renders through `landingV3`, the same player every preset room uses. That is the R1 promise: a room built by talking has the same places, moves, type and rules as the Galley or the Watch, with nothing that marks it as generated
+- The sentences that built it, in order:
+  1. Make this my plant room
+  2. Put them on the keystone by when I last watered
+  3. Glow the thirstiest one
+  4. Let me mark one watered (Allow)
+  5. Under the title, show what's thirsty, what's due this week, and light
+  6. Put the thirstiest plant in the widget with how to water it
+  7. Then the monstera, then the basil, which needs repotting
+  8. Use the watering can for the first two
+  9. A door for each plant, with when I last watered it
+  10. Say how often and where each one sits
+  11. Keep a Say word to change things
+  12. Make it teal
+- What each part is: title (`title`), switcher with Thirsty, This week and Light (`line` with needs `lines`), keystone (`row` with `top`), caption (`line`), widget (`list` of three, glyphs from the vetted set: can, can, grove), doors (`doors`, four, each bound to a plant), action words Watered and Say (`actionWord`)
+- Colors: teal for the room, wine for the thirstiest, ink, and the glyph's own green. That is four, inside the 3 to 4 rule
+- Door summaries are last-time lines and steady facts ("Last watered Wednesday", "Water every 7 days"), never a run of days
+- Probe: `docs/design/boards/r66/pcf.js` (no overlap between places, nothing clipped)

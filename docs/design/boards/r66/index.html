@@ -2868,6 +2868,22 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  window.__ch={say,get at(){return at},allow:()=>{reach=true;draw()},plants:()=>plants};
  return ()=>{clearTimeout(dry)}}};
 
+
+/* 359: the same Chart room after a dozen sentences. It renders through landingV3, the player every preset room uses,
+   so a room built by talking is indistinguishable from a designed one: same places, same moves, same type. What Tess
+   was told is listed in docs/design/tess-built-rooms/sheets.md (sheet 359). */
+SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say what to change and I’ll redo that place.',render(el){
+ const PL=[['Orchid',6,'Wednesday','Ice cubes, not a pour','By the east window'],['Monstera',4,'Friday','When the top inch is dry','By the couch'],['Fern',2,'Sunday','Keep it out of the sun','In the bathroom'],['Basil',1,'yesterday','Pinch the flowers off','On the kitchen sill']];
+ return landingV3(el,{name:'Plants',color:'var(--teal)',theme:'grow',
+  sw:{x:[{k:'Thirsty',lines:['Orchid, 6 days','Monstera, 4 days']},{k:'This week',lines:['Repot the basil','Feed the fern Friday']},{k:'Light',lines:['Orchid by the window','Fern in the shade']}]},
+  w:[{hdr:'Thirstiest',big:'Orchid',c:'var(--wine)',mid:'Last watered Wednesday',sml:'Ice cubes, not a pour',g:'can'},
+   {hdr:'Next',big:'Monstera',mid:'Last watered Friday',sml:'When the top inch is dry',g:'can'},
+   {hdr:'Repot',big:'Basil',mid:'Roots out of the bottom',sml:'The 6 inch pot is on the shelf',g:'grove'}],
+  keystone:k=>{const r=h('div','ch-c ch-key');r.style.cssText+=';position:absolute;top:196px;left:24px;z-index:5';
+   r.innerHTML=PL.map(([n,d],i)=>'<div class="'+(i===0?'th':'')+'"><b>'+d+'</b><span>'+n+'</span></div>').join('');k.appendChild(r);return null},
+  caption:'Days since water, the orchid first',
+  doors:PL.map(([n,d,last,care,where])=>({k:n,n:d,color:d>=5?'var(--wine)':'var(--teal)',sum:()=>sum('Last watered '+last,['Water every '+o('7')+un('days'),where,care])})),
+  acts:[{v:'Watered',o:'the orchid',f:e=>receipt(e,'Orchid, watered',()=>{})},{v:'Say',o:'what to change',f:()=>go('chart')}]})}};
 /* ---------- the map, updated ---------- */
 MAP.length=0;MAP.push(
  {app:'Bridge (Home)',state:'236 with the 283 apps dial',screens:[['home','Home'],['today','Today, from the date'],['settings','Settings'],['layout','Layout mode (from Settings)']],note:'Top lines flip; the mosaic turns; the one thing swipes four ways and strikes on hold; the apps list scrolls.'},
@@ -2877,7 +2893,7 @@ MAP.length=0;MAP.push(
  {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
-MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered.'});
+MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered.'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
 
 /* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.
