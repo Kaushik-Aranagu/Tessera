@@ -208,3 +208,18 @@ does not move.
 For the builders: the masthead is one view across a room's levels, outside the level's own transition. Give the
 Title `.id(room)` so it only transitions when the room changes, and let the Nav word use the letter morph from
 sheet 309 keyed on its text.
+
+## Sheet 315: the caption follows the door (Oct 26)
+
+- On a room's doors page, swiping the door title across to the next door flipped the title and settled the rows,
+  but the caption under the keystone swapped to the new door's in one frame.
+- Now it eases: the old caption leaves upward by 4 pt (140 ms) and the new one rises into place (240 ms from 120 ms),
+  the same move as shape mode's foot line (sheet 310). If only a number in it changed, only that number rolls
+  (sheet 313).
+- The first draw of the page does not animate; only a turn does.
+- Reduce Motion: the caption changes in place.
+- Measured on the board (`t59.js`): two turns on the Deck in paper and the Galley in black; the caption always ends
+  whole; `t39.js` finds no cut words and `t45.js` no stops.
+
+For the builders: the caption is `Text(door.caption).id(door.id)` with the same asymmetric offset-and-opacity
+transition as the shape foot line, driven by the door index through `MotionPolicy`.

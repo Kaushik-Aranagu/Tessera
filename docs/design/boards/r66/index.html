@@ -2034,7 +2034,7 @@ function lvSettle(box){if(RM)return;[...box.children].forEach((c,j)=>c.animate([
 Object.keys(LV).forEach(room=>{const D=LV[room];const S=SCREENS[room];
  SCREENS['l1_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);lvNav(el,'Doors');let di=p.door||0;
   const cap=el.querySelector('.lcap');const pg=h('div','lpg');el.appendChild(pg);
-  const fill=(dir)=>{const d=D.doors[di];if(cap)cap.textContent=d.cap;pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})},PAGE_FORM[room]);if(dir)lvSettle(pg)};el._refill=()=>fill(0);el._room=room;
+  const fill=(dir)=>{const d=D.doors[di];if(cap){const w=cap.textContent;cap.textContent=d.cap;if(dir)numRoll(cap,w)} /* 315: the caption eases to the new door's, never a swap */pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})},PAGE_FORM[room]);if(dir)lvSettle(pg)};el._refill=()=>fill(0);el._room=room;
   lvTitle(el,'ldt',i=>[D.doors[i].k,D.doors[i].line],D.doors.length,di,(i,d)=>{di=i;stack[stack.length-1].params={...p,door:i};fill(d)});fill(0);
   const f=lvAct(el,D.color,[{v:'Add',o:'to '+D.doors[di].k},{v:'Ask',o:'Tess about '+D.doors[di].k}]);return stop}};
  SCREENS['l2_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);const d=D.doors[p.door||0];lvNav(el,d.k);
