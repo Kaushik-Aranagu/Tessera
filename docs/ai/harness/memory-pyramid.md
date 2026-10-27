@@ -301,6 +301,14 @@ Each has a pass line set before it runs. A failure gets written up here too.
      private title or a private word teaches nothing, key-shaped pieces are dropped, and a word walled later is
      dropped at night. The router's file is excluded from backups and its keys are never logged.
 4. **P4: more axes and more sources.**
+   - **Topic axis (Swift, built; simulated in `scripts/ai/pyramid_topic_sim.py`, #1480):** `TopicTree` files free-text
+     leaves by their words. A node past 24 children splits by 2-means. Sibling holders merge when asks keep using both
+     or their keys converge, and only into at most half of the split size. A node left with one child collapses.
+     Leaves settle into the holder they fit a word better. At most 3 structural changes a night, all logged. `find` is
+     an exact index: it opens every child holding a matching leaf, so keys rank and never hide. `TopicMemory` keeps
+     one tree per policy, and the strict one is built only from claude-safe leaves. Each night starts with a prune,
+     outside the cap: a leaf deleted, or walled after it was filed, leaves the trees that may no longer see it, and an
+     emptied holder goes; a leaf plain again is filed again. The trees store node and leaf ids, never a word.
    - Add class, entity and room, plus lateral links. Then conversation turns and told lines as free-text leaves,
      with topic and entity learned from their words.
    - Pass: cross-context questions are answered with cites from two axes, and the pyramid beats flat recall on
