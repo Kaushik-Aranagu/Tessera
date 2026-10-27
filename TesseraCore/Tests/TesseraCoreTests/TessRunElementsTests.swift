@@ -83,7 +83,7 @@ struct TessRunElementsTests {
             }
         }
         #expect(shells.count == 1 && shells.first?.call == "openItem" && shells.first?.object == task.id)
-        #expect(events.last == .finished("Opening Pack the charger."))
+        #expect(events.last == .finished("Opening Pack the charger"))
         #expect(r.engine.history(limit: 100).count == before && haiku.streamCount == 0)
         let back = await helper.collect(r.run.ask("go back", frame: frame("bridge", items: [item])))
         #expect(back.contains(.shell(ShellIntent(call: "goBack"))))
@@ -102,7 +102,7 @@ struct TessRunElementsTests {
             "what is next for this and what else is on",
             frame: frame("bridge", items: [item])
         ))
-        #expect(events.last == .finished("Two tasks."))
+        #expect(events.last == .finished("Two tasks"))
         let seen = try #require((haiku.requestsSeen + sonnet.requestsSeen).first)
         let text = seen.messages.flatMap(\.content).compactMap { piece -> String? in
             if case let .text(text) = piece {
@@ -136,7 +136,7 @@ struct TessRunElementsTests {
             }
         }
         #expect(shells.first?.call == "openItem" && shells.first?.object == task.id)
-        #expect(events.last == .finished("Opened."))
+        #expect(events.last == .finished("Opened"))
     }
 
     // MARK: The new tools
@@ -183,7 +183,7 @@ struct TessRunElementsTests {
         let before = r.engine.history(limit: 100).count
         let events = await helper.collect(r.run.ask("could you bring up the thing I mean please now",
                                                     frame: frame("bridge", items: [item])))
-        #expect(events.last == .finished("Could not."))
+        #expect(events.last == .finished("Could not"))
         // Nothing was written: no spend, no cook, no op.
         #expect(try r.engine.store.objects(of: #require(r.engine.classes[.spend])).count == spends)
         #expect(r.engine.history(limit: 100).count == before)

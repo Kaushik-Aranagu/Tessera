@@ -62,7 +62,8 @@ struct WatchRoomContent: RoomContent {
                     : tree.health.isBare ? "Could begin again"
                     : tree.health.isWithering ? "Needs a little care"
                     : tree.dueToday ? "To tend today" : "Resting today"
-                return ShellRow(id: tree.id.uuidString, title: tree.name, detail: detail, isPrivate: tree.isPrivate)
+                return ShellRow(id: tree.id.uuidString, title: tree.name, detail: detail, isPrivate: tree.isPrivate,
+                                swipe: tree.dueToday && !tree.doneToday)
             }
             let trees = woodland.trees
             return [
@@ -329,6 +330,8 @@ struct WatchShellHost: View {
 
     private func handle(_ intent: ShellIntent, _ facts: WatchRoomContent.Facts) {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             navigator.pop()
         case let .openDoor(id):

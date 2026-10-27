@@ -307,6 +307,8 @@ struct LookoutShellHost: View {
 
     private func handle(_ intent: ShellIntent, _ facts: LookoutRoomContent.Facts) {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             navigator.pop()
         case let .openDoor(id):

@@ -355,7 +355,7 @@ private struct BlackboardDust: View {
     let chalk: Color
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 15)) { timeline in
+        LiveTimeline(minimumInterval: 1.0 / 15) { timeline in
             Canvas { context, size in
                 let time = timeline.date.timeIntervalSinceReferenceDate
                 var rng = ChalkRandom(seed: 5)
@@ -371,6 +371,7 @@ private struct BlackboardDust: View {
                 }
             }
         }
+        .liveRegion(LiveFeatures.deckChalk)
         .accessibilityHidden(true)
     }
 }

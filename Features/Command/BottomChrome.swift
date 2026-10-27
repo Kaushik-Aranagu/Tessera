@@ -251,8 +251,7 @@ struct BottomChrome: View {
                  wake: model.soul.wake, stroke: model.soul.stroke, strokeBlink: model.soul.strokeBlink,
                  beat: model.soul.beat, wear: model.soul.wear(at:)) { model.soul.placeDock($0) }
             .scaleEffect(0.72)
-            .scaleEffect(breathe ? 1.08 : 1)
-            .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
+            .liveBreath(on: breathe)
             .scaleEffect(swell ? 1.06 : 1)
             // The brighten after a local capture is the router's (900 ms), drawn here.
             .saturation(model.soul.isBright ? 1.35 : 1)

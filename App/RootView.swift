@@ -21,6 +21,15 @@ struct RootView: View {
         @State private var layoutModeOpen = false
     #endif
 
+    /// A full-screen cover or Tess's capture surface hides the stack: nothing under it draws live.
+    private var covered: Bool {
+        var covers = model.isWorkoutPresented || model.isCommandExpanded || demoCook != nil || settingsOpen
+        #if DEBUG
+            covers = covers || layoutModeOpen
+        #endif
+        return covers
+    }
+
     var body: some View {
         @Bindable var model = model
         GeometryReader { proxy in
@@ -29,7 +38,12 @@ struct RootView: View {
                     Group {
                         // Home v2 (sheet 137) while its Review switch is On; else Home as it was.
                         if HomeMosaic.isOn {
-                            HomeMosaicPage()
+                            // Sheet 283 v5: Bridge and its rooms in the one standing shell.
+                            if ShellHome.isOn {
+                                RootShellHost()
+                            } else {
+                                HomeMosaicPage()
+                            }
                         } else if HomeV2.isOn {
                             HomeV2View()
                         } else {
@@ -37,10 +51,14 @@ struct RootView: View {
                         }
                     }
                     .environment(\.animateEntrance, model.consumeFirstVisit(nil))
+                    // Live only when seen: Home is the visible page only with nothing pushed over it and no cover up.
+                    .liveScope(model.path.isEmpty && !covered)
                     .toolbarVisibility(.hidden, for: .navigationBar)
                     .navigationDestination(for: Route.self) { route in
                         ObjectPage(route: route)
                             .environment(\.animateEntrance, model.consumeFirstVisit(route))
+                            // Only the top of the stack is seen; the pages under it and any cover hide it.
+                            .liveScope(model.path.last == route && !covered)
                             .modifier(ArrivalTransition(
                                 id: route,
                                 arrival: model.arrivals[route] ?? .crossFade,

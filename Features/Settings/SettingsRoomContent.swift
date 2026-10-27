@@ -160,6 +160,8 @@ struct SettingsShellHost: View {
 
     private func handle(_ intent: ShellIntent) {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             if navigator.route.level == 0 {
                 dismiss()

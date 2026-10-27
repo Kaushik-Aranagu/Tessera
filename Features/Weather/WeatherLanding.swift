@@ -281,7 +281,7 @@ struct LookoutDropHandover: View {
         if !reduceMotion, !done {
             GeometryReader { proxy in
                 let scale = max(0.86, min(1.1, proxy.size.height / 874))
-                TimelineView(.animation(minimumInterval: 1 / 60)) { context in
+                LiveTimeline(minimumInterval: 1 / 60) { context in
                     let elapsed = context.date.timeIntervalSince(start)
                     Canvas { canvas, size in
                         Self.draw(&canvas, width: size.width, scale: scale, elapsed: elapsed)
@@ -291,6 +291,7 @@ struct LookoutDropHandover: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .liveRegion(LiveFeatures.lookoutHandover)
             .task {
                 start = .now
                 try? await Task.sleep(for: .seconds(Self.length + 0.4))
