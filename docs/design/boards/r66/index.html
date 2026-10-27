@@ -1338,7 +1338,16 @@ SCREENS.workout={title:'Push A',accent:'training',tess:'Bench opens at 185. Last
  const ln=(x1,y1,x2,y2,a,wd,col=W)=>{g.strokeStyle='rgba('+col+','+a+')';g.lineWidth=wd;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.quadraticCurveTo((x1+x2)/2,(y1+y2)/2+noise(x1,y2)*1.4,x2,y2);g.stroke()};
  const tick=(x,y,s=1,col=W)=>{g.strokeStyle='rgba('+col+',.9)';g.lineWidth=2.6*s;g.lineCap='round';g.beginPath();g.moveTo(x,y);g.lineTo(x+6*s,y+8*s);g.lineTo(x+16*s,y-10*s);g.stroke()};
  const PH={45:92,35:80,25:66,10:50,5:38,2.5:30},PW={45:17,35:15,25:13,10:10,5:8,2.5:6};
- function bar(w,y){const cx=201,ps=perSide(w);ln(24,y,378,y,.5,4);ln(cx-88,y,cx+88,y,.75,5);[-1,1].forEach(sd=>{let x=cx+sd*90;ln(x,y-16,x,y+16,.85,4);x+=sd*5;ps.forEach(p=>{const hh=PH[p],ww=PW[p];g.fillStyle='rgba('+W+',.16)';g.fillRect(sd>0?x:x-ww,y-hh/2,ww,hh);g.strokeStyle='rgba('+W+',.9)';g.lineWidth=2.4;g.strokeRect(sd>0?x:x-ww,y-hh/2,ww,hh);x+=sd*(ww+3)})});return ps}
+ /* 331: plates slide on and off as the weight changes. A new plate drops onto the sleeve from above and settles; one
+    taken off slides out past the end of the bar and fades, the way you would strip it. 320 ms each. */
+ let PA={ps:null,old:null,t0:0};
+ function bar(w,y){const cx=201,ps=perSide(w),key=ps.join();if(PA.ps!==key){PA={ps:key,old:PA.ps==null?null:PA.ps.split(',').filter(Boolean).map(Number),t0:performance.now()}}
+  const e=RM?1:Math.min(1,(performance.now()-PA.t0)/320),ez=1-Math.pow(1-e,3);
+  ln(24,y,378,y,.5,4);ln(cx-88,y,cx+88,y,.75,5);
+  const plate=(x,p,sd,dy,a)=>{const hh=PH[p],ww=PW[p];g.fillStyle='rgba('+W+','+(.16*a)+')';g.fillRect(sd>0?x:x-ww,y-hh/2+dy,ww,hh);g.strokeStyle='rgba('+W+','+(.9*a)+')';g.lineWidth=2.4;g.strokeRect(sd>0?x:x-ww,y-hh/2+dy,ww,hh)};
+  [-1,1].forEach(sd=>{let x=cx+sd*90;ln(x,y-16,x,y+16,.85,4);x+=sd*5;const old=PA.old||ps;let same=0;while(same<ps.length&&same<old.length&&ps[same]===old[same])same++;
+   let xo=x;old.forEach((p,k)=>{if(k>=same&&e<1)plate(xo+sd*ez*46,p,sd,0,1-ez);xo+=sd*(PW[p]+3)});
+   ps.forEach((p,k)=>{if(k<same||e>=1)plate(x,p,sd,0,1);else plate(x,p,sd,-(1-ez)*54,ez);x+=sd*(PW[p]+3)})});return ps}
  function stack(w,y){const sel=Math.min(12,Math.max(1,Math.round(w/10)));for(let k=1;k<=12;k++){const yy=y-60+k*9;const on=k===sel;g.strokeStyle='rgba('+(on?W:D)+','+(on?.95:.35)+')';g.lineWidth=on?3:1.6;g.strokeRect(120,yy,110,5)}ln(116,y-60+sel*9+2,96,y-60+sel*9+2,.9,3);T('pin',60,y-60+sel*9+9,20,.8,D)}
  const HIT={};growFromKey([cv]);
  function draw(){g.clearRect(0,0,402,874);g.drawImage(bg,0,0);const l=L(),st=next(l),d=S.done[S.li];

@@ -229,3 +229,13 @@ from the 354 x 182 slot at y 196 to full bleed in 560 ms, on a soft spring (cubi
 starts a touch brighter and settles. The thing you were looking at becomes the place you work in. The rest of the
 landing steps back the usual way. With Reduce Motion it's a plain cut. For the builders: a `matchedGeometryEffect`
 from the keystone to the cover's background, with content fading in after 200 ms.
+
+## Sheet 331: plates slide on and off
+
+When the weight changes (a drag, Easy or Hard, Lighter), the bar on the blackboard changes the way you would load it.
+- A plate added drops onto the sleeve from about 54 pt above and settles.
+- A plate taken off slides out past the end of the bar and fades, the way you strip it.
+- The plates that stay don't move. Each move takes 320 ms with an ease-out.
+- With Reduce Motion the bar just redraws.
+
+For the builders: diff the per-side plate lists from the inside out; only the changed tail animates.
