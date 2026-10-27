@@ -72,7 +72,7 @@ struct SettingsDoorLineTests {
 
     @Test func theTessDoorReadsTheRoomsFacts() {
         let line = SettingsLandingWords.doorLine(.tess, facts: facts(claude: false))
-        #expect(line == "Tess remembers 12 things, all on this phone.")
+        #expect(line == "Tess remembers 12 things, all on this phone")
         #expect(SettingsLandingWords.doorLine(.tess, facts: facts(claude: true)).contains("only with your key"))
     }
 
@@ -85,7 +85,7 @@ struct SettingsDoorLineTests {
                 #expect(!line.contains("sk-"))
             }
         }
-        #expect(SettingsLandingWords.doorLine(.units, facts: facts(claude: false)) == "Measures in kg, km, and °F.")
+        #expect(SettingsLandingWords.doorLine(.units, facts: facts(claude: false)) == "Measures in kg, km, and °F")
         #expect(SettingsLandingWords.doorLine(.backups, facts: facts(claude: false)).hasPrefix("Last backup tonight"))
     }
 
@@ -98,7 +98,7 @@ struct SettingsDoorLineTests {
             return
         }
         #expect(name == "Tess")
-        #expect(line == "Tess remembers 12 things, all on this phone.")
+        #expect(line == "Tess remembers 12 things, all on this phone")
     }
 }
 
