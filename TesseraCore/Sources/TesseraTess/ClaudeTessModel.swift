@@ -242,8 +242,8 @@ public struct ClaudeTessModel: TessModel {
     }
 
     /// The capture pack: today, the workout and last set in focus, and Tess's rules. Never notes, health or history.
-    /// The exercise name is his free text: a name that trips the wall (a secret word, money, a body fact, a key) sends
-    /// "no workout in focus" and no last set (a4-bypass item 1).
+    /// The exercise name is his free text: a key-shaped name (or, with `ClaudeSees.everything` off, one that trips the
+    /// wall: a secret word, money, a body fact) sends "no workout in focus" and no last set (a4-bypass item 1).
     func system(_ context: TessContext, engine: ActionEngine, lastWeightKg: Double?) -> String {
         let walled = Self.exerciseIsWalled(context, engine: engine, lastWeightKg: lastWeightKg)
         return TessVoice.instructions(
@@ -257,7 +257,8 @@ public struct ClaudeTessModel: TessModel {
     static func exerciseIsWalled(_ context: TessContext, engine: ActionEngine, lastWeightKg: Double?) -> Bool {
         guard let entry = context.entry.flatMap({ engine.store.object(id: $0) }),
               let exercise = engine.store.linkedClass("exercise", of: entry) else { return false }
-        return HomeDonePack.isWalled(exercise.name, lastWeightKg: lastWeightKg)
+        let name = exercise.name
+        return ClaudeSees.blocks(name, walled: HomeDonePack.isWalled(name, lastWeightKg: lastWeightKg))
     }
 
     // MARK: The request

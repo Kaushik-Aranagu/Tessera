@@ -39,8 +39,9 @@ public enum CallConformance {
         {
             failed.append("bound")
         }
-        // Wall: a device-only call never reaches a rung beyond the phone, bound or open.
-        if call.reach == .deviceOnly {
+        // Wall: while money stays off Claude (`ClaudeSees.moneyWrites` off), a device-only call never reaches a rung
+        // beyond the phone, bound or open. Since his Oct 27 pick it may.
+        if ClaudeSees.keepsOnPhone(call.reach == .deviceOnly) {
             let frame = sample(for: call, room: room, place: place)
             let claude: Set<BrainID> = [.haiku, .sonnet, .opus]
             let asks = Array(call.phrases.prefix(1)) + ["could you help me with this one please, it matters today"]

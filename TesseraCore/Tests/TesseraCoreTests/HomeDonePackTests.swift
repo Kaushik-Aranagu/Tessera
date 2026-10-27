@@ -5,6 +5,7 @@ import Testing
 /// Home's done-pack wall (board 0al): Research's home-pack-walls W1 to W16. A walled title or best name means no
 /// pack, so no call; the rules line still shows.
 @MainActor
+@Suite(.oldWalls)
 struct HomeDonePackTests {
     static var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)

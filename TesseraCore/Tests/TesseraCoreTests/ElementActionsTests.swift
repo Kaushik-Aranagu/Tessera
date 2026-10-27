@@ -5,6 +5,7 @@ import Testing
 
 /// The six actions behind Tess's element calls (docs/ai/harness/element-actions.md).
 @MainActor
+@Suite(.oldWalls)
 struct ElementActionsTests {
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]
