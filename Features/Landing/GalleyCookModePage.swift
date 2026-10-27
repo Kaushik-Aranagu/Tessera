@@ -24,6 +24,8 @@ struct GalleyCookModePage: View {
     @State private var cue = HapticCue()
     /// The last Serve (sheet 337): the ticket spiked, then the Eat summary printing down.
     @State private var spiked = false
+    /// The old ticket's layers are removed once the spike has finished, so nothing of it stays under the summary.
+    @State private var retired = false
     @State private var eat: GalleyCookEat?
     @State private var eatReveal: CGFloat = 0
 
@@ -97,16 +99,19 @@ struct GalleyCookModePage: View {
         let facts = Self.facts(session: session, model: model, now: now, opened: opened)
         let data = GalleyCookScreen(facts)
         return ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                printer
-                modeScreen(session, facts: facts, data: data)
+            if !retired {
+                VStack(spacing: 0) {
+                    printer
+                    modeScreen(session, facts: facts, data: data)
+                }
+                // The finished ticket is pulled up into the rail clip: the origin is top centre, 18 pt above the paper.
+                .scaleEffect(x: spiked ? GalleySpike.scaleX : 1, y: spiked ? GalleySpike.scaleY : 1,
+                             anchor: UnitPoint(x: 0.5, y: -GalleySpike.originAbove / 874))
+                .offset(y: spiked ? -GalleySpike.rise : 0)
+                .opacity(spiked ? 0 : 1)
+                .animation(reduceMotion ? nil : .easeIn(duration: GalleySpike.fade), value: spiked)
+                .allowsHitTesting(!spiked)
             }
-            // The finished ticket is pulled up into the rail clip at top centre.
-            .scaleEffect(x: spiked ? GalleySpike.scaleX : 1, y: spiked ? GalleySpike.scaleY : 1, anchor: .top)
-            .offset(y: spiked ? -GalleySpike.rise : 0)
-            .opacity(spiked ? 0 : 1)
-            .animation(reduceMotion ? nil : .easeIn(duration: GalleySpike.fade), value: spiked)
-            .allowsHitTesting(!spiked)
             if let eat {
                 eatSummary(eat)
                     .mask {
@@ -152,10 +157,16 @@ struct GalleyCookModePage: View {
             eat = summary
             eatReveal = 1
             spiked = true
+            retired = true
             return
         }
         cue.play(.selection)
         spiked = true
+        Task { @MainActor in
+            // Once the ticket has gone up (400 ms) its layers are removed.
+            try? await Task.sleep(for: .milliseconds(Int(GalleySpike.fade * 1000)))
+            retired = true
+        }
         try? await Task.sleep(for: .milliseconds(Int(GalleySpike.printDelay * 1000)))
         eatReveal = 0
         eat = summary
@@ -275,10 +286,9 @@ struct GalleyCookModePage: View {
                 }
                 .frame(height: 112)
                 Text(data.instruction)
-                    .font(GalleyPaper.plex(.bold, 46))
+                    .font(GalleyPaper.plex(.bold, GalleyCookFit.size(for: data.instruction, width: 354)))
                     .foregroundStyle(GalleyPaper.ink)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.55)
+                    .lineLimit(GalleyCookFit.lines)
                     .lineSpacing(-2)
                     .fixedSize(horizontal: false, vertical: true)
                 if !data.how.isEmpty {
@@ -314,13 +324,24 @@ struct GalleyCookModePage: View {
                             ForEach(data.timers) { timer in
                                 // Sheet 346: a started timer rolls up from 0:00; tapping a running one adds a minute.
                                 Button { addMinute(session, timerID: timer.id) } label: {
-                                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                        RollingTimerTime(seconds: timer.seconds, ready: timer.ready)
+                                    // Name, a dotted leader, then the time: "Roast ······ 30:00".
+                                    HStack(alignment: .firstTextBaseline, spacing: 6) {
                                         Text(timer.label)
                                             .font(GalleyPaper.plex(.regular, 18))
-                                            .foregroundStyle(GalleyPaper.inkSecondary)
+                                            .foregroundStyle(GalleyPaper.ink)
                                             .lineLimit(1)
+                                            .layoutPriority(1)
+                                        Rectangle().fill(.clear).frame(height: 1)
+                                            .overlay(alignment: .bottom) {
+                                                PrinterTear()
+                                                    .stroke(GalleyPaper.inkSecondary.opacity(0.55),
+                                                            style: StrokeStyle(lineWidth: 1.2, dash: [1.5, 4]))
+                                                    .frame(height: 1)
+                                            }
+                                            .offset(y: -3)
+                                        RollingTimerTime(seconds: timer.seconds, ready: timer.ready)
                                     }
+                                    .frame(maxWidth: 260)
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)

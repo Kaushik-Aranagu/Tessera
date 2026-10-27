@@ -20,6 +20,8 @@ struct RoutineModePage: View {
     @State private var cue = HapticCue()
     /// The page the book being read stands at (the Read step names the page it will reach).
     @State private var bookPage: Int?
+    /// Days in a row the evening has been tended, known once it is written (the closing screen's cue).
+    @State private var streak: Int?
 
     var body: some View {
         let dusk = run?.dusk ?? 0
@@ -29,7 +31,8 @@ struct RoutineModePage: View {
             if let run {
                 LiveClock(LiveFeatures.routineClock, minimumInterval: 1, paused: scenePhase != .active) { context in
                     let now = AppClock.adjust(context.date)
-                    let data = RoutineScreen(run, name: name, totalMinutes: total, now: now, bookPage: bookPage)
+                    let data = RoutineScreen(run, name: name, totalMinutes: total, now: now, bookPage: bookPage,
+                                             streak: streak)
                     screen(data, now: now)
                         // Sheet 335: the sky and the words dim together on the last step; kept under Reduce Motion.
                         .overlay {
@@ -193,14 +196,22 @@ struct RoutineModePage: View {
 
     private func done(_ data: RoutineScreen, ink: Color, soft: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(data.summary)
-                .font(.custom("Figtree", fixedSize: 52).weight(.heavy))
+            Text(data.tendedWord)
+                .font(.custom("Figtree", fixedSize: 84).weight(.heavy))
                 .foregroundStyle(ink)
-                .lineLimit(3)
+                .lineLimit(1)
                 .minimumScaleFactor(0.5)
-            Text("Goodnight")
+            Text(data.closingCue)
                 .font(TessFont.line(26, relativeTo: .title2).italic())
                 .foregroundStyle(soft)
+                .lineLimit(2)
+            // "5 of 5" set small as the time line; its spaces never break.
+            Text(data.closingCount)
+                .font(.custom("Outfit", fixedSize: 22).weight(.light))
+                .foregroundStyle(soft)
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.top, 14)
         }
         .padding(.top, 60)
     }
@@ -322,6 +333,15 @@ struct RoutineModePage: View {
         wrote = true
         if let result = try? model.engine.perform(TendRoutine(routine: routineID, at: AppClock.now), by: .user) {
             model.touch()
+            // The days in a row the routine has now been tended, for the closing cue (never a count of anything
+            // missed).
+            let calendar = Calendar.current
+            let today = TesseraDay(calendar: calendar).day(of: AppClock.now)
+            let days = RestBook(store: model.store, classes: model.classes).tendedDays(
+                of: routineID,
+                calendar: calendar
+            )
+            streak = RoutineFinish.streak(days: days, today: today, calendar: calendar)
             let line = result.record.receipt ?? "\(name), done for today."
             TessVoice.shared.say(line, undo: result.record, holds: .seconds(10))
         }

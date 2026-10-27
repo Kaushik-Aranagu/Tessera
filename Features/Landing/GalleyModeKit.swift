@@ -124,9 +124,14 @@ struct GalleyModeRail: View {
                         }
                         Text(item.label)
                             .font(GalleyPaper.plex(item.current ? .bold : .regular, item.current ? 20 : 17))
-                            .strikethrough(item.done, color: GalleyPaper.inkSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
+                            // A done step: ink 2 with a 1 pt line through it (sheet 341).
+                            .overlay {
+                                if item.done {
+                                    Rectangle().frame(height: 1).offset(y: 1)
+                                }
+                            }
                     }
                     .foregroundStyle(item.color ?? (item.current ? tint : item.done
                             ? GalleyPaper.inkSecondary.opacity(0.7) : GalleyPaper.inkSecondary))
@@ -353,6 +358,8 @@ enum GalleySpike {
     static let scaleX: CGFloat = 0.18
     static let scaleY: CGFloat = 0.06
     static let rise: CGFloat = 24
+    /// The origin of the shrink: top centre, this far above the paper (the rail clip).
+    static let originAbove: CGFloat = 18
     static let fade: TimeInterval = 0.4
     static let printDelay: TimeInterval = 0.3
     static let printSteps = 8

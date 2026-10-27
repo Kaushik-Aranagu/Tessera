@@ -26,3 +26,35 @@ enum RoutineReading {
         "\(title), tended, about \(page)\(page(after: seconds / 60, from: last))"
     }
 }
+
+/// The closing screen's words (sheet 335): a big "Tended", the days in a row as a quiet cue, and "5 of 5" as the time
+/// line, with non-breaking spaces so it never splits. Only ever counts up: nothing here says what a missed day did.
+enum RoutineFinish {
+    /// "5 of 5" with non-breaking spaces.
+    static func count(_ tended: Int, of total: Int) -> String {
+        "\(tended)\u{00A0}of\u{00A0}\(total)"
+    }
+
+    private static let words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
+                                "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen",
+                                "nineteen", "twenty"]
+
+    /// "Six days in a row now. Sleep well"; one night is only "Sleep well".
+    static func cue(streak: Int?) -> String {
+        guard let streak, streak >= 2 else { return "Sleep well" }
+        let number = streak <= words.count ? words[streak - 1].capitalized : "\(streak)"
+        return "\(number) days in a row now. Sleep well"
+    }
+
+    /// Days in a row ending today, from the days the routine was tended (one per Tessera day).
+    static func streak(days: Set<Date>, today: Date, calendar: Calendar = .current) -> Int {
+        var count = 0
+        var day = today
+        while days.contains(day) {
+            count += 1
+            guard let previous = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = previous
+        }
+        return count
+    }
+}

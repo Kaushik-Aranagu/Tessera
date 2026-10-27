@@ -117,10 +117,9 @@ enum GalleyCookWords {
         return ShownLine.unstopped(first, between: ", ")
     }
 
-    /// The step as one instruction line: its first sentence, at most ten words, no full stop.
+    /// The step as the instruction: its whole first sentence, no full stop. Never cut (the size gives way instead).
     static func line(_ text: String) -> String {
-        let words = sentence(text).split(separator: " ")
-        return capital(words.prefix(10).joined(separator: " "))
+        capital(sentence(text))
     }
 
     /// Sheet 333: what the ticket printer feeds when a pan timer hits zero: "Chicken ready, off the heat". The food is
@@ -166,6 +165,31 @@ enum GalleyCookWords {
     static func minutes(_ value: Double) -> String {
         let whole = Int(value.rounded())
         return whole == 1 ? "1 min" : "\(whole) min"
+    }
+}
+
+/// The instruction is always shown whole: it wraps to three lines at 46 pt, and if it still does not fit it shrinks in
+/// 2 pt
+/// steps down to 28 pt. It is never truncated (Design's review of sheet 328).
+enum GalleyCookFit {
+    static let from: CGFloat = 46
+    static let floor: CGFloat = 28
+    static let lines = 3
+
+    static func lineCount(_ text: String, size: CGFloat, width: CGFloat) -> Int {
+        let font = UIFont(name: "IBMPlexSansCond-Bold", size: size) ?? UIFont.boldSystemFont(ofSize: size)
+        let bounds = (text as NSString).boundingRect(with: CGSize(width: width, height: .greatestFiniteMagnitude),
+                                                     options: [.usesLineFragmentOrigin], attributes: [.font: font],
+                                                     context: nil)
+        return Int((bounds.height / font.lineHeight).rounded(.up))
+    }
+
+    static func size(for text: String, width: CGFloat) -> CGFloat {
+        var size = from
+        while size > floor, lineCount(text, size: size, width: width) > lines {
+            size -= 2
+        }
+        return size
     }
 }
 
@@ -260,7 +284,7 @@ struct GalleyCookEat: Equatable {
 
     init(_ facts: GalleyCookFacts) {
         dish = facts.serves.map { "\(facts.recipe) for \($0)" } ?? facts.recipe
-        let minutes = max(facts.minutesIn, 0)
+        let minutes = max(facts.minutesIn, 1)
         let steps = facts.steps.count
         detail = "Cooked in \(minutes) min, \(steps) \(steps == 1 ? "step" : "steps")"
     }

@@ -41,8 +41,12 @@ struct RoutineScreen: Equatable {
     var brightness = 1.0
     /// The end: "Tended, 4 of 5 steps".
     var summary = ""
+    /// The closing screen (sheet 335): "Tended", its cue, and "5 of 5" as the time line.
+    var tendedWord = "Tended"
+    var closingCue = "Sleep well"
+    var closingCount = ""
 
-    init(_ run: RoutineModeRun, name: String, totalMinutes: Int, now: Date, bookPage: Int? = nil) {
+    init(_ run: RoutineModeRun, name: String, totalMinutes: Int, now: Date, bookPage: Int? = nil, streak: Int? = nil) {
         title = name
         dusk = run.dusk
         finished = run.finished
@@ -51,6 +55,8 @@ struct RoutineScreen: Equatable {
         let tended = run.tended.count
         topRight = tended == 0 ? "about \(totalMinutes) min to bed" : "\(tended) of \(run.steps.count) tended"
         summary = "Tended, \(tended) of \(run.steps.count) steps"
+        closingCount = RoutineFinish.count(tended, of: run.steps.count)
+        closingCue = RoutineFinish.cue(streak: streak)
         rail = run.steps.map { step in
             // Done steps are dimmed ink, not green; a step left for tomorrow is dimmer still.
             let state: Color? = run.tended.contains(step.id) ? RoutineScreen.tended
