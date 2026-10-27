@@ -16,7 +16,12 @@ extension ModeLiveContent {
                 top: next.map { "Rest, then \(Self.shortName($0.lift.name).lowercased())" } ?? "Rest",
                 big: "",
                 next: next.map { Self.nextLine($0.set, state: state, plates: plates) } ?? "",
-                quiet: about, timerEnd: endsAt, timerTotal: total, isPrivate: false
+                quiet: about, timerEnd: endsAt, timerTotal: total, isPrivate: false,
+                // The face for 0:00, ready before the app could be asleep: the lift and the set you are up for.
+                ended: next.map {
+                    Ended(top: "Rest done, you\u{2019}re up", big: Self.shortName($0.lift.name),
+                          next: WorkoutModeState.weightText($0.set.weight, state.unit) + " \u{00D7} \($0.set.reps)")
+                }
             )
         case .set:
             let set = state.currentSet
@@ -33,8 +38,10 @@ extension ModeLiveContent {
 
     private static func privateWorkout(_ state: WorkoutModeState, at _: Date) -> ModeLiveContent {
         if case let .rest(endsAt, total, _) = state.phase {
+            // "Rest done" with a big "Up": no lift name and no weight, ever.
             return ModeLiveContent(word: "Rest", top: "Rest", big: "", next: "", quiet: "Private workout",
-                                   timerEnd: endsAt, timerTotal: total, isPrivate: true)
+                                   timerEnd: endsAt, timerTotal: total, isPrivate: true,
+                                   ended: Ended(top: "Rest done", big: "Up", next: ""))
         }
         return ModeLiveContent(word: "Rest", top: "Private workout", big: "", next: "", quiet: "Private workout",
                                timerEnd: nil, timerTotal: 0, isPrivate: true)

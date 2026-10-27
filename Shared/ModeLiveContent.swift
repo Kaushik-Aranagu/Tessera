@@ -23,6 +23,29 @@ struct ModeLiveContent: Codable, Hashable {
     var timerEnd: Date?
     var timerTotal: TimeInterval
     var isPrivate: Bool
+    /// Sheet 356: the face for when the rest hits 0:00, baked into the payload up front so the widget can switch to it
+    /// without the app running (on the timer's end date, or when the content goes stale at that date). A private
+    /// workout's carries no lift name and no weight.
+    var ended: Ended?
+
+    struct Ended: Codable, Hashable {
+        /// The Lock Screen's top line: "Rest done, you're up".
+        var top: String
+        /// The big word: the lift ("Bench"); "Up" for a private workout.
+        var big: String
+        /// The set you are up for ("185 lb × 5"); empty for a private workout.
+        var next: String
+    }
+
+    /// What replaces the clock in the Island once the rest is over.
+    static let upWord = "up"
+
+    /// Whether the rest is over: its end date has passed, or the system marked the content stale (which `staleDate`
+    /// arranges for the same date, so the face flips with the app asleep).
+    func hasEnded(at now: Date, isStale: Bool) -> Bool {
+        guard ended != nil else { return false }
+        return isStale || (timerEnd.map { $0 <= now } ?? false)
+    }
 
     /// The countdown as a range for `Text(timerInterval:)`.
     var timerInterval: ClosedRange<Date>? {

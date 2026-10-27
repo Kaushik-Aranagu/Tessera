@@ -42,7 +42,7 @@ struct RestLiveActivity: Widget {
                     ClosingFace(line: context.state
                         .closingLine ?? "\(context.attributes.workoutTitle), ready to finish")
                 } else if let mode = context.state.mode {
-                    ModeLockFace(mode: mode)
+                    ModeLockFace(mode: mode, isStale: context.isStale)
                 } else if RestFace.isSetAside(context) {
                     SetAsideFace(title: context.attributes.workoutTitle)
                 } else if context.state.showsMarks {
@@ -61,7 +61,7 @@ struct RestLiveActivity: Widget {
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     if let mode = state.mode {
-                        ModeWord(mode: mode, size: 34).padding(.leading, 8)
+                        ModeWord(mode: mode, size: 34, isStale: context.isStale).padding(.leading, 8)
                     } else if state.phase != .closing {
                         Countdown(state: state, isGo: isGo, size: 40)
                             .padding(.leading, 8)
@@ -70,7 +70,7 @@ struct RestLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     if let mode = state.mode {
-                        ModeNumber(mode: mode, size: 34).padding(.trailing, 8)
+                        ModeNumber(mode: mode, size: 34, isStale: context.isStale).padding(.trailing, 8)
                     } else if state.phase != .closing {
                         PlannedSetButton(state: state, isGo: isGo, nameSize: 16, setSize: 21)
                             .padding(.trailing, 8)
@@ -93,7 +93,7 @@ struct RestLiveActivity: Widget {
                 }
             } compactLeading: {
                 if let mode = state.mode {
-                    ModeWord(mode: mode, size: 17)
+                    ModeWord(mode: mode, size: 17, isStale: context.isStale)
                 } else {
                     Tick(color: mood.tick)
                         .frame(width: 18, height: 14)
@@ -101,7 +101,7 @@ struct RestLiveActivity: Widget {
             } compactTrailing: {
                 Group {
                     if let mode = state.mode {
-                        ModeNumber(mode: mode, size: 17)
+                        ModeNumber(mode: mode, size: 17, isStale: context.isStale)
                     } else if state.phase == .closing {
                         Text("Ready")
                     } else if RestFace.isSetAside(context) {
@@ -118,7 +118,7 @@ struct RestLiveActivity: Widget {
                 .frame(maxWidth: 48)
             } minimal: {
                 if let mode = state.mode {
-                    ModeNumber(mode: mode, size: 13)
+                    ModeNumber(mode: mode, size: 13, isStale: context.isStale)
                 } else {
                     Tick(color: mood.tick)
                         .frame(width: 16, height: 13)
@@ -540,10 +540,22 @@ private enum ModeType {
 private struct ModeNumber: View {
     let mode: ModeLiveContent
     let size: CGFloat
+    var isStale = false
 
     var body: some View {
+        // The date-keyed switch: from 0:00 on, "up" replaces the clock, with no app wake (a timeline view flips it at
+        // the
+        // end date; staleness flips it too).
+        TimelineView(.explicit([Date.now] + (mode.timerEnd.map { [$0] } ?? []))) { context in
+            face(ended: mode.hasEnded(at: context.date, isStale: isStale))
+        }
+    }
+
+    private func face(ended: Bool) -> some View {
         Group {
-            if let interval = mode.timerInterval {
+            if ended {
+                Text(ModeLiveContent.upWord)
+            } else if let interval = mode.timerInterval {
                 Text(timerInterval: interval, countsDown: true).multilineTextAlignment(.trailing)
             } else {
                 Text(mode.big)
@@ -560,23 +572,68 @@ private struct ModeNumber: View {
 private struct ModeWord: View {
     let mode: ModeLiveContent
     let size: CGFloat
+    var isStale = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Text(mode.word).font(ModeType.word(size)).foregroundStyle(ModeType.room)
+        let word = Text(mode.word).font(ModeType.word(size)).foregroundStyle(ModeType.room)
             .lineLimit(1).minimumScaleFactor(0.6)
+        // The Island swells once when the rest ends (the same swell as a pan timer's, 344); none under Reduce Motion.
+        if CookFace.swells(reduceMotion: reduceMotion), mode.ended != nil {
+            word.phaseAnimator([0.0, 1.0, 0.0], trigger: isStale) { content, phase in
+                content.scaleEffect(x: 1 + (CookFace.swell.x - 1) * phase, y: 1 + (CookFace.swell.y - 1) * phase)
+            } animation: { _ in
+                .easeInOut(duration: CookFace.swell.duration / 2)
+            }
+        } else {
+            word
+        }
     }
 }
 
 /// Three lines: the room-colour top line, the big thing left and the next thing right, one quiet fact.
 private struct ModeLockFace: View {
     let mode: ModeLiveContent
+    var isStale = false
 
     var body: some View {
+        // At the rest's end date, or when the content goes stale then, the face is the one baked into the payload:
+        // "Rest done, you're up", the lift big, the set you are up for. Both faces are keyed on the date, so no app
+        // wake.
+        TimelineView(.explicit([Date.now] + (mode.timerEnd.map { [$0] } ?? []))) { context in
+            if let ended = mode.ended, mode.hasEnded(at: context.date, isStale: isStale) {
+                endedFace(ended)
+            } else {
+                runningFace
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func endedFace(_ ended: ModeLiveContent.Ended) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(ended.top).font(ModeType.word(22)).foregroundStyle(ModeType.room).lineLimit(1)
+                .minimumScaleFactor(0.7)
+            HStack(alignment: .firstTextBaseline) {
+                Text(ended.big).font(ModeType.word(52)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.5)
+                Spacer(minLength: 8)
+                Text(ended.next).font(ModeType.word(24)).foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+            }
+            Text(mode.quiet).font(ModeType.word(17)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var runningFace: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(mode.top).font(ModeType.word(22)).foregroundStyle(ModeType.room).lineLimit(1)
                 .minimumScaleFactor(0.7)
             HStack(alignment: .firstTextBaseline) {
-                ModeNumber(mode: mode, size: 44).frame(maxWidth: 150, alignment: .leading)
+                ModeNumber(mode: mode, size: 44, isStale: isStale).frame(maxWidth: 150, alignment: .leading)
                 Spacer(minLength: 8)
                 Text(mode.next).font(ModeType.word(20)).foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1).minimumScaleFactor(0.6)
