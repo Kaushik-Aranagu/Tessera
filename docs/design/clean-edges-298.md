@@ -55,3 +55,15 @@ He said different moves are fine as long as each is clean. So each kind of place
 - Widget arrival: build the incoming lines with `.opacity(0)` and let the arrival transition reveal them; never show
   then hide.
 - Keep the check: the app's UI tests should sample frames during each move and fail on any text sliced by a clip.
+
+## 5. Sheet 319: door summaries never stack (his 1:55 AM PDT Oct 27 screenshot)
+
+- On the Deck, turning the dial quickly left an old door summary on screen and stacked each new one below it, down
+  over the action word ("Squat 275" across "Start"). Cause: on a fast turn, the summary already leaving was taken
+  as the one to replace, so the summary showing never left.
+- Now the one showing is always the one that leaves; anything still leaving keeps leaving; a summary is never left
+  in the layout. A new board check (`t62.js`) turns the dial at several speeds in five rooms and fails if any word of
+  a summary touches the action word. It finds none (the Purse's rolling digits are hidden by their own column and
+  are not counted).
+- For the builders: the door summary is one view keyed by the door (`.id(door)`) with a transition, never a stack of
+  views appended on each change.

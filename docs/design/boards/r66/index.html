@@ -1657,9 +1657,12 @@ function rollDigits(box){box.querySelectorAll('.o').forEach((o,j)=>{const t=o.te
   return '<span class="dg" style="display:inline-block;height:'+ht+'px;overflow:hidden;vertical-align:top"><span class="dc" style="display:block">'+col.map(c=>'<i style="display:block;height:'+ht+'px;line-height:'+ht+'px;font-style:normal">'+c+'</i>').join('')+'</span></span>'}).join('');
  o.querySelectorAll('.dc').forEach((c,k)=>c.animate([{transform:'translateY(0)'},{transform:'translateY(-'+5*ht+'px)'}],{duration:620+k*70,delay:140+j*60+(o.querySelectorAll('.dc').length-1-k)*18,easing:'cubic-bezier(.25,.7,.2,1)',fill:'backwards'}).onfinish=()=>{c.parentNode.replaceWith(document.createTextNode(c.lastChild.textContent))})})}
 function sumSet(sum,html,id,el){const X=SUMX[id];const nw=h('div','sx',html);if(SUMX_FONT[id])nw.style.cssText=SUMX_FONT[id];
- const old=sum.querySelector(':scope > .sx');sum.appendChild(nw);fitAll(nw);
- if(!old||RM||!X){if(old)old.remove();return}
- old.style.cssText+=';position:absolute;inset:0;pointer-events:none';
+ /* 319 (his 1:55 AM screenshot): on a fast turn the one already leaving was taken as "the old one", so the summary
+    showing never left and every turn stacked another below it, down over the action word. Now the old one is the
+    one showing; anything still leaving keeps leaving; a summary is never left in the flow. */
+ const live=[...sum.querySelectorAll(':scope > .sx:not(.gone)')],old=live.pop()||null;live.forEach(e=>e.remove());sum.appendChild(nw);fitAll(nw);
+ if(!old||RM||!X){if(old)old.remove();sum.querySelectorAll(':scope > .sx.gone').forEach(e=>e.remove());return}
+ old.classList.add('gone');old.style.cssText+=';position:absolute;inset:0;pointer-events:none';
  const parts=b=>X.whole?[b]:[...b.children];let end=0;
  parts(old).forEach((e,i)=>{const [k,o]=X.out(e,i);end=Math.max(end,(o.delay||0)+o.duration);e.animate(k,{...o,fill:'forwards'})});setTimeout(()=>old.remove(),end+20);
  parts(nw).forEach((e,i)=>{const [k,o]=X.in(e,i);e.animate(k,{...o,fill:'backwards'})});
