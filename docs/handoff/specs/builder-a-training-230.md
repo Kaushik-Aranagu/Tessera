@@ -61,7 +61,7 @@ All on `TrainingStats(store:classes:)` (engine only, pure reads), words in `Trai
   app (Tess's short form), not here.
 - Warm-up: three fields on the routine; `warmUp(of:) -> WarmUp?` (name, minutes, note; nil for none or a private
   routine), `WarmUp.phrase` -> "8 min on the rower", `TrainingSentences.warmUpLine(_:)` -> "Starts with 8 min on the
-  rower.", and the action `SetWarmUp(routine:name:minutes:note:)` (an empty name takes it off; refuses minutes outside 1
+  rower", and the action `SetWarmUp(routine:name:minutes:note:)` (an empty name takes it off; refuses minutes outside 1
   to 30 and a name or note that holds a secret word, a body fact or a key).
 - Skip today / Move Push A: a rest day (`TakeRest(scope: .training)`, from the element actions). A rolling plan never
   carries debt, so the next routine simply comes next; the receipt and the 10 s Undo are the action's own.

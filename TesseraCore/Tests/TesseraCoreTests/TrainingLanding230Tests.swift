@@ -119,12 +119,12 @@ struct TrainingLanding230Tests {
         #expect(stats.warmUp(of: routine) == nil)
         let set = try engine.perform(SetWarmUp(routine: routine.id, name: "Rower", minutes: 8,
                                                note: "Keep it easy, about 22 strokes a minute."), by: .user)
-        #expect(set.record.receipt == "Warm-up set, 8 min.")
+        #expect(set.record.receipt == "Warm-up set, 8 min")
         let warm = try #require(stats.warmUp(of: routine))
         #expect(warm.minutes == 8 && warm.note == "Keep it easy, about 22 strokes a minute.")
-        #expect(TrainingSentences.warmUpLine(warm) == "Starts with 8 min on the rower.")
+        #expect(TrainingSentences.warmUpLine(warm) == "Starts with 8 min on the rower")
         let off = try engine.perform(SetWarmUp(routine: routine.id, name: nil), by: .user)
-        #expect(off.record.receipt == "Warm-up taken off." && stats.warmUp(of: routine) == nil)
+        #expect(off.record.receipt == "Warm-up taken off" && stats.warmUp(of: routine) == nil)
         #expect(TrainingSentences.warmUpLine(nil) == nil)
         // Undo brings it back.
         engine.undo(off.record)

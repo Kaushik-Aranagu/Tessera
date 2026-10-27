@@ -87,6 +87,6 @@ public struct SetWarmUp: EngineAction {
 
     public func receipt(in _: ObjectStore) -> String? {
         let empty = (name ?? "").trimmingCharacters(in: .whitespaces).isEmpty
-        return empty ? "Warm-up taken off." : "Warm-up set, \(minutes ?? 0) min."
+        return empty ? "Warm-up taken off" : "Warm-up set, \(minutes ?? 0) min"
     }
 }

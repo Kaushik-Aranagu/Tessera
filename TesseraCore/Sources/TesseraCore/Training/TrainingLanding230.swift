@@ -142,8 +142,8 @@ public extension TrainingSentences {
         return "+\(amount) on \(gain.exercise.lowercased()) since \(formatter.string(from: gain.since))"
     }
 
-    /// "Starts with 8 min on the rower." for the landing brief, or nil with no warm-up.
+    /// "Starts with 8 min on the rower" for the landing brief (no final stop, like every shown line), or nil with no warm-up.
     static func warmUpLine(_ warmUp: WarmUp?) -> String? {
-        warmUp.map { "Starts with \($0.phrase)." }
+        warmUp.map { "Starts with \($0.phrase)" }
     }
 }
