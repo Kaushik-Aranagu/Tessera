@@ -29,7 +29,7 @@ fades, what blames).
 4. Privacy: walled titles, money amounts, health, calendar, body, calories never reach Claude, backups,
    logs, widgets or Spotlight; private reads "Private ..." in plain ink; Siri never sends; AI is on-device
    unless asksClaude; no new Claude use without it.
-   (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
+   (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 5. Tone: no guilt, streaks, counts of misses, "overdue" or "late"; offers not orders; Tess never faded;
    never an orb or skin for Tess; no Body weight page.
 6. Process: each item has a lane, a Review switch default Off (or says it is a rule sheet), a Core fact

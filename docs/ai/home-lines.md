@@ -55,7 +55,7 @@ The hero's form sets the pattern the context line answers:
 
 ## 2a. The promise on Settings
 
-Settings says, under the spend line: **"Titles and counts only. Never notes, places, health or money."** (Design 50.) The Home pack keeps that literally: per item, its title, kind, state, counts (sets done of target, exercises done of planned, items left), times (start, minutes ago), and record names, which are exercise titles. Nothing else: no weights, reps, note bodies, places, calendar locations, health or money. The pack snapshot test in AI-4 is the proof. (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
+Settings says, under the spend line: **"Titles and counts only. Never notes, places, health or money."** (Design 50.) The Home pack keeps that literally: per item, its title, kind, state, counts (sets done of target, exercises done of planned, items left), times (start, minutes ago), and record names, which are exercise titles. Nothing else: no weights, reps, note bodies, places, calendar locations, health or money. The pack snapshot test in AI-4 is the proof. (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 
 ## 3. When the rules line shows
 

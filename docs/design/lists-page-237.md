@@ -40,7 +40,7 @@ Builds on 226 (landing) and 217 (Lists room). Owner: Builder B (Lists).
 
 ## Privacy
 - A private list shows its real name and things inside the Lists room only. Everywhere else (the landing headline, Home lines, notices, widgets, Live Activity, Siri, Tess and Claude lines, backups) it reads "Private list" (shownLabel).
-- Private list things never go to Claude. Ordinary lists go only with asksClaude on, each with a sent-log row. (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
+- Private list things never go to Claude. Ordinary lists go only with asksClaude on, each with a sent-log row. (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 - Groceries are not a list. They stay as Pantry To get (the earlier ruling). The Home Shopping face (236) reads To get.
 
 ## v2, Oct 23 10:20-10:25 PM (his asks + the coordinator's rulings on the review)

@@ -42,7 +42,7 @@ Builds on 226 (landing) and 228 (Notes elements). Owner: Builder B (Notes).
 ## v2, reviewer notes with the coordinator's rulings (Oct 23, 9:31 PM)
 - Title fit stays: 28 to 21 pt on the page and 26 to 21 pt in the wheel focus (his 9:11 PM rule). The first-words line and the body text never shrink.
 - Depth blur: never on the focused row or its first-words line. One switch, Settings > Look > "Depth on wheels" (default On), turns it off everywhere. It is also off under Reduce Motion, Reduce Transparency and Low Power.
-- PRIVATE NOTE TEXT NEVER GOES TO CLAUDE, under lab mode too, unless he says otherwise himself. Ordinary notes go only with asksClaude on, each with a sent-log row. (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
+- PRIVATE NOTE TEXT NEVER GOES TO CLAUDE, under lab mode too, unless he says otherwise himself. Ordinary notes go only with asksClaude on, each with a sent-log row. (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 - Private note bodies stay out of backups, like calories. A restore brings back a "Private note" stub with no words. The note page's private line adds: "Its words stay on this phone."
 - Delete: the 10 s Undo, plus 7 days in a fifth lens "Recently deleted" (op log). That lens shows only when it holds something. Its rows read "Gift ideas, deleted 2 d ago"; tap to bring one back ("Gift ideas, back. Undo"). After 7 days a note is gone.
 - Left drags on the action word start at the word, 28 pt or more from the edge, so they never fight the back edge (0 to 24 pt).

@@ -30,7 +30,7 @@ Opening the ask slot on a side makes this thing the subject. `AskSubjectPack.bui
 5. At the monthly cap: the phone's answer, "Claude paused until Nov 1."
 6. Otherwise: pack for Claude.
 
-His intake ("is this enough protein for me") answers with one ingredient's table value on the phone and never goes to Claude (Product 2:36 pm). (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
+His intake ("is this enough protein for me") answers with one ingredient's table value on the phone and never goes to Claude (Product 2:36 pm). (Send side superseded by Kaushik's Oct 27 11:59 AM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 
 ## 5. Job settings and worst-case cost
 

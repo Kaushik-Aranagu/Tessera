@@ -1232,7 +1232,7 @@ Accept the defaults in product/notes-lists-landing-build-sheet-oct22.md. Notes l
 
 Kaushik: "okay for the training stats". Stats and Log (product/training-stats-log-spec-oct22.md) are UNHELD and buildable: Core PR 1 (TrainingStats, sentences, calories function, privacy filter, Review ids, tests), Builder A PR 2 (Stats page) and PR 3 (Log page, landing sentence). Defaults ruled earlier stand: single page; private sessions excluded everywhere; a lower lift reads "holding near its best"; light-week threshold only behind a Review switch (Off); calories burned stays Off. Still held: run mode R1-R4, Programs and scenarios, services (phases 2 and 4).
 
-## 12:10 PM Oct 27: NO privacy filtering of what is sent to Claude (Kaushik, ruling in the Builder B thread, 18:59 UTC Oct 27)
+## 11:59 AM Oct 27: NO privacy filtering of what is sent to Claude (Kaushik, ruling in the AI layer thread, 18:59 UTC Oct 27)
 
 Kaushik: "I don't want any privacy-related restrictions on the what Claude can be and whatnot. So yeah, calories or weight or money or everything I'm fine with, all of it going there, because that is what I would do anyway. So yeah, don't filter or mask any of them."
 1. What is sent to Claude is not filtered or masked: money, calories, weight, health, body and private items all go as they are. This SUPERSEDES every earlier rule that kept those out of Claude payloads (ruling 61 (1) for counts sent to Claude, the walled-phrase rules in the capture-miss route, 6:20 PM Oct 19 "no money values in any tool result Claude sees", the Stats/Training "never reaches Claude" lines, the Me profile and calorie lines, private masks in what is sent). Code: #1488.
