@@ -199,7 +199,7 @@ public final class Door {
                                          runID: job.runID))
             return end(.refused)
         }
-        if offersMoney(job.request) {
+        if Self.offersMoney(job.request) {
             await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction",
                                          runID: job.runID))
             return end(.refused)
@@ -499,7 +499,7 @@ public final class Door {
             await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
             return nil
         }
-        if offersMoney(job.request) {
+        if Self.offersMoney(job.request) {
             return nil
         }
         let packed = pack(job, policy: policy, onClaude: true)
