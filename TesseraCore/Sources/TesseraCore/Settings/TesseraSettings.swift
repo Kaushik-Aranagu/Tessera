@@ -127,6 +127,18 @@ public struct SettingsStore {
         try update(by: actor) { $0.mosaicBackdrop = nil }
     }
 
+    /// Whether this store was made by the test world (`TestStore`). The stamp lives in the database header, outside
+    /// the object graph, so no settings write or reset can add or clear it.
+    @MainActor
+    public static func isTestStore(in store: ObjectStore) -> Bool {
+        TestStore.isStamped(store.context)
+    }
+
+    /// Stamps this store as a test store; refused on his own store (see `TestStore.stamp`).
+    public func stampAsTestStore() throws {
+        try TestStore.stamp(engine.store)
+    }
+
     /// All nil until the first write; creates nothing.
     public func read() -> TesseraSettings {
         guard let object = engine.store.object(id: Self.objectID), !object.isDeleted else { return TesseraSettings() }
@@ -256,5 +268,25 @@ public struct WriteSettings: EngineAction {
 
     public func summary(in _: ObjectStore) -> String {
         "Changed a preference"
+    }
+}
+
+/// Where a test store keeps its own sent log, usage ledger and trace: beside its database file, never in the app's
+/// own data folder, so a test run can't touch the real ones (docs/ai/harness/test-world.md section 2).
+public enum TestStoreFiles {
+    public static func sibling(of storeURL: URL, _ name: String) -> URL {
+        storeURL.deletingLastPathComponent().appendingPathComponent("tessera-test-\(name)")
+    }
+
+    public static func sentLog(of storeURL: URL) -> URL {
+        sibling(of: storeURL, "sent-log.json")
+    }
+
+    public static func ledger(of storeURL: URL) -> URL {
+        sibling(of: storeURL, "usage-ledger.json")
+    }
+
+    public static func trace(of storeURL: URL) -> URL {
+        sibling(of: storeURL, "trace.json")
     }
 }

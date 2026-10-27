@@ -613,7 +613,7 @@ struct Maker {
         world.told = [
             .init(at: on(max(first, at(2025, 11, 10)), 20), text: "I train at 6 am before work."),
             .init(at: on(at(2026, 2, 3), 9), text: "I take oat milk in my coffee."),
-            .init(at: on(at(2026, 3, 20), 21), text: "My goal is a 100 kg bench by spring."),
+            .init(at: on(at(2026, 3, 20), 21), text: "My goal is to bench two plates by spring."),
             .init(at: on(at(2026, 4, 2), 19), text: "My old gym locker number is 112.",
                   forgotten: on(at(2026, 4, 9), 8)),
             .init(at: on(Self.eveningFrom, 20), text: "I've switched to training in the evening after work."),
@@ -622,7 +622,7 @@ struct Maker {
             .init(key: "trainTime", value: "6 am", from: world.told[0].at, until: on(Self.eveningFrom, 20)),
             .init(key: "trainTime", value: "evening", from: on(Self.eveningFrom, 20), until: nil),
             .init(key: "coffeeMilk", value: "oat milk", from: on(at(2026, 2, 3), 9), until: nil),
-            .init(key: "benchGoal", value: "100 kg", from: on(at(2026, 3, 20), 21), until: nil),
+            .init(key: "benchGoal", value: "two plates", from: on(at(2026, 3, 20), 21), until: nil),
         ]
         world.unknowns = ["What's my favorite cuisine?", "What's my shoe size?", "Which airline do I fly most?",
                           "When is my sister's birthday?"]
