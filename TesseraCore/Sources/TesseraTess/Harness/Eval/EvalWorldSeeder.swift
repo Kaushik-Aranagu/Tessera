@@ -34,8 +34,8 @@ public enum EvalWorldSeeder {
 
     public static func seed(_ world: EvalWorld, into engine: ActionEngine) throws -> Report {
         let store = engine.store
-        guard isTestStore(store) else { throw Refusal.notATestStore }
-        if let row = try firstRowOfHis(in: store) {
+        guard !TestStore.isHisStore(store.context) else { throw Refusal.notATestStore }
+        if let row = try TestStore.firstRowOfHis(in: store) {
             throw Refusal.storeHasData(row)
         }
         // Stamped first: from here on the store is a test store (Claude rungs allowed, never backed up).
@@ -51,38 +51,6 @@ public enum EvalWorldSeeder {
         seeder.memory()
         store.save()
         return seeder.report
-    }
-
-    /// In memory, or a file under the temporary folder.
-    static func isTestStore(_ store: ObjectStore) -> Bool {
-        if SettingsStore.isTestStore(in: store) {
-            return true
-        }
-        guard let url = store.context.url else { return true }
-        let temp = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().standardizedFileURL.path
-        let path = url.resolvingSymlinksInPath().standardizedFileURL.path
-        return path.hasPrefix(temp.hasSuffix("/") ? temp : temp + "/")
-    }
-
-    /// The class name of the first live row a fresh catalog would not have made, or nil when there is none. Rows are
-    /// matched by class and title, so a starter routine he renamed counts as his.
-    static func firstRowOfHis(in store: ObjectStore) throws -> String? {
-        let fresh = ObjectStore.open(inMemory: true)
-        _ = try fresh.prepareCatalog()
-        var catalog: [String: Int] = [:]
-        for object in fresh.context.objects.values where !object.isDeleted {
-            catalog[rowKey(object), default: 0] += 1
-        }
-        for object in store.context.objects.values where !object.isDeleted {
-            let key = rowKey(object)
-            guard let left = catalog[key], left > 0 else { return object.classDef?.name ?? "object" }
-            catalog[key] = left - 1
-        }
-        return nil
-    }
-
-    static func rowKey(_ object: ObjectRecord) -> String {
-        "\(object.classDef?.id.uuidString ?? "none")|\(object.title)"
     }
 }
 

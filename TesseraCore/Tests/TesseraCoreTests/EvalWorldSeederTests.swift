@@ -85,12 +85,12 @@ struct EvalWorldSeederTests {
     }
 
     @Test func aFreshCatalogIsEmptyAndInMemoryIsATestStore() throws {
-        #expect(try EvalWorldSeeder.firstRowOfHis(in: store) == nil)
-        #expect(EvalWorldSeeder.isTestStore(store))
+        #expect(try TestStore.firstRowOfHis(in: store) == nil)
+        #expect(!TestStore.isHisStore(store.context))
         // A starter routine he renamed is his.
         let routine = try #require(live(.routine).first)
         routine.title = "My push day"
-        #expect(try EvalWorldSeeder.firstRowOfHis(in: store) != nil)
+        #expect(try TestStore.firstRowOfHis(in: store) != nil)
     }
 
     @Test func seedingTwiceIsRefused() throws {
