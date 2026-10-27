@@ -426,3 +426,9 @@ In cooking and routine modes, the step you just finished is struck in the step l
 - Earlier done steps keep their plain strike. Undo removes it.
 - Reduce Motion: the strike is simply there.
 - Test: t67 paper and black green (lines whole); pjd.js finishes "Char" and reads it as the just-done step, struck (JD1.png).
+
+## Sheet 351: a finished aisle is struck too
+
+Shopping mode's aisle list (bottom right) now uses the same pen stroke as 350: the moment the last item of an aisle goes in the basket, that aisle's name is struck left to right (320 ms, 100 ms delay), then stays struck. All three modes now share one rule: done things are struck by the pen, never ticked or greyed alone.
+
+- Test: t67 paper and black green; pja.js gets the three produce items and reads "Produce" as the just-struck aisle.
