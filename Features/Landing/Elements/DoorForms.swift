@@ -11,7 +11,7 @@ enum DoorsForm: String, CaseIterable, Sendable {
 }
 
 extension EnvironmentValues {
-    // The form the landing dial takes. The shell (or Tess's reshape) sets it; the default is the designed reel.
+    /// The form the landing dial takes. The shell (or Tess's reshape) sets it; the default is the designed reel.
     @Entry var doorsForm: DoorsForm = .reel
 }
 

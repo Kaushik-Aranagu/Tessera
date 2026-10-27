@@ -1,10 +1,10 @@
-import SwiftUI
 import CoreGraphics
-import Testing
+import SwiftUI
 @testable import Tessera
+import Testing
 
 /// Sheet 283 v4: every point belongs to a named place; empty places are kept and never filled by a neighbour.
-@Suite struct LandingPlacesTests {
+struct LandingPlacesTests {
     private let screen = CGRect(x: 0, y: 0, width: 402, height: 874)
 
     @Test func everyPlaceIsOnTheScreen() {
@@ -47,9 +47,14 @@ import Testing
 
     @Test func childrenStayInsideTheirParent() {
         let masthead = LandingPlace.masthead.frame
-        let children: [CGRect] = [LandingPlace.Masthead.title, LandingPlace.Masthead.navWord, LandingPlace.Masthead.switcher,
-                                  LandingPlace.Masthead.needs, LandingPlace.Masthead.settingsWord,
-                                  LandingPlace.Masthead.departureBoard]
+        let children: [CGRect] = [
+            LandingPlace.Masthead.title,
+            LandingPlace.Masthead.navWord,
+            LandingPlace.Masthead.switcher,
+            LandingPlace.Masthead.needs,
+            LandingPlace.Masthead.settingsWord,
+            LandingPlace.Masthead.departureBoard,
+        ]
         for child in children {
             #expect(masthead.contains(child))
         }

@@ -4,8 +4,8 @@ import Testing
 /// The money wall (Kaushik, Oct 25): amounts show inside the Purse room only. Home, the doorway into a room, system
 /// widgets, Live Activities and the shared surfaces never read a money amount. The test reads the source files, so a
 /// later change that pulls an amount type into one of those places fails here.
-@Suite struct MoneyWallTests {
-    private static let root: URL = URL(fileURLWithPath: #filePath)
+struct MoneyWallTests {
+    private static let root: URL = .init(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent()
 
     private static let forbidden = ["MoneyAmount", "MoneyTrend", "PurseSeries", "PurseBook", "PurseChart",
@@ -30,7 +30,10 @@ import Testing
     }
 
     @Test func theDoorwayNeverReadsMoney() throws {
-        let text = try String(contentsOf: Self.root.appendingPathComponent("Features/Home/Doorway.swift"), encoding: .utf8)
+        let text = try String(
+            contentsOf: Self.root.appendingPathComponent("Features/Home/Doorway.swift"),
+            encoding: .utf8
+        )
         for token in Self.forbidden {
             #expect(!text.contains(token))
         }

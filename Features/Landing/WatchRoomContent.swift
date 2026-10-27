@@ -85,7 +85,7 @@ struct WatchRoomContent: RoomContent {
                 default: WatchRoomContent.accent
                 }
                 return DialDoor(id: door.id, name: door.name, count: door.count > 0 ? "\(door.count)" : nil,
-                                color: color, lines: door.lines)
+                                color: color, lines: door.lines, rows: door.rows, more: door.more)
             }
         }
 

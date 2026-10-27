@@ -25,6 +25,10 @@ struct RoutinesWoodlandFacts: Equatable {
         let name: String
         let count: Int
         let lines: [String]
+        /// Sheet 320: the door as a ledger (a name, its count on the right).
+        var rows: [DialDoor.Row] = []
+        /// The quiet last line: what opening the door adds.
+        var more: String?
     }
 
     let trees: [WoodlandTree]
@@ -95,7 +99,8 @@ struct RoutinesWoodlandFacts: Equatable {
             case "fruit": all.filter(\.hasFruit)
             default: []
             }
-            return Door(id: id, name: name, count: members.count, lines: Self.doorLines(id: id, members))
+            return Door(id: id, name: name, count: members.count, lines: Self.doorLines(id: id, members),
+                        rows: Self.doorRows(id: id, members), more: Self.doorMore(id: id, members))
         }
     }
 
@@ -154,6 +159,31 @@ struct RoutinesWoodlandFacts: Equatable {
             lines.append("\(done) done today")
         }
         return Array(lines.prefix(3))
+    }
+
+    /// The door as a ledger (sheet 320): each state with its count on the right edge; a state at none is left out, and
+    /// a
+    /// door with no routines keeps the plain sentence.
+    static func doorRows(id: String, _ members: [WoodlandTree]) -> [DialDoor.Row] {
+        guard !members.isEmpty else { return [] }
+        if id == "fruit" {
+            return [DialDoor.Row(id: "fruit", name: "To collect", value: "\(members.count)")]
+        }
+        func row(_ name: String, _ count: Int) -> DialDoor.Row? {
+            count > 0 ? DialDoor.Row(id: name, name: name, value: "\(count)") : nil
+        }
+        let tend = members.filter { !$0.doneToday && !$0.health.isWithering && !$0.health.isBare }.count
+        let care = members.filter(\.health.isWithering).count
+        let bare = members.filter(\.health.isBare).count
+        let done = members.filter(\.doneToday).count
+        return [row("To tend", tend), row("Need care", care), row("Begin again", bare), row("Done today", done)]
+            .compactMap(\.self)
+    }
+
+    /// The quiet last line: the longest streak in the door, or that it has fruit.
+    static func doorMore(id _: String, _ members: [WoodlandTree]) -> String? {
+        guard let best = members.max(by: { $0.days < $1.days }), best.days > 0 else { return nil }
+        return "\(best.name), \(best.days) \(best.days == 1 ? "day" : "days") kept"
     }
 
     /// The caption under the scene: the tapped plant, or the oldest one; longest form first.

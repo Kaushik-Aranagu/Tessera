@@ -207,20 +207,52 @@ extension GalleyRoomContent.Facts {
         return [
             DialDoor(id: "tonight", name: "Tonight", color: color("tonight"),
                      label: front.tonight == nil ? "Nothing planned yet" : "Next \(front.week.count) days",
-                     lines: Array(planned.prefix(3))),
+                     lines: Array(planned.prefix(3)), rows: tonightRows(front.week),
+                     more: pass.low.isEmpty ? nil : more(pass.low, suffix: "low")),
             DialDoor(id: "pantry", name: "Pantry", count: pass.low.isEmpty ? nil : "\(pass.low.count)",
                      color: color("pantry"),
-                     label: pass.low.isEmpty ? "Nothing running low" : "Running low", lines: Array(pass.low.prefix(3))),
+                     label: pass.low.isEmpty ? "Nothing running low" : "Running low", lines: Array(pass.low.prefix(3)),
+                     rows: pass.low.prefix(4).map { DialDoor.Row(name: $0) }),
             DialDoor(id: "recipes", name: "Recipes", count: front.saved > 0 ? "\(front.saved)" : nil,
                      color: color("recipes"),
                      label: pass.cookable.isEmpty ? nil : "You can make \(pass.cookable.count) now",
-                     lines: Array(pass.cookable.prefix(3))),
+                     lines: Array(pass.cookable.prefix(3)),
+                     rows: pass.cookable.prefix(4).map { DialDoor.Row(name: $0) },
+                     more: front.saved > 0 ? "\(front.saved) kept" : nil),
             DialDoor(id: "groceries", name: "Groceries", count: pass.toGet.isEmpty ? nil : "\(pass.toGet.count)",
                      color: color("groceries"),
                      label: pass.toGet.isEmpty ? "Nothing to get" : "To get",
-                     lines: Array(pass.toGet.prefix(3))),
+                     lines: Array(pass.toGet.prefix(3)),
+                     rows: pass.toGet.prefix(4).map { DialDoor.Row(name: $0) },
+                     more: pass.toGet.count > 4 ? "and \(pass.toGet.count - 4) more" : nil),
             DialDoor(id: "leftovers", name: "Leftovers", color: color("leftovers"), label: "Kept in Pantry for now"),
         ]
+    }
+
+    /// Tonight as a ledger (sheet 320): each planned dish with the clock time it starts on the right ("6:05 pm"); a
+    /// dish with no start time stays a plain sentence.
+    static func tonightRows(_ week: [KitchenFront.Day]) -> [DialDoor.Row] {
+        week.prefix(4).compactMap { day -> DialDoor.Row? in
+            guard let meal = day.meal else { return nil }
+            let name = "\(day.weekday) \(NotesLandingPage.short(meal.title))"
+            let parts = HouseTime.clock(meal.start).split(separator: " ")
+            guard parts.count == 2 else { return DialDoor.Row(id: day.weekday, name: name) }
+            return DialDoor.Row(
+                id: day.weekday,
+                name: name,
+                value: String(parts[0]),
+                unit: String(parts[1]).lowercased()
+            )
+        }
+    }
+
+    /// "Milk and eggs low": up to two names, then a count.
+    static func more(_ names: [String], suffix: String) -> String {
+        switch names.count {
+        case 1: "\(names[0]) \(suffix)"
+        case 2: "\(names[0]) and \(names[1].lowercased()) \(suffix)"
+        default: "\(names[0]) and \(names.count - 1) more \(suffix)"
+        }
     }
 
     /// Two lines beside the switcher, changing with it (283): tonight, tomorrow, or the week.
@@ -391,4 +423,3 @@ struct GalleyShellHost: View {
         cookCover = .init(id: cook.id)
     }
 }
-
