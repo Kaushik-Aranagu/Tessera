@@ -64,3 +64,14 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 - The action word's small line keeps his own capitals ("make the keystone a ring of pots I can spin")
 - Core: a validator rejection that has a nearest allowed change returns it as `offer` (a patch) with the reason line, so the receipt's button can run it with no second model call. A kit miss returns `queue: <part name>` for R5's Mac part builder; until R5, the queue is a list in the room's settings that the install notes read
 - Probe: `docs/design/boards/r66/pno.js` (no ghost on refusal, keystone unchanged, offer runs, queue set). `pch.js` now walks all six sentences
+
+## Sheet 362: the room remembers every sentence
+
+- Hold the room's title (450 ms, a soft double haptic) for its history. It opens in the widget place: every sentence said to this room, newest first, each with the time it was said in Outfit at the right edge. The current version is the line in ink 600; the rest are ink 2. Long sentences wrap; nothing is cut
+- Tap a line to see the room as it was then. Every place shows that version as a ghost (38%), and the action word reads "Go back" with "to how it was at 1:18 pm"
+- Go back sets that version. The receipt reads "Back to 1:18 pm" with Undo, which returns to now. Going back is itself a change in the history, so nothing is ever lost
+- Close (the action word while the list is open) or holding the title again shuts it. Tapping the current line ends a preview
+- Refusals and queued parts are in the list too, since they were said; going back past them changes nothing they didn't change
+- Fix found on the way (amends 358): a ghost's dashed outline crossed the first letters of its words, because content starts at the place's left edge and the outline sat 2 pt inside it. The outline now comes down when the ghost lands, not when it sets. The drying line alone marks the place while it dries, and Undo still raises the outline back
+- Core: the history is the room's op log filtered to its op groups, each with the sentence as its note. "Go back to" writes one op group that is the inverse of every group after the chosen one. Builder A: preview renders the chosen version without writing
+- Probe: `docs/design/boards/r66/phi.js`

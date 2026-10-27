@@ -2810,7 +2810,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-pl{position:absolute;border:1px dashed color-mix(in srgb,var(--ink3,var(--ink2)) 70%,transparent);border-radius:12px;transition:opacity .38s var(--d,0s) cubic-bezier(.4,0,.6,1),transform .38s var(--d,0s) cubic-bezier(.4,0,.6,1);pointer-events:none}
 .ch-pl i{position:absolute;left:8px;top:5px;font:500 11px/14px var(--sans);font-style:normal;color:var(--ink2);opacity:.7;transition:opacity .4s}
 /* 358: when a place sets, its scaffolding comes down: the dashed outline drops 6 pt and lets go; Undo puts it back up */
-.ch-pl.set{opacity:0;transform:translateY(6px) scale(.985)}.ch-pl.set i,.ch-pl.ghp i{opacity:0}
+.ch-pl.set,.ch-pl.ghp{opacity:0;transform:translateY(6px) scale(.985)}.ch-pl.set i,.ch-pl.ghp i{opacity:0}
 .ch-c{position:absolute;transition:opacity .45s cubic-bezier(.2,.8,.2,1)}
 .ch-c.gh{opacity:.38}
 .ch-dry{position:absolute;height:1px;background:var(--room,var(--ink));transform-origin:0 50%;z-index:7;pointer-events:none}
@@ -2836,6 +2836,10 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .chart .ch-pl.pt{opacity:1;transform:none;border-color:transparent;outline:1.5px solid var(--slate);outline-offset:6px;border-radius:16px;transition:opacity .22s,transform .22s}.ch-pl.pt i{opacity:0}
 .ch-key.calm .th b{animation-duration:7s}
 .ch-key.big b{font-size:80px}
+.ch-hist{left:24px;top:420px;width:354px;display:grid;gap:0}
+.ch-hist button{all:unset;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;padding:5px 0;font:400 14px/19px var(--sans);color:var(--ink2);cursor:pointer}
+.ch-hist button.on{color:var(--ink);font-weight:600}
+.ch-hist b{font:400 14px var(--num);color:var(--ink2);white-space:nowrap}
 .ch-tess{left:36px;top:440px;width:330px;font:italic 400 20px/28px Newsreader,serif;color:var(--ink)}
 .chart .ch-c[data-p]{cursor:pointer}
 @media (prefers-reduced-motion:reduce){.ch-key .th b{animation:none}.ch-pl{transition:opacity .2s}.ch-pl.set{transform:none}}
@@ -2860,13 +2864,18 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the '+t.n.toLowerCase()+' is thirsty':', all watered')+'</div>';
   if(at>=2)s+='<div class="ch-c ch-key'+(calm?' calm':'')+(big?' big':'')+'" data-p="key">'+[...plants].sort((a,b)=>b.d-a.d).map(p=>'<div class="'+(at>=3&&p===t&&p.d>0?'th':'')+'"><b>'+p.d+'</b><span>'+p.n+'</span></div>').join('')+'</div>'+
    '<div class="ch-c ch-cap" data-p="cap">Days since water'+(at>=3&&t.d>0?', the '+t.n.toLowerCase()+' first':'')+'</div>';
-  if(at>=6&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
-  if(heard)s+='<div class="ch-c ch-heard">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
+  if(hist){const N=realAt??at;s+='<div class="ch-c ch-hist">'+SAY.slice(0,N).map((x,i)=>({x,i})).reverse().map(({x,i})=>'<button data-v="'+i+'" class="'+(i===at-1?'on':'')+'"><span>'+x.s+'</span><b>'+tm(i)+'</b></button>').join('')+'</div>'}
+  else if(at>=6&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
+  if(hist);else if(heard)s+='<div class="ch-c ch-heard">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
   layer.innerHTML=s;
+  if(realAt!=null)ghost=['title','line','key','cap'];
   if(ghost)ghost.forEach(k=>layer.querySelectorAll('[data-p="'+k+'"]').forEach(e=>e.classList.add('gh')));
   Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('pt',sel===k));
   const water=at>=6&&reach&&t.d>0;act.className='ch-act'+(water?' water':'');
-  act.innerHTML=sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.replace(/^./,c=>c.toLowerCase())+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
+  act.innerHTML=realAt!=null?'<span class="av">Go back</span><span class="ao">to how it was at '+tm(at-1)+'</span>':hist?'<span class="av">Close</span><span class="ao">the history</span>':sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.replace(/^./,c=>c.toLowerCase())+'</span>':'<span class="av">Say</span><span class="ao">anything else</span>'}
+ /* 362: the room remembers every sentence. Hold the title for its history, newest first, each with the time it was
+    said. Tap one to see the room as it was then, in ghost; Go back sets it, and the receipt's Undo returns to now */
+ let hist=false,realAt=null,held=false,hT=0;const tm=i=>'1:'+String(12+i*3).padStart(2,'0')+' pm';
  let tline='',big=false,queued=false,heard='',sel=null,selT=0,calm=false;const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget'};
  function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;
   if(S.no){draw();dry=setTimeout(()=>{dry=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
@@ -2884,12 +2893,14 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   heard='Make this calmer';draw(['key']);const [x,y,w,hh]=PL.key;const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
   if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});
   dry=setTimeout(()=>{dry=null;l.remove();heard='';calm=true;draw();receipt(el,'Keystone, calmer',()=>{calm=false;draw()})},2000)}
- act.onclick=()=>{if(dry)return;if(sel)return pointed();const t=th();if(at>=6&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
- layer.onclick=e=>{const b=e.target.closest('[data-a="allow"]');if(b){reach=true;return draw()}const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
+ act.onclick=()=>{if(dry)return;if(realAt!=null){const was=realAt;realAt=null;hist=false;draw();return receipt(el,'Back to '+tm(at-1),()=>{at=was;draw()})}if(hist){hist=false;return draw()}if(sel)return pointed();const t=th();if(at>=6&&reach&&t.d>0){const was=t.d;t.d=0;draw();receipt(el,t.n+', watered',()=>{t.d=was;draw()});return}say()};
+ layer.onpointerdown=e=>{held=false;if(!e.target.closest('.ch-ttl')||dry)return;clearTimeout(hT);hT=setTimeout(()=>{held=true;hist=!hist;if(!hist&&realAt!=null){at=realAt;realAt=null}sel=null;if(navigator.vibrate)try{navigator.vibrate([6,40,6])}catch(e){}draw()},450)};
+ layer.onpointerup=layer.onpointerleave=()=>clearTimeout(hT);
+ layer.onclick=e=>{if(held){held=false;if(e.target.closest('.ch-ttl'))return}const v=e.target.closest('[data-v]');if(v){const n=+v.dataset.v+1;if(realAt==null)realAt=at;at=n;if(at===realAt){realAt=null}return draw()}if(hist)return;const b=e.target.closest('[data-a="allow"]');if(b){reach=true;return draw()}const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
   sel=sel===c.dataset.p?null:c.dataset.p;clearTimeout(selT);if(sel)selT=setTimeout(()=>{sel=null;draw()},30000);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}draw()};
  draw();
- window.__ch={say,get at(){return at},get sel(){return sel},get calm(){return calm},get big(){return big},get queued(){return queued},allow:()=>{reach=true;draw()},plants:()=>plants};
- return ()=>{clearTimeout(dry);clearTimeout(selT)}}};
+ window.__ch={say,get at(){return at},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>{reach=true;draw()},plants:()=>plants};
+ return ()=>{clearTimeout(dry);clearTimeout(selT);clearTimeout(hT)}}};
 
 
 /* 359: the same Chart room after a dozen sentences. It renders through landingV3, the player every preset room uses,
