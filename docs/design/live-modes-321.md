@@ -442,3 +442,12 @@ In the lift phase, swiping across (or tapping a lift in the list) to change lift
 - During a rest, picking the next lift only queues it, so nothing is wiped until the rest ends.
 - Reduce Motion: no wipe.
 - Test: t67 paper and black green; ppk.js picks Press with a leftward swipe and freezes mid-wipe (PK1.png: warm-up on the left, Press arriving from the right); pwp.js (338) still passes.
+
+## Sheet 353: set out what a step needs
+
+In cooking mode, the Needs lines are now a mise en place checklist. Tap a line ("Tortillas ······ 8") when it is out on the counter and the pen strikes it (the 332 stroke, 300 ms). Tap again to bring it back.
+
+- Set-out marks are kept per step, so coming back to a step shows what is already out.
+- It is optional and never blocks Next. Nothing counts or nags about it.
+- One 4 ms tick on strike, none on un-strike.
+- Test: t67 paper and black green; pmp.js taps Tortillas with a real pointer (struck, MP1.png), then again (back).

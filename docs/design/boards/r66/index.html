@@ -1546,21 +1546,23 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
   {k:'Soften',t:'Onions and peppers in',d:'Sliced thin, stir now and then',heat:'Medium',heat2:'same pan',cue:'the onions turn see-through',ing:[['Onions','2'],['Peppers','2']],tm:360,tn:'Onions'},
   {k:'Brighten',t:'Limes over, cilantro on',d:'Squeeze, chop, taste for salt',heat:'Off',heat2:'',cue:'it tastes bright, not flat',ing:[['Limes','3'],['Cilantro','1 bunch']]},
   {k:'Serve',t:'Fill, fold, eat',d:'Rice on the side, it goes out today',heat:'Microwave',heat2:'rice, 90 s',cue:'two each, four left for lunch',ing:[['Sour cream','2 tbsp'],['Rice','1 cup']]}];
- const S={i:0,done:new Set(),T:{},t0:Date.now(),fin:0};window.__ck={S,ST};
+ const S={i:0,done:new Set(),T:{},t0:Date.now(),fin:0,prep:new Set()};window.__ck={S,ST};
  const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),mins=()=>Math.max(0,Math.floor((Date.now()-S.t0)/60000));
  const clock=d=>(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0');
  const left=()=>ST.filter((_,i)=>!S.done.has(i)).reduce((a,x)=>a+(x.tm?x.tm/60:3),0);
- const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='ack'){S.alert=null;return paint()}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);const was=S.T[k]>0?mm(S.T[k]):'0:00';S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1);
+ const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='ack'){S.alert=null;return paint()}
+   /* 353: tap a Needs line to set it out (mise en place): the pen strikes it, tap again to bring it back */
+   if(a.startsWith('ig')){const k=ST[S.i].k+'.'+a.slice(2);if(S.prep.has(k))S.prep.delete(k);else{S.prep.add(k);S.pj=k;setTimeout(()=>{if(S.pj===k)S.pj=null},450);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}}return paint(1)}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);const was=S.T[k]>0?mm(S.T[k]):'0:00';S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1);
    /* 346: a timer you start rolls up from 0:00 to its time; tapping a running one adds a minute and the minutes roll on */
    const o=P.querySelector('[data-a="tm'+k+'"] .o');if(o&&!RM)numRoll(o,was);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}}if(a.startsWith('st')){S.i=+a.slice(2);paint()}}});
  let lastKey='';
- function paint(force){const s=ST[S.i];const key=S.i+'|'+S.fin+'|'+[...S.done].join()+'|'+Object.keys(S.T).join()+'|'+(S.alert||'');
+ function paint(force){const s=ST[S.i];const key=S.i+'|'+S.fin+'|'+[...S.done].join()+'|'+Object.keys(S.T).join()+'|'+(S.alert||'')+'|'+[...S.prep].join();
   const timers=ST.filter(x=>x.tm).map(x=>{const T=S.T[x.k];return lead(x.tn,T==null?'<i>'+mm(x.tm)+', tap to start</i>':T>0?'<b class="o">'+mm(T)+'</b>':'<b class="ready">Ready, off the heat</b>',T>0?'run':'')}).map((h,j)=>h.replace('class="tl','data-a="tm'+ST.filter(x=>x.tm)[j].k+'" class="tl')).join('');
   const html=S.fin?'<div class="tk-top"><span data-a="back">Galley</span><span>Ready at '+clock(new Date())+'</span></div><div class="tk-h">Tacos for 2</div><div class="tk-big">Eat</div><div class="tk-how">All 5 steps, '+Math.max(1,mins())+' min</div><div class="tk-rule"></div>'+lead('Rice','goes out today')+lead('Leftovers','4 tacos, lunch')+lead('Dishes','5 for later')+'<div class="tk-verb" data-a="back">Back</div><div class="tk-sub">to the Galley</div>':
    (S.alert?'<div class="tk-alert" data-a="ack">'+((ST.find(x=>x.k===S.alert)||{}).tn||S.alert)+' ready, off the heat</div>':'')+'<div class="tk-top"><span data-a="back">Galley</span><span>'+mins()+' min in, eat about '+clock(new Date(Date.now()+left()*60000))+'</span></div>'+
    '<div class="tk-h">Tacos for 2</div><div class="tk-row"><span class="tk-num">'+(S.i+1)+'</span><span class="tk-of">of '+ST.length+'</span><span class="tk-heat"><b>'+s.heat+'</b>'+(s.heat2?'<i>'+s.heat2+'</i>':'')+'</span></div>'+
    '<div class="tk-big tk-wrap">'+s.t+'</div><div class="tk-how">'+s.d+'</div><div class="tk-cue"><b>Done when</b> '+s.cue+'</div>'+
-   '<div class="tk-rule"></div><div class="tk-lb">Needs</div>'+s.ing.map(([a,b])=>lead(a,b)).join('')+
+   '<div class="tk-rule"></div><div class="tk-lb">Needs</div>'+s.ing.map(([a,b],q)=>{const k=s.k+'.'+q;return lead(a,b,S.prep.has(k)?'got'+(S.pj===k?' justgot':''):'').replace('class="tl','data-a="ig'+q+'" class="tl')}).join('')+
    '<div class="tk-rule"></div><div class="tk-lb">Timers</div>'+timers+
    '<div class="tk-steps">'+ST.map((x,i)=>'<div data-a="st'+i+'" class="'+(i===S.i?'on':'')+(S.done.has(i)?' dn'+(S.jd===i?' jd':''):'')+'">'+x.k+'</div>').join('')+'</div>'+
    '<div class="tk-verb" data-a="next">'+(ST.filter((_,i)=>!S.done.has(i)).length===1&&!S.done.has(S.i)?'Serve':'Next')+'</div><div class="tk-sub">'+(S.done.has(S.i)?'turn to what is left':'swipe up, or tap')+'</div>';
