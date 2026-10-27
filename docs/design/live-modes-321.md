@@ -358,3 +358,14 @@ In routine mode, a step put off with "not tonight" keeps a small note in the ste
 - Done steps stay struck (341), the current step stays bold in the routine colour, so the list reads done, now, later at a glance without new colours.
 - The receipt is unchanged: "Tidy, tomorrow, the streak is kept".
 - Test: t67 paper and black green; pst.js taps "not tonight" with a real pointer and reads "tomorrowTidy" in the list (ST1.png).
+
+## Sheet 344: the Live Activity hears the timer too
+
+When a pan timer runs out while the phone is locked, the cooking Live Activity says the same thing the ticket prints (333).
+
+- Island: "Chicken" in wine (#8C2F39 mixed 45% toward white, so it reads on black), then "ready" in place of the countdown. The island swells once (scale 1.08 × 1.14, 520 ms, a slight overshoot), with the same buzz as the ticket.
+- Lock-screen activity: "READY, OFF THE HEAT" in the wine caps line, the food big ("Chicken"), and on the right the next running timer ("5:58, onions to go"). The bottom line: "Step 2 of 5, tap to open the ticket".
+- Tap opens cooking mode on the ticket with the alert line still printed.
+- Reduce Motion: no swell; the words change.
+- Private stays as it is (workouts only). Cooking has nothing private to hide.
+- Test: t67 paper and black green; plk.js still clean; plr.js sets the chicken timer to 1 s and reads "Ready, off the heat" with "Chicken ready" in the island (LR1.png).

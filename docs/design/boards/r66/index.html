@@ -1455,25 +1455,30 @@ SCREENS.lock={title:'Lock screen',accent:'training',tess:'',render(el){el.classL
   ()=>({isl:['<span style="'+BC+';font-weight:600;color:color-mix(in srgb,var(--training) 62%,#fff)">'+(priv?'Rest':'Bench')+'</span>',mm(t)],
    la:priv?'<div class="la1" style="'+BC+'">Rest</div><div class="la2"><span class="lab" style="'+BC+'">'+mm(t)+'</span></div><div class="la3">Private workout</div>':
    '<div class="la1" style="'+BC+';color:color-mix(in srgb,var(--training) 62%,#fff)">Rest, then bench</div><div class="la2"><span class="lab" style="'+BC+'">'+mm(t)+'</span><span class="lar"><b style="'+BC+'">185 lb × 5</b><i>each side 45 + 25</i></span></div><div class="la3">Set 2 of 3, done about 7:22</div>'}),
-  ()=>({isl:['<span style="'+PX+';font-weight:700;color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Chicken</span>',mm(t2)],
+  ()=>!t2?({isl:['<span style="'+PX+';font-weight:700;color:'+WINE+'">Chicken</span>','ready'],
+   la:'<div class="la1" style="'+PX+';font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:'+WINE+'">Ready, off the heat</div><div class="la2"><span class="lab" style="'+PX+';font-weight:700">Chicken</span><span class="lar"><b style="font-family:var(--num);font-weight:300">'+mm(t3)+'</b><i>onions to go</i></span></div><div class="la3">Step 2 of 5, tap to open the ticket</div>'}):
+  ({isl:['<span style="'+PX+';font-weight:700;color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Chicken</span>',mm(t2)],
    la:'<div class="la1" style="'+PX+';color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Brown the chicken</div><div class="la2"><span class="lab" style="font-family:var(--num);font-weight:300">'+mm(t2)+'</span><span class="lar"><b>Chicken</b><i>onions '+mm(t3)+' after</i></span></div><div class="la3">Step 2 of 5, turn it when it lets go of the pan</div>'}),
   ()=>({isl:['<span style="'+PX+';font-weight:700;color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Dairy</span>','7 left'],
    la:'<div class="la1" style="'+PX+';color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Dairy, the back wall</div><div class="la2"><span class="lab" style="'+PX+';font-weight:700">Milk</span><span class="lar"><b style="font-family:var(--num);font-weight:300">1 gal</b><i>then eggs, yogurt</i></span></div><div class="la3">7 of 11 to get, 4 for the tacos</div>'}),
   ()=>({isl:['<span style="font-weight:800;color:color-mix(in srgb,var(--routines) 62%,#fff)">Hips</span>',mm(t4)],
    la:'<div class="la1" style="color:color-mix(in srgb,var(--routines) 62%,#fff);font-weight:700">Stretch, 2 of 5</div><div class="la2"><span class="lab" style="font-family:var(--sans);font-weight:800;letter-spacing:-.02em">Hips</span><span class="lar"><b style="font-family:var(--num);font-weight:300">'+mm(t4)+'</b><i>then back</i></span></div><div class="la3">Knee over ankle, breathe out</div>'})];
  const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+ /* 344: when a pan timer runs out the Live Activity prints the same wine line as the ticket (333), and the island
+    gives one small swell, the way it does for a finished timer */
+ const WINE='color-mix(in srgb,#8C2F39 45%,#fff)';
  el.innerHTML='<div class="lk-island"><span class="il"></span><span class="ir o"></span></div><div class="lk-date">Tuesday, October 27</div><div class="lk-time o">6:52</div>'+
   '<div class="lk-la"></div><div class="lk-tabs">'+['Workout','Cooking','Shopping','Routine'].map((x,i)=>'<span data-i="'+i+'">'+x+'</span>').join('')+'<span data-p="1">Private</span></div>';
  const isl=el.querySelector('.lk-island'),la=el.querySelector('.lk-la');
  let lastKey='';
  function paint(){const v=modes[m]();isl.querySelector('.il').innerHTML=v.isl[0];const ir=isl.querySelector('.ir');const w=ir.textContent;if(w!==v.isl[1]){ir.textContent=v.isl[1];numRoll(ir,w)}
-  const key=m+'|'+priv;if(key!==lastKey){la.innerHTML=v.la;if(lastKey&&!RM)[...la.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key}
+  const key=m+'|'+priv+'|'+(m===1&&!t2);if(key!==lastKey){if(lastKey&&m===1&&!t2&&!RM){isl.animate([{transform:'scale(1)'},{transform:'scale(1.08,1.14)',offset:.35},{transform:'scale(1)'}],{duration:520,easing:'cubic-bezier(.3,1.4,.5,1)'});if(navigator.vibrate)try{navigator.vibrate([6,60,6])}catch(e){}}la.innerHTML=v.la;if(lastKey&&!RM)[...la.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key}
   else{const b=la.querySelector('.lab');const nb=document.createElement('div');nb.innerHTML=v.la;const n=nb.querySelector('.lab');if(b&&n&&b.textContent!==n.textContent){const w0=b.textContent;b.textContent=n.textContent;numRoll(b,w0)}const r=la.querySelector('.lar b'),nr=nb.querySelector('.lar b');if(r&&nr&&r.textContent!==nr.textContent)r.textContent=nr.textContent;const i3=la.querySelector('.lar i'),ni=nb.querySelector('.lar i');if(i3&&ni&&i3.textContent!==ni.textContent)i3.textContent=ni.textContent}
   el.querySelectorAll('.lk-tabs span[data-i]').forEach(s=>s.classList.toggle('on',+s.dataset.i===m));el.querySelector('.lk-tabs span[data-p]').classList.toggle('on',priv)}
  el.querySelector('.lk-tabs').onclick=e=>{const s=e.target.closest('span');if(!s)return;if(s.dataset.p){priv=!priv}else m=+s.dataset.i;paint()};
  la.onclick=()=>{m=(m+1)%modes.length;paint()};
- paint();const iv=setInterval(()=>{if(!document.contains(el))return;t=Math.max(0,t-1);t2=Math.max(0,t2-1);t4=Math.max(0,t4-1);paint()},1000);
- window.__lk={set:(i,p)=>{m=i;priv=!!p;paint()}};return ()=>clearInterval(iv)}};
+ paint();const iv=setInterval(()=>{if(!document.contains(el))return;t=Math.max(0,t-1);t2=Math.max(0,t2-1);t3=Math.max(0,t3-1);t4=Math.max(0,t4-1);paint()},1000);
+ window.__lk={set:(i,p)=>{m=i;priv=!!p;paint()},t2:v=>{t2=v;paint()}};return ()=>clearInterval(iv)}};
 
 /* ---------- 329 Routine mode, the whole evening (his 2:59 AM note). The screen is the dusk outside the Watch's
    woodland, and it darkens a little with every step tended, so by Lights it is night. One move at a time: its name
