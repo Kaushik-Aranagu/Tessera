@@ -53,12 +53,15 @@ public struct NightPass: Sendable {
         public var at: Date
         /// The agent room it belongs to (`AgentSpec.room`): "training", "today".
         public var room: String
+        /// The object it was read from: a summary cites it, so deleting the object rebuilds the summary (H8).
+        public var id: UUID?
 
-        public init(kind: String, name: String, at: Date, room: String) {
+        public init(kind: String, name: String, at: Date, room: String, id: UUID? = nil) {
             self.kind = kind
             self.name = name
             self.at = at
             self.room = room
+            self.id = id
         }
     }
 

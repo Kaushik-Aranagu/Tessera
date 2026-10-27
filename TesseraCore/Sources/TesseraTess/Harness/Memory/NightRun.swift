@@ -18,14 +18,18 @@ public struct NightRecord: Codable, Sendable, Equatable {
     public var summaries: [String: String]
     /// Which tool paths answered each job (input-hygiene H6). Nil in a file from before it.
     public var procedures: ProcedureBook?
+    /// The cite index (input-hygiene H8): summary path to the objects it was built from. Nil in a file from before
+    /// it; a summary with no entry is never rebuilt.
+    public var cites: [String: [UUID]]?
 
     public init(lastNight: String? = nil, packHashes: [String: String] = [:], summaries: [String: String] = [:],
-                procedures: ProcedureBook? = nil)
+                procedures: ProcedureBook? = nil, cites: [String: [UUID]]? = nil)
     {
         self.lastNight = lastNight
         self.packHashes = packHashes
         self.summaries = summaries
         self.procedures = procedures
+        self.cites = cites
     }
 
     /// Drops the oldest summaries past the limits. Stamps sort as text, so the newest are last.
@@ -34,6 +38,7 @@ public struct NightRecord: Codable, Sendable, Equatable {
             let paths = summaries.keys.filter { $0.hasPrefix(folder) }.sorted()
             for path in paths.dropLast(limit) {
                 summaries[path] = nil
+                cites?[path] = nil
             }
         }
     }
@@ -80,6 +85,8 @@ public struct NightRun {
         public var failed: [NightPass.Step]
         public var reflected: [String]
         public var eval: [EvalNight]
+        /// Summaries rewritten because something they cited was deleted (H8).
+        public var rebuilt: [String] = []
     }
 
     public var engine: ActionEngine
@@ -123,6 +130,8 @@ public struct NightRun {
     ) async -> Report? {
         let pass = pass
         guard record.lastNight != pass.night else { return nil }
+        // Forgetting is exact: before tonight's summaries, every older one that cites a deleted thing is rebuilt.
+        let rebuilt = forget(&record)
         var hashes: [AgentSpec.Expertise: (now: String, built: String?)] = [:]
         for (expertise, hash) in packs {
             hashes[expertise] = (now: hash, built: record.packHashes[expertise.rawValue])
@@ -131,9 +140,11 @@ public struct NightRun {
         let end = calendar.date(byAdding: .day, value: 1, to: start) ?? now
         let sunday = calendar.component(.weekday, from: pass.closingDay) == 1
         let weekStart = calendar.date(byAdding: .day, value: -6, to: start) ?? start
+        let dayItems = items(from: start, to: end)
+        let weekItems = sunday ? items(from: weekStart, to: end) : []
         let steps = pass.plan(
-            beliefs: TessBeliefStore(engine: engine).all(), series: series(), day: items(from: start, to: end),
-            week: sunday ? items(from: weekStart, to: end) : [], notebooks: notebooks, packs: hashes,
+            beliefs: TessBeliefStore(engine: engine).all(), series: series(), day: dayItems,
+            week: weekItems, notebooks: notebooks, packs: hashes,
             agents: AgentSpec.available(under: policy), lastNight: record.lastNight, policy: policy
         )
 
@@ -151,6 +162,8 @@ public struct NightRun {
                     _ = try engine.perform(ConfirmBelief(belief: belief), by: .system)
                 case let .summary(path, text):
                     record.summaries[path] = text
+                    let cited = path.hasPrefix(Self.weekFolder) ? weekItems : dayItems
+                    record.cites = (record.cites ?? [:]).merging([path: cited.compactMap(\.id)]) { $1 }
                 case let .prune(path):
                     prune(path)
                 case let .refresh(expertise):
@@ -170,7 +183,68 @@ public struct NightRun {
         record.trim()
 
         let nights = await runEval(night: pass.night, record: &eval, ask: ask)
-        return Report(night: pass.night, steps: steps, failed: failed, reflected: reflected, eval: nights)
+        return Report(night: pass.night, steps: steps, failed: failed, reflected: reflected, eval: nights,
+                      rebuilt: rebuilt)
+    }
+
+    static let dayFolder = "/summaries/day/"
+    static let weekFolder = "/summaries/week/"
+
+    /// Rebuilds every summary that cites a deleted or missing object, from what is still there, under the night's
+    /// policy; its cites are rebuilt too. Returns the paths it rewrote, oldest first. A summary whose day can't be
+    /// read from its path is dropped instead, so a deleted name never stays.
+    func forget(_ record: inout NightRecord) -> [String] {
+        var rewritten: [String] = []
+        for (path, ids) in (record.cites ?? [:]).sorted(by: { $0.key < $1.key }) {
+            let gone = ids.contains { id in store.object(id: id).map(\.isDeleted) ?? true }
+            guard gone, record.summaries[path] != nil else { continue }
+            rewritten.append(path)
+            guard let rebuilt = rebuild(path) else {
+                record.summaries[path] = nil
+                record.cites?[path] = nil
+                continue
+            }
+            record.summaries[path] = rebuilt.text
+            record.cites?[path] = rebuilt.ids
+        }
+        return rewritten
+    }
+
+    /// A summary as the night that wrote it would write it now: the day or ISO week its path names.
+    func rebuild(_ path: String) -> (text: String, ids: [UUID])? {
+        let closing: Date
+        if path.hasPrefix(Self.dayFolder) {
+            let parts = path.dropFirst(Self.dayFolder.count).split(separator: "-").compactMap { Int($0) }
+            guard parts.count == 3, let day = calendar.date(from: DateComponents(year: parts[0], month: parts[1],
+                                                                                 day: parts[2]))
+            else { return nil }
+            closing = day
+        } else if path.hasPrefix(Self.weekFolder) {
+            let parts = path.dropFirst(Self.weekFolder.count).split(separator: "-W").compactMap { Int($0) }
+            var iso = Calendar(identifier: .iso8601)
+            iso.timeZone = calendar.timeZone
+            guard parts.count == 2, let sunday = iso.date(from: DateComponents(weekday: 1, weekOfYear: parts[1],
+                                                                               yearForWeekOfYear: parts[0]))
+            else { return nil }
+            closing = calendar.startOfDay(for: sunday)
+        } else {
+            return nil
+        }
+        // The night after that day, at 4:05 am.
+        guard let after = calendar.date(byAdding: DateComponents(day: 1, hour: 4, minute: 5), to: closing)
+        else { return nil }
+        let night = NightPass(calendar: calendar, now: after)
+        let start = night.dayStart
+        let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
+        let isWeek = path.hasPrefix(Self.weekFolder)
+        let from = isWeek ? calendar.date(byAdding: .day, value: -6, to: start) ?? start : start
+        let read = items(from: from, to: end)
+        let allowed = NightPass.allowed(read, under: policy)
+        let steps = night.summaries(day: isWeek ? [] : allowed, week: isWeek ? allowed : [])
+        for case let .summary(written, text) in steps where written == path {
+            return (text, read.compactMap(\.id))
+        }
+        return nil
     }
 
     /// The closing day's runs into the procedure book (H6); paths no run has taken in 90 days go.
@@ -251,26 +325,27 @@ public struct NightRun {
         if let workoutClass = classes[.workout] {
             for workout in store.objects(of: workoutClass) where !workout.isDeleted {
                 guard let at = inside(store.value("startedAt", of: workout)?.dateValue) else { continue }
-                items.append(.init(kind: "workout", name: shown(workout), at: at, room: AppID.training.rawValue))
+                items.append(.init(kind: "workout", name: shown(workout), at: at, room: AppID.training.rawValue,
+                                   id: workout.id))
             }
         }
         if let cookClass = classes[.cook] {
             for cook in store.objects(of: cookClass) where !cook.isDeleted {
                 guard let at = inside(store.value("cookedAt", of: cook)?.dateValue) else { continue }
                 let name = store.linkedObjects("recipe", of: cook).first.map(shown) ?? shown(cook)
-                items.append(.init(kind: "cook", name: name, at: at, room: AppID.kitchen.rawValue))
+                items.append(.init(kind: "cook", name: name, at: at, room: AppID.kitchen.rawValue, id: cook.id))
             }
         }
         if let taskClass = classes[.task] {
             for task in store.objects(of: taskClass) where !task.isDeleted {
                 guard let at = inside(store.value("doneAt", of: task)?.dateValue) else { continue }
-                items.append(.init(kind: "task done", name: shown(task), at: at, room: "today"))
+                items.append(.init(kind: "task done", name: shown(task), at: at, room: "today", id: task.id))
             }
         }
         if let noteClass = classes[.note] {
             for note in store.objects(of: noteClass) where !note.isDeleted {
                 guard let at = inside(note.createdAt) else { continue }
-                items.append(.init(kind: "note", name: "", at: at, room: AppID.notes.rawValue))
+                items.append(.init(kind: "note", name: "", at: at, room: AppID.notes.rawValue, id: note.id))
             }
         }
         return items
