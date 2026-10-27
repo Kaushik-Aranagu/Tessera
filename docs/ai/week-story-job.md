@@ -108,6 +108,7 @@ f80c08c):
   this same line also tells him word jobs (Today, your week) step aside (settled by Product's 8:16 ruling); Design says nothing else changes.
 - **The privacy line,** from AI-4 on, under the spend line, with the switch on or off: "Titles and counts only.
   Never notes, places, health or money."
+  (Send side superseded by Kaushik's Oct 27 12:10 PM ruling, docs/product/decisions.md; the backup, log, widget and screen walls stay.)
 
 ### Where code and docs differ
 
