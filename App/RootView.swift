@@ -14,6 +14,7 @@ struct RootView: View {
     /// `-openCook "Paprika chicken"` (simulator only, read through LaunchFlags): starts that cook and opens its clock
     /// page, for recordings.
     @State private var demoCook: DemoCookCover?
+    @State private var demoShop = false
     /// Settings, opened from the entry at the top right of any page below Home.
     @State private var settingsOpen = false
     #if DEBUG
@@ -116,8 +117,15 @@ struct RootView: View {
                     .environment(\.animateEntrance, true)
             }
         }
-        .fullScreenCover(item: $demoCook) { CookClockPage(cookID: $0.id) }
+        .fullScreenCover(item: $demoCook) { CookEntry(cookID: $0.id) }
         #if DEBUG
+            .fullScreenCover(isPresented: $demoShop) { GalleyShopModePage() }
+            .task {
+                // Simulator only (LaunchFlags): `-openShop` opens the Galley's shopping mode, for stills.
+                guard LaunchFlags.has("-openShop") else { return }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoShop = true
+            }
             .fullScreenCover(isPresented: $layoutModeOpen) {
                 NavigationStack { LayoutModeView() }
             }
