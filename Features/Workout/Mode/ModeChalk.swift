@@ -49,7 +49,7 @@ struct PlateBar: View {
 }
 
 /// Draws the bar for a `progress` from 0 to 1 (animatable, so SwiftUI interpolates it each frame).
-private struct PlateBarDrawing: View, Animatable {
+private struct PlateBarDrawing: View, @preconcurrency Animatable {
     let plates: [Double]
     let diff: PlateDiff
     let largest: Double

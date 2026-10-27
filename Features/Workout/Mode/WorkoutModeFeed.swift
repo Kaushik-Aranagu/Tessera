@@ -41,11 +41,13 @@ struct WarmUpPlan: Equatable, Sendable {
 }
 
 /// Where the warm-up comes from: Core's `TrainingStats.warmUp(of:)` in the app, nothing in tests.
+@MainActor
 protocol WarmUpSource {
     func warmUp(for workout: ObjectRecord, in model: AppModel) -> WarmUpPlan?
 }
 
 /// No warm-up: the mode starts on the first lift.
+@MainActor
 struct NoWarmUp: WarmUpSource {
     func warmUp(for _: ObjectRecord, in _: AppModel) -> WarmUpPlan? {
         nil
@@ -54,6 +56,7 @@ struct NoWarmUp: WarmUpSource {
 
 /// Core's answer: the routine the workout came from, through `TrainingStats.warmUp(of:)` (nil for none or a private
 /// routine).
+@MainActor
 struct CoreWarmUp: WarmUpSource {
     func warmUp(for workout: ObjectRecord, in model: AppModel) -> WarmUpPlan? {
         guard let routine = model.store.linkedObjects("routine", of: workout).first else { return nil }
