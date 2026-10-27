@@ -98,11 +98,12 @@ struct RoutineRunTests {
         run.next(now: t0.addingTimeInterval(1))
         let screen = RoutineScreen(run, name: "Evening", totalMinutes: 32, now: t0.addingTimeInterval(1))
         #expect(screen.title == "Evening" && screen.topRight == "1 of 5 tended")
-        #expect(screen.line == "Stretch, 2 of 5" && screen.stepMinutes == "6 min" && screen.move == "Hips")
+        #expect(screen.line == "Stretch, 1 of 3" && screen.stepMinutes == "6 min" && screen.move == "Hips")
+        #expect(screen.then == "shoulders")
         #expect(screen.cue == "Slow" && screen.breath == "breathe in" && screen.secondsLeft == 120)
         #expect(screen.moves.map(\.title) == ["Hips", "Shoulders", "Neck"] && screen.moves[0].state == .current)
         #expect(screen.rail.map(\.label) == ["Tidy", "Stretch", "Read", "Journal", "Lights"])
-        #expect(screen.rail[0].color == RoutineScreen.tendedGreen && screen.rail[1].current)
+        #expect(screen.rail[0].color == RoutineScreen.tended && screen.rail[1].current)
         let start = RoutineScreen(self.run(), name: "Evening", totalMinutes: 32, now: t0)
         #expect(start.topRight == "about 32 min to bed" && start.verb == "Next" && start.pauseWord == "Pause")
     }
@@ -114,8 +115,8 @@ struct RoutineRunTests {
         }
     }
 
-    @Test func theDuskTurnsItsInkHalfway() {
-        #expect(RoutineDusk.night(0) == 0 && RoutineDusk.night(1) == 1 && RoutineDusk.night(0.35) == 0)
+    @Test func theInkStaysTheSameThroughTheDusk() {
+        #expect(RoutineDusk.ink(0) == RoutineScreen.ink && RoutineDusk.ink(1) == RoutineScreen.ink)
     }
 }
 

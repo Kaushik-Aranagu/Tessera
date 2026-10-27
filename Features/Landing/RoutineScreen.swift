@@ -18,6 +18,8 @@ struct RoutineScreen: Equatable {
     var topRight = ""
     /// "Stretch, 2 of 5".
     var line = ""
+    /// "then sink": what comes after this move; nil on the last.
+    var then: String?
     /// The step's total minutes, on the right of the top line.
     var stepMinutes: String?
     var move = ""
@@ -48,8 +50,9 @@ struct RoutineScreen: Equatable {
         topRight = tended == 0 ? "about \(totalMinutes) min to bed" : "\(tended) of \(run.steps.count) tended"
         summary = "Tended, \(tended) of \(run.steps.count) steps"
         rail = run.steps.map { step in
-            let state: Color? = run.tended.contains(step.id) ? RoutineScreen.tendedGreen
-                : run.skipped.contains(step.id) ? RoutineScreen.slate : nil
+            // Done steps are dimmed ink, not green; a step left for tomorrow is dimmer still.
+            let state: Color? = run.tended.contains(step.id) ? RoutineScreen.tended
+                : run.skipped.contains(step.id) ? RoutineScreen.skippedInk : nil
             return GalleyRailItem(id: step.id, label: step.title, detail: "\(step.minutes)",
                                   current: run.beat?.step == step.id, done: run.tended.contains(step.id), color: state)
         }
@@ -63,7 +66,13 @@ struct RoutineScreen: Equatable {
             brightness = 1 - (1 - RoutineScreen.dimmest) * fraction
         }
         let step = run.steps[beat.step]
-        line = "\(step.title), \(beat.step + 1) of \(run.steps.count)"
+        // The header counts moves ("Tidy, 1 of 3"); a step with no moves counts the evening's steps.
+        if let count = run.moveCount {
+            line = "\(step.title), \(count.at) of \(count.of)"
+        } else {
+            line = "\(step.title), \(beat.step + 1) of \(run.steps.count)"
+        }
+        then = run.then
         stepMinutes = "\(step.minutes) min"
         move = beat.title
         cue = beat.cue
@@ -82,6 +91,8 @@ struct RoutineScreen: Equatable {
     /// The dimmest the last step and the closing screen get (62% brightness).
     static let dimmest = 0.62
 
-    static let tendedGreen = Color(hex: 0x6FAE7A)
-    static let slate = Color(hex: 0x8A93A6)
+    /// The routine's ink (sheet 329 and 335): F4EEF2 on the dusk.
+    static let ink = Color(hex: 0xF4EEF2)
+    static let tended = ink.opacity(0.5)
+    static let skippedInk = ink.opacity(0.32)
 }

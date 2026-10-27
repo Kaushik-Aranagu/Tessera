@@ -169,6 +169,15 @@ struct RoutineModeRun: Equatable {
         steps.isEmpty ? 0 : min(max(Double(tended.count) / Double(steps.count), 0), 1)
     }
 
+    /// What comes after the move on, in a few words, for "then sink": the next beat's title, lower case; nil on the
+    /// last.
+    var then: String? {
+        guard let beat, beats.indices.contains(index + 1) else { return nil }
+        let next = beats[index + 1]
+        guard !skipped.contains(next.step) else { return nil }
+        return next.title.lowercased()
+    }
+
     /// 1-based position of the move within its step, and how many the step has.
     var moveCount: (at: Int, of: Int)? {
         guard let beat, beat.isMove, let first = steps[beat.step].beats.first else { return nil }

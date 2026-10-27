@@ -36,7 +36,7 @@ struct RoutineModePage: View {
                 }
             }
         }
-        .preferredColorScheme(dusk > 0.45 ? .dark : .light)
+        .preferredColorScheme(.dark)
         .onAppear(perform: begin)
         .task {
             // The clock moves the run on: a move whose time is up gives way to the next, by itself.
@@ -67,9 +67,26 @@ struct RoutineModePage: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Back to the Watch")
                 Spacer()
-                Text(data.topRight)
-                    .font(.custom("Figtree", fixedSize: 16).weight(.medium))
-                    .foregroundStyle(soft)
+                // The count on the right, and under it "hold to finish" (like the workout): the hold ends the evening.
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(data.topRight)
+                        .font(.custom("Figtree", fixedSize: 16).weight(.medium))
+                        .foregroundStyle(soft)
+                    if !data.finished {
+                        Text("hold to finish")
+                            .font(.custom("Figtree", fixedSize: 13).weight(.medium))
+                            .foregroundStyle(soft.opacity(0.8))
+                    }
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 0.7) {
+                    if !data.finished {
+                        finish()
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(data.finished ? "" : "Hold to finish the evening")
             }
             .padding(.top, 8)
             if data.finished {
@@ -104,7 +121,8 @@ struct RoutineModePage: View {
                     Text(breath)
                         .font(.custom("Figtree", fixedSize: 20).weight(.medium))
                         .foregroundStyle(soft)
-                        .scaleEffect(reduceMotion ? 1 : (breath == "breathe in" ? 1.14 : 0.92), anchor: .leading)
+                        // The letters widen on the in-breath (4 s) and close up on the out-breath (6 s).
+                        .tracking(reduceMotion ? 0 : (breath == "breathe in" ? 5 : 0))
                         .animation(
                             reduceMotion ? nil : .easeInOut(duration: breath == "breathe in" ? 4 : 6),
                             value: breath
@@ -119,6 +137,11 @@ struct RoutineModePage: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                     .padding(.top, 10)
+                if let then = data.then {
+                    Text("then \(then)")
+                        .font(.custom("Figtree", fixedSize: 20).weight(.medium))
+                        .foregroundStyle(soft)
+                }
                 if data.paused {
                     Text("Paused")
                         .font(.custom("Figtree", fixedSize: 18).weight(.semibold))
@@ -133,9 +156,9 @@ struct RoutineModePage: View {
                                 Text(row.time).monospacedDigit()
                             }
                             .font(.custom("Figtree", fixedSize: 18).weight(row.state == .current ? .bold : .regular))
-                            .foregroundStyle(row.state == .done ? RoutineScreen.tendedGreen
+                            .foregroundStyle(row.state == .done ? RoutineScreen.tended
                                 : row.state == .current ? ink : soft)
-                            .strikethrough(row.state == .done, color: RoutineScreen.tendedGreen)
+                            .strikethrough(row.state == .done, color: RoutineScreen.tended)
                         }
                     }
                     .frame(maxWidth: 220)
@@ -183,13 +206,10 @@ struct RoutineModePage: View {
                     }
                     .buttonStyle(.plain)
                     if !data.finished {
-                        // Two short rows, so no word ever wraps beside the steps down the right edge.
-                        VStack(alignment: .leading, spacing: 0) {
-                            HStack(spacing: 22) {
-                                small(data.pauseWord, color: soft) { pauseOrResume() }
-                                small("Not tonight", color: soft) { notTonight() }
-                            }
-                            small("Finish, hold", color: soft, hold: true) { finish() }
+                        // Pause and Not tonight on one line under Next; Finish is the hold at the top right.
+                        HStack(spacing: 22) {
+                            small(data.pauseWord.lowercased(), color: soft) { pauseOrResume() }
+                            small("not tonight", color: soft) { notTonight() }
                         }
                     }
                 }
@@ -312,32 +332,35 @@ struct RoutineModePage: View {
     }
 }
 
-/// The dusk: warm peach at the start to deep blue by the last step; the ink turns from dark to light halfway.
+/// The dusk (sheet 329): the sky starts dark (top 2A2140, middle 5B3A62, horizon C98472) and deepens to night as the
+/// steps are tended; the ink is F4EEF2 throughout.
 enum RoutineDusk {
-    private static let dayTop = (r: 0.96, g: 0.84, b: 0.69)
-    private static let dayBottom = (r: 0.93, g: 0.66, b: 0.52)
-    private static let nightTop = (r: 0.06, g: 0.07, b: 0.16)
-    private static let nightBottom = (r: 0.16, g: 0.18, b: 0.35)
+    private typealias RGB = (r: Double, g: Double, b: Double)
+    private static func rgb(_ hex: UInt32) -> RGB {
+        (Double((hex >> 16) & 255) / 255, Double((hex >> 8) & 255) / 255, Double(hex & 255) / 255)
+    }
+
+    private static let startTop = rgb(0x2A2140), startMiddle = rgb(0x5B3A62), startHorizon = rgb(0xC98472)
+    private static let endTop = rgb(0x0A0916), endMiddle = rgb(0x181536), endHorizon = rgb(0x3B2E58)
 
     static func gradient(_ dusk: Double) -> LinearGradient {
         let t = min(max(dusk, 0), 1)
-        func mix(_ from: (r: Double, g: Double, b: Double), _ to: (r: Double, g: Double, b: Double)) -> Color {
-            Color(red: from.r + (to.r - from.r) * t, green: from.g + (to.g - from.g) * t,
-                  blue: from.b + (to.b - from.b) * t)
+        func mix(_ from: RGB, _ to: RGB) -> Color {
+            Color(
+                red: from.r + (to.r - from.r) * t,
+                green: from.g + (to.g - from.g) * t,
+                blue: from.b + (to.b - from.b) * t
+            )
         }
-        return LinearGradient(colors: [mix(dayTop, nightTop), mix(dayBottom, nightBottom)], startPoint: .top,
-                              endPoint: .bottom)
+        return LinearGradient(
+            colors: [mix(startTop, endTop), mix(startMiddle, endMiddle), mix(startHorizon, endHorizon)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 
-    /// 0 in the day, 1 at night, with the turn between 0.35 and 0.6 of the dusk.
-    static func night(_ dusk: Double) -> Double {
-        let t = min(max((dusk - 0.35) / 0.25, 0), 1)
-        return t * t * (3 - 2 * t)
-    }
-
-    static func ink(_ dusk: Double) -> Color {
-        let n = night(dusk)
-        return Color(red: 0.17 + (0.95 - 0.17) * n, green: 0.15 + (0.94 - 0.15) * n, blue: 0.13 + (0.90 - 0.13) * n)
+    static func ink(_: Double) -> Color {
+        RoutineScreen.ink
     }
 
     static func soft(_ dusk: Double) -> Color {
