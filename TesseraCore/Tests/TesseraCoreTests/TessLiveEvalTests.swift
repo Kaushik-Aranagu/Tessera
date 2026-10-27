@@ -200,16 +200,36 @@ struct TessLiveEvalTests {
             let started = ContinuousClock.now
             for turn in question.turns {
                 var failedLine: String?
+                var answered = false
+                let before = await trace.all()
+                let brainsBefore = before.filter { $0.kind == .brain }.count
+                let checksBefore = before.filter { $0.kind == .check }.count
                 for await event in run.ask(turn) {
                     switch event {
                     case .words:
                         if firstWord == nil {
                             firstWord = Self.milliseconds(clock.now - started)
                         }
-                    case let .finished(text): reply = text
+                    case let .finished(text):
+                        reply = text
+                        answered = true
                     case let .failed(line): failedLine = line
                     default: break
                     }
+                }
+                // The turn's own check span lands a few milliseconds after its stream ends: wait (up to 3 s) until this
+                // turn's span is there before the next turn starts, so a multi-turn question is scored on its last
+                // reply.
+                var waited = 0
+                while answered, waited < 60 {
+                    let now = await trace.all()
+                    if now.filter({ $0.kind == .brain }).count == brainsBefore
+                        || now.filter({ $0.kind == .check }).count > checksBefore
+                    {
+                        break
+                    }
+                    try? await Task.sleep(for: .milliseconds(50))
+                    waited += 1
                 }
                 if let failedLine {
                     reply = failedLine
@@ -220,17 +240,7 @@ struct TessLiveEvalTests {
                     }
                 }
             }
-            // The check span is recorded a few milliseconds after the stream ends: wait for it (up to 3 s) whenever a
-            // brain answered, instead of reading the trace once.
-            var spans = await trace.all()
-            var waited = 0
-            while spans.contains(where: { $0.kind == .brain }), !spans.contains(where: { $0.kind == .check }),
-                  waited < 60
-            {
-                try? await Task.sleep(for: .milliseconds(50))
-                waited += 1
-                spans = await trace.all()
-            }
+            let spans = await trace.all()
             let tools = spans.filter { $0.kind == .tool }.map(\.name)
             let rung = spans.last { $0.kind == .brain }?.brain
             let check = spans.last { $0.kind == .check && $0.name == TessRun.answerCheck }
