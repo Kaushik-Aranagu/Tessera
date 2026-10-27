@@ -321,3 +321,12 @@ Tapping "not here, ask me later" in shopping mode moves the item to the end of i
 - The receipt line still says "Limes, later in this aisle" with no undo (it is not a loss).
 - Reduce Motion: the list simply reorders.
 - Test: t67 paper and black green; psk.js order goes Limes, Cilantro, Peppers to Cilantro, Peppers, Limes with three row animations.
+
+## Sheet 340: holding writes "hold to finish" over
+
+The workout's "hold to finish" (top right) now shows the hold as it happens.
+
+- While the finger is down, the same words are written over in the accent chalk, left to right, across the 600 ms hold. Let go early or move more than 10 pt and the overwrite clears; the hold is cancelled.
+- When it completes, the workout finishes as before (Done board). No bar, ring or extra mark: the words are the progress.
+- Reduce Motion: the overwrite does not run; the hold still works.
+- Test: t67 paper and black green; phd.js (HD1.png, halfway: "hold to" in accent, "finish" still chalk grey); phd2.js holds with a real pointer and reaches Done.
