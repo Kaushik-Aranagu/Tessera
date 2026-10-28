@@ -25,6 +25,11 @@ public struct RunDigest: Sendable, Equatable, Codable {
         }
 
         public static let unknown = Reading(deviceOnly: true, untrusted: true)
+
+        /// As a run's provenance has it: device-only when it read a walled fragment, untrusted once a page is in it.
+        public init(_ run: RunProvenance) {
+            self.init(deviceOnly: run.taint == .deviceOnly, untrusted: run.hasUntrusted)
+        }
     }
 
     public var runID: UUID

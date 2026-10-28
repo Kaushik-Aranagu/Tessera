@@ -51,6 +51,12 @@ public struct RunProvenance: Sendable, Equatable {
         taint = .highest([taint] + fragments.map(\.taint))
     }
 
+    /// What another run read: a room asked after a page has read that page too.
+    public mutating func read(_ run: RunProvenance) {
+        sources.formUnion(run.sources)
+        taint = .highest([taint, run.taint])
+    }
+
     public mutating func read(_ untrusted: Untrusted) {
         sources.insert(untrusted.source)
     }

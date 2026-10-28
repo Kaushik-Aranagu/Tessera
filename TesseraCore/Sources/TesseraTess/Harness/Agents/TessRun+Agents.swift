@@ -62,12 +62,15 @@ extension TessRun {
                                ghosts: [])
         }
         let rooms = Array(picked.prefix(agent.maxChildren))
+        // What Tess has read so far goes with the question: after a page, no room may teach itself from it either.
+        let asker = reading?.read
 
         // In parallel: every room thinks at once, and the slowest one sets the wait. Main-actor tasks started
         // together and awaited in order (a task group's sendability check refuses this shape).
         let tasks = rooms.indices.map { position in
             Task { @MainActor in
-                await self.runAgent(rooms[position], question: question, handles: handles, onDevice: onDevice)
+                await self.runAgent(rooms[position], question: question, handles: handles, onDevice: onDevice,
+                                    read: asker)
             }
         }
         // Unstructured tasks don't inherit cancellation: a cancelled ask stops every room, so none keeps spending.
@@ -88,7 +91,8 @@ extension TessRun {
         for (spec, result) in zip(rooms, results) {
             lines.append("\(spec.title): \(result.report)")
             ghosts += result.ghosts
-            if !result.failed {
+            // A report made after a page is not kept as the room's episode: its next run would start from it.
+            if !result.failed, asker?.hasUntrusted != true {
                 episodes.append(agent: spec.name, ask: question, report: result.report, about: about,
                                 lab: policy == .lab, at: now())
             }
@@ -100,7 +104,7 @@ extension TessRun {
     /// One room agent's run: a child loop with the agent's own context, scope and tools, and no history but its own
     /// episodes (they are in its context). Its words never reach him; its report goes back to Tess.
     func runAgent(_ spec: AgentSpec, question: String, handles: [String: UUID], onDevice: Bool,
-                  plan chosen: RungPlan? = nil, remembers: Int? = nil) async
+                  plan chosen: RungPlan? = nil, remembers: Int? = nil, read: RunProvenance? = nil) async
         -> (report: String, ghosts: [UUID], failed: Bool)
     {
         let child = TessRun(door: door, engine: engine, conversation: conversation, trace: trace,
@@ -110,6 +114,7 @@ extension TessRun {
         child.calendar = calendar
         child.flagOn = flagOn
         child.remembersLeft = remembers
+        child.inherited = read
         let system = AgentContext.blocks(for: spec, engine: engine, policy: door.policy(), now: now(),
                                          calendar: calendar)
         // The child's own tools only: never ask_agent, never a money write (AgentSpec.problems keeps both out).
