@@ -211,7 +211,7 @@ public struct RoomPatchValidator {
     }
 
     /// Every trait the studio drew, by name, with the values it takes in any place.
-    static let traitValues: [String: Set<String>] = {
+    public static let traitValues: [String: Set<String>] = {
         var all: [String: Set<String>] = [:]
         for forms in LookCatalog.places.values {
             for trait in forms.traits {
