@@ -2892,6 +2892,22 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
    keeps the old name until he turns to that row; there, once, the old name lifts off and the new one rises in its place.
    Teal sits ΔE76 6.8 from the Purse's colour, so the plant room takes olive, the Lists colour the Log freed (sheet 280). */
 const CLASSVIEW={Plant:{hist:false}},EVERY={Orchid:7,Monstera:6,Fern:3,Basil:2};
+/* 377: through a door, the plant's name and number travel. Opening a door, the name lifts out of the dial row and
+   grows into the page's title while the number leaves its keystone column for the page's keystone slot, 40 ms behind.
+   Coming back they travel the other way, to wherever the plant now sits: water it on its page and its number flies
+   home to the end of the row, turning from "Today" into 0 as it lands. Everything else moves as the shell moves it.
+   Reduce Motion: no travel, the shell's own move */
+function capText(e){if(!e)return null;const r=document.createRange();r.selectNodeContents(e);const q=r.getBoundingClientRect();if(!q.width)return null;const cs=getComputedStyle(e);
+ return {text:e.textContent,l:q.left,t:q.top,fs:parseFloat(cs.fontSize),fam:cs.fontFamily,fw:cs.fontWeight,ls:cs.letterSpacing,color:cs.color}}
+function travel(el,pairs){if(RM)return;pairs=pairs.filter(p=>p.src);if(!pairs.length)return;pairs.forEach(p=>{const e=p.dst();if(e)e.style.visibility='hidden'});
+ requestAnimationFrame(()=>{const er=el.getBoundingClientRect();pairs.forEach((p,i)=>{const d=p.dst();if(!d)return;d.style.visibility='';const D=capText(d);if(!D)return;d.style.visibility='hidden';
+  const mk=(T,X)=>{const c=h('div','fx tv',T.text);c.style.cssText='position:absolute;z-index:9;pointer-events:none;white-space:nowrap;transform-origin:0 0;line-height:normal;left:'+((T.l-er.left)/K)+'px;top:'+((T.t-er.top)/K)+'px;font-family:'+T.fam+';font-weight:'+T.fw+';font-size:'+T.fs+'px;letter-spacing:'+T.ls+';color:'+(X||T.color);el.appendChild(c);return c};
+  const sc=D.fs/p.src.fs,dx=(D.l-p.src.l)/K,dy=(D.t-p.src.t)/K,E='cubic-bezier(.25,1,.35,1)',land=c=>{d.style.visibility='';c.animate([{opacity:1},{opacity:0}],{duration:60,fill:'forwards'}).onfinish=()=>c.remove()};
+  if(p.src.text===D.text){const c=mk(p.src);c.animate([{transform:'none',color:p.src.color},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:D.color}],{duration:480,delay:i*40,easing:E,fill:'both'}).onfinish=()=>land(c);return}
+  // the words differ (Today and 0): the old word fades where it stands and the new one flies, so a wide word never sweeps the row
+  const a=mk(p.src),b=mk(D),from='translate('+(-dx)+'px,'+(-dy)+'px) scale('+(1/sc)+')';a.dataset.k='out';b.dataset.k='in';
+  a.animate([{opacity:1},{opacity:0}],{duration:100,fill:'forwards'}).onfinish=()=>a.remove();
+  b.animate([{transform:from,opacity:0,color:p.src.color,easing:'linear'},{offset:.2,transform:from,opacity:1,color:p.src.color,easing:E},{transform:'none',opacity:1,color:D.color}],{duration:580,delay:i*40,fill:'both'}).onfinish=()=>land(b)})})}
 const WHERE={Orchid:'By the east window',Monstera:'By the couch',Fern:'In the bathroom',Basil:'On the kitchen sill'},CARE={Orchid:'Ice cubes, not a pour',Monstera:'When the top inch is dry',Fern:'Keep it out of the sun',Basil:'Pinch the flowers off'};
 ROOMS.chart={n:'Chart room',fact:'Say what it’s for',c:'var(--slate)',was:null,shown:'Chart room'};{const i=APPS.indexOf('money');if(i>=0&&!APPS.includes('chart'))APPS.splice(i+1,0,'chart')}
 function chartLabel(d,f){const R=ROOMS.chart;if(R.shown===R.n)return R.n;
@@ -3093,7 +3109,13 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   dry=setTimeout(step,600)}
  {const R=ROOMS.chart,SV=R.saved,again=R.replay;R.replay=false;
   if(SV){plants=SV.plants.map(p=>({...p}));reach=SV.reach;way=SV.way;calm=SV.calm;big=SV.big;queued=SV.queued;at=SV.at}
-  if(SV&&again&&!RM&&SV.at>0)replay(SV.at);else draw()}
+  if(SV&&again&&!RM&&SV.at>0)replay(SV.at);else{draw();
+   if(current&&current.dataset.id==='plant'){const pt=current.querySelector('.ttl2'),pb=current.querySelector('.pl-key b'),nm=pt&&pt.textContent,S1=capText(pt),S2=capText(pb);[pt,pb].forEach(e=>e&&(e.style.visibility='hidden'));
+    // the number goes first and the name a beat after, so the name never crosses the big word; the other plants' numbers
+    // wait until it has passed, so it comes home along an empty row
+    travel(el,[{src:S2,dst:()=>{const c=[...layer.querySelectorAll('.ch-key > div')].find(x=>x.querySelector('span')?.textContent===nm);return c&&c.querySelector('b')}},
+     {src:S1,dst:()=>{const r=[...layer.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1');return r&&r.querySelector('span')}}]);
+    if(!RM&&S2)layer.querySelectorAll('.ch-key > div').forEach(c=>{if(c.querySelector('span')?.textContent!==nm)c.querySelector('b').animate([{opacity:0},{opacity:0,offset:.55},{opacity:1}],{duration:640,fill:'backwards'})})}}}
  window.__ch={say,get n(){return SAY.length},get tmw(){return tmw},tomorrow,get at(){return at},get way(){return way},get wv(){return wv},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>allowNow(),down:()=>down(),stop:()=>stop(),get dry(){return !!dry},get rp(){return rp},get tline(){return tline},get reach(){return reach},plants:()=>plants};
  return ()=>{clearTimeout(dry);clearTimeout(selT);clearTimeout(hT)}}};
 
@@ -3142,7 +3164,11 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
  act.onclick=()=>{if(dry)return;if(pl.d===0)return CV.hist?back():say();const was=pl.d;pl.was=was;pl.d=0;tline='';draw();
   if(!RM)k.querySelector('b').animate([{transform:'translateY(.25em)',opacity:.2},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
   receipt(el,pl.n+', watered',()=>{pl.d=was;delete pl.was;draw()})};
- draw();window.__pl={get d(){return pl.d},get hist(){return CV.hist},say,stop,get dry(){return !!dry}};return ()=>clearTimeout(dry)}};
+ draw();
+ if(current&&current.dataset.id==='chart'){const row=[...current.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1'),nm=row&&row.querySelector('span'),
+  col=[...current.querySelectorAll('.ch-key > div')].find(x=>x.querySelector('span')?.textContent===pl.n),nb=col&&col.querySelector('b');
+  if(nm&&nm.textContent===pl.n){const S1=capText(nm),S2=capText(nb);[nm,nb].forEach(e=>e&&(e.style.visibility='hidden'));travel(el,[{src:S1,dst:()=>t},{src:S2,dst:()=>k.querySelector('b')}])}}
+ window.__pl={get d(){return pl.d},get hist(){return CV.hist},say,stop,get dry(){return !!dry}};return ()=>clearTimeout(dry)}};
 SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say what to change and I’ll redo that place.',render(el){
  const PL=[['Orchid',6,'Wednesday','Ice cubes, not a pour','By the east window'],['Monstera',4,'Friday','When the top inch is dry','By the couch'],['Fern',2,'Sunday','Keep it out of the sun','In the bathroom'],['Basil',1,'yesterday','Pinch the flowers off','On the kitchen sill']];
  return landingV3(el,{name:'Plants',color:'var(--lists)',theme:'grow',
