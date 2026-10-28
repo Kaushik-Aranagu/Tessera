@@ -68,6 +68,8 @@ final class ChartRoomDriver: ShellRoomDriver {
 
     func content(model: AppModel, scheme _: ColorScheme) -> any RoomContent {
         chart.attach(model.engine)
+        chart.onSmile = { [weak soul = model.soul] in soul?.smileOnce() }
+        chart.onSmileEnd = { [weak soul = model.soul] in soul?.smileEnds() }
         return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent, sayObject: chart.sayObject,
                             footSteps: chart.historyFoot ?? chart.replayFoot)
     }

@@ -101,6 +101,8 @@ final class SoulRouter {
     private(set) var stroke: Date?
     private(set) var isStrokeCrossing = false
     private(set) var strokeBlink: Date?
+    /// Sheet 387: the start of her one long eyes-smile, while it lasts.
+    private(set) var smileStart: Date?
     /// Bumped once per stroke for its one soft tick (a second within the ripple restarts it with no tick).
     private(set) var strokeTicks = 0
     @ObservationIgnored private var strokeTimer: Task<Void, Never>?
@@ -439,6 +441,25 @@ final class SoulRouter {
         }
         wakeStore.set(today, forKey: Self.wearDayKey)
         setWear(0)
+    }
+
+    /// Sheet 387: her eyes close into two small arcs for 1.6 s, once ("Everyone's had a drink"). Under Reduce Motion
+    /// her
+    /// eyes change shape at once (there is no tween to drop: the arcs simply show and go).
+    func smileOnce() {
+        let start = Date.now
+        smileStart = start
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(SoulLife.drinkSmileSeconds))
+            if self?.smileStart == start {
+                self?.smileStart = nil
+            }
+        }
+    }
+
+    /// Undo takes the line back, and the smile ends with it.
+    func smileEnds() {
+        smileStart = nil
     }
 
     /// Sheet 383: a new line of hers starts, and her face blinks once as it does (the shared `TessLine` calls this).

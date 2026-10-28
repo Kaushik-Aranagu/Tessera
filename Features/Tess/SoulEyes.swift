@@ -233,7 +233,11 @@ struct SoulEyes: View {
         let float = still ? 0 : SoulLife.float(at: time)
         let since = reaction.map { time - $0.start }
         let widen = !still && reaction?.kind == .touch ? SoulLife.widen(since: since ?? 99) : 1
-        let smile = reaction?.kind == .did ? SoulLife.smile(since: since ?? 99) : 0
+        let smile = switch reaction?.kind {
+        case .did: SoulLife.smile(since: since ?? 99)
+        case .drink: SoulLife.smile(since: since ?? 99, seconds: SoulLife.drinkSmileSeconds)
+        default: 0.0
+        }
         let eyes = eyeSize(unit: scale)
         let mouthDrawn = mouth.map { $0.kind.drawn(since: still ? 99 : time - $0.start) } ?? 0
         let stillMouth = still ? (mouth != nil ? 1.0 : 0) : mouthDrawn

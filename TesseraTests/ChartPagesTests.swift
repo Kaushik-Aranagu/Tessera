@@ -216,4 +216,43 @@ struct ChartPagesTests {
         try app.engine.perform(TendRoutineStep(step: step.id, done: false), by: .user)
         #expect(line() == "Last misted never, in Water houseplants")
     }
+
+    @Test func theLastThirstyPlantGetsEveryonesHadADrinkAndUndoTakesItBack() {
+        var lines: [String] = []
+        var undo: (() -> Void)?
+        let room = ChartRoomModel(data: DemoRoomData(), defaults: nil, drying: .milliseconds(60)) { text, take in
+            lines.append(text)
+            undo = take
+        }
+        room.attach(app.engine)
+        var doc = ChartDoc(name: "Chart room", color: "olive", reach: ["write Plant.lastWatered"])
+        doc.parts = [
+            ChartPart(id: "row", kind: .row, place: "keystone",
+                      props: ["big": .text("lastWatered"), "sort": .text("-daysSince(lastWatered)")], bind: "Plant"),
+            ChartPart(id: "glow", kind: .top, place: "keystone",
+                      props: ["on": .text("row"), "field": .text("lastWatered")]),
+            ChartPart(id: "water", kind: .actionWord, place: "actionWord",
+                      props: ["verb": .text("Water"), "object": .text("the {top}"),
+                              "does": .text("write Plant.lastWatered")], bind: "Plant"),
+        ]
+        room.load(doc)
+        var smiles = 0
+        var ends = 0
+        room.onSmile = { smiles += 1 }
+        room.onSmileEnd = { ends += 1 }
+        for _ in 0 ..< 3 {
+            room.does("water")
+            #expect(room.note == nil, "earlier waterings say nothing: no counts, no streaks")
+        }
+        #expect(smiles == 0)
+        room.does("water")
+        #expect(
+            room.note?.line == "Everyone's had a drink" && smiles == 1,
+            "the last thirsty plant: once, with a smile"
+        )
+        undo?()
+        #expect(room.note == nil && ends == 1, "Undo takes the line back and the smile ends")
+        // Watering with nobody thirsty left to water says nothing more.
+        #expect(lines.filter { $0.hasSuffix("watered") }.count == 4)
+    }
 }

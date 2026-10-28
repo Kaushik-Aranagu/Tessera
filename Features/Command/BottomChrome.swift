@@ -250,6 +250,7 @@ struct BottomChrome: View {
                  pageAccents: room.map { [$0] } ?? [],
                  director: room.map { SoulRoomTint.director($0) } ?? CoreSoulDirector(),
                  wake: model.soul.wake, stroke: model.soul.stroke, strokeBlink: model.soul.strokeBlink,
+                 smileStart: model.soul.smileStart,
                  beat: model.soul.beat, wear: model.soul.wear(at:)) { model.soul.placeDock($0) }
             .scaleEffect(0.72)
             .liveBreath(on: breathe)

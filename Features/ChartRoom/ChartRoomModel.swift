@@ -841,17 +841,34 @@ final class ChartRoomModel {
         guard let node = nodes[.actionWord]?.first(where: { $0.id == partID }),
               case let .actionWord(_, _, _, does?) = node,
               let bind = shown.part(partID)?.bind ?? PartResolver.bind(of: does),
-              let top = PartResolver.topItem(in: shown, bind: bind, data: { [data] in data.items($0) }),
-              let undo = data.write(does, to: top.name)
+              let top = PartResolver.topItem(in: shown, bind: bind, data: { [data] in data.items($0) })
         else { return }
+        let before = data.items(bind)
+        guard let undo = data.write(does, to: top.name) else { return }
+        let after = data.items(bind)
+        let last = Everyone.isLast(before: before, after: after)
         say("\(top.name), watered") { [weak self] in
             undo()
             self?.drink(top.name, up: false)
             self?.refreshGlow()
+            if self?.note?.line == Everyone.line {
+                // Undo takes the line back, and the smile ends with it.
+                self?.note = nil
+                self?.onSmileEnd?()
+            }
         }
         drink(top.name, up: true)
         refreshGlow()
+        if last {
+            // The last thirsty plant: Tess says so word by word, once, and her eyes smile (sheet 387).
+            note = RoomNote(line: Everyone.line, button: nil, patch: nil)
+            onSmile?()
+        }
     }
+
+    /// Her eyes smile once ("Everyone's had a drink") and stop with Undo; the driver wires these to the Tess layer.
+    @ObservationIgnored var onSmile: (() -> Void)?
+    @ObservationIgnored var onSmileEnd: (() -> Void)?
 
     /// The drink: `up` the colour climbs out of the watered plant; not up, the thirst sinks back in. Only that plant,
     /// for 0.76 s (Reduce Motion: it changes in place, nothing to wait for).

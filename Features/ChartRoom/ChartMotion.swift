@@ -107,3 +107,20 @@ enum GlowFollow {
         reduceMotion || elapsed >= settle ? leader : current
     }
 }
+
+/// Sheet 387, "everyone's had a drink": when the last thirsty plant is watered Tess says so, once. Earlier waterings
+/// say nothing: no counts, no streaks.
+enum Everyone {
+    static let line = "Everyone's had a drink"
+
+    /// A plant is thirsty while its days since water are above zero.
+    static func thirsty(_ items: [BoundItem], key: String = "daysSince(lastWatered)") -> [BoundItem] {
+        items.filter { ($0.fields[key] ?? 0) > 0 }
+    }
+
+    /// Whether the watering just done was the last of the thirsty ones: some plant was thirsty before it, and none is
+    /// after it.
+    static func isLast(before: [BoundItem], after: [BoundItem], key: String = "daysSince(lastWatered)") -> Bool {
+        !thirsty(before, key: key).isEmpty && thirsty(after, key: key).isEmpty
+    }
+}

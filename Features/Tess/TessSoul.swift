@@ -66,6 +66,8 @@ struct TessSoul: View {
     /// A stroke's ripple and the blink after it (idea 3, `SoulRouter.stroke` / `strokeBlink`).
     var stroke: Date?
     var strokeBlink: Date?
+    /// Sheet 387: when her eyes began their one long smile (`SoulRouter.smileOnce`).
+    var smileStart: Date?
     /// Her beat (§6, `SoulRouter.beat`) and the colour she wears for his day (idea 4, `SoulRouter.wear(at:)`).
     var beat: Date?
     var wear: (Date) -> CGFloat = { _ in 0 }
@@ -209,7 +211,7 @@ struct TessSoul: View {
         let time = date.timeIntervalSinceReferenceDate
         let lean = SoulLife.lean(at: time)
         var scale: CGFloat = 1
-        if let reaction, reaction.kind != .did {
+        if let reaction, reaction.kind != .did, reaction.kind != .drink {
             scale = SoulLife.breath(reaction.kind, since: time - reaction.start.timeIntervalSinceReferenceDate)
         }
         // While he talks she leans 1.6 pt toward him (his finger, else straight down).
@@ -284,7 +286,8 @@ struct TessSoul: View {
                 ?? wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
                      still: reduceMotion, lid: lid, attention: attention,
-                     reaction: reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
+                     reaction: smileStart.map { (SoulLife.Reaction.drink, $0.timeIntervalSinceReferenceDate) }
+                         ?? reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
                      solid: !look.isDark, closed: quiet,
                      mouth: mouth.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) })
         }

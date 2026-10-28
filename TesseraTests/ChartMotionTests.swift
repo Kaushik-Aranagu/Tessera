@@ -85,4 +85,34 @@ struct ChartMotionTests {
             .owner(current: "Monstera", leader: "Orchid", elapsed: 0.1, reduceMotion: false) == "Monstera")
         #expect(GlowFollow.owner(current: "Monstera", leader: "Orchid", elapsed: 0.4, reduceMotion: false) == "Orchid")
     }
+
+    // MARK: 387, everyone's had a drink
+
+    @Test func onlyTheWateringThatLeavesNoneThirstyIsTheLastOne() {
+        func plants(_ days: [Double]) -> [BoundItem] {
+            days.map { BoundItem(name: "p\($0)", fields: ["daysSince(lastWatered)": $0]) }
+        }
+        #expect(Everyone.isLast(before: plants([6, 4, 2, 1]), after: plants([0, 4, 2, 1])) == false)
+        #expect(Everyone.isLast(before: plants([0, 0, 0, 1]), after: plants([0, 0, 0, 0])), "the last thirsty one")
+        #expect(!Everyone.isLast(before: plants([0, 0, 0, 0]), after: plants([0, 0, 0, 0])), "nobody was thirsty")
+        #expect(Everyone.thirsty(plants([0, 3, 0])).count == 1)
+        #expect(Everyone.line == "Everyone's had a drink")
+    }
+
+    @Test @MainActor func herEyesSmileForOneAndAHalfSecondsOnceAndStopWithUndo() {
+        let soul = SoulRouter()
+        #expect(soul.smileStart == nil)
+        soul.smileOnce()
+        #expect(soul.smileStart != nil)
+        soul.smileEnds()
+        #expect(soul.smileStart == nil, "Undo ends the smile")
+        #expect(SoulLife.drinkSmileSeconds == 1.6)
+        #expect(
+            SoulLife.smile(since: 1.2, seconds: SoulLife.drinkSmileSeconds) > 0,
+            "still smiling past the short smile"
+        )
+        #expect(SoulLife.smile(since: 1.2) == 0)
+        #expect(SoulLife.smile(since: 1.7, seconds: SoulLife.drinkSmileSeconds) == 0)
+        #expect(SoulLife.smile(since: 0.8, seconds: SoulLife.drinkSmileSeconds) == 1)
+    }
 }
