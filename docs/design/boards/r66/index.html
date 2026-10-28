@@ -759,6 +759,8 @@ SCREENS.routine={title:'A routine',accent:'routines',tess:'Hip opener drops firs
  const r=R.find(x=>x.id===(P.id||'stretch'))||R[0],D=detailOf(r);const nSteps=D.steps?D.steps.length:1;
  if(!D.hist)D.hist=hist(r.id.length,r.at??12*60,D.len,nSteps,(i,dow,x)=>r.st==='care'&&i>20&&x<.7?'miss':r.st==='begin'&&i>19?'miss':i===9?'rest':x<.1?'miss':'ok');
  let dim=0,doneSteps=new Set(r.st==='done'&&D.one?[0]:[]),split=false;
+ // 379: one source for the misting. Misted today means the step shows done here, whichever page did it
+ if(D.steps&&window.PLANTMIST&&PLANTMIST.Orchid==='today')D.steps.forEach((s,i)=>{if(/orchid/i.test(s[0]))doneSteps.add(i)});
  // 378: opened through a link from another object, the back word names that object, in its color
  const bw=h('div','backw',P.from?P.from.n:r.g);if(P.from)bw.style.color=P.from.c;bw.onclick=back;el.appendChild(bw);
  el.appendChild(h('div','ttl2',r.n));
@@ -773,12 +775,16 @@ SCREENS.routine={title:'A routine',accent:'routines',tess:'Hip opener drops firs
    f.textContent=d?'Do it again':'Done';f.onclick=()=>{if(!d){doneSteps.add(0);r.st='done';draw();receipt(el,r.n+', done.',()=>{doneSteps.delete(0);draw()})}};swipeStep($('.step',pane),0);return}
   const open=D.steps.map((x,i)=>i).filter(i=>!doneSteps.has(i)),dn=D.steps.map((x,i)=>i).filter(i=>doneSteps.has(i)),left=open.reduce((n,i)=>n+D.steps[i][1],0);
   let y=26,html='<div style="position:absolute;top:0;font-size:13px;color:var(--ink2)">'+(open.length?D.steps.length+' steps, about '+left+' min left':'All '+D.steps.length+' steps done')+'</div>';
-  open.forEach((i,j)=>{const [n,m,how]=D.steps[i],c=j===0;html+='<div class="step'+(c?' cur':'')+'" data-i="'+i+'" style="top:'+y+'px"><div class="row"><span class="nm">'+n+'<i class="k"></i></span><span class="mn">'+m+'<small>min</small></span></div>'+(c?'<div class="how">'+how+'</div>':'')+'</div>';y+=c?96:44});
+  // 379: opened from the orchid, the word that names it takes its color, so he sees where he came in
+  const came=n=>P.from?n.replace(new RegExp('\\b('+P.from.n+')\\b','i'),'<em class="came" style="font-style:normal;color:'+P.from.c+'">$1</em>'):n;
+  open.forEach((i,j)=>{const [n,m,how]=D.steps[i],c=j===0;html+='<div class="step'+(c?' cur':'')+'" data-i="'+i+'" style="top:'+y+'px"><div class="row"><span class="nm">'+came(n)+'<i class="k"></i></span><span class="mn">'+m+'<small>min</small></span></div>'+(c?'<div class="how">'+how+'</div>':'')+'</div>';y+=c?96:44});
   if(dn.length){y+=14;html+='<div class="slab" style="top:'+y+'px">Done</div>';y+=18;dn.forEach(i=>{const [n,m]=D.steps[i];html+='<div class="step done" data-i="'+i+'" style="top:'+y+'px"><div class="row"><span class="nm">'+n+'<i class="k"></i></span><span class="mn">'+m+'<small>min</small></span></div></div>';y+=44})}
   const wasH=pane.firstElementChild&&pane.firstElementChild.dataset.h&&pane.firstElementChild.textContent;pane.innerHTML=html;const hd=pane.firstElementChild;if(hd){hd.dataset.h=1;numRoll(hd,wasH)}pane.querySelectorAll('.step').forEach(e=>swipeStep(e,+e.dataset.i));
   f.textContent=!dn.length?'Start':open.length?'Next step':'Do it again';f.onclick=()=>{if(open.length)check(open[0]);else{doneSteps=new Set();draw()}}}
- function check(i){if(doneSteps.has(i)){doneSteps.delete(i);draw();return}const e=$('.step[data-i="'+i+'"]',pane);e&&e.classList.add('done');
-  setTimeout(()=>{doneSteps.add(i);draw();if(doneSteps.size===D.steps.length){petals(el,120,300);r.st='done';receipt(el,r.n+', done.',()=>{doneSteps.delete(i);draw()})}else receipt(el,D.steps[i][0]+', done.',()=>{doneSteps.delete(i);draw()})},RM?0:600)}
+ function check(i){if(doneSteps.has(i)){doneSteps.delete(i);mist(i,false);draw();return}const e=$('.step[data-i="'+i+'"]',pane);e&&e.classList.add('done');
+  setTimeout(()=>{doneSteps.add(i);mist(i,true);draw();if(doneSteps.size===D.steps.length){petals(el,120,300);r.st='done';receipt(el,r.n+', done.',()=>{doneSteps.delete(i);mist(i,false);draw()})}else receipt(el,D.steps[i][0]+', done.',()=>{doneSteps.delete(i);mist(i,false);draw()})},RM?0:600)}
+ /* 379: the misting step is where the orchid's page reads its last misting from, so checking it off is what the page shows */
+ function mist(i,on){const s=D.steps&&D.steps[i];if(!s||!/orchid/i.test(s[0])||!window.PLANTMIST)return;if(on){if(PLANTMIST.Orchid!=='today'){PLANTMIST.was=PLANTMIST.Orchid;PLANTMIST.Orchid='today'}}else PLANTMIST.Orchid=PLANTMIST.was||'Thursday'}
  function swipeStep(e,i){let x0=null,dx=0;e.onpointerdown=ev=>{x0=ev.clientX;dx=0;e.setPointerCapture(ev.pointerId)};e.onpointermove=ev=>{if(x0==null)return;dx=(ev.clientX-x0)/K;e.style.transform='translateX('+Math.max(-70,Math.min(70,dx))+'px)'};
   e.onpointerup=()=>{if(x0==null)return;x0=null;e.style.transform='';if(D.one){if((dx>56||Math.abs(dx)<6)&&!doneSteps.has(0)){doneSteps.add(0);r.st='done';petals(el,140,300);draw();receipt(el,r.n+', done.',()=>{doneSteps.delete(0);draw()})}return}
    if(dx<-56&&!doneSteps.has(i)){const s=D.steps.splice(i,1)[0];D.steps.push(s);doneSteps=new Set([...doneSteps].map(j=>j>i?j-1:j));draw();receipt(el,s[0]+', not now.',()=>{D.steps.splice(D.steps.indexOf(s),1);D.steps.splice(i,0,s);doneSteps=new Set([...doneSteps].map(j=>j>=i?j+1:j));draw()});return}
@@ -2895,6 +2901,8 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
    keeps the old name until he turns to that row; there, once, the old name lifts off and the new one rises in its place.
    Teal sits ΔE76 6.8 from the Purse's colour, so the plant room takes olive, the Lists colour the Log freed (sheet 280). */
 /* 378: OBJVIEW is one object's own layer over its class's page. It wins where it says something and says nothing else */
+/* 379: when the orchid was last misted lives with the routine's step, not on the page; both read it */
+window.PLANTMIST={Orchid:'Thursday'};
 const OBJVIEW={},CLASSVIEW={Plant:{hist:false}},EVERY={Orchid:7,Monstera:6,Fern:3,Basil:2};
 /* 377: through a door, the plant's name and number travel. Opening a door, the name lifts out of the dial row and
    grows into the page's title while the number leaves its keystone column for the page's keystone slot, 40 ms behind.
@@ -3158,7 +3166,7 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
   // the parts stack from the care note down, so an empty one leaves no gap, and Tess sits one line below the last
   let y=452;const hOn=CV.hist||ghost==='hist',mOn=OV.mist||ghost==='mist';
   hs.textContent=hOn?hist():'';hs.classList.toggle('gh',ghost==='hist');if(hOn){top.hist=y;hs.style.top=y+'px';y+=24}
-  ms.innerHTML=mOn?'Last misted Thursday, in <span class="pl-ln">Water houseplants</span>':'';ms.classList.toggle('gh',ghost==='mist');if(mOn){top.mist=y;ms.style.top=y+'px';y+=24}
+  ms.innerHTML=mOn?'Last misted <span class="pl-w">'+PLANTMIST.Orchid+'</span>, in <span class="pl-ln">Water houseplants</span>':'';ms.classList.toggle('gh',ghost==='mist');if(mOn){top.mist=y;ms.style.top=y+'px';y+=24}
   ts.style.top=Math.max(500,y+24)+'px';
   ts.className='ch-c '+(heard?'ch-heard live':'ch-tess');ts.textContent=heard?'“'+heard+'”':tline||(OV.mist?'The misting is the orchid’s own, the rest is every plant’s':CV.hist?'This page is every plant’s. Say a change and they all get it':'Every plant gets this plain page until you say how it should look');
   const sayIt=pl.d===0&&!CV.hist,sayM=pl.d===0&&CV.hist&&mistOK&&!OV.mist;act.className='ch-act'+(pl.d>0?' water':'');
@@ -3182,6 +3190,10 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
  if(current&&current.dataset.id==='chart'){const row=[...current.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1'),nm=row&&row.querySelector('span'),
   col=[...current.querySelectorAll('.ch-key > div')].find(x=>x.querySelector('span')?.textContent===pl.n),nb=col&&col.querySelector('b');
   if(nm&&nm.textContent===pl.n){const S1=capText(nm),S2=capText(nb);[nm,nb].forEach(e=>e&&(e.style.visibility='hidden'));travel(el,[{src:S1,dst:()=>t},{src:S2,dst:()=>k.querySelector('b')}])}}
+ /* 379: misted in the routine, the page already knows. The day lifts into place once, and Tess says where it came from */
+ if(OV.mist&&OV.seen&&OV.seen!==PLANTMIST.Orchid){tline='Misted in Water houseplants, so this page already knows';draw();const w=ms.querySelector('.pl-w');
+  if(w&&!RM)w.animate([{transform:'translateY(.4em)',opacity:.2},{transform:'none',opacity:1}],{duration:360,delay:280,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})}
+ if(mistOK)Object.defineProperty(OV,'seen',{value:PLANTMIST.Orchid,writable:true,configurable:true,enumerable:false});
  window.__pl={get d(){return pl.d},get hist(){return CV.hist},get mist(){return !!OV.mist},ov:OV,say,stop,get dry(){return !!dry}};return ()=>clearTimeout(dry)}};
 SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say what to change and I’ll redo that place.',render(el){
  const PL=[['Orchid',6,'Wednesday','Ice cubes, not a pour','By the east window'],['Monstera',4,'Friday','When the top inch is dry','By the couch'],['Fern',2,'Sunday','Keep it out of the sun','In the bathroom'],['Basil',1,'yesterday','Pinch the flowers off','On the kitchen sill']];
