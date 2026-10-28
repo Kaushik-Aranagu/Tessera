@@ -67,6 +67,9 @@ enum SlotKind: String, Equatable {
     case scene
     /// A room built from a document (the Chart room, R1): the places drawn from a tree of kit parts (`PartNode`).
     case parts
+    /// A ranked door page or an item page (sheet 284): both fill the Page's block, so a change from one to the other
+    /// is the same place with new words and never a collapse.
+    case rows
 }
 
 /// One row of a door page: an id the shell hands back on tap, a title and a short detail. A private row never
@@ -108,6 +111,28 @@ enum SlotPayload: Equatable {
     case scene(String, label: String)
     /// A document room's own composition for one place: a tree of kit parts, drawn by `PartView`.
     case parts(PartTree)
+    /// Sheet 284, level 1: the door's rows split the Page's block by rank weights (`RankedPage`).
+    case ranked(RankedPageData)
+    /// Sheet 284, level 2: Facts over a Body drawn by the item's kind (`ItemPage`).
+    case item(ItemPageData)
+    /// Sheet 284: the Door title (level 1) or the Item title (level 2): the name in 34 pt bold ink over one line. Across
+    /// goes to the neighbour route (`PageTitle`).
+    case pageTitle(PageTitle)
+}
+
+/// The Door title or Item title as sheet 284 draws it. `previous` and `next` are the routes an across swipe goes to
+/// (the neighbouring door or item); nil where there is none, so the title does not move.
+struct PageTitle: Equatable {
+    var name: String
+    var line: String
+    var previous: ShellRoute?
+    var next: ShellRoute?
+    /// The dial focus the landing keeps when across goes to the previous or next door, so back lands on the door you
+    /// were on (level 1 only).
+    var previousFocus: Int?
+    var nextFocus: Int?
+    /// The title of an item (level 2) rather than a door (level 1).
+    var isItem = false
 }
 
 /// What the `parts` payload carries: the top-level parts of one place, in order, and the room's colour.
@@ -151,6 +176,8 @@ struct ShellRoute: Hashable, CustomStringConvertible {
     let room: String
     var level = 0
     var door: String?
+    /// Level 2: the item (a row id) whose page is open.
+    var item: String?
 
     static func landing(_ room: String) -> ShellRoute {
         ShellRoute(room: room)
@@ -160,12 +187,18 @@ struct ShellRoute: Hashable, CustomStringConvertible {
         ShellRoute(room: room, level: 1, door: door)
     }
 
+    /// An item page: level 2, under the door it was opened from.
+    static func item(_ room: String, _ door: String, _ item: String) -> ShellRoute {
+        ShellRoute(room: room, level: 2, door: door, item: item)
+    }
+
     var layout: LayoutKind {
         LayoutKind(level: level)
     }
 
     var description: String {
-        door.map { "\(room)/\(level)/\($0)" } ?? "\(room)/\(level)"
+        let base = door.map { "\(room)/\(level)/\($0)" } ?? "\(room)/\(level)"
+        return item.map { "\(base)/\($0)" } ?? base
     }
 }
 

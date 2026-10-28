@@ -106,6 +106,20 @@ private struct PlaceRenderer: View {
             ShellPage(rows: rows, settle: style.context != .state, reduceMotion: reduceMotion,
                       start: style.context == .route ? 0.2 : 0, act: act)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        case let .pageTitle(title):
+            PageTitleView(title: title, size: size, navigator: navigator)
+        case let .ranked(data):
+            RankedPage(data: data, settle: style.context != .state, reduceMotion: reduceMotion,
+                       start: style.context == .route ? 0.2 : 0, merging: style.context == .merge) {
+                act(.openItem($0))
+            }
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        case let .item(data):
+            ItemPage(data: data, settle: style.context != .state, reduceMotion: reduceMotion,
+                     start: style.context == .route ? 0.2 : 0, merging: style.context == .merge) {
+                act(.openItem($0))
+            }
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .action(steps, accent):
             LandingActionWord(action: footAction(steps), accent: accent,
                               arrival: style.context == .route && style.move != .untouched ? 0.42 : nil)
@@ -397,5 +411,55 @@ private struct ShellPageRow<Label: View>: View {
         case .armed, .disarmed:
             break
         }
+    }
+}
+
+/// The Door title (level 1) and Item title (level 2) of sheet 284: the name in 34 pt bold ink over one 15 pt line.
+/// Across (a horizontal swipe, or the adjustable action for VoiceOver) goes to the next door or item: only the words
+/// change, so the route is replaced and the stack does not grow.
+private struct PageTitleView: View {
+    let title: PageTitle
+    let size: CGSize
+    let navigator: ShellNavigator
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            FitLine(forms: FitLine.cuts(title.name), size: PageTitleView.nameSize, color: Theme.Colors.ink,
+                    weight: .bold)
+                .frame(height: 46, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+            FitLine(forms: FitLine.cuts(title.line), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+                .frame(height: 22, alignment: .leading)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+        .contentShape(Rectangle())
+        .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded { value in
+            let across = value.translation.width
+            guard abs(across) > 40, abs(across) > 2 * abs(value.translation.height) else { return }
+            go(across < 0 ? title.next : title.previous, focus: across < 0 ? title.nextFocus : title.previousFocus)
+        })
+        .accessibilityElement(children: .combine)
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: go(title.next, focus: title.nextFocus)
+            case .decrement: go(title.previous, focus: title.previousFocus)
+            @unknown default: break
+            }
+        }
+        .accessibilityIdentifier(title.isItem ? "shell.itemTitle" : "shell.doorTitle")
+    }
+
+    static let nameSize: CGFloat = 34
+
+    private func go(_ route: ShellRoute?, focus: Int?) {
+        guard let route else { return }
+        if let focus {
+            let landing = ShellRoute.landing(route.room)
+            var state = navigator.state(for: landing)
+            state.dialFocus = focus
+            navigator.setState(state, for: landing)
+        }
+        navigator.replace(route)
     }
 }

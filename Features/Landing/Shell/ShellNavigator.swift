@@ -56,6 +56,25 @@ final class ShellNavigator {
         begin(from: from)
     }
 
+    /// Across (sheet 284): the top route becomes its neighbour (the next door, the next item). The stack does not
+    /// grow, so back still goes up one level, and the change plays as one more change of words.
+    func replace(_ next: ShellRoute) {
+        guard canPop, next != route else { return }
+        let from = presenting
+        let left = stack.removeLast()
+        stack.append(next)
+        if !stack.contains(left) {
+            states[left] = nil
+        }
+        begin(from: from)
+    }
+
+    /// Writes the state kept for a route below the top (a door page's across moves the landing's dial focus, so back
+    /// lands on the door you were on).
+    func setState(_ state: RoomState, for route: ShellRoute) {
+        states[route] = state
+    }
+
     func pop() {
         guard canPop else { return }
         let from = presenting

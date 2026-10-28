@@ -109,7 +109,6 @@ struct ItemPage: View {
     let open: (String) -> Void
 
     @State private var settled = false
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         GeometryReader { proxy in
@@ -150,12 +149,21 @@ struct FactsRow: View {
 
     var body: some View {
         let scale = RankedLayout.typeScale(typeSize)
-        HStack(alignment: .top, spacing: 0) {
-            ForEach(Array(facts.prefix(3).enumerated()), id: \.offset) { index, fact in
-                FactCell(fact: fact, color: index == 0 ? accent : Theme.Colors.ink, scale: scale)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(ItemPageLayout.columnWeights[index])
+        GeometryReader { proxy in
+            let columns = ItemPageLayout.columns(in: CGRect(origin: .zero, size: proxy.size))
+            HStack(alignment: .top, spacing: 0) {
+                ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
+                    Group {
+                        if facts.indices.contains(index) {
+                            FactCell(fact: facts[index], color: index == 0 ? accent : Theme.Colors.ink, scale: scale)
+                        } else {
+                            Color.clear
+                        }
+                    }
+                    .frame(width: column.width, alignment: .topLeading)
+                }
             }
+            .frame(width: proxy.size.width, alignment: .topLeading)
         }
         .accessibilityElement(children: .combine)
     }
