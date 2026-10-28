@@ -226,29 +226,89 @@ struct GalleyModeVerb: View {
     }
 }
 
+/// One Undo line (sheet 382): the word Undo stays at full ink for 6 s, then thins to 45% by the tenth; the line fades
+/// over a quarter second when the time runs out; tapping Undo reverses the change at once and winds the line back
+/// from its right end in 0.22 s. Reduce Motion: no thinning and no winding.
+struct UndoLine<Text_: View>: View {
+    let id: UUID
+    let canUndo: Bool
+    var tint: Color
+    var reduceMotion: Bool
+    @ViewBuilder var text: Text_
+    var undo: () -> Void
+    @State private var start = Date.now
+
+    static var thinStart: Double {
+        6
+    }
+
+    static var thinEnd: Double {
+        10
+    }
+
+    static var thinnest: Double {
+        0.45
+    }
+
+    static var windDuration: Double {
+        0.22
+    }
+
+    /// The word's ink at `age` seconds: 1 until 6 s, then down to 45% at 10 s.
+    static func opacity(at age: Double, reduceMotion: Bool) -> Double {
+        guard !reduceMotion, age > thinStart else { return 1 }
+        let t = min((age - thinStart) / (thinEnd - thinStart), 1)
+        return 1 - t * (1 - thinnest)
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            text
+            if canUndo {
+                TimelineView(.animation(minimumInterval: 0.25, paused: reduceMotion)) { context in
+                    Button("Undo") { undo() }
+                        .font(GalleyPaper.plex(.bold, 15))
+                        .foregroundStyle(tint)
+                        .opacity(Self.opacity(at: context.date.timeIntervalSince(start), reduceMotion: reduceMotion))
+                        .buttonStyle(.plain)
+                        .frame(minHeight: 44)
+                }
+            }
+        }
+        .onChange(of: id, initial: true) { _, _ in
+            start = .now
+        }
+    }
+}
+
 /// The receipt just above the thumb zone: what happened, with Undo while it can be taken back.
 struct GalleyModeReceipt: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let voice = TessVoice.shared
+    /// The line being wound back after Undo, drawn for 0.22 s after the voice has let go of it.
+    @State private var winding: TessVoice.Note?
+    @State private var windProgress: CGFloat = 1
 
     var body: some View {
-        if let note = voice.note {
-            HStack(spacing: 12) {
+        if let note = voice.note ?? winding {
+            UndoLine(id: note.id, canUndo: note.undo != nil || note.takeBack != nil, tint: GalleyPaper.ochre,
+                     reduceMotion: reduceMotion)
+            {
                 Text(note.text)
                     .font(GalleyPaper.plex(.medium, 15))
                     .foregroundStyle(GalleyPaper.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if note.undo != nil || note.takeBack != nil {
-                    Button("Undo") { undo(note) }
-                        .font(GalleyPaper.plex(.bold, 15))
-                        .foregroundStyle(GalleyPaper.ochre)
-                        .buttonStyle(.plain)
-                        .frame(minHeight: 44)
-                }
+            } undo: {
+                undo(note)
             }
+            .mask(alignment: .leading) {
+                Rectangle().scaleEffect(x: winding == nil ? 1 : windProgress, anchor: .leading)
+            }
+            // The line fades over a quarter second when its 10 s run out.
             .transition(.opacity)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: voice.note?.id)
         }
     }
 
@@ -258,7 +318,19 @@ struct GalleyModeReceipt: View {
         }
         note.takeBack?()
         model.touch()
-        withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
+        guard !reduceMotion else {
+            voice.clear()
+            return
+        }
+        // The change is reversed at once; the line winds back from its right end, then is gone.
+        winding = note
+        windProgress = 1
+        voice.clear()
+        withAnimation(.easeIn(duration: UndoLine<EmptyView>.windDuration)) { windProgress = 0 }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(Int(UndoLine<EmptyView>.windDuration * 1000)))
+            winding = nil
+        }
     }
 }
 
