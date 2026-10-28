@@ -4,8 +4,10 @@ import Foundation
 import Testing
 
 /// The store slice of the memory pyramid: his store as leaves, with every wall the night pass keeps. A private thing is
-/// its label and counts for nothing; unfinished, deleted and future rows never become leaves.
+/// its label and counts for nothing; unfinished, deleted and future rows never become leaves. The suite runs the old
+/// walls; what lab reads now is `underLabAPrivateThingIsItsOwnWordsStillDeviceOnly`.
 @MainActor
+@Suite(.oldWalls)
 struct PyramidStoreLeavesTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine
@@ -85,6 +87,38 @@ struct PyramidStoreLeavesTests {
             #expect(!texts.contains { $0.contains(walled) }, "\(walled)")
         }
         #expect(all.allSatisfy { $0.stats.isEmpty && $0.taint == .deviceOnly })
+    }
+
+    @Test func underLabAPrivateThingIsItsOwnWordsStillDeviceOnly() throws {
+        try ClaudeSees.$everything.withValue(true) {
+            let routine = try make(.routine, "Knee rehab day")
+            let hidden = try workout("Session", on: at(10, 6), sets: [(40, 12)])
+            try store.setLinks("routine", on: hidden, to: [routine])
+            let task = try make(.task, "Lexapro refill")
+            try store.set("doneAt", to: .date(at(10, 7)), on: task)
+            let note = try make(.note, "wifi")
+            try store.set("body", to: .text("wifi password is tacocat24"), on: note)
+            note.createdAt = at(10, 8)
+            let keyed = try make(.note, "key")
+            try store.set("body", to: .text("my key " + "sk-" + "ant-" + "made-up-for-a-test-0123456789"), on: keyed)
+            keyed.createdAt = at(10, 9)
+            // A key past the 280-character cut: the cut could leave a piece that no longer looks like one.
+            let long = try make(.note, "Long")
+            let key = "sk-" + "ant-" + "made-up-for-a-test-0123456789"
+            try store.set("body", to: .text(String(repeating: "a", count: 270) + " " + key), on: long)
+            long.createdAt = at(10, 10)
+            let all = leaves()
+            let texts = all.map(\.text)
+            #expect(texts.contains("Session") && texts.contains("Did Lexapro refill"), "\(texts)")
+            #expect(texts.contains("wifi password is tacocat24") && texts.contains("Private note"), "\(texts)")
+            #expect(!texts.contains { $0.contains("sk-" + "ant-") || $0.contains(String(repeating: "a", count: 50)) })
+            #expect(texts.count(where: { $0 == "Private note" }) == 2, "\(texts)")
+            // Walled all the same: no total, and strict never reads them.
+            #expect(all.allSatisfy { $0.stats.isEmpty && $0.taint == .deviceOnly })
+            let pyramid = MemoryPyramid(leaves: all, calendar: calendar)
+            #expect(pyramid.zoom("/time/2026/10/07", policy: .strict).isError)
+            #expect(pyramid.zoom("/time/2026/10/07", policy: .lab).text.contains("Did Lexapro refill"))
+        }
     }
 
     @Test(arguments: ["ate 600 calories today", "Burned 400 kcal on the bike", "Hurt my knee on the stairs",
