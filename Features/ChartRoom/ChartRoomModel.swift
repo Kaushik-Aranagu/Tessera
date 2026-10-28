@@ -94,7 +94,7 @@ final class ChartRoomModel {
     @ObservationIgnored private let defaults: UserDefaults?
     @ObservationIgnored private let drying: Duration
     @ObservationIgnored private var dryTask: Task<Void, Never>?
-    @ObservationIgnored private let say: (String, @escaping () -> Void) -> Void
+    @ObservationIgnored private var say: (String, @escaping () -> Void) -> Void
     @ObservationIgnored private(set) var engine: ActionEngine?
     @ObservationIgnored private var record: OpRecord?
 
@@ -102,14 +102,15 @@ final class ChartRoomModel {
     static let blank = ChartDoc(name: "Chart room")
 
     init(data: RoomData = DemoRoomData(), defaults: UserDefaults? = nil, drying: Duration = .seconds(PartGhost.drying),
-         say: @escaping (String, @escaping () -> Void) -> Void = { text, undo in
-             TessVoice.shared.say(text, holds: .seconds(10), takeBack: undo)
-         })
+         say: ((String, @escaping () -> Void) -> Void)? = nil)
     {
         self.data = data
         self.defaults = defaults
         self.drying = drying
-        self.say = say
+        self.say = say ?? { _, _ in }
+        if say == nil {
+            self.say = { [weak self] text, undo in self?.showReceipt(text, undo: undo) }
+        }
         if let defaults, let json = defaults.string(forKey: Self.defaultsKey),
            let saved = try? ChartDoc.decode(json)
         {
@@ -119,6 +120,35 @@ final class ChartRoomModel {
             document = Self.blank
             cursor = 0
         }
+    }
+
+    // MARK: The receipt (sheet 382: the shared UndoLine draws it)
+
+    struct Receipt: Identifiable {
+        let id = UUID()
+        let text: String
+        let undo: () -> Void
+    }
+
+    private(set) var receipt: Receipt?
+
+    /// Tess's receipt line with Undo for 10 s. Drawn by the shared `UndoLine`, never by the room.
+    func showReceipt(_ text: String, undo: @escaping () -> Void) {
+        let next = Receipt(text: text, undo: undo)
+        receipt = next
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(10))
+            if self?.receipt?.id == next.id {
+                self?.receipt = nil
+            }
+        }
+    }
+
+    /// Undo was tapped: the change is taken back at once and the line goes.
+    func undoReceipt() {
+        guard let current = receipt else { return }
+        receipt = nil
+        current.undo()
     }
 
     /// Attaches Core's engine: the room is read from, and written to, its objects from here on.

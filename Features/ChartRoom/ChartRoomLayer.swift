@@ -98,6 +98,7 @@ struct ChartRoomLayer: View {
                 }
                 noteLine(scale: scale)
                 historyPanel(scale: scale)
+                receiptLine(scale: scale)
                 widgetNote(scale: scale, dx: dx)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -144,6 +145,21 @@ struct ChartRoomLayer: View {
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .frame(width: 354, alignment: .leading)
             .offset(x: 24, y: 730 * scale)
+        }
+    }
+
+    /// Tess's receipt, with Undo for 10 s, through the shared `UndoLine` (sheet 382).
+    @ViewBuilder
+    private func receiptLine(scale: CGFloat) -> some View {
+        if let receipt = model.receipt {
+            UndoLine(id: receipt.id, canUndo: true, tint: Theme.Colors.Accent.chart, reduceMotion: reduceMotion) {
+                FitLine(forms: FitLine.cuts(receipt.text), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+            } undo: {
+                model.undoReceipt()
+            }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .frame(width: 354, alignment: .leading)
+            .offset(x: 24, y: 738 * scale)
         }
     }
 
