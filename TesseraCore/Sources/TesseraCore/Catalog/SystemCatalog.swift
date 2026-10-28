@@ -237,6 +237,8 @@ public enum SystemCatalog {
                       FieldSpec(key: "cue", name: "Cue", kind: .text),
                       // Words only, never a pace: "in", "out" or "in/out".
                       FieldSpec(key: "breath", name: "Breath", kind: .choice, options: ["in", "out", "in/out"]),
+                      // When it was last checked off; today's checks are the ones on today's Tessera day.
+                      FieldSpec(key: "doneAt", name: "Done at", kind: .date),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
