@@ -589,7 +589,9 @@ struct RollingTimerTime: View {
 }
 
 /// A Needs line as a mise en place tick (sheet 353): tapping it draws the pen stroke through it in 300 ms and it stays
-/// struck until tapped again. Reduce Motion: the strike is simply there.
+/// struck until tapped again. Undo lifts the pen (sheet 354): the line pulls out from the right edge toward the start
+/// in 260 ms, slow first then quick, while the words come back to full ink over 220 ms, and the line repaints unstruck
+/// at 280 ms. Reduce Motion: the strike is simply there, and gone.
 private struct GalleyNeedRow: View {
     let name: String
     var amount: String?
@@ -597,10 +599,12 @@ private struct GalleyNeedRow: View {
     var tap: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var progress: CGFloat?
+    /// The words stay in the struck ink until the pen has left the line.
+    @State private var lifting = false
 
     var body: some View {
         Button(action: tap) {
-            GalleyLeaderRow(name: name, amount: amount, struck: struck)
+            GalleyLeaderRow(name: name, amount: amount, struck: struck || lifting)
                 .overlay {
                     let shown = progress ?? (struck ? 1 : 0)
                     if shown > 0 {
@@ -615,12 +619,24 @@ private struct GalleyNeedRow: View {
         .accessibilityValue(struck ? "Set out" : "")
         .accessibilityAddTraits(.isToggle)
         .onChange(of: struck) { _, now in
-            guard now, !reduceMotion else {
+            guard !reduceMotion else {
                 progress = nil
+                lifting = false
                 return
             }
-            progress = 0
-            withAnimation(.timingCurve(0.3, 0.7, 0.3, 1, duration: 0.3)) { progress = 1 }
+            if now {
+                progress = 0
+                withAnimation(.timingCurve(0.3, 0.7, 0.3, 1, duration: 0.3)) { progress = 1 }
+            } else {
+                progress = 1
+                lifting = true
+                withAnimation(.timingCurve(0.5, 0, 0.75, 0.3, duration: 0.26)) { progress = 0 }
+                withAnimation(.easeOut(duration: 0.22)) { lifting = false }
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(280))
+                    progress = nil
+                }
+            }
         }
     }
 }
