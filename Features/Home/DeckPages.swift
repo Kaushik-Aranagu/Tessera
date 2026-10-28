@@ -17,6 +17,8 @@ struct DeckItem: Equatable {
     var line: String
     var facts: [ItemFact]
     var sets: SetsBody
+    /// The foot's object for Start: "set 1, 185 lb".
+    var start = ""
 }
 
 /// Every door page and lift page of the Deck.
@@ -49,18 +51,18 @@ enum DeckSets {
         var reps: Double
     }
 
-    /// The warm-up ramp: no warm-up sets are logged (they are not history), so the page shows the usual two from the
-    /// opening weight, 50% for 8 and 70% for 5, rounded to 2.5 kg. A seam: Core has no warm-up prescription yet.
-    static let ramp: [(share: Double, reps: Int)] = [(0.5, 8), (0.7, 5)]
+    /// The warm-up: no warm-up sets are logged (they are not history), so the page shows the usual one from the
+    /// opening weight, half of it for 10, rounded to 2.5 kg. A seam: Core has no warm-up prescription yet.
+    static let ramp: [(share: Double, reps: Int)] = [(0.5, 10)]
     static let rampFrom = 40.0
 
     static func rounded(_ kilograms: Double) -> Double {
         (kilograms / 2.5).rounded() * 2.5
     }
 
-    /// "80" and "kg", or "BW" for a bodyweight set.
+    /// "80" and "kg", or "Body" for a bodyweight set.
     static func weightText(_ kilograms: Double) -> (number: String, unit: String) {
-        kilograms <= 0 ? ("BW", "") : (Format.shown(kilograms), Format.unit.symbol)
+        kilograms <= 0 ? ("Body", "") : (Format.shown(kilograms), Format.unit.symbol)
     }
 
     static func repsText(_ reps: Double) -> String {
@@ -94,28 +96,49 @@ enum DeckSets {
         return out
     }
 
-    /// "80 kg x 5, 5, 5, 4": the last session's sets. One weight is said once.
+    /// "180 lb, 4 sets of 5": the last session. Reps that differ are listed: "180 lb, 5, 5, 5 and 4". Different
+    /// weights are listed set by set.
     static func lastTime(_ sets: [Entry]) -> String {
         guard let first = sets.first else { return "" }
-        let times = "\u{00D7}"
-        if sets.allSatisfy({ $0.weight == first.weight }) {
-            let text = weightText(first.weight)
-            let head = text.unit.isEmpty ? text.number : "\(text.number) \(text.unit)"
-            return "\(head) \(times) " + sets.map { repsText($0.reps) }.joined(separator: ", ")
+        func load(_ kilograms: Double) -> String {
+            let text = weightText(kilograms)
+            return text.unit.isEmpty ? text.number : "\(text.number) \(text.unit)"
         }
-        return sets.map { "\(weightText($0.weight).number) \(times) \(repsText($0.reps))" }.joined(separator: ", ")
+        guard sets.allSatisfy({ $0.weight == first.weight }) else {
+            return sets.map { "\(load($0.weight)), \(repsText($0.reps))" }.joined(separator: " and ")
+        }
+        if sets.allSatisfy({ $0.reps == first.reps }) {
+            return "\(load(first.weight)), \(sets.count) \(sets.count == 1 ? "set" : "sets") of \(repsText(first.reps))"
+        }
+        let reps = sets.map { repsText($0.reps) }
+        return "\(load(first.weight)), " + reps.dropLast().joined(separator: ", ") + " and " + (reps.last ?? "")
     }
 
-    /// The item's one line under its title: what is next, or that everything is done, or that nothing is logged.
-    static func line(for lines: [SetLine], hasHistory: Bool) -> String {
-        if let next = lines.first(where: { $0.state == .next }) {
-            let unit = next.unit.isEmpty ? "" : " \(next.unit)"
-            return "Next: \(next.label.lowercased()), \(next.weight)\(unit) \u{00D7} \(next.reps)"
+    /// The foot's object for a lift: "set 1, 185 lb" (the first working set).
+    static func startObject(_ lines: [SetLine]) -> String {
+        guard let set = lines.first(where: { $0.label == "Set 1" }) ?? lines.first else { return "" }
+        return "set 1, " + (set.unit.isEmpty ? set.weight : "\(set.weight) \(set.unit)")
+    }
+
+    /// "first lift", "second lift", ... "lift 7".
+    static func ordinal(_ index: Int) -> String {
+        let words = ["first", "second", "third", "fourth", "fifth", "sixth"]
+        return words.indices.contains(index) ? "\(words[index]) lift" : "lift \(index + 1)"
+    }
+
+    /// "three days ago", "a week ago", "three weeks ago"; nil from a month on (the date reads instead).
+    static func ago(_ date: Date, now: Date, calendar: Calendar) -> String? {
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date),
+                                           to: calendar.startOfDay(for: now)).day ?? 0
+        let words = ["zero", "one", "two", "three", "four", "five", "six"]
+        switch days {
+        case ...0: return "today"
+        case 1: return "yesterday"
+        case 2 ..< 7: return "\(words[days]) days ago"
+        case 7 ..< 14: return "a week ago"
+        case 14 ..< 30: return "\(words[min(days / 7, 4)]) weeks ago"
+        default: return nil
         }
-        if !lines.isEmpty, lines.allSatisfy({ $0.state == .done }) {
-            return "All sets done"
-        }
-        return hasHistory ? "Nothing planned" : "No sets logged yet"
     }
 }
 
@@ -133,24 +156,31 @@ extension DeckPages {
         }
     }
 
-    /// Today's source (the workout running, tonight's, the routine, or the one finished today), its rows, and the
-    /// sets each lift plans. A private workout is one row and nothing else.
-    private static func today(model: AppModel, now: Date,
-                              calendar: Calendar) -> (source: ObjectRecord?, rows: [RankedRow], planned: [UUID: Int])
-    {
+    /// Today: the source workout, its rows, the sets each lift plans, and where each lift sits ("Push A, first lift").
+    private struct TodayPage {
+        var rows: [RankedRow] = []
+        var planned: [UUID: Int] = [:]
+        var position: [UUID: String] = [:]
+    }
+
+    /// Today's source (the workout running, tonight's, the routine, or the one finished today). A private workout is
+    /// one row and nothing else.
+    private static func today(model: AppModel, now: Date, calendar: Calendar) -> TodayPage {
         let store = model.store
         let source: ObjectRecord? = model.session?.workout ?? model.tonightWorkout(around: now)
             ?? model.triedRoutine() ?? model.todaysRoutine(now: now) ?? model.finishedToday(now: now).first?.workout
-        if let source, ObjectPrivacy.routineTitle(source.title, in: store) == ObjectPrivacy.routineLabel {
-            return (source, [RankedRow(id: "page#private", title: ObjectPrivacy.routineLabel, isPrivate: true)], [:])
+        var page = TodayPage()
+        let name = source.map { ObjectPrivacy.routineTitle($0.title, in: store) } ?? ""
+        if name == ObjectPrivacy.routineLabel {
+            page.rows = [RankedRow(id: "page#private", title: name, isPrivate: true)]
+            return page
         }
-        var planned: [UUID: Int] = [:]
-        var rows: [RankedRow] = []
         for (index, slot) in (source?.orderedChildren.filter { !$0.isDeleted } ?? []).enumerated() {
             guard let exercise = store.linkedClass("exercise", of: slot),
                   !ObjectPrivacy.isPrivateWord(exercise.name, in: store) else { continue }
             let count = max(Int(store.number("targetSets", of: slot) ?? 3), 1)
-            planned[exercise.id] = count
+            page.planned[exercise.id] = count
+            page.position[exercise.id] = "\(name), \(DeckSets.ordinal(index))"
             let sessions = model.ledger.sessions(of: exercise)
             let logged = sessions.first.flatMap { calendar.isDate($0.date, inSameDayAs: now) ? $0 : nil }
             let open = sessions.first { !calendar.isDate($0.date, inSameDayAs: now) }?.sets.first ?? logged?.sets.first
@@ -160,47 +190,103 @@ extension DeckPages {
             if doneCount > 0, doneCount < count {
                 sub = "\(doneCount) of \(count) sets"
             }
-            rows.append(RankedRow(
+            page.rows.append(RankedRow(
                 id: "\(TrainingWallTarget.exercise(exercise.id).id)#t\(index)", title: exercise.name,
                 value: open == nil ? "" : text.number, unit: open == nil ? "" : text.unit, sub: sub,
                 state: doneCount >= count ? .done : .none
             ))
         }
-        return (source, rows, planned)
+        return page
+    }
+
+    /// This week, Monday first: only the days with something on them, a workout done or one planned. Today's row is
+    /// titled "Today"; a done day says its minutes, a planned day "Plan". Never "missed".
+    private static func week(model: AppModel, now: Date, calendar: Calendar) -> DeckDoorPage {
+        let store = model.store
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan) ?? 0
+        let days = model.ledger.week(containing: now, plan: plan, now: now,
+                                     sessionsPerWeek: perWeek > 0 ? perWeek : nil, calendar: calendar)
+        var rows: [RankedRow] = []
+        var done = 0
+        var planned = 0
+        for (index, day) in days.enumerated() {
+            let isToday = calendar.isDate(day.day, inSameDayAs: now)
+            let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: day.day) - 1]
+            let title = isToday ? "Today" : weekday
+            let id = "week#\(index)"
+            if let first = day.done.first {
+                done += 1
+                let name = ObjectPrivacy.routineTitle(first.title, in: store)
+                let minutes = first.duration.map { Int(($0 / 60).rounded()) } ?? 0
+                rows.append(RankedRow(id: id, title: title, value: minutes > 0 ? "\(minutes)" : "",
+                                      unit: minutes > 0 ? "min" : "", sub: "\(name), done", state: .done,
+                                      isPrivate: name == ObjectPrivacy.routineLabel))
+            } else if let routine = day.planned, !day.isRest {
+                planned += 1
+                let name = ObjectPrivacy.routineTitle(routine.title, in: store)
+                rows.append(RankedRow(id: id, title: title, value: isToday ? "" : "Plan", sub: name,
+                                      isPrivate: name == ObjectPrivacy.routineLabel))
+            }
+        }
+        return DeckDoorPage(line: "\(done) of \(done + planned) done", rows: rows)
+    }
+
+    /// Library: the workouts of every plan, their lifts as the sub and their usual minutes as the value; a private
+    /// one is "Private workout". Nil when no routine exists (the caller keeps the lift list).
+    private static func workouts(model: AppModel, wall _: TrainingWallFacts) -> DeckDoorPage? {
+        let store = model.store
+        var seen: Swift.Set<UUID> = []
+        let routines = model.objects(of: .plan).flatMap { store.linkedObjects("routines", of: $0) }
+            .filter { !$0.isDeleted && seen.insert($0.id).inserted }
+        guard !routines.isEmpty else { return nil }
+        let rows: [RankedRow] = routines.map { routine in
+            let id = TrainingWallTarget.routine(routine.id).id
+            let title = ObjectPrivacy.routineTitle(routine.title, in: store)
+            guard title != ObjectPrivacy.routineLabel else {
+                return RankedRow(id: id, title: title, sub: "Kept on the phone", isPrivate: true)
+            }
+            let slots = routine.orderedChildren.filter { !$0.isDeleted }
+            let lifts = slots.compactMap { store.linkedClass("exercise", of: $0) }
+                .filter { !ObjectPrivacy.isPrivateWord($0.name, in: store) }
+                .prefix(4).map { TrainingWallFacts.lift($0.name) }
+            let minutes = TrainingPage.estimatedMinutes(sets: NowPage.plannedSets(slots, store: store))
+            return RankedRow(id: id, title: title, value: "\(minutes)", unit: "min", sub: lifts.joined(separator: ", "))
+        }
+        return DeckDoorPage(line: "\(rows.count) \(rows.count == 1 ? "workout" : "workouts")", rows: rows)
     }
 
     /// A lift's item page: facts and sets.
-    private static func item(_ lift: Lift, planned: [UUID: Int], now: Date, calendar: Calendar) -> DeckItem {
+    private static func item(_ lift: Lift, today: TodayPage, now: Date, calendar: Calendar) -> DeckItem {
         let logged = lift.sessions.first.flatMap { calendar.isDate($0.date, inSameDayAs: now) ? $0 : nil }
         let before = lift.sessions.first { !calendar.isDate($0.date, inSameDayAs: now) }
         func sets(_ session: TrainingLedger.Session?) -> [DeckSets.Entry] {
             session?.sets.map { DeckSets.Entry(weight: $0.weight, reps: $0.reps) } ?? []
         }
-        let count = planned[lift.exercise.id] ?? before?.sets.count ?? logged?.sets.count ?? 3
+        let count = today.planned[lift.exercise.id] ?? before?.sets.count ?? logged?.sets.count ?? 3
         let lines = DeckSets.lines(last: sets(before), today: sets(logged), planned: count)
-        let open = (before ?? logged)?.sets.first.map { DeckSets.weightText($0.weight) }
-        let best = lift.best.map { DeckSets.weightText($0.weight) }
-        let estimate = lift.best.flatMap { $0.e1RM > 0 ? DeckSets.weightText($0.e1RM) : nil }
+        func fact(_ kilograms: Double?, _ label: String) -> ItemFact {
+            guard let kilograms else { return ItemFact(number: "\u{2014}", label: label) }
+            let text = DeckSets.weightText(kilograms)
+            return ItemFact(number: text.number, unit: text.unit, label: label)
+        }
+        let open = (before ?? logged)?.sets.first?.weight
+        let estimate = lift.best.flatMap { $0.e1RM > 0 ? $0.e1RM : nil }
+        let day = lift.last.formatted(.dateTime.month(.abbreviated).day())
         return DeckItem(
             title: lift.exercise.name,
-            line: DeckSets.line(for: lines, hasHistory: true),
-            facts: [
-                ItemFact(number: open?.number ?? "None", unit: open?.unit ?? "",
-                         label: planned[lift.exercise.id] == nil ? "Last" : "Today"),
-                ItemFact(number: best?.number ?? "None", unit: best?.unit ?? "", label: "Best"),
-                ItemFact(number: estimate?.number ?? "None", unit: estimate?.unit ?? "", label: "Est. 1 rep"),
-            ],
-            sets: SetsBody(lines: lines, lastTime: DeckSets.lastTime(sets(before)))
+            line: today.position[lift.exercise.id] ?? "Last \(day)",
+            facts: [fact(open, today.planned[lift.exercise.id] == nil ? "Last" : "Today"),
+                    fact(lift.best?.weight, "Best"), fact(estimate, "Est. 1 rep")],
+            sets: SetsBody(lines: lines, lastTime: DeckSets.lastTime(sets(before))),
+            start: DeckSets.startObject(lines)
         )
     }
 
-    static func load(model: AppModel, wall: TrainingWallFacts, deck: TrainingDeckFacts, now: Date = AppClock.now,
+    static func load(model: AppModel, wall: TrainingWallFacts, now: Date = AppClock.now,
                      calendar: Calendar = .current) -> DeckPages
     {
         let store = model.store
-        func shown(_ title: String) -> String {
-            ObjectPrivacy.routineTitle(title, in: store)
-        }
         func day(_ date: Date) -> String {
             date.formatted(.dateTime.month(.abbreviated).day())
         }
@@ -213,30 +299,9 @@ extension DeckPages {
             return Lift(exercise: exercise, sessions: sessions, best: model.ledger.bestSet(of: exercise))
         }.sorted { $0.last > $1.last }
 
-        let (source, todayRows, planned) = today(model: model, now: now, calendar: calendar)
+        let today = today(model: model, now: now, calendar: calendar)
 
-        // The week: today first, then the days that follow, then the days gone by.
-        let weekdays = calendar.weekdaySymbols
-        let week = deck.board.week
-        let todayAt = week.firstIndex { $0.isToday } ?? 0
-        let weekOrder = Array(week[todayAt...] + week[..<todayAt])
-        let weekRows: [RankedRow] = weekOrder.map { day in
-            let name = weekdays[(calendar.firstWeekday - 1 + day.id) % 7]
-            let sub = day.isToday ? (day.done ? "Today, trained" : "Today")
-                : (day.done ? (day.liftName.map { "Trained, \($0)" } ?? "Trained") : "")
-            return RankedRow(
-                id: day.liftID.map { "\(TrainingWallTarget.exercise($0).id)#w\(day.id)" } ?? "week#\(day.id)",
-                title: name, sub: sub, state: day.done ? .done : .none
-            )
-        }
-
-        // Library: the lifts by how lately he did them, the best beside each.
-        let libraryAll = lifts.map { lift in
-            let best = lift.best.map { DeckSets.weightText($0.weight) }
-            return RankedRow(id: "\(TrainingWallTarget.exercise(lift.exercise.id).id)#l", title: lift.exercise.name,
-                             value: best?.number ?? "", unit: best?.unit ?? "", sub: "Last \(day(lift.last))")
-        }
-        // Bests: the newest bests first, every one in gold (best and new are gold).
+        // Bests: the newest bests first, every one in gold. A best from the last month says how long ago in words.
         let bests = lifts.compactMap { lift -> (Lift, TrainingLedger.LoggedSet, Date)? in
             guard let best = lift.best, best.weight > 0,
                   let when = lift.sessions.first(where: { $0.sets.contains { $0.id == best.id } })?.date
@@ -245,15 +310,29 @@ extension DeckPages {
         }.sorted { $0.2 > $1.2 }
         let bestRows = bests.map { lift, best, when in
             let text = DeckSets.weightText(best.weight)
+            let reps = Int(best.reps.rounded())
+            let whenText = DeckSets.ago(when, now: now, calendar: calendar) ?? day(when)
             return RankedRow(id: "best:\(lift.exercise.id.uuidString)#b", title: lift.exercise.name, value: text.number,
-                             unit: text.unit, sub: "\(DeckSets.repsText(best.reps)) reps, \(day(when))",
-                             state: .best)
+                             unit: text.unit, sub: "\(reps) \(reps == 1 ? "rep" : "reps"), \(whenText)", state: .best)
         }
+        let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
+        let fresh = bests.filter { $0.2 >= monthStart }.count
 
-        // Plan: the routines, today's first.
+        // Library: the workouts; the lift list when no routine exists yet.
+        let library = workouts(model: model, wall: wall) ?? DeckDoorPage(
+            line: wall.doors.first { $0.id == "library" }?.label ?? "Nothing logged yet",
+            rows: lifts.map { lift in
+                let best = lift.best.map { DeckSets.weightText($0.weight) }
+                return RankedRow(id: "\(TrainingWallTarget.exercise(lift.exercise.id).id)#l",
+                                 title: lift.exercise.name, value: best?.number ?? "", unit: best?.unit ?? "",
+                                 sub: "Last \(day(lift.last))")
+            }
+        )
+
+        // Plan: the routines, today's first (Core has no block, deload or goal facts yet).
         let routines = model.plan.map { store.linkedObjects("routines", of: $0) }?.filter { !$0.isDeleted } ?? []
-        var planRows: [RankedRow] = routines.map { routine in
-            let title = shown(routine.title)
+        let planRows: [RankedRow] = routines.map { routine in
+            let title = ObjectPrivacy.routineTitle(routine.title, in: store)
             guard title != ObjectPrivacy.routineLabel else {
                 return RankedRow(id: TrainingWallTarget.routine(routine.id).id, title: title, isPrivate: true)
             }
@@ -262,27 +341,22 @@ extension DeckPages {
             return RankedRow(id: TrainingWallTarget.routine(routine.id).id, title: title, value: "\(minutes)",
                              unit: "min", sub: "\(slots.count) \(slots.count == 1 ? "lift" : "lifts")")
         }
-        if let source, let first = routines.firstIndex(where: { $0.title == source.title }), first > 0 {
-            planRows.insert(planRows.remove(at: first), at: 0)
-        }
 
         func line(_ id: String, _ fallback: String) -> String {
             let door = wall.doors.first { $0.id == id }
             return door?.label ?? door?.lines.first ?? fallback
         }
-        let trained = week.filter(\.done).count
         var pages = DeckPages()
-        pages.doors["today"] = DeckDoorPage(line: line("today", "Nothing planned today"), rows: todayRows)
-        pages.doors["week"] = DeckDoorPage(line: "\(trained) trained", rows: weekRows)
-        pages.doors["library"] = DeckDoorPage(line: line("library", "Nothing logged yet"), rows: libraryAll)
+        pages.doors["today"] = DeckDoorPage(line: line("today", "Nothing planned today"), rows: today.rows)
+        pages.doors["week"] = week(model: model, now: now, calendar: calendar)
+        pages.doors["library"] = library
         pages.doors["bests"] = DeckDoorPage(
-            line: bestRows.isEmpty ? "None yet" : "\(bestRows.count) \(bestRows.count == 1 ? "lift" : "lifts")",
+            line: bestRows.isEmpty ? "None yet" : (fresh == 0 ? "None new" : "\(fresh) new since \(day(monthStart))"),
             rows: bestRows
         )
         pages.doors["plan"] = DeckDoorPage(line: line("plan", "No plan yet"), rows: planRows)
-
         for lift in lifts {
-            pages.items[TrainingWallTarget.exercise(lift.exercise.id).id] = item(lift, planned: planned, now: now,
+            pages.items[TrainingWallTarget.exercise(lift.exercise.id).id] = item(lift, today: today, now: now,
                                                                                  calendar: calendar)
         }
         return pages

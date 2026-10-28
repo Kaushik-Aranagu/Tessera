@@ -62,7 +62,7 @@ struct SetsBody: ItemBodyKind {
             let ink = Self.ink(line.state)
             let label = Self.labelSize * scale
             let number = min(Self.numberSize * scale, height * 0.62)
-            let unitSize = max(10, number / 2)
+            let unitSize = max(10, number * 0.41)
             let numberWidth = DoorText.width(line.weight, size: number, bold: false)
             let unitWidth = line.unit.isEmpty ? 0 : DoorText.width(line.unit, size: unitSize, bold: false) + 3
             let repsText = ", \(line.reps)"
@@ -84,7 +84,7 @@ struct SetsBody: ItemBodyKind {
             if unitWidth > 0 {
                 render.runs.append(ElementRun(text: line.unit, rect: CGRect(x: x + 3, y: top + 2,
                                                                             width: unitWidth - 3, height: height - 4),
-                                              size: unitSize, ink: .ink2, isUnit: true))
+                                              size: unitSize, ink: .ink, isUnit: true))
                 x += unitWidth
             }
             render.runs.append(ElementRun(text: repsText, rect: CGRect(x: x, y: top + 2, width: frame.maxX - x,
@@ -243,8 +243,8 @@ private struct SetLineView: View {
                 .foregroundStyle(color)
             if !line.unit.isEmpty {
                 Text(line.unit)
-                    .font(.custom("Figtree", fixedSize: max(10, number / 2)).weight(.regular))
-                    .foregroundStyle(line.state == .todo ? Theme.Colors.inkSecondary : color)
+                    .font(.custom("Outfit", fixedSize: max(10, number * 0.41)).weight(.light))
+                    .foregroundStyle(Theme.Colors.ink)
                     .padding(.leading, 3)
             }
             Text(", \(line.reps)")

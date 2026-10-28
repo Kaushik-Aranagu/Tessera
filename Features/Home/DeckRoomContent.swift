@@ -89,11 +89,11 @@ struct DeckRoomContent: RoomContent {
             .navWord: SlotContent(id: "deck.nav.doors", kind: .text, payload: .navWord("Doors")),
             .doorTitle: SlotContent(id: ContentID("deck.door.\(id).title"), kind: .text, payload: .pageTitle(title)),
             .keystone: keystone,
-            .caption: caption,
+            .caption: doorCaption(id),
             .page: SlotContent(id: ContentID("deck.door.\(id).page"), kind: .rows,
                                payload: .ranked(RankedPageData(rows: rows, accent: accent,
                                                                moreID: DeckPages.moreID(id)))),
-            .actionWord: action,
+            .actionWord: doorFoot(door?.name ?? "Today"),
             .tess: nil,
         ])
     }
@@ -111,12 +111,14 @@ struct DeckRoomContent: RoomContent {
         var name = row?.title ?? "Nothing here"
         var line = row?.sub ?? ""
         var shownFacts: [ItemFact] = []
+        var start: String?
         var body = ItemBody.siblings(SiblingsBody.make(rows: rows, current: itemID))
         if let row, !row.isPrivate, let lift = facts.pages.items[DeckPages.itemKey(itemID)] {
             name = lift.title
             line = lift.line
             shownFacts = lift.facts
             body = .sets(lift.sets)
+            start = lift.start.isEmpty ? nil : lift.start
         } else if let row, !row.isPrivate, let place {
             shownFacts = Self.plainFacts(row, index: place, count: rows.count, door: door?.name ?? "", doorID: id)
         }
@@ -132,12 +134,49 @@ struct DeckRoomContent: RoomContent {
             .doorTitle: SlotContent(id: ContentID("deck.item.\(id).\(itemID).title"), kind: .text,
                                     payload: .pageTitle(title)),
             .keystone: keystone,
-            .caption: caption,
+            .caption: doorCaption(id),
             .page: SlotContent(id: ContentID("deck.item.\(id).\(itemID).page"), kind: .rows,
                                payload: .item(ItemPageData(facts: shownFacts, body: body, accent: accent))),
-            .actionWord: action,
+            .actionWord: itemFoot(name: name, start: start, isPrivate: row?.isPrivate ?? false),
             .tess: nil,
         ])
+    }
+
+    /// Each door's own keystone hint (sheet 284): the caption eases to the new door's words when the Door title turns.
+    static let doorCaptions = [
+        "today": "The board keeps what you chalk on it",
+        "week": "Swipe fast left on the board to wipe it",
+        "library": "Hold a name on the board to see it",
+        "bests": "Bests are written in gold",
+        "plan": "Drag on the board to write",
+    ]
+
+    private func doorCaption(_ door: String) -> SlotContent {
+        let text = Self.doorCaptions[door] ?? Self.caption[0]
+        return SlotContent(id: ContentID("deck.caption.\(door)"), kind: .text, payload: .lines([text]))
+    }
+
+    /// The foot at level 1: Add to the door, Ask Tess about it. The id is the same for every door, so the verb stays
+    /// put and only the object eases over as the door turns.
+    private func doorFoot(_ name: String) -> SlotContent {
+        SlotContent(id: "deck.action.door", kind: .action, payload: .action([
+            ShellStep(id: "add", verb: "Add", object: "to \(name)"),
+            ShellStep(id: "ask", verb: "Ask", object: "Tess about \(name)"),
+        ], accent: accent))
+    }
+
+    /// The foot at level 2: a lift starts its first set (hold) or swaps; any other row opens or asks. A private item
+    /// only asks. Two lifts share one id, so only the object eases; lift to row changes the verbs.
+    private func itemFoot(name: String, start: String?, isPrivate: Bool) -> SlotContent {
+        if let start {
+            return SlotContent(id: "deck.action.lift", kind: .action, payload: .action([
+                ShellStep(id: "start", verb: "Start", object: start, hold: true),
+                ShellStep(id: "swap", verb: "Swap", object: "for dumbbells"),
+            ], accent: accent))
+        }
+        var steps = isPrivate ? [] : [ShellStep(id: "open", verb: "Open", object: name)]
+        steps.append(ShellStep(id: "ask", verb: "Ask", object: "Tess about \(isPrivate ? "this" : name)"))
+        return SlotContent(id: "deck.action.row", kind: .action, payload: .action(steps, accent: accent))
     }
 
     /// The facts of a row with no page of its own yet: its value, where it ranks in the door.
@@ -335,7 +374,7 @@ extension DeckRoomContent.Facts {
         let wall = TrainingWallFacts.load(model, dark: scheme == .dark)
         let deck = TrainingDeckFacts.load(model, wall: wall, dark: scheme == .dark)
         return Self(wall: wall, deck: deck, rows: rows(wall: wall, deck: deck),
-                    pages: DeckPages.load(model: model, wall: wall, deck: deck))
+                    pages: DeckPages.load(model: model, wall: wall))
     }
 
     /// Each door's page: Today's lifts, the week's days, the library's lifts, the bests and the plan's routines.
@@ -450,7 +489,7 @@ struct DeckShellHost: View {
             }
         case let .openDoor(id): navigator.push(.door(DeckRoomContent.room, id))
         case let .openItem(id): DeckRouting.open(id, navigator: navigator, actions: actions)
-        case let .action(id): actions.step(id)
+        case let .action(id): DeckRouting.step(id, navigator: navigator, actions: actions)
         }
     }
 }
@@ -459,6 +498,23 @@ struct DeckShellHost: View {
 /// the row's item page; on an item page a sibling replaces it. "More" rows open the old library, stats or today page.
 @MainActor
 enum DeckRouting {
+    /// The foot's steps at levels 1 and 2 (the landing's keep `DeckActions.step`). Ask has no page of its own yet:
+    /// Tess says how to reach her.
+    static func step(_ id: String, navigator: ShellNavigator, actions: DeckActions?) {
+        let route = navigator.route
+        switch id {
+        case "add":
+            switch route.door ?? DeckRoomContent.firstDoor {
+            case "today", "week": actions?.step("log")
+            case let door: actions?.door(door)
+            }
+        case "ask": TessVoice.shared.say("Hold me and ask. I will answer about what is on this page")
+        case "swap": TessVoice.shared.say("Swapping a lift happens in the workout")
+        case "open": actions?.item(route.item ?? "")
+        default: actions?.step(id)
+        }
+    }
+
     static func open(_ id: String, navigator: ShellNavigator, actions: DeckActions?) {
         let route = navigator.route
         if route.level == 0 {

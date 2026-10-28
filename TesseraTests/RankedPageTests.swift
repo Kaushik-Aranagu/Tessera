@@ -94,10 +94,10 @@ struct RankedPageTests {
         let lines = DeckSets.lines(last: [DeckSets.Entry(weight: 80, reps: 5), DeckSets.Entry(weight: 80, reps: 5),
                                           DeckSets.Entry(weight: 80, reps: 4)],
                                    today: [DeckSets.Entry(weight: 80, reps: 5)], planned: 3)
-        #expect(lines.map(\.label) == ["Warm-up", "Warm-up", "Set 1", "Set 2", "Set 3"])
-        #expect(lines.map(\.state) == [.done, .done, .done, .next, .todo])
+        #expect(lines.map(\.label) == ["Warm-up", "Set 1", "Set 2", "Set 3"], "one warm-up row")
+        #expect(lines.map(\.state) == [.done, .done, .next, .todo])
         #expect(lines.first?.weight == DeckSets.weightText(40).number)
-        #expect(lines[4].reps == "4", "a set shows what last time did at that place")
+        #expect(lines[3].reps == "4", "a set shows what last time did at that place")
     }
 
     @Test func nothingLoggedMakesTheFirstLineNext() {
@@ -109,15 +109,17 @@ struct RankedPageTests {
 
     @Test func bodyweightSetsReadBW() {
         let lines = DeckSets.lines(last: [DeckSets.Entry(weight: 0, reps: 12)], today: [], planned: 1)
-        #expect(lines.map(\.weight) == ["BW"])
+        #expect(lines.map(\.weight) == ["Body"])
         #expect(lines.map(\.label) == ["Set 1"], "no warm-up ramp from a bodyweight lift")
     }
 
     @Test func lastTimeSaysOneWeightOnce() {
         let same = [DeckSets.Entry(weight: 80, reps: 5), DeckSets.Entry(weight: 80, reps: 5),
                     DeckSets.Entry(weight: 80, reps: 4)]
-        #expect(DeckSets.lastTime(same).hasSuffix("5, 5, 4"))
-        #expect(DeckSets.lastTime(same).components(separatedBy: "\u{00D7}").count == 2)
+        #expect(DeckSets.lastTime(same).hasSuffix(", 5, 5 and 4"))
+        #expect(!DeckSets.lastTime(same).contains("\u{00D7}"), "never a times sign")
+        let level = [DeckSets.Entry(weight: 80, reps: 5), DeckSets.Entry(weight: 80, reps: 5)]
+        #expect(DeckSets.lastTime(level).hasSuffix(", 2 sets of 5"))
         #expect(DeckSets.lastTime([]) == "")
     }
 
@@ -144,6 +146,32 @@ struct RankedPageTests {
             let results = ElementConformance.run(spec: element.spec)
             let blocks = ElementConformance.blocks(results)
             #expect(blocks.isEmpty, "\(ElementConformance.report(blocks).joined(separator: "\n"))")
+        }
+    }
+
+    @Test func aBestFromTheLastMonthSaysHowLongAgoInWords() {
+        let calendar = Calendar(identifier: .gregorian)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        func ago(_ days: Int) -> String? {
+            DeckSets.ago(calendar.date(byAdding: .day, value: -days, to: now) ?? now, now: now, calendar: calendar)
+        }
+        #expect(ago(0) == "today")
+        #expect(ago(1) == "yesterday")
+        #expect(ago(3) == "three days ago")
+        #expect(ago(7) == "a week ago")
+        #expect(ago(21) == "three weeks ago")
+        #expect(ago(45) == nil, "older ones keep the date")
+    }
+
+    @Test func theStartObjectNamesTheFirstWorkingSet() {
+        let lines = DeckSets.lines(last: [DeckSets.Entry(weight: 80, reps: 5)], today: [], planned: 2)
+        #expect(DeckSets.startObject(lines).hasPrefix("set 1, 80"))
+        #expect(DeckSets.ordinal(0) == "first lift" && DeckSets.ordinal(6) == "lift 7")
+    }
+
+    @Test func unitsAreFortyOnePercentOfTheTitle() {
+        for row in RankedLayout.rows(count: 7, in: CGRect(x: 0, y: 0, width: 354, height: 364)) {
+            #expect(abs(row.unitSize - max(10, row.titleSize * 0.41)) < 0.001)
         }
     }
 }

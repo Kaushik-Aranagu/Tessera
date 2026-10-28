@@ -127,12 +127,14 @@ struct ItemPage: View {
             ZStack(alignment: .topLeading) {
                 FactsRow(facts: data.facts, accent: data.accent)
                     .frame(width: facts.width, height: facts.height, alignment: .topLeading)
-                    .offset(y: settled || !settle ? 0 : -10)
+                    .offset(y: settled || !settle ? 0 : -8)
+                    .blur(radius: settled || !settle ? 0 : 2)
                     .opacity(settled || !settle ? 1 : 0)
                     .animation(animation(0), value: settled)
                 ItemBodyView(kind: data.body, accent: data.accent, open: open)
                     .frame(width: bodyFrame.width, height: bodyFrame.height, alignment: .topLeading)
-                    .offset(x: bodyFrame.minX, y: bodyFrame.minY + (settled || !settle ? 0 : -10))
+                    .offset(x: bodyFrame.minX, y: bodyFrame.minY + (settled || !settle ? 0 : -8))
+                    .blur(radius: settled || !settle ? 0 : 2)
                     .opacity(settled || !settle ? 1 : 0)
                     .animation(animation(1), value: settled)
             }
@@ -200,9 +202,9 @@ private struct FactCell: View {
                     .minimumScaleFactor(0.6)
                 if !fact.unit.isEmpty {
                     Text(fact.unit)
-                        .font(.custom("Figtree", fixedSize: max(10, ItemPageLayout.numberSize * scale * 0.5))
-                            .weight(.regular))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .font(.custom("Outfit", fixedSize: max(10, ItemPageLayout.numberSize * scale * 0.5))
+                            .weight(.light))
+                        .foregroundStyle(Theme.Colors.ink)
                 }
             }
             .lineLimit(1)

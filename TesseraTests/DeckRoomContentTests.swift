@@ -251,4 +251,43 @@ struct DeckRoomContentTests {
         #expect(ShellRooms.ids.contains(SettingsRoomContent.room))
         #expect(ShellRooms.host(for: "nowhere") == nil)
     }
+
+    @Test func eachDoorHasItsOwnCaptionAtLevelsOneAndTwo() {
+        let content = DeckRoomContent(facts: Self.facts())
+        func caption(_ route: ShellRoute) -> String? {
+            guard case let .lines(lines)? = content.screen(for: route, state: RoomState())[.caption]?.payload
+            else { return nil }
+            return lines.first
+        }
+        #expect(caption(.door("deck", "today")) == "The board keeps what you chalk on it")
+        #expect(caption(.door("deck", "bests")) == "Bests are written in gold")
+        #expect(caption(.door("deck", "plan")) == "Drag on the board to write")
+        #expect(caption(Self.benchRoute) == caption(.door("deck", "today")))
+        let door = content.screen(for: .door("deck", "today"), state: RoomState())
+        let week = content.screen(for: .door("deck", "week"), state: RoomState())
+        #expect(PlaceMove.plan(from: door, to: week)[.caption] == .move, "the caption eases over as the door turns")
+        #expect(PlaceMove.plan(from: door, to: content.screen(for: Self.benchRoute, state: RoomState()))[.caption]
+            == .untouched)
+    }
+
+    @Test func theFootChangesWithTheLevel() {
+        let content = DeckRoomContent(facts: Self.facts())
+        func steps(_ route: ShellRoute) -> [ShellStep] {
+            guard case let .action(steps, _)? = content.screen(for: route, state: RoomState())[.actionWord]?.payload
+            else { return [] }
+            return steps
+        }
+        #expect(steps(.door("deck", "today")).map(\.verb) == ["Add", "Ask"])
+        #expect(steps(.door("deck", "today")).first?.object == "to Today")
+        #expect(steps(.door("deck", "week")).first?.object == "to This week")
+        let lift = steps(Self.benchRoute)
+        #expect(lift.map(\.verb) == ["Start", "Swap"])
+        #expect(lift.first?.hold == true)
+        let row = steps(.item("deck", "today", "page#t1"))
+        #expect(row.map(\.verb) == ["Open", "Ask"])
+        #expect(row.first?.object == "Row")
+        let a = content.screen(for: .door("deck", "today"), state: RoomState())
+        let b = content.screen(for: .door("deck", "week"), state: RoomState())
+        #expect(PlaceMove.plan(from: a, to: b)[.actionWord] == .untouched, "the verb stays put; the object eases over")
+    }
 }

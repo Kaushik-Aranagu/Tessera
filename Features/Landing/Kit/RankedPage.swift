@@ -143,7 +143,7 @@ enum RankedLayout {
             // Never taller than the row can hold, so rows never overlap whatever the size.
             let title = min(base * scale, height * 0.62)
             let value = title * valueRatio
-            let unit = max(unitFloor, title * 0.5)
+            let unit = max(unitFloor, title * 0.41)
             let sub = subSize * min(scale, 1.2)
             let fitsSub = title * 1.25 + sub * 1.3 + 4 <= height
             let layout = RankedRowLayout(rect: CGRect(x: frame.minX, y: y, width: frame.width, height: height),
@@ -210,7 +210,8 @@ struct RankedPage: View {
                             open(row.id)
                         }
                         .frame(height: layouts[index].rect.height)
-                        .offset(y: settled || !settle ? 0 : -10)
+                        .offset(y: settled || !settle ? 0 : -8)
+                        .blur(radius: settled || !settle ? 0 : 2)
                         .opacity(settled || !settle ? 1 : 0)
                         .animation(rowAnimation(index), value: settled)
                     }
@@ -246,7 +247,7 @@ private struct RankedRowView: View {
                     Text(row.title)
                         .font(.custom("Figtree", fixedSize: layout.titleSize).weight(index == 0 ? .bold : .semibold))
                         .tracking(-0.015 * layout.titleSize)
-                        .foregroundStyle(row.isPrivate ? Theme.Colors.inkSecondary : ink)
+                        .foregroundStyle(ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                     if layout.showsSub, !row.sub.isEmpty {
@@ -262,11 +263,11 @@ private struct RankedRowView: View {
                     HStack(alignment: .lastTextBaseline, spacing: 3) {
                         Text(row.value)
                             .font(.custom("Outfit", fixedSize: layout.valueSize).weight(.light))
-                            .foregroundStyle(ink)
+                            .foregroundStyle(Theme.Colors.ink)
                         if !row.unit.isEmpty {
                             Text(row.unit)
-                                .font(.custom("Figtree", fixedSize: layout.unitSize).weight(.regular))
-                                .foregroundStyle(Theme.Colors.inkSecondary)
+                                .font(.custom("Outfit", fixedSize: layout.unitSize).weight(.light))
+                                .foregroundStyle(Theme.Colors.ink)
                         }
                     }
                     .lineLimit(1)

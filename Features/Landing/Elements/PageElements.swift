@@ -145,12 +145,12 @@ struct RankedPageElement: TesseraElement {
                 render.runs.append(ElementRun(text: row.value,
                                               rect: CGRect(x: layout.rect.maxX - valueWidth, y: valueTop,
                                                            width: valueOnly, height: layout.valueSize * 1.25),
-                                              size: layout.valueSize, ink: ink))
+                                              size: layout.valueSize, ink: .ink))
                 if unitWidth > 0 {
                     render.runs.append(ElementRun(text: row.unit,
                                                   rect: CGRect(x: layout.rect.maxX - unitWidth + 3, y: valueTop,
                                                                width: unitWidth - 3, height: layout.valueSize * 1.25),
-                                                  size: layout.unitSize, ink: .ink2, isUnit: true))
+                                                  size: layout.unitSize, ink: .ink, isUnit: true))
                 }
             }
             render.targets.append(layout.rect)
@@ -270,7 +270,7 @@ struct ItemPageElement: TesseraElement {
                 render.runs.append(ElementRun(text: fact.unit,
                                               rect: CGRect(x: numberRect.minX + numberWidth + 3, y: numberRect.minY,
                                                            width: unitWidth - 3, height: numberRect.height),
-                                              size: unitSize, ink: .ink2, isUnit: true))
+                                              size: unitSize, ink: .ink, isUnit: true))
             }
             render.runs.append(ElementRun(text: fact.label.uppercased(),
                                           rect: ItemPageLayout.labelRect(in: column, scale: request.typeScale),
