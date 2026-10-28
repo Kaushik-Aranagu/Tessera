@@ -13,7 +13,7 @@ struct GalleyTicket: Identifiable, Equatable {
     }
 
     enum Ink: Equatable {
-        case dinner, toGet, runsOut, ask
+        case dinner, toGet, runsOut, ask, dishes
     }
 
     let id: String
@@ -24,6 +24,10 @@ struct GalleyTicket: Identifiable, Equatable {
     let big: Bool
     let ink: Ink
     let opens: Opens
+    /// A ticket for an order that counts down ("7 waiting") and leaves the rail when it is finished (sheet 388).
+    var count: Int?
+    /// Hung back on the rail by Undo: the clip catches it with a small dip.
+    var returned = false
 
     /// Lines a page holds in the 182 pt slot (259 v2): about six on a big ticket, three on a small one.
     var perPage: Int {
@@ -158,13 +162,41 @@ struct GalleyRail: View {
                     ForEach(tickets) { ticket in
                         GalleyTicketView(ticket: ticket, open: open)
                             .frame(width: room * ticket.share / max(shares, 1), height: proxy.size.height - Self.railY)
-                            .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .top)))
+                            .transition(ticket.ink == .dishes
+                                ? .modifier(
+                                    active: TicketOffTheRail(away: true),
+                                    identity: TicketOffTheRail(away: false)
+                                )
+                                : .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .top)))
                     }
                 }
                 .offset(y: Self.railY - 3)
             }
             .tesseraAnimation(Theme.Motion.house, value: tickets.map(\.id))
+            // One light tick when a finished ticket comes off (sheet 388).
+            .onChange(of: tickets.map(\.id)) { old, new in
+                if new.count < old.count {
+                    cue.play(.selection)
+                }
+            }
+            .tesseraFeedback(cue)
         }
+    }
+
+    @State private var cue = HapticCue()
+}
+
+/// A finished ticket leaving the rail, and Undo hanging it back (sheet 388): it tips from its left corner (-4 degrees
+/// about x 0.3), rises 70 pt and fades while its words stay as they are; the others spread to fill the gap. Coming
+/// back it runs the same in reverse.
+struct TicketOffTheRail: ViewModifier {
+    let away: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .rotationEffect(.degrees(away ? -4 : 0), anchor: UnitPoint(x: 0.3, y: 0))
+            .offset(y: away ? -70 : 0)
+            .opacity(away ? 0 : 1)
     }
 }
 
@@ -179,6 +211,8 @@ struct GalleyTicketView: View {
     @State private var page = 0
     @State private var turn: Double = 0
     @State private var cue = HapticCue()
+    /// The clip's offset while it catches a returning ticket: up 3 pt, a hold, 1 pt down, then home (sheet 388).
+    @State private var clipLift: CGFloat = 0
 
     private var dark: Bool {
         scheme == .dark
@@ -193,7 +227,7 @@ struct GalleyTicketView: View {
         case .dinner: dark ? Color(hex: 0xE2A07F) : Color(hex: 0x9C4B2C)
         case .toGet: dark ? Color(hex: 0xB5BE7A) : Color(hex: 0x5E6B1F)
         case .runsOut: dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
-        case .ask: LandingAccent.kitchen
+        case .ask, .dishes: LandingAccent.kitchen
         }
     }
 
@@ -203,7 +237,15 @@ struct GalleyTicketView: View {
         VStack(alignment: .leading, spacing: 0) {
             GalleyFitLine(text: ticket.title.uppercased(), face: "IBMPlexSansCond-Bold", size: 13, tracking: 13 * 0.08,
                           color: titleColor)
-            if let sub = ticket.sub {
+            if let count = ticket.count {
+                // The count steps down like a counter; at nothing it reads the clear sink (sheet 388).
+                Text(count == 0 ? "THE SINK IS CLEAR" : "\(count) WAITING")
+                    .font(.custom("IBMPlexSansCond-Medium", fixedSize: 10.5))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .contentTransition(.numericText(countsDown: true))
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.08), value: count)
+            } else if let sub = ticket.sub {
                 GalleyFitLine(text: sub.uppercased(), face: "IBMPlexSansCond-Medium", size: 10.5,
                               color: Theme.Colors.inkSecondary)
             }
@@ -247,8 +289,25 @@ struct GalleyTicketView: View {
         Rectangle()
             .fill(Theme.Colors.inkSecondary)
             .frame(width: 18, height: 6)
-            .offset(y: -3)
+            .offset(y: -3 + clipLift)
             .accessibilityHidden(true)
+            .onAppear {
+                if ticket.returned {
+                    dip()
+                }
+            }
+    }
+
+    /// Undo hangs the ticket back: the clip starts 3 pt up, holds, dips 1 pt past the rail, then settles, over 0.56 s.
+    private func dip() {
+        guard !reduceMotion else { return }
+        clipLift = -3
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(160))
+            withAnimation(.easeIn(duration: 0.2)) { clipLift = 1 }
+            try? await Task.sleep(for: .milliseconds(200))
+            withAnimation(.easeOut(duration: 0.2)) { clipLift = 0 }
+        }
     }
 
     /// Over the clip to the next page (rotate to edge-on, swap the page, come back round), or back. At either end the

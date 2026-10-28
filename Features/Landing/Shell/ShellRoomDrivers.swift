@@ -119,6 +119,10 @@ final class GalleyRoomDriver: ShellRoomDriver {
     var recipe: KitchenCookCover?
     var cookCover: KitchenCookCover?
     var shopping = false
+    /// The Dishes ticket's count while it is on the rail (sheet 388); nil once it has come off. Until Core has the
+    /// Dishes model this is only shown by the `-washDishes` simulator flag.
+    var dishes: Int?
+    var dishesReturned = false
     @ObservationIgnored private var facts: GalleyRoomContent.Facts?
     @ObservationIgnored private var front: KitchenFront?
     @ObservationIgnored private weak var model: AppModel?
@@ -134,7 +138,51 @@ final class GalleyRoomDriver: ShellRoomDriver {
 
     func scene(_ key: String) -> AnyView? {
         guard key == GalleyRoomContent.sceneKey, let facts else { return nil }
-        return AnyView(GalleyRail(tickets: facts.pass.tickets) { [weak self] in self?.go($0) })
+        return AnyView(GalleyRail(tickets: tickets(facts)) { [weak self] in self?.go($0) })
+    }
+
+    /// The rail's tickets, with the Dishes ticket first while there are dishes (sheet 388).
+    private func tickets(_ facts: GalleyRoomContent.Facts) -> [GalleyTicket] {
+        guard let dishes else { return facts.pass.tickets }
+        let ticket = GalleyTicket(id: "dishes", title: "Dishes", sub: nil,
+                                  lines: dishes == 0 ? ["all put away"] : [], big: false, ink: .dishes, opens: .recipes,
+                                  count: dishes, returned: dishesReturned)
+        return [ticket] + facts.pass.tickets
+    }
+
+    func entered(navigator _: ShellNavigator) {
+        #if DEBUG
+            // Simulator only (LaunchFlags): `-washDishes` hangs a Dishes ticket with 7 waiting and washes it after 4 s.
+            guard LaunchFlags.has("-washDishes"), dishes == nil else { return }
+            dishes = 7
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(4))
+                await wash()
+            }
+        #endif
+    }
+
+    /// Wash: the count steps down about a dish a beat (80 ms), then half a second later the ticket comes off with
+    /// "Dishes, done" and an Undo that hangs it back at 7 waiting. Under Reduce Motion it is simply gone (sheet 388).
+    func wash() async {
+        guard let waiting = dishes, waiting > 0 else {
+            TessVoice.shared.say("The sink is clear")
+            return
+        }
+        let reduce = UIAccessibility.isReduceMotionEnabled
+        dishesReturned = false
+        if !reduce {
+            for left in stride(from: waiting - 1, through: 0, by: -1) {
+                withAnimation(.easeOut(duration: 0.08)) { dishes = left }
+                try? await Task.sleep(for: .milliseconds(80))
+            }
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduce) { dishes = nil }
+        TessVoice.shared.say("Dishes, done", holds: .seconds(10), takeBack: { [weak self] in
+            self?.dishesReturned = true
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduce) { self?.dishes = waiting }
+        })
     }
 
     func overlay(navigator _: ShellNavigator) -> AnyView {
