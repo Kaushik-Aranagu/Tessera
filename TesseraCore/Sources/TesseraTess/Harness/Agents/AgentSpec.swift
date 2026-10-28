@@ -83,7 +83,7 @@ public struct AgentSpec: Sendable, Equatable, Identifiable {
         name: "Kitchen", title: "Galley", persona: Persona.galley, room: AppID.kitchen.rawValue, plain: .plain,
         open: .open,
         tools: reads + web + ["remember", "createRecipe", "addGroceries", "addToList", "cookTogether",
-                              "setServeTime", "startShop", "createTask"],
+                              "setServeTime", "startShop", "createTask", "addDishes", "washDishes"],
         beliefClasses: [.recipe, .ingredient, .cook, .cookSession, .place], notebook: "/memories/kitchen",
         summaries: Summary.allCases, expertise: .kitchen, maxRounds: 8, maxChildren: 3, depth: 1, labOnly: false
     )

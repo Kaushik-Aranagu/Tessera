@@ -77,6 +77,16 @@ public enum ElementCatalog {
                                        reaction: .keystoneTakes)
     static let createRecipe = ElementCall("createRecipe", phrases: ["save the recipe", "new recipe"],
                                           inputs: [CallInput("title", from: .asked)], reaction: .keystoneTakes)
+    /// The sink's ticket on the rail (sheet 388): Wash takes it off; dishes he names go on it.
+    /// Never a bare "wash" or "used": "wash the rice" and "I used the last eggs" are not the sink. No add phrase sits
+    /// inside a wash phrase, so "did the dishes" binds Wash alone.
+    static let washDishes = ElementCall("washDishes", phrases: ["wash up", "wash the dishes", "did the dishes",
+                                                                "dishes done", "washed up"],
+                                        reaction: .strike)
+    static let addDishes = ElementCall("addDishes", phrases: ["more plates", "dirty dishes", "more dishes"],
+                                       inputs: [CallInput("count", from: .asked),
+                                                CallInput("label", from: .asked, required: false)],
+                                       reaction: .keystoneTakes)
 
     /// Watch
     static let tend = ElementCall("tendRoutine", phrases: ["done", "did it", "water", "tend"],
@@ -157,9 +167,10 @@ public enum ElementCatalog {
         ],
         "galley": [
             .widget: [startCooking, setServeTime, done, openItem],
-            .keystone: [openItem, startCooking, addGroceries],
+            .keystone: [openItem, startCooking, addGroceries, washDishes, addDishes],
             .page: [startCooking, openItem],
-            .actionWord: [startCooking, cookTogether, addGroceries, startShop, done, createRecipe],
+            .actionWord: [startCooking, cookTogether, addGroceries, startShop, done, createRecipe, washDishes,
+                          addDishes],
         ],
         "watch": [
             .widget: [tend, pause, openItem],

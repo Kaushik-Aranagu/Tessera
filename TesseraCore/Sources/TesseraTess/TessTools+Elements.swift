@@ -44,6 +44,34 @@ extension TessTools {
             return try [call.perform(LogSpend(amount: amount, note: args["note"] as? String, spentAt: call.now))]
         }
     }
+
+    /// The sink (sheet 388): dishes from a meal not cooked here ("I used three more plates"). A cook adds its own
+    /// load, so this is only for what he names; nothing is guessed.
+    static var addDishes: Tool {
+        Tool(name: "addDishes", description: "Put dishes in the sink that a cook here didn't, e.g. 3 more plates",
+             input: .object([("count", .integer("How many dishes, as he said")),
+                             ("label", .nullable(.string("What they were from, e.g. Lunch")))]))
+        { args, call in
+            let count = try Int(args.number("count"))
+            guard (1 ... maxDishes).contains(count) else { throw TessToolError("count must be 1 to \(maxDishes)") }
+            let label = (args["label"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return try [call.perform(AddDishes(count: count, label: label?.isEmpty == false ? label : nil,
+                                               at: call.now))]
+        }
+    }
+
+    /// The most dishes one `addDishes` puts in: past it a misheard number would read as hours at the sink.
+    static let maxDishes = 50
+
+    /// "I did the dishes": every open load is washed at once, as one ghost with Undo.
+    static var washDishes: Tool {
+        Tool(name: "washDishes", description: "Mark every dish in the sink washed", input: .object([])) { _, call in
+            guard !Sink.openLoads(in: call.store).isEmpty else {
+                throw TessToolAnswer(line: "The sink is clear")
+            }
+            return try [call.perform(WashDishes(at: call.now))]
+        }
+    }
 }
 
 @MainActor
