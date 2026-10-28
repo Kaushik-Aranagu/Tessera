@@ -2,7 +2,7 @@ const {chromium}=require('/opt/node22/lib/node_modules/playwright');
 (async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
 await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
 await pg.evaluate(()=>go('chart'));await pg.waitForTimeout(1500);
-for(let i=0;i<5;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(2300)}
+for(let i=0;i<6;i++){await pg.evaluate(()=>__ch.say());await pg.waitForTimeout(2300)}
 const ctr=async s=>pg.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]},s);
 const st=()=>pg.evaluate(()=>({at:__ch.at,tmw:__ch.tmw,wish:document.querySelector('.ch-wish')?.className||'',key:[...document.querySelectorAll('.ch-key b')].map(b=>b.textContent).join(' '),cap:document.querySelector('.ch-cap')?.textContent,tess:document.querySelector('.ch-tess')?.textContent||'',act:document.querySelector('.ch-act').textContent,gh:[...document.querySelectorAll('.ch-c.gh')].map(e=>e.dataset.p).join(','),rc:document.querySelector('.receipt')?.textContent||'',pls:[...document.querySelectorAll('.ch-pl')].map(p=>p.className.replace('ch-pl','').trim()||'-').join('|')}));
 const r={};let c=await ctr('.ch-act');await pg.mouse.click(c[0],c[1]);await pg.waitForTimeout(900);r.mid=await st();await pg.waitForTimeout(1500);r.set=await st();await pg.screenshot({path:'WI1.png'});

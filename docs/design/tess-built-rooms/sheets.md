@@ -147,7 +147,7 @@ The board's Chart room now has seven sentences. The new one comes before "Let me
 ## Sheet 370: Allow waits
 
 - A change that widens what the room can do now waits for him. When "Let me mark one watered" has dried, the receipt no longer says "Watered, set". It reads "Waiting for your Allow" with "Not now", and the reach line above it, "This room can now mark plants watered" with Allow, is the only way forward
-- Until he taps Allow, nothing in the room can write: the widget place keeps its outline (sheet 358, it isn't set yet), and the action word stays on "Say anything else" instead of "Watered the orchid"
+- Until he taps Allow, nothing in the room can write, and the action word stays on "Say anything else" instead of "Watered the orchid"
 - Not now plays the change backwards (sheet 368) and the room is as it was before the sentence
 - Allow sets it. The outline lets go, the action word turns to "Watered the orchid", and the receipt then reads "Watered, set" with Undo. Undo takes back the change and the grant together, so the room can't keep a reach he has taken back
 - Before this, the receipt said "set" while the room still waited for Allow, so the screen claimed something the store hadn't done. The receipt now only ever names what is true
@@ -210,3 +210,15 @@ The 2-second drying line was only a wait. Now it is the window for him to change
 - Three rules hold in every state: nothing is written before a change sets; taking a room down never deletes what it shows; every state's Reduce Motion form is its end state at once
 - Core's tests get one case per arrow, and the round trips (stop, un-dry, archive then restore) must leave the store byte-identical
 - Board: the Chart room's map note now lists 371 to 373
+
+## Sheet 375: each plant gets a door
+
+The doors place was the one place the Chart room never filled. The board's room now has eight sentences, and the new one comes before the wish: "Give each plant a door".
+
+- It fills the doors place the way every room's doors look (sheet 283): the room's own dial on the right, under his right thumb, and the summary on the left. The rows are the plants in the keystone's order, thirstiest first, each with its days in small numbers. The focused row takes its plant's color: wine for the one that needs water, olive for the rest. The summary is where the plant lives ("By the east window")
+- Taps in the dial turn it or open the focused door. They never point at the place (sheet 363), so choosing a plant and asking Tess to change the doors can't get mixed up. Pointing still works on the summary
+- A door opens the plant itself. Nobody designed a page for a plant, so it gets the class's plain page, the one every object has until he says how it should look. It has a back word ("Plants"), the name in olive and one line ("Watered 6 days ago, by the east window"). The keystone slot holds its one number, with the unit at half size ("6 days", or "Today"). Below that come the caption, the care note and Tess's line: "Every plant gets this plain page until you say how it should look"
+- Watering on the plant's page needs no Allow. Allow is for what a room Tess built may do. Here he is marking his own plant on its own page. The action word reads "Watered today", the number rises into "Today", and the receipt reads "Monstera, watered" with Undo. Once it is watered, the action word reads "Back to Plants"
+- Back in the room, the keystone and the doors already show it ("6 2 1 0", the Monstera last). Nothing was copied, because the room only ever showed the plants. The dial stays on the plant he opened, now at its new place in the order
+- Core: the doors part is a `doors` part bound to the room's list (`bind: Plant`, the list's sort), so it re-orders with the keystone. Each row's object id is the door's destination. The plain page is the class's default `ViewDef` (title, one line from the two most recent fields, the first number field in the keystone slot, notes, Tess's line), generated, not stored, until he changes it. A write from the object's own page is his own op and goes through no room grant. Builder A: the doors place uses the same door dial view as every landing. The plain page is `ObjectPage` with the generated view
+- Probe: `docs/design/boards/r66/pdr.js` (doors ghost while drying, then set; keystone order, wine focus, summary; turning doesn't select the place; the plant page and its line and number; watering there with Undo; back in the room, re-ordered and still focused; no overlap with the wish, the reach line, the receipt or Tess, in paper and black). The other Chart room probes now walk eight sentences

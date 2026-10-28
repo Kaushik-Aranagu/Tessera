@@ -120,7 +120,7 @@ A change (one op group from one sentence):
 |---|---|---|---|
 | Staged | his words in his line, the parts in ghost (38%), the drying line running (2 s) | a sentence | set when the line ends, or at once when a new sentence starts (the line runs to its end in 160 ms); stopped by touching his words or saying "wait" |
 | Stopped | the line holds 120 ms, runs back from where it got to, the ghost lets go; Tess: "Stopped, nothing changed"; no receipt | touch on his words while staged | none, nothing was written |
-| Waiting for Allow | the wine reach line with Allow; the place's outline stays up, since nothing is set; receipt "Waiting for your Allow" with Not now | a staged change whose validator result is `needsAllow` reaching the end of its line | set on Allow; un-dried on Not now; a new sentence leaves it waiting |
+| Waiting for Allow | the wine reach line with Allow; nothing it asks for can happen yet; receipt "Waiting for your Allow" with Not now | a staged change whose validator result is `needsAllow` reaching the end of its line | set on Allow; un-dried on Not now; a new sentence leaves it waiting |
 | Set | full ink, the outline lets go, receipt `say` with Undo for 10 s | the line ending, or Allow | un-dried by Undo |
 | Un-dried | the ghost comes back, the line runs back right to left (600 ms, easing in), the outline comes back up | Undo on a set change, Not now on a waiting one | none, the op group is marked `undone` when the line reaches 0 |
 | Refused | nothing changes; Tess says why in her line and offers what the rules allow | a validator `refuse` | none |

@@ -2873,6 +2873,13 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-tess{left:36px;top:440px;width:330px;font:italic 400 20px/28px Newsreader,serif;color:var(--ink)}
 .ch-heard.fast{opacity:.55;transition:none}
 .ch-heard.live{cursor:pointer;padding-block:8px;margin-top:-8px}
+.ch-doors{left:24px;top:640px;width:354px;height:120px}
+.ch-dsum{position:absolute;left:0;top:48px;width:180px;font:500 15px/24px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden}
+.ch-dial{right:0;top:0;width:160px}
+.pl-key{left:24px;top:196px;width:354px;height:182px;display:flex;align-items:flex-end;gap:10px;padding-bottom:22px}
+.pl-key b{font:300 96px/1 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
+.pl-key span{font:300 48px/1 var(--num);color:var(--ink2);padding-bottom:8px}
+.pl-care{left:24px;top:420px;width:354px;font:400 17px/24px var(--sans);color:var(--ink)}
 .chart .ch-c[data-p]{cursor:pointer}
 .ch-wish{left:24px;top:584px;width:354px;font:400 15px/22px var(--sans);color:var(--ink2);white-space:nowrap;transition:color .3s}.ch-wish.on{color:var(--ink)}
 .ch-nm{font-style:normal;display:inline-block}
@@ -2883,6 +2890,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
    the room's own top fact, live ("Orchid, 6 days"), so Bridge reads a built room the way it reads a preset one. The dial
    keeps the old name until he turns to that row; there, once, the old name lifts off and the new one rises in its place.
    Teal sits ΔE76 6.8 from the Purse's colour, so the plant room takes olive, the Lists colour the Log freed (sheet 280). */
+const WHERE={Orchid:'By the east window',Monstera:'By the couch',Fern:'In the bathroom',Basil:'On the kitchen sill'},CARE={Orchid:'Ice cubes, not a pour',Monstera:'When the top inch is dry',Fern:'Keep it out of the sun',Basil:'Pinch the flowers off'};
 ROOMS.chart={n:'Chart room',fact:'Say what it’s for',c:'var(--slate)',was:null,shown:'Chart room'};{const i=APPS.indexOf('money');if(i>=0&&!APPS.includes('chart'))APPS.splice(i+1,0,'chart')}
 function chartLabel(d,f){const R=ROOMS.chart;if(R.shown===R.n)return R.n;
  if(!f||RM){if(f){R.shown=R.n;return R.n}return '<span style="color:var(--ink2)">'+R.shown+'</span>'}
@@ -2912,9 +2920,11 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   {s:'Make the keystone a ring of pots I can spin',no:'A ring that spins is a new kind of part. I’m building it on the Mac, and it comes with your next install',r:'Ring, queued for your next install',queue:1},
   /* 367: a wish. A sentence about the future becomes a rule the room keeps, shown as its own line at the foot of
      the widget place. Tapping it shows tomorrow: every number one day on, in ghost, and the notice Tess would send */
+  /* 375: doors. Every plant becomes a door in the room's own dial, in the keystone's order, and each opens the plant */
+  {s:'Give each plant a door',fills:['doors'],r:'Doors, set',doors:1},
   {s:'Tell me when one goes a week without water',fills:['wid'],r:'Wish, set',wish:1},
   {s:'Let me mark one watered',fills:['wid'],r:'Watered, set',reach:1}];
- const RI=SAY.findIndex(x=>x.reach)+1,WI=SAY.findIndex(x=>x.wish)+1;let tmw=false;
+ const RI=SAY.findIndex(x=>x.reach)+1,WI=SAY.findIndex(x=>x.wish)+1,DI=SAY.findIndex(x=>x.doors)+1;let tmw=false;
  const layer=h('div');el.appendChild(layer);
  const act=h('button','ch-act');el.appendChild(act);
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
@@ -2924,10 +2934,14 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(at>=2)s+='<div class="ch-c ch-key w-'+WAYS[wv??way]+(calm?' calm':'')+(big?' big':'')+'" data-p="key">'+keyHTML(WAYS[wv??way],t)+'</div>'+
    '<div class="ch-c ch-cap" data-p="cap">'+(tmw?(t.d>=7?'Tomorrow, the <em class="ch-nm">'+t.n.toLowerCase()+'</em> has gone a week':'Tomorrow, none has gone a week'):'Days since water'+(at>=3&&t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> first':''))+'</div>';
   if(hist){const N=realAt??at;s+='<div class="ch-c ch-hist">'+SAY.slice(0,N).map((x,i)=>({x,i})).reverse().map(({x,i})=>'<button data-v="'+i+'" class="'+(i===at-1?'on':'')+'"><span>'+x.s+'</span><b>'+tm(i)+'</b></button>').join('')+'</div>'}
+  if(!hist&&at>=DI)s+='<div class="ch-c ch-doors" data-p="doors"><div class="ch-dsum"></div><div class="dial ch-dial"></div></div>';
   if(!hist&&at>=WI)s+='<div class="ch-c ch-wish'+(tmw?' on':'')+'" data-p="wid">Tess tells you when one goes a week dry</div>';
   if(hist);else if(at>=RI&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
   if(hist);else if(heard)s+='<div class="ch-c ch-heard'+(rp?' fast':' live')+'">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
   layer.innerHTML=s;
+  {const dh=layer.querySelector('.ch-dial'),sm=layer.querySelector('.ch-dsum');if(dh){const L=[...plants].sort((a,b)=>b.d-a.d),f=Math.max(0,L.findIndex(p=>p.n===ROOMS.chart.door));
+   dial(dh,L.map(p=>({n:p.n,d:p.d,color:p.d>=5?'var(--wine)':'var(--lists)'})),{start:f,slot:40,blur:1.6,label:(d,F)=>'<span style="font-size:'+(F?26:20)+'px;font-weight:'+(F?700:600)+'">'+d.n+'</span><i>'+d.d+'</i>',
+    open:d=>{if(!dry&&!rp&&!tmw&&realAt==null&&!hist)go('plant',{n:d.n})},change:d=>{ROOMS.chart.door=d.n;sm.textContent=WHERE[d.n]}})}}
   if(realAt!=null)ghost=['title','line','key','cap'];if(tmw)ghost=['line','key','cap'];
   if(ghost)ghost.forEach(k=>layer.querySelectorAll('[data-p="'+k+'"]').forEach(e=>{if(e.classList.contains('ch-wish')&&at!==WI)return;e.classList.add('gh')}));
   Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('pt',sel===k));
@@ -2970,7 +2984,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(nb&&from!==d){const sg=Math.sign(d-from);let v=from;nb.textContent=v;const tick=()=>{if(!nb.isConnected)return;v+=sg;nb.textContent=v;if(v!==d)setTimeout(tick,Math.max(40,380/Math.abs(d-from)))};setTimeout(tick,60)}
   if(top0!==top1){layer.querySelectorAll('.ch-nm').forEach(e=>e.animate([{opacity:0,transform:'translateY(.4em)'},{opacity:1,transform:'none'}],{duration:260,delay:180,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
    setTimeout(()=>{if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}},380)}}
- const wpull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget'};
+ const wpull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget',doors:'doors'};
  function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;{const rc=el.querySelector('.receipt');if(rc)rc.innerHTML=''}
   if(S.no){draw();cur={ls:[],t0:performance.now(),back:()=>{at--}};dry=setTimeout(()=>{dry=null;cur=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
     if(S.queue)receipt(el,S.r,()=>{queued=false;tline='';draw()});
@@ -3056,7 +3070,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(e.type!=='pointerup'||Math.abs(dx)<40){if(k&&k.style.translate){const t=k.style.translate;k.style.translate='';if(!RM)k.animate([{translate:t},{translate:(-.12*parseFloat(t))+'px 0',offset:.7},{translate:'0px 0'}],{duration:320,easing:'cubic-bezier(.2,.8,.3,1)'})}return}
   const nx=((wv??way)+(dx<0?1:2))%3;wv=nx===way?null:nx;tline=wv==null?'':TL[WAYS[wv]];heard='';sel=null;flip()};
  layer.addEventListener('pointerup',wend);layer.addEventListener('pointercancel',wend);
- layer.onclick=e=>{if(e.target.closest('.ch-heard')&&dry&&cur){stop();return}if(swiped){swiped=false;return}if(held){held=false;if(e.target.closest('.ch-ttl'))return}if(e.target.closest('.ch-wish')&&!dry){tomorrow(!tmw);return}const v=e.target.closest('[data-v]');if(v){const n=+v.dataset.v+1;if(realAt==null)realAt=at;at=n;if(at===realAt){realAt=null}return draw()}if(hist)return;const b=e.target.closest('[data-a="allow"]');if(b&&!dry)return allowNow();const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
+ layer.onclick=e=>{if(e.target.closest('.ch-heard')&&dry&&cur){stop();return}if(e.target.closest('.ch-dial'))return;if(swiped){swiped=false;return}if(held){held=false;if(e.target.closest('.ch-ttl'))return}if(e.target.closest('.ch-wish')&&!dry){tomorrow(!tmw);return}const v=e.target.closest('[data-v]');if(v){const n=+v.dataset.v+1;if(realAt==null)realAt=at;at=n;if(at===realAt){realAt=null}return draw()}if(hist)return;const b=e.target.closest('[data-a="allow"]');if(b&&!dry)return allowNow();const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
   sel=sel===c.dataset.p?null:c.dataset.p;clearTimeout(selT);if(sel)selT=setTimeout(()=>{sel=null;draw()},30000);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}draw()};
  /* 372: the room keeps itself while he is away, and a room he brings back after taking it down rebuilds itself the way
     he made it. The frame sketches in (366), then his sentences go by in his line, softer and quick, each setting its
@@ -3085,6 +3099,28 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
 /* 359: the same Chart room after a dozen sentences. It renders through landingV3, the player every preset room uses,
    so a room built by talking is indistinguishable from a designed one: same places, same moves, same type. What Tess
    was told is listed in docs/design/tess-built-rooms/sheets.md (sheet 359). */
+/* 375: a plant's own page. Nobody designed a page for a plant, so it gets the class's plain page: its name, one line,
+   its one number in the keystone slot, its care note, and Tess saying how to change it. It is the object, not the room:
+   watering here needs no Allow, because it is him marking his own plant, not a room Tess built doing it. Back in the
+   room, the keystone and the doors show it, because the room only ever showed the plants */
+SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain page until you say how it should look.',render(el,P){el.classList.add('chart');
+ const R=ROOMS.chart,pl=(R.saved&&R.saved.plants.find(p=>p.n===P.n))||{n:P.n,d:0};
+ const bw=h('div','backw','Plants');bw.style.color='var(--lists)';bw.onclick=back;el.appendChild(bw);
+ const t=h('div','ttl2',pl.n);t.style.color='var(--lists)';el.appendChild(t);
+ const ln=h('div','ch-c ch-line');ln.style.top='128px';el.appendChild(ln);
+ const k=h('div','ch-c pl-key');el.appendChild(k);
+ const cp=h('div','ch-c ch-cap','Days since it was last watered');el.appendChild(cp);
+ el.appendChild(h('div','ch-c pl-care',CARE[pl.n]||''));
+ const ts=h('div','ch-c ch-tess','Every plant gets this plain page until you say how it should look');ts.style.top='470px';el.appendChild(ts);
+ const act=h('button','ch-act');el.appendChild(act);
+ const ago=d=>d===0?'today':d===1?'yesterday':d+' days ago';
+ function draw(){ln.textContent='Watered '+ago(pl.d)+', '+WHERE[pl.n].replace(/^./,c=>c.toLowerCase());
+  k.innerHTML=pl.d===0?'<b>Today</b>':'<b>'+pl.d+'</b><span>'+(pl.d===1?'day':'days')+'</span>';
+  act.className='ch-act'+(pl.d>0?' water':'');act.innerHTML=pl.d>0?'<span class="av">Watered</span><span class="ao">today</span>':'<span class="av">Back</span><span class="ao">to Plants</span>'}
+ act.onclick=()=>{if(pl.d===0)return back();const was=pl.d;pl.d=0;draw();
+  if(!RM)k.querySelector('b').animate([{transform:'translateY(.25em)',opacity:.2},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
+  receipt(el,pl.n+', watered',()=>{pl.d=was;draw()})};
+ draw();window.__pl={get d(){return pl.d}};return null}};
 SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say what to change and I’ll redo that place.',render(el){
  const PL=[['Orchid',6,'Wednesday','Ice cubes, not a pour','By the east window'],['Monstera',4,'Friday','When the top inch is dry','By the couch'],['Fern',2,'Sunday','Keep it out of the sun','In the bathroom'],['Basil',1,'yesterday','Pinch the flowers off','On the kitchen sill']];
  return landingV3(el,{name:'Plants',color:'var(--lists)',theme:'grow',
