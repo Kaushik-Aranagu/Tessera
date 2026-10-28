@@ -63,7 +63,7 @@ public struct RoomPatchValidator {
                 return "A new part needs an id"
             }
             guard document.part(id) == nil else { return "The part \(id) is already there, so set it instead" }
-            guard let kind = step.kind, RoomKit.kind(kind) != nil else {
+            guard let said = step.kind, let kind = RoomKit.kind(said)?.name else {
                 return "\(step.kind ?? "That") isn't a kind of part this room has"
             }
             guard let place = step.place else { return "The part \(id) needs a place" }
@@ -85,7 +85,7 @@ public struct RoomPatchValidator {
                 }
             }
             if let kind = step.kind {
-                document.parts[index].kind = kind
+                document.parts[index].kind = RoomKit.kind(kind)?.name ?? kind
             }
             if let place = step.place {
                 document.parts[index].place = place
@@ -142,7 +142,8 @@ public struct RoomPatchValidator {
             document.color = value
             return nil
         }
-        let values = Self.traitValues[trait]
+        let studio = Self.traitValues[trait]
+        let values = studio.map { $0.union(RoomKit.roomTraits[trait] ?? []) } ?? RoomKit.roomTraits[trait]
         guard let values else { return "\(trait) isn't something a room's look can change" }
         guard values.contains(value) else {
             return "\(trait) takes \(values.sorted().joined(separator: ", ")), not \(value)"
@@ -310,6 +311,13 @@ public struct RoomPatchValidator {
     private func checkText(_ value: RawJSON, key: String, of part: RoomPart) -> String? {
         switch value {
         case let .string(text):
+            if RoomKit.recordProps.contains(key) {
+                let parts = text.split(separator: "|")
+                if text.count > RoomKit.maxRecord || parts.contains(where: { $0.count > RoomKit.maxText }) {
+                    return "A record holds \(RoomKit.maxRecord) characters, and each part \(RoomKit.maxText)"
+                }
+                return nil
+            }
             if let reason = lineLength(text) {
                 return reason
             }
@@ -379,7 +387,8 @@ public struct RoomPatchValidator {
                 return "A number needs a class to bind"
             }
         case "row", "list":
-            if part.bind == nil {
+            // Static cards stand in for his things until a class is bound.
+            if part.bind == nil, part.props["cards"] == nil {
                 return "A \(part.kind) needs a class to bind"
             }
             if let reason = field("big") ?? field("small") {

@@ -316,4 +316,57 @@ struct RoomStep2Tests {
         let set = try engine.perform(TakeDownRoom(room: room.id), by: .user)
         #expect(!RoomPatcher.stop([set.record], in: engine))
     }
+
+    // MARK: What Builder A's twelve sentences say
+
+    @Test func actionWordIsAKindHoweverItIsCapitalised() throws {
+        let patch = patch(.init(op: "grant", reach: "write Plant.lastWatered"),
+                          .init(op: "add", id: "water", kind: "actionword", place: "actionWord",
+                                props: ["verb": .string("Watered"), "does": .string("write Plant.lastWatered")],
+                                bind: "Plant"))
+        #expect(RoomRefusals.refusal(for: patch, against: RoomDocument(name: "Chart room"), store: store,
+                                     classes: classes) == nil)
+        guard case let .ok(document, _) = RoomPatchValidator(store: store, classes: classes)
+            .validate(patch, against: RoomDocument(name: "Chart room"))
+        else {
+            Issue.record("a differently capitalised kind is the kind")
+            return
+        }
+        #expect(document.part("water")?.kind == "actionWord", "stored under its own name")
+        let exact = self.patch(.init(op: "grant", reach: "write Plant.lastWatered"),
+                               add("water", "actionWord", "actionWord", ["verb": .string("Watered")], bind: "Plant"))
+        #expect(RoomRefusals.refusal(for: exact, against: RoomDocument(name: "Chart room"), store: store,
+                                     classes: classes) == nil)
+        guard case .applied = try RoomPatcher.apply(exact, sentence: "Let me mark one watered", engine: engine) else {
+            Issue.record("an action word goes through the real patcher")
+            return
+        }
+    }
+
+    @Test func staticWordsWindowsCardsAndLongerDoorRecordsAreInTheKit() {
+        let steps: [RoomPatch.Step] = [
+            add("line", "line", "switcher", ["words": .array(["Thirsty", "This week", "Light"].map { .string($0) })]),
+            add("need", "lines", "needs", ["windows": .array([.string("Orchid, 6 days|Monstera, 4 days")])]),
+            add("next", "list", "widget", ["cards": .array([
+                .string("Thirstiest|Orchid|Last watered Wednesday|Ice cubes, not a pour|wine"),
+            ])]),
+            add("doors", "doors", "dial", ["doors": .array([
+                .string(
+                    "Basil|Last watered yesterday|Water every 2 days|On the kitchen sill|Pinch the flowers off|wine"
+                ),
+            ])]),
+            .init(op: "look", trait: "glyph", value: "can"),
+            .init(op: "look", trait: "say", value: "kept"),
+        ]
+        let result = RoomPatchValidator(store: store, classes: classes)
+            .validate(RoomPatch(room: "Chart room", say: "x", ops: steps), against: RoomDocument(name: "Chart room"))
+        guard case .ok = result else {
+            Issue.record("Builder A's sentences are in the kit: \(result)")
+            return
+        }
+        let tooLong = String(repeating: "x", count: 121)
+        let long = patch(add("need", "lines", "needs", ["windows": .array([.string(tooLong)])]))
+        #expect(RoomRefusals.refusal(for: long, against: RoomDocument(name: "Chart room"), store: store,
+                                     classes: classes)?.line.contains("A record holds") == true)
+    }
 }
