@@ -1,0 +1,325 @@
+{
+ "test": "2.3 post hoc (s23c): CLM-8B head-use variants on LoCoMo",
+ "decides": "nothing (post hoc, written Oct 28, 2026 after 2.3 failed and before any variant number existed); 2.3 stays failed",
+ "dry_run": false,
+ "model": "mlx-community/Qwen3-8B-8bit",
+ "backend": "mlx",
+ "mlx_act": "native",
+ "variants": {
+  "V0_plain": {
+   "question_side": "state head on the question",
+   "turn_side": "action head on the turn"
+  },
+  "V1_swapped": {
+   "question_side": "action head on the question",
+   "turn_side": "state head on the turn"
+  },
+  "V2_state_both": {
+   "question_side": "state head on the question",
+   "turn_side": "state head on the turn"
+  },
+  "V3_action_both": {
+   "question_side": "action head on the question",
+   "turn_side": "action head on the turn"
+  },
+  "V4_instruction": {
+   "question_side": "state head on the question + instruction (V4 text)",
+   "turn_side": "action head on the turn"
+  }
+ },
+ "instruction": "Which earlier message in this conversation answers the question?",
+ "label": "post hoc, decides nothing",
+ "schema_check": {
+  "checked": true,
+  "file": "clm/schema.py",
+  "package_version": "0.1.0",
+  "questions": 1536,
+  "mismatches": 0,
+  "example": "When did Caroline go to the LGBTQ support group?\n\nWhich earlier message in this conversation answers the question?"
+ },
+ "hidden_states": {
+  "cache_layout": "<cache>/<tag>__<backend>[-f32act]/<store>",
+  "locomo_store": "<cache>/qwen3-8b-8bit__mlx/locomo",
+  "locomo_sha": "dfcfb28f02749451786c0a10eeb77ef00b09b07f04bb36e03dfc65a545ac0a0a",
+  "quant": "mlx affine 8-bit, group 64",
+  "revision": "48a0b75b1ae72503e21e1558d040bc227510ff06",
+  "locomo": {
+   "n": 7406,
+   "tokens": 215319,
+   "mean_tokens": 29.07,
+   "truncated": 0,
+   "rows_rescaled_for_fp16": {},
+   "model": "mlx-community/Qwen3-8B-8bit",
+   "backend": "MlxLM"
+  },
+  "v4_store": "<cache>/qwen3-8b-8bit__mlx/s23c_v4_questions_866604a7056a",
+  "v4_new_lm_pass": true,
+  "v4": {
+   "n": 1525,
+   "tokens": 33873,
+   "mean_tokens": 22.21,
+   "truncated": 0,
+   "rows_rescaled_for_fp16": {},
+   "model": "mlx-community/Qwen3-8B-8bit",
+   "backend": "MlxLM",
+   "n_texts": 1525
+  }
+ },
+ "locomo": {
+  "n_questions": 1536,
+  "s23_plain_read": {
+   "alone": 0.192646,
+   "fused": 0.499542,
+   "by_category": {
+    "multi-hop": {
+     "alone": 0.151641,
+     "fused": 0.260235
+    },
+    "when": {
+     "alone": 0.099688,
+     "fused": 0.515317
+    },
+    "inference": {
+     "alone": 0.088502,
+     "fused": 0.248111
+    },
+    "single-hop": {
+     "alone": 0.25327,
+     "fused": 0.601268
+    }
+   },
+   "source": "s23_clm_scores.npz clm{i}"
+  },
+  "recall10": {
+   "V0_plain": {
+    "alone": 0.192646,
+    "fused": 0.499542
+   },
+   "V1_swapped": {
+    "alone": 0.101849,
+    "fused": 0.36504
+   },
+   "V2_state_both": {
+    "alone": 0.080089,
+    "fused": 0.262245
+   },
+   "V3_action_both": {
+    "alone": 0.027914,
+    "fused": 0.198344
+   },
+   "V4_instruction": {
+    "alone": 0.058209,
+    "fused": 0.278078
+   }
+  },
+  "by_category": {
+   "V0_plain": {
+    "multi-hop": {
+     "alone": 0.151641,
+     "fused": 0.260235
+    },
+    "when": {
+     "alone": 0.099688,
+     "fused": 0.515317
+    },
+    "inference": {
+     "alone": 0.088502,
+     "fused": 0.248111
+    },
+    "single-hop": {
+     "alone": 0.25327,
+     "fused": 0.601268
+    }
+   },
+   "V1_swapped": {
+    "multi-hop": {
+     "alone": 0.065062,
+     "fused": 0.180997
+    },
+    "when": {
+     "alone": 0.056075,
+     "fused": 0.355919
+    },
+    "inference": {
+     "alone": 0.093404,
+     "fused": 0.183799
+    },
+    "single-hop": {
+     "alone": 0.13258,
+     "fused": 0.450059
+    }
+   },
+   "V2_state_both": {
+    "multi-hop": {
+     "alone": 0.04542,
+     "fused": 0.13608
+    },
+    "when": {
+     "alone": 0.03271,
+     "fused": 0.186916
+    },
+    "inference": {
+     "alone": 0.05118,
+     "fused": 0.124283
+    },
+    "single-hop": {
+     "alone": 0.112961,
+     "fused": 0.348395
+    }
+   },
+   "V3_action_both": {
+    "multi-hop": {
+     "alone": 0.015518,
+     "fused": 0.09458
+    },
+    "when": {
+     "alone": 0.020249,
+     "fused": 0.166667
+    },
+    "inference": {
+     "alone": 0.016304,
+     "fused": 0.086797
+    },
+    "single-hop": {
+     "alone": 0.036266,
+     "fused": 0.257432
+    }
+   },
+   "V4_instruction": {
+    "multi-hop": {
+     "alone": 0.04962,
+     "fused": 0.137154
+    },
+    "when": {
+     "alone": 0.069055,
+     "fused": 0.3419
+    },
+    "inference": {
+     "alone": 0.040761,
+     "fused": 0.154358
+    },
+    "single-hop": {
+     "alone": 0.058859,
+     "fused": 0.314507
+    }
+   }
+  },
+  "vs_s23_plain": {
+   "V0_plain": {
+    "alone": {
+     "mean": 0.0,
+     "ci": [
+      0.0,
+      0.0
+     ],
+     "signflip_p_one_sided": 1.0
+    },
+    "fused": {
+     "mean": 0.0,
+     "ci": [
+      0.0,
+      0.0
+     ],
+     "signflip_p_one_sided": 1.0
+    }
+   },
+   "V1_swapped": {
+    "alone": {
+     "mean": -0.090797,
+     "ci": [
+      -0.110797,
+      -0.070972
+     ],
+     "signflip_p_one_sided": 1.0
+    },
+    "fused": {
+     "mean": -0.134502,
+     "ci": [
+      -0.152164,
+      -0.112605
+     ],
+     "signflip_p_one_sided": 1.0
+    }
+   },
+   "V2_state_both": {
+    "alone": {
+     "mean": -0.112557,
+     "ci": [
+      -0.135585,
+      -0.090172
+     ],
+     "signflip_p_one_sided": 1.0
+    },
+    "fused": {
+     "mean": -0.237296,
+     "ci": [
+      -0.266888,
+      -0.208451
+     ],
+     "signflip_p_one_sided": 1.0
+    }
+   },
+   "V3_action_both": {
+    "alone": {
+     "mean": -0.164732,
+     "ci": [
+      -0.180236,
+      -0.150227
+     ],
+     "signflip_p_one_sided": 1.0
+    },
+    "fused": {
+     "mean": -0.301197,
+     "ci": [
+      -0.327419,
+      -0.274155
+     ],
+     "signflip_p_one_sided": 1.0
+    }
+   },
+   "V4_instruction": {
+    "alone": {
+     "mean": -0.134437,
+     "ci": [
+      -0.155676,
+      -0.114618
+     ],
+     "signflip_p_one_sided": 1.0
+    },
+    "fused": {
+     "mean": -0.221463,
+     "ci": [
+      -0.260108,
+      -0.179956
+     ],
+     "signflip_p_one_sided": 1.0
+    }
+   }
+  }
+ },
+ "s23_check": {
+  "entries": 924184,
+  "entries_differ": 0,
+  "max_abs_diff": 0.0,
+  "questions_alone_differ": 0,
+  "questions_fused_differ": 0,
+  "s23_json": "s23_clm.json",
+  "s23_json_model": "mlx-community/Qwen3-8B-8bit",
+  "s23_json_means_compared": 10,
+  "s23_json_means_differ": {},
+  "s23_scores": "s23_clm_scores.npz",
+  "s23_scores_quant": "mlx affine 8-bit, group 64",
+  "s23_calib_ok": true,
+  "v0_reproduces_s23": true
+ },
+ "reading": {
+  "rule": "'the head use was the problem' only if some variant V1..V4 has alone recall@10 >= 0.5 (plain 0.192646, bge-small bridge read 0.66217); otherwise 'zero-shot CLM is the wrong tool for this memory, however its heads are used'",
+  "best_variant": "V1_swapped",
+  "best_alone": 0.101849,
+  "bar": 0.5,
+  "met": false,
+  "reading": "zero-shot CLM is the wrong tool for this memory, however its heads are used",
+  "label": "post hoc, decides nothing"
+ },
+ "seconds": 368
+}
