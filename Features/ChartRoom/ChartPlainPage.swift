@@ -11,8 +11,8 @@ import TesseraCore
 @MainActor
 enum PlainPage {
     /// Which parts draw where: title, caption, keystone and the page's own lines.
-    static func nodes(parts: [RoomPart], object: ObjectRecord, book: PageBook, engine: ActionEngine?)
-        -> [Place: [PartNode]]
+    static func nodes(parts: [RoomPart], object: ObjectRecord, book: PageBook, engine: ActionEngine?,
+                      drawingLinks: Bool = true) -> [Place: [PartNode]]
     {
         var out: [Place: [PartNode]] = [:]
         for part in parts {
@@ -36,11 +36,9 @@ enum PlainPage {
                 var texts: [String] = []
                 if case let .array(items)? = part.props["lines"] {
                     texts = items.compactMap { item in
-                        if case let .string(text) = item {
-                            words(text)
-                        } else {
-                            nil
-                        }
+                        guard case let .string(text) = item else { return nil }
+                        // A line that names a routine is drawn by the page itself, with its link (sheet 378).
+                        return !drawingLinks && routineLink(in: text) != nil ? nil : words(text)
                     }.filter { !$0.isEmpty }
                 }
                 node = texts.isEmpty ? nil : .lines(id: part.id, texts: texts)
@@ -112,11 +110,15 @@ enum PlainPage {
 
     /// A routine named in a line through `{@field.parent.title}` (sheet 378): the field that links to it, if any.
     nonisolated static func routineLink(in template: String) -> String? {
-        guard let open = template.range(of: "{@"), let close = template[open.upperBound...].firstIndex(of: "}") else {
-            return nil
+        var rest = Substring(template)
+        while let open = rest.range(of: "{@"), let close = rest[open.upperBound...].firstIndex(of: "}") {
+            let path = rest[open.upperBound ..< close].split(separator: ".").map(String.init)
+            if path.count == 3, path[1] == "parent", path[2] == "title" {
+                return path[0]
+            }
+            rest = rest[rest.index(after: close)...]
         }
-        let path = template[open.upperBound ..< close].split(separator: ".").map(String.init)
-        return path.count == 3 && path[1] == "parent" && path[2] == "title" ? path[0] : nil
+        return nil
     }
 }
 
@@ -158,6 +160,15 @@ final class ChartPageModel {
                 }
             }
         }
+    }
+
+    /// Sheet 378: the orchid's own part, "Last misted today, in Water houseplants": read from the routine step its
+    /// `misted` field links to (checking the step off on the routine page updates this line).
+    static func mistedPart() -> RoomPatch {
+        RoomPatch(room: "Plant page", say: "Last misted", ops: [
+            .init(op: "add", id: "misted", kind: "lines", place: "page",
+                  props: ["lines": .array([.string("Last misted {@misted.doneAt}, in {@misted.parent.title}")])]),
+        ])
     }
 
     /// The change he can say on a plant's page: the dates it was watered, in its line.
@@ -228,7 +239,8 @@ struct ChartPlainPage: View {
     var body: some View {
         let _ = model.revision
         let parts = book.page(for: object)
-        let nodes = PlainPage.nodes(parts: parts, object: object, book: book, engine: model.engine)
+        let nodes = PlainPage.nodes(parts: parts, object: object, book: book, engine: model.engine,
+                                    drawingLinks: false)
         GeometryReader { proxy in
             let scale = max(0.86, min(1.1, proxy.size.height / 874))
             let dx = (proxy.size.width - 402) / 2

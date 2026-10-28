@@ -158,6 +158,18 @@ final class ChartRoomModel {
         // The real store: Core's sample Plant class (until he says production-ready) and the binds read through it.
         _ = try? RoomSample.seedPlants(store: engine.store, classes: engine.classes, now: AppClock.now)
         data = EngineRoomData(engine: engine)
+        // Simulator only: the orchid's own "Last misted" part, so a UI test can open its page (sheets 378, 379).
+        if LaunchFlags.has("-chartMistedPart"),
+           let orchid = RoomBind(store: engine.store, classes: engine.classes).classDef(for: "Plant")
+           .flatMap({ plants in
+               engine.store.objects(of: plants).first { $0.title == "Orchid" }
+           }),
+           !PageBook(store: engine.store, classes: engine.classes).page(for: orchid)
+           .contains(where: { $0.id == "misted" })
+        {
+            _ = try? engine.perform(PatchPage(object: orchid.id, patch: ChartPageModel.mistedPart(), only: true),
+                                    by: .user)
+        }
         // Another room's colour is never taken: the whole dial's table, from the rooms' own colours.
         RoomColor.otherRooms = Dictionary(uniqueKeysWithValues: LayoutRoom.allCases.compactMap { room in
             room.hex.map { (room.name, RoomColor.Pair($0.light, $0.dark)) }

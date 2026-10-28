@@ -193,4 +193,27 @@ struct ChartPagesTests {
         #expect(PlainPage.fillDone(template, now: now, calendar: calendar) { _ in done } == "Last misted today")
         #expect(PlainPage.fillDone("Plain {title}", now: now, calendar: calendar) { _ in today } == "Plain {title}")
     }
+
+    @Test func theOrchidsLineReadsNeverThenTodayAfterItsRoutineStepIsChecked() throws {
+        let orchid = try plant("Orchid")
+        try app.engine.perform(PatchPage(object: orchid.id, patch: ChartPageModel.mistedPart(), only: true), by: .user)
+        func line() -> String {
+            let parts = book.page(for: orchid)
+            let nodes = PlainPage.nodes(parts: parts, object: orchid, book: book, engine: app.engine)
+            return nodes[.page]?.flatMap(\.words).first { $0.hasPrefix("Last misted") } ?? ""
+        }
+        #expect(line() == "Last misted never, in Water houseplants")
+        let step = try #require(app.store.linkedObjects("misted", of: orchid).first)
+        #expect(step.title == "Mist the orchid" && step.parent?.title == "Water houseplants")
+        try app.engine.perform(TendRoutineStep(step: step.id), by: .user)
+        #expect(line() == "Last misted today, in Water houseplants", "the line follows the step")
+        // Only the orchid has the part, and only the orchid links to a step.
+        let fern = try plant("Fern")
+        #expect(!book.page(for: fern).contains { $0.id == "misted" })
+        #expect(PlainPage.routine(linkedBy: "misted", from: orchid, store: app.store)?.title == "Water houseplants")
+        #expect(PlainPage.routine(linkedBy: "misted", from: fern, store: app.store) == nil)
+        // Taking the check back puts "never" back.
+        try app.engine.perform(TendRoutineStep(step: step.id, done: false), by: .user)
+        #expect(line() == "Last misted never, in Water houseplants")
+    }
 }

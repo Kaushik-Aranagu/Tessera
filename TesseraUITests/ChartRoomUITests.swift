@@ -93,4 +93,36 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
             "The back word came back to the room"
         )
     }
+
+    /// Sheets 378, 379: on the orchid's page the plum routine link pushes the routine page with "Orchid" as its back
+    /// word, and checking the step there updates the orchid's own line.
+    func testTheRoutineLinkPushesTheRoutineAndCheckingItUpdatesTheOrchidsLine() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demoTime", "18:10", "-resetChart", "-chartPlantDoors", "-chartMistedPart",
+                               "-shellProbe", "-shellWalk", "chart"]
+        app.launch()
+        let ask = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Don’t Allow"]
+        if ask.waitForExistence(timeout: 4) {
+            ask.tap()
+        }
+        XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 30), "The Chart room is open")
+        let door = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Orchid")).firstMatch
+        XCTAssertTrue(door.waitForExistence(timeout: 15))
+        door.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["chart.plainPage"].waitForExistence(timeout: 10))
+        let before = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Last misted")).firstMatch
+        XCTAssertTrue(app.buttons["chart.routineLink"].waitForExistence(timeout: 10), "The routine name is a link")
+        app.buttons["chart.routineLink"].tap()
+        let back = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Orchid")).firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 10), "The routine page's back word is Orchid")
+        let step = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Mist the orchid"))
+            .firstMatch
+        XCTAssertTrue(step.waitForExistence(timeout: 10), "The routine page shows the step")
+        step.tap()
+        back.tap()
+        let after = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Last misted today"))
+            .firstMatch
+        XCTAssertTrue(after.waitForExistence(timeout: 10), "Checking the step updated the orchid's line")
+        _ = before
+    }
 }
