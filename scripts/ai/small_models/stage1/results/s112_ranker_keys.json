@@ -1,0 +1,862 @@
+{
+ "test": "1.12 learned keys on top of the ranker",
+ "docstring_sha256_16": "f147db72131f5635",
+ "smoke": false,
+ "protocol": "Stage 1.12: does learning keys from use add anything ON TOP of the ranker? (public data only; pre-registered)\n\nWritten before any number of this test was produced. The protocol, the primary metric and the decision rule below are\nfixed; this docstring's sha256[:16] is printed in the log and stored in the JSON.\n\nWhy. Stage 1 found that learning keys from Haiku's cites gains under 1 point of recall@10 on LoCoMo (s111: the s12 rule\npicked per fold on dev chats, +0.005 over the fused rank-16 read after fusion, chat interval [-0.0005, +0.0111]), while\nan LLM-free LightGBM ranker over the fused read's top 50 gains +0.094 (0.7492 vs 0.6553). If learning from use is worth\nkeeping, it has to add to that ranker. This test gives the ranker the learned keys as features and asks whether recall\nrises.\n\nData and read (unchanged from s111_baselines.py). LoCoMo: 1,536 questions on 10 chats (common.load_locomo, sha-pinned),\nouter folds common.FOLDS (chat pairs (0,1) ... (8,9)); chat i is read with the tuned rank-16 bridge of fold i // 2\n(retrieval.Reader keys, trained on the 8 other chats). LongMemEval-S: the 428 questions with user-turn evidence\n(common.load_lme), read with the rank-16 bridge trained on all 10 LoCoMo chats. Cites: Haiku's hop-0 cites\n(runs/answers_hop0.jsonl, rows of kind \"read\"; snippet numbers n mapped to nodes through runs/tasks_hop0.jsonl.gz); the\nopened set of a question is its 10 hop-0 snippet nodes (the fused rank-16 top 10). No LLM is called; nothing is re-read.\n\nArm A (reference): the s111 ranker exactly. LightGBM over the top 50 candidates of each question's fused rank-16 read\n(RRF k 60 of the BM25 list and the bridge list), its 25 features (s111_baselines.qfeats), labels 1 for a marked evidence\nnode else 0, scored by recall@10 of the reordered top 50. For outer fold f it is fit on the 8 training chats, whose\nbridge features come from inner rank-16 bridges that held each chat's pair out (common.train on the other 6 training\nchats, fold f's tuned lr from s11_rank.json, seed 1000 + 10 f + pair[0]); the test pair uses the outer bridge.\nHyperparameters per fold on dev chats (the test pair of fold (f + 1) mod 5, read with the inner bridge that held that pair\nout): objective {lambdarank, binary} x num_leaves {7, 31} x trees {50, 100, 200, 400} (learning rate 0.05, min 20 rows\nper leaf, no subsampling, deterministic, one thread, random_state 0), fit on the 6 training chats outside the dev pair,\nbest mean dev recall@10, ties first in grid order. LongMemEval-S: the config with the best pooled dev recall over the 5\nfolds, fit on all 10 LoCoMo chats (features from the bridge that held each chat out). Check (the run stops otherwise):\nper-fold picks equal s111's picks.ranker, LoCoMo mean 0.7492, LongMemEval-S 0.9187 with config lambdarank/31/50.\n\nLearning streams (the s12 protocol). For a chat read with bridge b (keys K0 = b's key view of the nodes, states S = b's\nstate view of the questions), a rule from s12_cites.RULES and an order o in {0, 1, 2}\n(np.random.default_rng([chat, o, 2027]).permutation, the s12/s111 orders), the keys start at K0 and the chat's questions\nare visited in that order; after question r the keys learn from r's Haiku cites exactly as s12_cites.run_order (pull the\ncited keys toward the state; centred rules toward s - c mu, with mu the mean ask state of b's own training chats under b,\nfrozen; push the opened-but-not-cited keys for contrastive and combo). Cites are static (what Haiku cited from the hop-0\nopened top 10). Causal: the features of question r use the keys as they stand BEFORE r's own update, so in order o only\nthe questions visited before r have moved any key. Every stream starts from K0 (nothing carries across chats or orders).\n\nArm B (under test): arm A's ranker with 4 learned-key features appended (29 features, columns 26 to 29). With L_r the\nlearned keys before r's update and s_r the bridge state of question r, per candidate v of the SAME 50 candidates (the\nbase fused top 50, so B can only reorder what A reorders and the comparison isolates the features):\n  26 learned cosine      l_v = L_r[v] . s_r  (a key that has not moved gives exactly the base bridge cosine)\n  27 learned rank        rank of v among the 50 by l_v, descending, 0 = best, ties by fused position\n  28 learned gap         l_v - max over the 50 of l\n  29 learned minus base  l_v - K0[v] . s_r   (exactly 0 for a key that has not moved)\nRule (PRIMARY): per outer fold f, the s12 rule picked on fold f's dev chats by s111 (picks.ours.fused for haiku cites:\nfold 0 combo, 1 move η0.1, 2 centred, 3 combo, 4 contrastive). The run recomputes these picks from its own dev streams\n(best mean dev fused recall@10, each question averaged over the 3 orders, ties first in s12's RULES order) and stops if\nthey differ from s111's. Within fold f the same rule drives the streams of its training chats, its dev chats and its\ntest pair.\nSecondary arm \"combo\" (not decisive): the same with combo (centred pull η 0.1, c 1, plus centred push η 0.02) in every\nfold.\n\nTraining rows of arm B (no leak through bridges or streams). For outer fold f, training chat j's 29 features come from\nits inner bridge b (the one that held j's pair out, as in A) and from the learning stream run on chat j with b's keys,\nb's states, b's frozen mean, j's own Haiku cites and opened sets, under fold f's rule. Labels are the gold evidence, as in\nA. Streams use cites, never labels, so no chat's features come from a bridge or a learning stream that saw its labels.\nTest chats: the outer bridge, the outer fold's frozen mean (mean ask state of its 8 training chats), their own cites.\nDev chats: their inner bridge and that bridge's frozen mean, as in A and in s111's dev runs.\n\nOrders. The stream depends on the order, so arm B is run once per order o: the model of order o is fit on the order-o\nfeatures of its training chats and scored on the order-o features of the chats it is evaluated on (dev or test). Each\nquestion's arm B recall@10 is the mean over the 3 orders. Arm B's hyperparameters: the same grid and procedure as A, with\na config's dev score per fold = mean over the dev questions of their order-averaged recall@10 (ties first in grid\norder). Arm A does not depend on the order (one fit per config, as in s111).\n\nLongMemEval-S (428 questions). One question per history, so nothing is asked twice and the keys cannot learn: learned =\nbase (features 26 to 29 are the bridge cosine, its rank among the 50, its gap to the best, and 0). Arm B there: the config\nwith the best pooled dev score over the 5 folds, fit on all 10 LoCoMo chats (the bridge that held each chat out, and chat\ni's outer stream under fold i // 2's rule), one model per order, each question's recall averaged over the 3 models;\ncompared with arm A (s111's LongMemEval-S ranker). Same for combo.\n\nPRIMARY METRIC: LoCoMo recall@10 of B minus A, per question (1,536), paired by question, chat-clustered.\n\nStatistics. LoCoMo: common.cluster_boot (whole chats resampled, 4,000 draws, seed 0, the same draws for every comparison)\nfor the 95% percentile interval. Next to every interval: the exact one-sided chat sign-flip p (statistic = the\nquestion-weighted mean difference sum_j e_j D_j / N, D_j = chat j's summed difference, N = 1,536; all 2^10 sign vectors\ne; p = share of sign vectors whose statistic is >= the observed one, the observed included, so p >= 1/1024) and a\njackknife-t 95% interval (leave one chat out; theta_-j = question-weighted mean without chat j; SE = sqrt((G - 1)/G *\nsum_j (theta_-j - mean theta)^2), G = 10; estimate +- t(0.975, 9 df) SE). LongMemEval-S: cluster_boot with each question\nits own cluster, and a leave-one-question-out jackknife-t interval (no sign-flip there: the verdict uses only its point\nestimate).\n\nDECISION RULE (fixed now; computed from unrounded values):\n  PASS          LoCoMo B - A point estimate > 0 AND its chat-clustered 95% percentile interval lies above zero (lower\n                end > 0) AND the exact one-sided sign-flip p < 0.05, AND LongMemEval-S B - A >= -0.005 (point estimate).\n  FAIL          LoCoMo B - A point estimate <= 0, OR the LoCoMo interval lies above zero but LongMemEval-S B - A < -0.005.\n  INCONCLUSIVE  otherwise.\nReported, not decisive: multi-hop (LoCoMo category 1) B - A with the same statistics; the secondary combo arm (combo - A on\nLoCoMo, multi-hop and LongMemEval-S); B - base, A - base and combo - B; per-chat differences and chats up; B's test recall\nper order; dev picks and dev tables of both arms; the share of candidate rows whose learned key has moved (feature 29 not\n0); the LightGBM gain share of features 26 to 29 in the picked test models.\n\nChecks (the run stops if one fails): arm A reproduces s111 (above); the opened sets equal the fused top 10; the inner\nbridges reproduce s11's dev recall (s111's check); every stream's dense and fused recall@10 equal s12_cites.run_order's\nfor the same keys, rule, cites and order; the dev picks equal s111's picks.ours.fused; on the test chats the picked rules'\nfused mean equals s111's \"ours\" 0.6603 and combo's equals s111's 0.6618.\n\nKnown limits, stated in advance. (1) The opened sets and cites of a training chat were logged from its outer read, whose\nbridge (fold j // 2) was trained on 8 chats that can include fold f's test pair. Haiku cannot be re-run, so this channel\n(which nodes were opened and so could be cited) stays, as it did for s111's dev runs; it carries no gold label of any\nchat. (2) Dev selection follows s111 exactly, including that the fit chats' features come from inner bridges whose\ntraining set includes the dev pair; this applies to both arms alike. (3) Ten chats: the sign-flip p cannot go below\n1/1024, and the learned features exist only for keys a chat's earlier questions moved.\n\nCode-path test before the one real run: --smoke runs the whole pipeline with every learned arm's stream at η = 0 (keys\nnever move, so learned = base and arms B and combo carry no learning), checks that feature 29 is 0 everywhere, prints no\nvalue of arm B or combo, and writes only to the scratch directory. It measures nothing about learning. The real run is\ndone once; if a bug forces a rerun, the report says what and why, and the decision rule above stays unchanged.\n\nOutputs: results/s112_ranker_keys.json (and the tee'd results/s112_ranker_keys.log). Compute: about 15 CPU minutes with 3\nprocesses. Usage:\n  /tmp/e1/bin/python -I s112_ranker_keys.py [--procs 3] [--cache <pkl>] [--reuse] [--smoke --out <scratch json>]",
+ "checks": {
+  "answer_rows": 3928,
+  "opened_not_equal_fused_top10": 0,
+  "haiku_cites_per_question": 1.743,
+  "inner_bridge_dev_dense_vs_s11": {
+   "0": {
+    "here": 0.6596,
+    "s11": 0.6596
+   },
+   "1": {
+    "here": 0.6552,
+    "s11": 0.6552
+   },
+   "2": {
+    "here": 0.658,
+    "s11": 0.658
+   },
+   "3": {
+    "here": 0.6492,
+    "s11": 0.6492
+   },
+   "4": {
+    "here": 0.6702,
+    "s11": 0.6702
+   }
+  },
+  "streams_equal_s12_run_order": {
+   "streams": 114,
+   "all_equal": true
+  },
+  "dev_rule_picks": {
+   "here": [
+    "combo",
+    "move η0.1",
+    "centred",
+    "combo",
+    "contrastive"
+   ],
+   "s111": [
+    "combo",
+    "move η0.1",
+    "centred",
+    "combo",
+    "contrastive"
+   ],
+   "dev_fused_means_equal_s111": true
+  },
+  "test_fused_learned_read": {
+   "picked": 0.6603,
+   "picked_s111": 0.6603,
+   "combo": 0.6618,
+   "combo_s111": 0.6618
+  },
+  "arm_A_reproduces_s111": {
+   "picks_equal": true,
+   "locomo": 0.7492,
+   "locomo_s111": 0.7492,
+   "lme_pick_equal": true,
+   "lme": 0.9187,
+   "lme_s111": 0.9187
+  }
+ },
+ "learned_feature_coverage": {
+  "B": {
+   "test_candidate_rows_moved": 0.489622,
+   "test_questions_with_a_moved_candidate": 0.978082
+  },
+  "combo": {
+   "test_candidate_rows_moved": 0.664288,
+   "test_questions_with_a_moved_candidate": 0.989149
+  }
+ },
+ "picks": {
+  "A": {
+   "per_fold": {
+    "0": [
+     "lambdarank",
+     "31",
+     "200"
+    ],
+    "1": [
+     "lambdarank",
+     "31",
+     "100"
+    ],
+    "2": [
+     "lambdarank",
+     "31",
+     "50"
+    ],
+    "3": [
+     "lambdarank",
+     "7",
+     "100"
+    ],
+    "4": [
+     "lambdarank",
+     "31",
+     "50"
+    ]
+   },
+   "lme": [
+    "lambdarank",
+    "31",
+    "50"
+   ]
+  },
+  "B": {
+   "per_fold": {
+    "0": [
+     "lambdarank",
+     "7",
+     "200"
+    ],
+    "1": [
+     "lambdarank",
+     "31",
+     "100"
+    ],
+    "2": [
+     "lambdarank",
+     "7",
+     "50"
+    ],
+    "3": [
+     "lambdarank",
+     "7",
+     "200"
+    ],
+    "4": [
+     "binary",
+     "31",
+     "50"
+    ]
+   },
+   "lme": [
+    "lambdarank",
+    "7",
+    "200"
+   ]
+  },
+  "combo": {
+   "per_fold": {
+    "0": [
+     "lambdarank",
+     "7",
+     "200"
+    ],
+    "1": [
+     "lambdarank",
+     "7",
+     "200"
+    ],
+    "2": [
+     "lambdarank",
+     "7",
+     "100"
+    ],
+    "3": [
+     "lambdarank",
+     "7",
+     "200"
+    ],
+    "4": [
+     "lambdarank",
+     "31",
+     "100"
+    ]
+   },
+   "lme": [
+    "lambdarank",
+    "7",
+    "200"
+   ]
+  }
+ },
+ "dev": {
+  "A": {
+   "fold0": {
+    "lambdarank/7/50": 0.7489,
+    "lambdarank/7/100": 0.7426,
+    "lambdarank/7/200": 0.7485,
+    "lambdarank/7/400": 0.7524,
+    "lambdarank/31/50": 0.7547,
+    "lambdarank/31/100": 0.7495,
+    "lambdarank/31/200": 0.7585,
+    "lambdarank/31/400": 0.7536,
+    "binary/7/50": 0.7304,
+    "binary/7/100": 0.7395,
+    "binary/7/200": 0.7495,
+    "binary/7/400": 0.7516,
+    "binary/31/50": 0.7431,
+    "binary/31/100": 0.7429,
+    "binary/31/200": 0.7392,
+    "binary/31/400": 0.7406
+   },
+   "fold1": {
+    "lambdarank/7/50": 0.7366,
+    "lambdarank/7/100": 0.7475,
+    "lambdarank/7/200": 0.7451,
+    "lambdarank/7/400": 0.7458,
+    "lambdarank/31/50": 0.7456,
+    "lambdarank/31/100": 0.7516,
+    "lambdarank/31/200": 0.7438,
+    "lambdarank/31/400": 0.7385,
+    "binary/7/50": 0.7191,
+    "binary/7/100": 0.7281,
+    "binary/7/200": 0.7362,
+    "binary/7/400": 0.7384,
+    "binary/31/50": 0.7364,
+    "binary/31/100": 0.7362,
+    "binary/31/200": 0.7387,
+    "binary/31/400": 0.7387
+   },
+   "fold2": {
+    "lambdarank/7/50": 0.7594,
+    "lambdarank/7/100": 0.7571,
+    "lambdarank/7/200": 0.7588,
+    "lambdarank/7/400": 0.755,
+    "lambdarank/31/50": 0.763,
+    "lambdarank/31/100": 0.7582,
+    "lambdarank/31/200": 0.7447,
+    "lambdarank/31/400": 0.7266,
+    "binary/7/50": 0.7424,
+    "binary/7/100": 0.7488,
+    "binary/7/200": 0.7449,
+    "binary/7/400": 0.7548,
+    "binary/31/50": 0.7337,
+    "binary/31/100": 0.7363,
+    "binary/31/200": 0.7366,
+    "binary/31/400": 0.7337
+   },
+   "fold3": {
+    "lambdarank/7/50": 0.7087,
+    "lambdarank/7/100": 0.7266,
+    "lambdarank/7/200": 0.7256,
+    "lambdarank/7/400": 0.7231,
+    "lambdarank/31/50": 0.7055,
+    "lambdarank/31/100": 0.7031,
+    "lambdarank/31/200": 0.6876,
+    "lambdarank/31/400": 0.6868,
+    "binary/7/50": 0.6924,
+    "binary/7/100": 0.6916,
+    "binary/7/200": 0.7105,
+    "binary/7/400": 0.7241,
+    "binary/31/50": 0.7011,
+    "binary/31/100": 0.6991,
+    "binary/31/200": 0.6933,
+    "binary/31/400": 0.7005
+   },
+   "fold4": {
+    "lambdarank/7/50": 0.7442,
+    "lambdarank/7/100": 0.7478,
+    "lambdarank/7/200": 0.7427,
+    "lambdarank/7/400": 0.7463,
+    "lambdarank/31/50": 0.7627,
+    "lambdarank/31/100": 0.7584,
+    "lambdarank/31/200": 0.7584,
+    "lambdarank/31/400": 0.7359,
+    "binary/7/50": 0.7467,
+    "binary/7/100": 0.7546,
+    "binary/7/200": 0.7503,
+    "binary/7/400": 0.7488,
+    "binary/31/50": 0.7608,
+    "binary/31/100": 0.7616,
+    "binary/31/200": 0.7486,
+    "binary/31/400": 0.7447
+   },
+   "pooled": {
+    "lambdarank/7/50": 0.74,
+    "lambdarank/7/100": 0.7443,
+    "lambdarank/7/200": 0.7446,
+    "lambdarank/7/400": 0.7448,
+    "lambdarank/31/50": 0.7459,
+    "lambdarank/31/100": 0.7437,
+    "lambdarank/31/200": 0.7381,
+    "lambdarank/31/400": 0.7284,
+    "binary/7/50": 0.7256,
+    "binary/7/100": 0.7319,
+    "binary/7/200": 0.7381,
+    "binary/7/400": 0.7437,
+    "binary/31/50": 0.7338,
+    "binary/31/100": 0.734,
+    "binary/31/200": 0.7306,
+    "binary/31/400": 0.7311
+   }
+  },
+  "B": {
+   "fold0": {
+    "lambdarank/7/50": 0.7524,
+    "lambdarank/7/100": 0.7524,
+    "lambdarank/7/200": 0.7565,
+    "lambdarank/7/400": 0.755,
+    "lambdarank/31/50": 0.756,
+    "lambdarank/31/100": 0.7542,
+    "lambdarank/31/200": 0.751,
+    "lambdarank/31/400": 0.7451,
+    "binary/7/50": 0.7373,
+    "binary/7/100": 0.7425,
+    "binary/7/200": 0.7475,
+    "binary/7/400": 0.7493,
+    "binary/31/50": 0.7473,
+    "binary/31/100": 0.7485,
+    "binary/31/200": 0.7512,
+    "binary/31/400": 0.7475
+   },
+   "fold1": {
+    "lambdarank/7/50": 0.7415,
+    "lambdarank/7/100": 0.7473,
+    "lambdarank/7/200": 0.7467,
+    "lambdarank/7/400": 0.7463,
+    "lambdarank/31/50": 0.7483,
+    "lambdarank/31/100": 0.7525,
+    "lambdarank/31/200": 0.7423,
+    "lambdarank/31/400": 0.7385,
+    "binary/7/50": 0.7293,
+    "binary/7/100": 0.7406,
+    "binary/7/200": 0.7438,
+    "binary/7/400": 0.7447,
+    "binary/31/50": 0.7403,
+    "binary/31/100": 0.7414,
+    "binary/31/200": 0.743,
+    "binary/31/400": 0.747
+   },
+   "fold2": {
+    "lambdarank/7/50": 0.7622,
+    "lambdarank/7/100": 0.7566,
+    "lambdarank/7/200": 0.7574,
+    "lambdarank/7/400": 0.7501,
+    "lambdarank/31/50": 0.7585,
+    "lambdarank/31/100": 0.7572,
+    "lambdarank/31/200": 0.7542,
+    "lambdarank/31/400": 0.7493,
+    "binary/7/50": 0.7475,
+    "binary/7/100": 0.751,
+    "binary/7/200": 0.7485,
+    "binary/7/400": 0.748,
+    "binary/31/50": 0.7412,
+    "binary/31/100": 0.7406,
+    "binary/31/200": 0.7457,
+    "binary/31/400": 0.7461
+   },
+   "fold3": {
+    "lambdarank/7/50": 0.7128,
+    "lambdarank/7/100": 0.7229,
+    "lambdarank/7/200": 0.7277,
+    "lambdarank/7/400": 0.7192,
+    "lambdarank/31/50": 0.7147,
+    "lambdarank/31/100": 0.7175,
+    "lambdarank/31/200": 0.7058,
+    "lambdarank/31/400": 0.7015,
+    "binary/7/50": 0.7086,
+    "binary/7/100": 0.7082,
+    "binary/7/200": 0.7154,
+    "binary/7/400": 0.7173,
+    "binary/31/50": 0.7084,
+    "binary/31/100": 0.7024,
+    "binary/31/200": 0.6985,
+    "binary/31/400": 0.6962
+   },
+   "fold4": {
+    "lambdarank/7/50": 0.7574,
+    "lambdarank/7/100": 0.7535,
+    "lambdarank/7/200": 0.7548,
+    "lambdarank/7/400": 0.7546,
+    "lambdarank/31/50": 0.7602,
+    "lambdarank/31/100": 0.7608,
+    "lambdarank/31/200": 0.7532,
+    "lambdarank/31/400": 0.7512,
+    "binary/7/50": 0.7519,
+    "binary/7/100": 0.7526,
+    "binary/7/200": 0.7503,
+    "binary/7/400": 0.7494,
+    "binary/31/50": 0.7635,
+    "binary/31/100": 0.7629,
+    "binary/31/200": 0.7557,
+    "binary/31/400": 0.7497
+   },
+   "pooled": {
+    "lambdarank/7/50": 0.7451,
+    "lambdarank/7/100": 0.7465,
+    "lambdarank/7/200": 0.7487,
+    "lambdarank/7/400": 0.7449,
+    "lambdarank/31/50": 0.7473,
+    "lambdarank/31/100": 0.7481,
+    "lambdarank/31/200": 0.7411,
+    "lambdarank/31/400": 0.7368,
+    "binary/7/50": 0.7343,
+    "binary/7/100": 0.7386,
+    "binary/7/200": 0.7409,
+    "binary/7/400": 0.7416,
+    "binary/31/50": 0.7391,
+    "binary/31/100": 0.7382,
+    "binary/31/200": 0.7384,
+    "binary/31/400": 0.737
+   }
+  },
+  "combo": {
+   "fold0": {
+    "lambdarank/7/50": 0.7524,
+    "lambdarank/7/100": 0.7524,
+    "lambdarank/7/200": 0.7565,
+    "lambdarank/7/400": 0.755,
+    "lambdarank/31/50": 0.756,
+    "lambdarank/31/100": 0.7542,
+    "lambdarank/31/200": 0.751,
+    "lambdarank/31/400": 0.7451,
+    "binary/7/50": 0.7373,
+    "binary/7/100": 0.7425,
+    "binary/7/200": 0.7475,
+    "binary/7/400": 0.7493,
+    "binary/31/50": 0.7473,
+    "binary/31/100": 0.7485,
+    "binary/31/200": 0.7512,
+    "binary/31/400": 0.7475
+   },
+   "fold1": {
+    "lambdarank/7/50": 0.7488,
+    "lambdarank/7/100": 0.7516,
+    "lambdarank/7/200": 0.7554,
+    "lambdarank/7/400": 0.7521,
+    "lambdarank/31/50": 0.7453,
+    "lambdarank/31/100": 0.7487,
+    "lambdarank/31/200": 0.7453,
+    "lambdarank/31/400": 0.7398,
+    "binary/7/50": 0.7406,
+    "binary/7/100": 0.7456,
+    "binary/7/200": 0.7478,
+    "binary/7/400": 0.754,
+    "binary/31/50": 0.7473,
+    "binary/31/100": 0.7482,
+    "binary/31/200": 0.7468,
+    "binary/31/400": 0.7477
+   },
+   "fold2": {
+    "lambdarank/7/50": 0.7625,
+    "lambdarank/7/100": 0.765,
+    "lambdarank/7/200": 0.7608,
+    "lambdarank/7/400": 0.7581,
+    "lambdarank/31/50": 0.7545,
+    "lambdarank/31/100": 0.7519,
+    "lambdarank/31/200": 0.7509,
+    "lambdarank/31/400": 0.7435,
+    "binary/7/50": 0.7472,
+    "binary/7/100": 0.7521,
+    "binary/7/200": 0.7502,
+    "binary/7/400": 0.7444,
+    "binary/31/50": 0.7475,
+    "binary/31/100": 0.7477,
+    "binary/31/200": 0.7489,
+    "binary/31/400": 0.7454
+   },
+   "fold3": {
+    "lambdarank/7/50": 0.7128,
+    "lambdarank/7/100": 0.7229,
+    "lambdarank/7/200": 0.7277,
+    "lambdarank/7/400": 0.7192,
+    "lambdarank/31/50": 0.7147,
+    "lambdarank/31/100": 0.7175,
+    "lambdarank/31/200": 0.7058,
+    "lambdarank/31/400": 0.7015,
+    "binary/7/50": 0.7086,
+    "binary/7/100": 0.7082,
+    "binary/7/200": 0.7154,
+    "binary/7/400": 0.7173,
+    "binary/31/50": 0.7084,
+    "binary/31/100": 0.7024,
+    "binary/31/200": 0.6985,
+    "binary/31/400": 0.6962
+   },
+   "fold4": {
+    "lambdarank/7/50": 0.7537,
+    "lambdarank/7/100": 0.7539,
+    "lambdarank/7/200": 0.7569,
+    "lambdarank/7/400": 0.7598,
+    "lambdarank/31/50": 0.7612,
+    "lambdarank/31/100": 0.7625,
+    "lambdarank/31/200": 0.7502,
+    "lambdarank/31/400": 0.7508,
+    "binary/7/50": 0.7571,
+    "binary/7/100": 0.7521,
+    "binary/7/200": 0.753,
+    "binary/7/400": 0.7523,
+    "binary/31/50": 0.758,
+    "binary/31/100": 0.7592,
+    "binary/31/200": 0.758,
+    "binary/31/400": 0.7535
+   },
+   "pooled": {
+    "lambdarank/7/50": 0.7461,
+    "lambdarank/7/100": 0.7493,
+    "lambdarank/7/200": 0.7515,
+    "lambdarank/7/400": 0.7486,
+    "lambdarank/31/50": 0.746,
+    "lambdarank/31/100": 0.7464,
+    "lambdarank/31/200": 0.7405,
+    "lambdarank/31/400": 0.7357,
+    "binary/7/50": 0.7373,
+    "binary/7/100": 0.7397,
+    "binary/7/200": 0.7425,
+    "binary/7/400": 0.7431,
+    "binary/31/50": 0.7411,
+    "binary/31/100": 0.7405,
+    "binary/31/200": 0.7402,
+    "binary/31/400": 0.7376
+   }
+  }
+ },
+ "gain_share": {
+  "B": {
+   "learned": {
+    "learned cos": 0.006383,
+    "learned rank in 50": 0.070326,
+    "learned gap to best": 0.209044,
+    "learned minus base": 0.006283
+   },
+   "learned_total": 0.292037,
+   "top5": {
+    "learned gap to best": 0.209044,
+    "rrf": 0.207239,
+    "same session as top 1": 0.087988,
+    "bridge z": 0.071905,
+    "learned rank in 50": 0.070326
+   }
+  },
+  "combo": {
+   "learned": {
+    "learned cos": 0.003505,
+    "learned rank in 50": 0.086181,
+    "learned gap to best": 0.272896,
+    "learned minus base": 0.007662
+   },
+   "learned_total": 0.370244,
+   "top5": {
+    "learned gap to best": 0.272896,
+    "rrf": 0.175595,
+    "same session as top 1": 0.106529,
+    "learned rank in 50": 0.086181,
+    "bm25 / best": 0.063634
+   }
+  }
+ },
+ "verdict": {
+  "result": "inconclusive",
+  "locomo_B_minus_A": {
+   "n": 1536,
+   "mean": 0.00128,
+   "ci": [
+    -0.008549,
+    0.010816
+   ],
+   "jackknife_t_ci": [
+    -0.010452,
+    0.013011
+   ],
+   "jackknife_se": 0.005186,
+   "signflip_p_one_sided": 0.40625
+  },
+  "lme_B_minus_A": 0.000766,
+  "conditions": {
+   "point_above_zero": true,
+   "interval_above_zero": false,
+   "signflip_p_below_0_05": false,
+   "lme_at_least_minus_0_005": true
+  }
+ },
+ "locomo": {
+  "n_questions": 1536,
+  "n_multi_hop": 282,
+  "means": {
+   "base": 0.655345,
+   "A": 0.749209,
+   "B": 0.750488,
+   "combo": 0.751722
+  },
+  "multi_hop_means": {
+   "base": 0.395955,
+   "A": 0.514865,
+   "B": 0.510547,
+   "combo": 0.512231
+  },
+  "by_order": {
+   "B": [
+    0.752661,
+    0.750129,
+    0.748675
+   ],
+   "combo": [
+    0.753694,
+    0.751374,
+    0.750099
+   ]
+  },
+  "comparisons": {
+   "B - A": {
+    "all": {
+     "n": 1536,
+     "mean": 0.00128,
+     "ci": [
+      -0.008549,
+      0.010816
+     ],
+     "jackknife_t_ci": [
+      -0.010452,
+      0.013011
+     ],
+     "jackknife_se": 0.005186,
+     "signflip_p_one_sided": 0.40625
+    },
+    "multi_hop": {
+     "n": 282,
+     "mean": -0.004318,
+     "ci": [
+      -0.014115,
+      0.00479
+     ],
+     "jackknife_t_ci": [
+      -0.016092,
+      0.007456
+     ],
+     "jackknife_se": 0.005205,
+     "signflip_p_one_sided": 0.791016
+    },
+    "per_chat": [
+     0.023148,
+     -0.003498,
+     -0.005665,
+     0.001672,
+     -0.021812,
+     0.017751,
+     0.005185,
+     0.008435,
+     0.015695,
+     -0.024573
+    ],
+    "chats_up": 6,
+    "chats_down": 4
+   },
+   "combo - A": {
+    "all": {
+     "n": 1536,
+     "mean": 0.002513,
+     "ci": [
+      -0.005356,
+      0.010342
+     ],
+     "jackknife_t_ci": [
+      -0.007007,
+      0.012034
+     ],
+     "jackknife_se": 0.004209,
+     "signflip_p_one_sided": 0.280273
+    },
+    "multi_hop": {
+     "n": 282,
+     "mean": -0.002633,
+     "ci": [
+      -0.015586,
+      0.009925
+     ],
+     "jackknife_t_ci": [
+      -0.018825,
+      0.013558
+     ],
+     "jackknife_se": 0.007158,
+     "signflip_p_one_sided": 0.652344
+    },
+    "per_chat": [
+     0.023148,
+     -0.003498,
+     -0.017105,
+     0.001914,
+     -0.014299,
+     0.015402,
+     0.005185,
+     0.008435,
+     0.01451,
+     -0.007123
+    ],
+    "chats_up": 6,
+    "chats_down": 4
+   },
+   "A - base": {
+    "all": {
+     "n": 1536,
+     "mean": 0.093864,
+     "ci": [
+      0.071441,
+      0.116988
+     ],
+     "jackknife_t_ci": [
+      0.065865,
+      0.121863
+     ],
+     "jackknife_se": 0.012377,
+     "signflip_p_one_sided": 0.000977
+    },
+    "multi_hop": {
+     "n": 282,
+     "mean": 0.11891,
+     "ci": [
+      0.098138,
+      0.14132
+     ],
+     "jackknife_t_ci": [
+      0.093291,
+      0.144528
+     ],
+     "jackknife_se": 0.011325,
+     "signflip_p_one_sided": 0.000977
+    }
+   },
+   "B - base": {
+    "all": {
+     "n": 1536,
+     "mean": 0.095143,
+     "ci": [
+      0.074916,
+      0.11724
+     ],
+     "jackknife_t_ci": [
+      0.068797,
+      0.12149
+     ],
+     "jackknife_se": 0.011647,
+     "signflip_p_one_sided": 0.000977
+    },
+    "multi_hop": {
+     "n": 282,
+     "mean": 0.114592,
+     "ci": [
+      0.099061,
+      0.130342
+     ],
+     "jackknife_t_ci": [
+      0.095865,
+      0.133319
+     ],
+     "jackknife_se": 0.008278,
+     "signflip_p_one_sided": 0.000977
+    }
+   },
+   "combo - base": {
+    "all": {
+     "n": 1536,
+     "mean": 0.096377,
+     "ci": [
+      0.076374,
+      0.116629
+     ],
+     "jackknife_t_ci": [
+      0.071258,
+      0.121496
+     ],
+     "jackknife_se": 0.011104,
+     "signflip_p_one_sided": 0.000977
+    },
+    "multi_hop": {
+     "n": 282,
+     "mean": 0.116276,
+     "ci": [
+      0.097107,
+      0.136351
+     ],
+     "jackknife_t_ci": [
+      0.092617,
+      0.139936
+     ],
+     "jackknife_se": 0.010459,
+     "signflip_p_one_sided": 0.000977
+    }
+   },
+   "combo - B": {
+    "all": {
+     "n": 1536,
+     "mean": 0.001234,
+     "ci": [
+      -0.002884,
+      0.005946
+     ],
+     "jackknife_t_ci": [
+      -0.004127,
+      0.006595
+     ],
+     "jackknife_se": 0.00237,
+     "signflip_p_one_sided": 0.359375
+    },
+    "multi_hop": {
+     "n": 282,
+     "mean": 0.001685,
+     "ci": [
+      -0.009118,
+      0.012876
+     ],
+     "jackknife_t_ci": [
+      -0.011983,
+      0.015352
+     ],
+     "jackknife_se": 0.006042,
+     "signflip_p_one_sided": 0.421875
+    }
+   }
+  }
+ },
+ "lme": {
+  "n_questions": 428,
+  "means": {
+   "fused read": 0.898209,
+   "A": 0.918653,
+   "B": 0.919418,
+   "combo": 0.917679
+  },
+  "comparisons": {
+   "B - A": {
+    "n": 428,
+    "mean": 0.000766,
+    "ci": [
+     -0.006452,
+     0.008516
+    ],
+    "jackknife_t_ci": [
+     -0.006902,
+     0.008433
+    ],
+    "jackknife_se": 0.003901
+   },
+   "combo - A": {
+    "n": 428,
+    "mean": -0.000974,
+    "ci": [
+     -0.008788,
+     0.00727
+    ],
+    "jackknife_t_ci": [
+     -0.009005,
+     0.007058
+    ],
+    "jackknife_se": 0.004086
+   },
+   "A - fused read": {
+    "n": 428,
+    "mean": 0.020444,
+    "ci": [
+     0.000228,
+     0.041629
+    ],
+    "jackknife_t_ci": [
+     0.000351,
+     0.040537
+    ],
+    "jackknife_se": 0.010223
+   }
+  },
+  "note": "one question per history: learned = base; models trained on LoCoMo"
+ },
+ "seconds": 476
+}

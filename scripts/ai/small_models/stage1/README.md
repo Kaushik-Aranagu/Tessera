@@ -54,3 +54,4 @@ threadpoolctl and, for `s111_baselines.py`, lightgbm 4.7.
 | 1.9 | pass | log-defined keys forget exactly, byte for byte, 90 of 90 cases |
 | 1.10 | fail | session fusion does not carry over to LongMemEval-S (+0.011, CI spans zero; multi-session −0.013 point loss) |
 | 1.11 | fail | ties RMM-style heads; a LightGBM ranker trained on other chats' gold evidence gains +0.094 over the current read |
+| 1.12 | inconclusive | added after stage 1 (`s112_ranker_keys.py`): learned-key features on top of the ranker +0.001 [−0.009, +0.011], sign-flip p 0.41; no detectable gain |
