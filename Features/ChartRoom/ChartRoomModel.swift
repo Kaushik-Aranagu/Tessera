@@ -188,7 +188,13 @@ final class ChartRoomModel {
         guard self.engine == nil else { return }
         self.engine = engine
         // The real store: Core's sample Plant class (until he says production-ready) and the binds read through it.
-        _ = try? RoomSample.seedPlants(store: engine.store, classes: engine.classes, now: AppClock.now)
+        do {
+            try RoomSample.seedPlants(store: engine.store, classes: engine.classes, now: AppClock.now)
+            UserDefaults.standard.removeObject(forKey: "chartRoom.seedError")
+        } catch {
+            // Core's sample seeding stopped part way: kept for the simulator's diagnostics line.
+            UserDefaults.standard.set("\(error)", forKey: "chartRoom.seedError")
+        }
         engine.store.invalidateCaches()
         data = EngineRoomData(engine: engine)
         // Simulator only: the orchid's own "Last misted" part, so a UI test can open its page (sheets 378, 379).

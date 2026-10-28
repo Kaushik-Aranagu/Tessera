@@ -226,6 +226,8 @@ struct ChartPlainPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pages: ChartPageModel?
     @State private var routine: ObjectStop?
+    /// Bumped when a pushed routine page comes back, so the page re-reads what that page changed (a checked step).
+    @State private var tick = 0
     /// Simulator only: why the UI test's seeded part could not be written.
     @State private var seedError: String?
 
@@ -245,6 +247,7 @@ struct ChartPlainPage: View {
 
     var body: some View {
         let _ = model.revision
+        let _ = tick
         let parts = book.page(for: object)
         let nodes = PlainPage.nodes(parts: parts, object: object, book: book, engine: model.engine,
                                     drawingLinks: false)
@@ -280,8 +283,10 @@ struct ChartPlainPage: View {
                 routineLines(parts: parts, scale: scale)
                 if LaunchFlags.has("-chartMistedPart") {
                     let linked = model.store.linkedObjects("misted", of: object)
-                    Text("seed \(seedError ?? "ok") parts \(parts.map(\.id).joined(separator: ",")) linked \(linked.map(\.title)) parent \(linked.first?.parent?.title ?? "none") routines \(model.classDef(.routine).map { model.store.objects(of: $0).map(\.title) } ?? []) steps \(model.classDef(.routineStep).map { model.store.objects(of: $0).count } ?? -1) raw \(String(describing: model.store.value("misted", of: object)))")
-                        .font(.system(size: 11)).offset(x: 24, y: 560 * scale)
+                    Text(
+                        "seed \(seedError ?? "ok") plantsSeed \(UserDefaults.standard.string(forKey: "chartRoom.seedError") ?? "ok") parts \(parts.map(\.id).joined(separator: ",")) linked \(linked.map(\.title)) parent \(linked.first?.parent?.title ?? "none") routines \(model.classDef(.routine).map { model.store.objects(of: $0).map(\.title) } ?? []) steps \(model.classDef(.routineStep).map { model.store.objects(of: $0).count } ?? -1) raw \(String(describing: model.store.value("misted", of: object)))"
+                    )
+                    .font(.system(size: 11)).offset(x: 24, y: 560 * scale)
                 }
                 if pages?.wasWatered() == true {
                     sayWords(scale: scale)
@@ -308,6 +313,11 @@ struct ChartPlainPage: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("chart.plainPage")
+        .onChange(of: routine) { _, now in
+            if now == nil {
+                tick += 1
+            }
+        }
         .navigationDestination(item: $routine) { stop in
             // The routine opens with the plant's name as its back word, in the room's colour (sheet 378).
             ObjectPage(route: .object(stop.id),
