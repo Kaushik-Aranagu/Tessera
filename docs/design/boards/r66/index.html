@@ -326,27 +326,47 @@ const tessCv=$('#tess'),tc=tessCv.getContext('2d');let tessHue=null,tessT=0,blin
 function tessCue(accent){tessTarget=(!accent||accent==='ink')?null:accent}
 function hexRGB(x){x=x.replace('#','');return [parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)]}
 let tessMix=0;
-function tessDraw(now){tessT=now/1000;const t=tessT;tc.clearRect(0,0,192,192);
+/* 384: Tess looks at what she means. While his words are on the page her eyes rest on them; while a change dries they
+   watch the place it fills; as she speaks, they go to each thing her line names, in time with the word, and with
+   nothing named they look at you. A glance is quick and coming home is slow, the cloud leans a little after the eyes,
+   and a thing that moves is followed. The farther the thing, the farther the eyes turn, as if she sat just behind the
+   glass, so the title and the line under her read as different looks. Reduce Motion: the eyes are placed at once and rest on the first thing named */
+const gz={x:0,y:0,m:0};let gzA=null,gzQ=[];
+function tessLook(a,ms,still){gzQ.forEach(clearTimeout);gzQ=[];gzA=a?{a,end:performance.now()+(ms||2000),still}:null}
+function tessGaze(seq){seq=seq.filter(s=>s[0]);if(!seq.length)return;if(RM){const f=seq.find(s=>s[0]!=='you')||seq[0];return tessLook(f[0],seq.reduce((n,s)=>n+s[1],0))}
+ tessLook(null);let t=0;seq.forEach(([a,ms])=>{gzQ.push(setTimeout(()=>{gzA={a,end:performance.now()+ms}},t));t+=ms})}
+window.__tgaze=()=>{const a=gzA&&gzA.a;return {x:+gz.x.toFixed(2),y:+gz.y.toFixed(2),m:+gz.m.toFixed(2),a:!a?null:a==='you'?'you':(a.dataset&&a.dataset.k?'k:'+a.dataset.k:a.className||a.tagName)}};
+function gazeStep(){let tx=0,ty=0,want=0;
+ if(gzA){const a=gzA.a;if(performance.now()>gzA.end||(a!=='you'&&!a.isConnected)||(gzA.still&&!gzA.still()))gzA=null;
+  else{want=1;if(a!=='you'){const r=a.getBoundingClientRect(),c=tessCv.getBoundingClientRect();if(r.width||r.height){const dx=r.left+r.width/2-(c.left+c.width/2),dy=r.top+r.height/2-(c.top+c.height/2),L=Math.hypot(dx,dy)||1,f=Math.min(1,L/(phone.getBoundingClientRect().height*.85||1));tx=dx/L*f*6;ty=dy/L*f*4.4}}}}
+ const k=RM?1:want?.3:.07;gz.x+=(tx-gz.x)*k;gz.y+=(ty-gz.y)*k;gz.m+=(want-gz.m)*(RM?1:.12)}
+function tessDraw(now){tessT=now/1000;const t=tessT;tc.clearRect(0,0,192,192);gazeStep();
  const black=phone.dataset.look==='black';let ember=black?[[255,107,61],[255,74,51],[255,194,61]]:[[255,90,38],[229,52,28],[255,169,15]];
  const want=tessTarget?1:0;tessMix+=(want-tessMix)*.04;
  if(tessTarget){const a=hexRGB(css('--'+tessTarget));const room=[a,a.map(v=>Math.max(0,v-30)),a.map(v=>Math.min(255,v+40))];ember=ember.map((c,i)=>c.map((v,j)=>Math.round(v*(1-tessMix)+room[i][j]*tessMix)))}
- const breath=.96+.08*Math.sin(.98*t),R=46*breath;const cx=96,cy=100;
+ const breath=.96+.08*Math.sin(.98*t),R=46*breath;const cx=96+gz.x*.45,cy=100+gz.y*.45;
  for(let k=0;k<3;k++){const ang=(.6+.16*t)+k*2.094,rr=k?R*.56:R*.4,x=cx+Math.cos(ang)*rr*.5,y=cy+Math.sin(ang)*rr*.5;
   const g=tc.createRadialGradient(x,y,2,cx,cy,R*(1.05+.04*Math.sin(2*t+k)));const c=ember[k];
   g.addColorStop(0,'rgba('+c+','+(k?.75:.95)+')');g.addColorStop(.55,'rgba('+c+','+(k?.45:.6)+')');g.addColorStop(1,'rgba('+c+',0)');
   tc.fillStyle=g;tc.beginPath();tc.arc(cx,cy,R*1.1,0,7);tc.fill()}
  const bl=((t%5)<.13||performance.now()<(window.__tblink||0))?.15:1,gl=Math.sin(t*.7)*3;tc.fillStyle=black?'rgba(21,21,23,.82)':'rgba(30,24,30,.86)';
- [[-9,-4],[9,-4]].forEach(([dx,dy])=>{tc.beginPath();tc.ellipse(cx+dx+gl,cy+dy,3.2,4.6*bl,0,0,7);tc.fill()});
+ [[-9,-4],[9,-4]].forEach(([dx,dy])=>{tc.beginPath();tc.ellipse(cx+dx+gl*(1-gz.m)+gz.x*.55,cy+dy+gz.y*.55,3.2,4.6*bl,0,0,7);tc.fill()});
  requestAnimationFrame(tessDraw)}
 requestAnimationFrame(tessDraw);
 let tlT=null;function tessSay(text){const L=$('#tessline');L.innerHTML='';const ws=text.split(' ');let d=0;
  ws.forEach(w=>{const s=h('span');s.textContent=w+' ';s.style.animationDelay=d+'ms';s.style.opacity=0;setTimeout(()=>{s.style.opacity=1},d);L.appendChild(s);d+=62+(/[.,]$/.test(w)?40:0)});
- clearTimeout(tlT);tlT=setTimeout(()=>{L.innerHTML=''},6000+d)}
+ clearTimeout(tlT);tlT=setTimeout(()=>{L.innerHTML=''},6000+d);tessLook('you',d+1500)}
 /* 383: Tess's line speaks. When she says something new on a page, her words arrive at her speaking pace, the same as
    her face-tap line above (about 60 ms a word, a breath after a comma), and her face blinks once as she starts. What
    she already said when a page opens is simply there. The line's text is whole from the first frame (every word is in
    place at no ink), so nothing that reads it waits. Reduce Motion: the line is simply there */
-function speak(el){if(RM||!el)return;const t=el.textContent;if(!t)return;el.textContent='';let d=0;const ws=t.split(' ');
+/* 384: aim(word) names the thing on the page a word means (or nothing); at is what the line is about from its first
+   word. Her eyes start on you, go to each named thing as its word arrives, and come home a beat after the last word */
+const gzWord=w=>w.toLowerCase().replace(/^[^a-z]+|[^a-z’']+$/g,'').replace(/[’']s$/,'');
+function speak(el,aim,at){if(!el)return;const t=el.textContent;if(!t)return;const ws=t.split(' ');
+ {let d=0,last=at||null;const mk=at?[{d:0,a:at}]:[];ws.forEach(w=>{const a=aim&&aim(gzWord(w));if(a&&a!==last){mk.push({d,a});last=a}d+=62+(/[,.;:]$/.test(w)?40:0)});const T=d+260;
+  tessGaze(!mk.length?[['you',T+900]]:[...(mk[0].d>0?[['you',mk[0].d]]:[]),...mk.map((m,j)=>[m.a,(j<mk.length-1?mk[j+1].d:T+1100)-m.d])])}
+ if(RM)return;el.textContent='';let d=0;
  ws.forEach((w,i)=>{const s=document.createElement('span');s.className='sw-w';s.textContent=w;el.appendChild(s);if(i<ws.length-1)el.appendChild(document.createTextNode(' '));
   s.animate([{opacity:0,transform:'translateY(3px)'},{opacity:1,transform:'none'}],{duration:260,delay:d,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});d+=62+(/[,.;:]$/.test(w)?40:0)});
  window.__tblink=performance.now()+130}
@@ -2978,6 +2998,9 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  const layer=h('div');el.appendChild(layer);
  const act=h('button','ch-act');el.appendChild(act);
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
+ // 384: what a word of Tess's means in this room: a plant is its number, the thirstiest is the top one, a way is the keystone
+ const aim=w=>{const p=w==='thirstiest'?th():plants.find(p=>p.n.toLowerCase()===w);if(p)return layer.querySelector('.ch-key b[data-k="'+p.n+'"]')||layer.querySelector('.ch-nm');
+  if(/^(number|numbers|ladder|keystone)$/.test(w))return layer.querySelector('.ch-key');return w==='wish'?layer.querySelector('.ch-wish'):null};
  function draw(ghost){const t=th();let s='';
   {const R=ROOMS.chart;R.th=at>=1&&t.d>0?t.n:'';R.n=at>=1?'Plants':'Chart room';R.c=at>=1?'var(--lists)':'var(--slate)';R.fact=at>=1?(t.d>0?t.n+', '+t.d+(t.d===1?' day':' days'):'All watered'):'Say what it’s for'}if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> is thirsty':', all watered')+'</div>';
@@ -2990,7 +3013,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(hist);else if(heard)s+='<div class="ch-c ch-heard'+(rp?' fast':' live')+'">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
   layer.innerHTML=s;
   // 383: a new line from Tess is spoken; one she already said when the room opened is simply there
-  {const tl=layer.querySelector('.ch-tess'),t=tl?tl.textContent:'';if(tl&&said!==null&&t!==said)speak(tl);said=t}
+  {const tl=layer.querySelector('.ch-tess'),t=tl?tl.textContent:'';if(tl&&said!==null&&t!==said)speak(tl,aim);said=t}
   {const dh=layer.querySelector('.ch-dial'),sm=layer.querySelector('.ch-dsum');if(dh){const L=[...plants].sort((a,b)=>b.d-a.d),f=Math.max(0,L.findIndex(p=>p.n===ROOMS.chart.door));
    dial(dh,L.map(p=>({n:p.n,d:p.d,color:p.d>=5?'var(--wine)':'var(--lists)'})),{start:f,slot:40,blur:1.6,label:(d,F)=>'<span style="font-size:'+(F?26:20)+'px;font-weight:'+(F?700:600)+'">'+d.n+'</span><i>'+d.d+'</i>',
     open:d=>{if(!dry&&!rp&&!tmw&&realAt==null&&!hist)go('plant',{n:d.n})},change:d=>{ROOMS.chart.door=d.n;sm.textContent=WHERE[d.n]}})}}
@@ -3049,13 +3072,15 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
    e.animate([{opacity:0,transform:'translateY(.4em)'},{opacity:1,transform:'none'}],{duration:280,delay:delay+170,easing:E,fill:'backwards'})})}
  const wpull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget',doors:'doors'};
  function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;{const rc=el.querySelector('.receipt');if(rc)rc.innerHTML=''}
-  if(S.no){draw();cur={ls:[],t0:performance.now(),back:()=>{at--}};dry=setTimeout(()=>{dry=null;cur=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
+  if(S.no){draw();tessGaze([[layer.querySelector('.ch-heard'),1200]]);cur={ls:[],t0:performance.now(),back:()=>{at--}};dry=setTimeout(()=>{dry=null;cur=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
     if(S.queue)receipt(el,S.r,()=>{queued=false;tline='';draw()});
     else receipt(el,S.r,()=>{tline='';grow()},S.alt)},1200);return}
   draw(S.fills);
   // the drying line runs along the foot of each place it filled, 2 s, then the ghost sets
   const lines=S.fills.map(k=>{const [x,y,w,hh]=PL[k];const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
    if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});return l});
+  // 384: she reads his words, then watches the place it fills while it dries
+  tessGaze([[layer.querySelector('.ch-heard'),700],[layer.querySelector('[data-p="'+S.fills[0]+'"]')||lines[0],1300]]);
   cur={ls:lines,t0:performance.now(),back:()=>{at--}};
   dry=setTimeout(()=>{dry=null;cur=null;lines.forEach(l=>l.remove());heard='';
    /* 370: a change that widens what the room can do isn't set by the drying line. The receipt says it is waiting for
@@ -3206,7 +3231,9 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
    g.style.cssText='position:absolute;z-index:8;pointer-events:none;white-space:nowrap;left:'+((o.r.left-er.left)/K)+'px;top:'+((o.r.top-er.top)/K)+'px;font:'+cs.font+';line-height:'+cs.lineHeight+';color:'+cs.color;el.appendChild(g);
    g.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY('+up+')'}],{duration:170,delay:i*60,easing:'cubic-bezier(.4,0,.8,.4)',fill:'both'}).onfinish=()=>g.remove();
    e.animate([{opacity:0,transform:'translateY('+dn+')'},{opacity:1,transform:'none'}],{duration:280,delay:i*60+150,easing:E,fill:'backwards'})})}
- let dry=null,heard='',tline='',ln0=null;const top={hist:452,mist:476};
+ let dry=null,heard='',tline='',ln0=null,tAt=null;const top={hist:452,mist:476};
+ // 384: on this page the plant's name is its title, misting is the misted day, and Water is the routine it lives in
+ const aim=w=>w===pl.n.toLowerCase()?t:/^mist(ed|ing)$/.test(w)?ms.querySelector('.pl-w')||ms:w==='water'?ms.querySelector('.pl-ln'):null;
  function draw(ghost){if(ghost===true)ghost='hist';ln.textContent='Watered '+ago(pl.d)+', '+WHERE[pl.n].replace(/^./,c=>c.toLowerCase());
   k.innerHTML=pl.d===0?'<b>Today</b>':'<b>'+pl.d+'</b><span>'+(pl.d===1?'day':'days')+'</span>';
   // the parts stack from the care note down, so an empty one leaves no gap, and Tess sits one line below the last
@@ -3216,15 +3243,15 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
   ts.style.top=Math.max(500,y+24)+'px';
   const wasSaid=ts._said;ts.className='ch-c '+(heard?'ch-heard live':'ch-tess');ts.textContent=heard?'“'+heard+'”':tline||(OV.mist?'The misting is the orchid’s own, the rest is every plant’s':CV.hist?'This page is every plant’s. Say a change and they all get it':'Every plant gets this plain page until you say how it should look');
   // 383: a new line from Tess is spoken; the line the page opens with is simply there; his own words are never spoken back
-  if(heard)ts._said=null;else{const t=ts.textContent;if(wasSaid!==undefined&&wasSaid!==t)speak(ts);ts._said=t}
+  if(heard)ts._said=null;else{const t=ts.textContent;if(wasSaid!==undefined&&wasSaid!==t)speak(ts,aim,tAt);ts._said=t}tAt=null;
   const sayIt=pl.d===0&&!CV.hist,sayM=pl.d===0&&CV.hist&&mistOK&&!OV.mist;act.className='ch-act'+(pl.d>0?' water':'');
   act.innerHTML=pl.d>0?'<span class="av">Watered</span><span class="ao">today</span>':sayIt?'<span class="av">Say</span><span class="ao">show when I watered it</span>':sayM?'<span class="av">Say</span><span class="ao">just for the orchid, show its misting</span>':'<span class="av">Back</span><span class="ao">to Plants</span>'}
  function line(from,to,dur,ease,y){const l=h('div','ch-dry');l.style.cssText='left:26px;top:'+(y+24-2)+'px;width:350px';el.appendChild(l);
   if(!RM)l.animate([{transform:'scaleX('+from+')'},{transform:'scaleX('+to+')'}],{duration:dur,easing:ease,fill:'both'});return l}
  function say(kind){kind=kind==='mist'?'mist':'hist';const M=kind==='mist';heard=M?'Just for the orchid, show its misting':'Show when I watered it';tline='';{const rc=el.querySelector('.receipt');if(rc)rc.remove()}
-  draw(kind);ln0=line(0,1,2000,'linear',top[kind]);ln0._t=performance.now();
+  draw(kind);ln0=line(0,1,2000,'linear',top[kind]);ln0._t=performance.now();tessGaze([[ts,700],[M?ms:hs,1300]]);
   dry=setTimeout(()=>{dry=null;ln0.remove();ln0=null;heard='';
-   if(M){OV.mist=true;OBJVIEW[pl.n]=OV;tline='Only the orchid’s page, the others don’t get misted'}else{CV.hist=true;tline='Every plant’s page has it now, not just the '+pl.n.toLowerCase()+'’s'}draw();
+   if(M){OV.mist=true;OBJVIEW[pl.n]=OV;tline='Only the orchid’s page, the others don’t get misted'}else{CV.hist=true;tline='Every plant’s page has it now, not just the '+pl.n.toLowerCase()+'’s'}tAt=M?ms:hs;draw();
    if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}
    receipt(el,M?'The orchid’s page, set':'Every plant’s page, set',()=>{if(dry)return;tline='';draw(kind);const l=line(1,0,600,'cubic-bezier(.5,0,.75,0)',top[kind]);if(M)OV.mist=false;else CV.hist=false;dry=setTimeout(()=>{dry=null;l.remove();draw()},RM?0:600)})},2000)}
  function stop(){if(!dry||!ln0)return;clearTimeout(dry);const p=Math.min(1,(performance.now()-ln0._t)/2000),l=ln0;ln0=null;if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}
