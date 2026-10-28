@@ -148,9 +148,9 @@ struct NotesLandingPage: View {
 
     /// A wall word: the title cut on a whole word at 14 characters, then stepped back past trailing small words
     /// and punctuation (228). Never "...", never an empty word.
-    /// The Log's own colour (sheet 241 and 283: plum 8A4570 / E3A3CB), not the app-wide Notes violet.
+    /// The Log's own colour, violet, his pick Oct 27 (5B2277 / BB70E1).
     static func plum(_ scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color(hex: 0xE3A3CB) : Color(hex: 0x8A4570)
+        scheme == .dark ? Color(hex: 0xBB70E1) : Color(hex: 0x5B2277)
     }
 
     static func short(_ title: String) -> String {
