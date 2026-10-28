@@ -14,7 +14,7 @@ extension ChartRoomModel {
         ])),
         ("Put them on the keystone by when I last watered", RoomPatch(room: "Chart room", say: "Keystone, set", ops: [
             .init(op: "add", id: "row", kind: "row", place: "keystone",
-                  props: ["big": .string("daysSince(lastWatered)"), "small": .string("title"),
+                  props: ["big": .string("lastWatered"), "small": .string("title"),
                           "sort": .string("-daysSince(lastWatered)"), "max": .number(4)], bind: "Plant"),
             .init(op: "add", id: "cap", kind: "line", place: "caption",
                   props: ["text": .string("Days since water")], bind: "Plant"),
