@@ -823,6 +823,29 @@ struct ChartRoomTests {
         #expect(keystoneItems(room).first { $0.small == "Orchid" }?.isTop == true)
     }
 
+    @Test func whenEveryPlantIsWateredTheSentenceNamesNobodyAndNothingGlows() async throws {
+        let said = Said()
+        let room = model(said: said)
+        upToTheWideningPatch(room)
+        room.saySomething()
+        try await Task.sleep(for: .milliseconds(250))
+        room.allow()
+        func line(_ place: Place) -> String {
+            room.nodes[place]?.flatMap(\.words).first ?? ""
+        }
+        #expect(line(.switcher) == "4 plants, the orchid is thirsty")
+        #expect(line(.caption) == "Days since water, the orchid first")
+        for _ in 0 ..< 4 {
+            room.does("water")
+        }
+        #expect(line(.switcher) == "4 plants, all watered")
+        #expect(line(.caption) == "Days since water", "the caption keeps just its words")
+        #expect(keystoneItems(room).allSatisfy { $0.big == "0" })
+        try await Task.sleep(for: .milliseconds(550))
+        #expect(keystoneItems(room).allSatisfy { !$0.isTop }, "nothing glows")
+        #expect(room.nodes[.actionWord] == nil, "the word that named the thirstiest has gone")
+    }
+
     // MARK: Sheet 372: a room comes back the way it was made
 
     private func restoredRoom() async throws -> (ChartRoomModel, Said, ChartDoc) {

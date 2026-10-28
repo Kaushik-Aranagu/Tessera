@@ -111,6 +111,12 @@ enum PartText {
     static func fill(_ template: String, items: [BoundItem], top: BoundItem?) -> String {
         var text = template
         text = text.replacingOccurrences(of: "{count}", with: String(items.count))
+        if top == nil {
+            // Nobody is thirsty (sheet 364): the sentence names nobody ("4 plants, all watered"), and a caption
+            // that ranked them drops its clause ("Days since water").
+            text = text.replacingOccurrences(of: "the {top} is thirsty", with: "all watered")
+            text = text.replacingOccurrences(of: ", the {top} first", with: "")
+        }
         text = text.replacingOccurrences(of: "{top}", with: top?.name.lowercased() ?? "")
         for key in Set(items.flatMap(\.fields.keys)) {
             let value = top?.fields[key].map { whole($0) } ?? ""
@@ -277,6 +283,10 @@ enum PartResolver {
                 return nil
             }
             let top = lineTop(part, doc: doc, bound: bound, data: data)
+            // A word that names the thirstiest plant has nothing to say when none is thirsty: the foot says Say again.
+            if (props.text("object") ?? "").contains("{top}"), top == nil {
+                return nil
+            }
             return .actionWord(id: part.id, verb: shown(props.text("verb")),
                                object: shown(PartText.fill(props.text("object") ?? "", items: bound, top: top)),
                                does: does)
@@ -308,7 +318,11 @@ enum PartResolver {
     {
         guard let modifier = doc.parts.first(where: { $0.kind == .top }), let field = modifier.props.text("field")
         else { return bound.first }
-        return bound.max { value($0, field) < value($1, field) } ?? bound.first
+        // Nothing thirsty: nobody is the top (sheet 364: "all watered", nothing glows).
+        guard let best = bound.max(by: { value($0, field) < value($1, field) }), value(best, field) > 0 else {
+            return nil
+        }
+        return best
     }
 }
 

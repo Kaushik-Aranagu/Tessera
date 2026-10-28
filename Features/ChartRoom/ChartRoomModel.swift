@@ -1029,7 +1029,11 @@ final class ChartRoomModel {
 
     /// What the Say word's small line reads: "what to change about the keystone", or "what to build".
     var sayObject: String {
-        picked.map { "what to change about the \(Self.name(of: $0))" } ?? DocumentRoom.sayObject
+        if let picked {
+            return "what to change about the \(Self.name(of: picked))"
+        }
+        // Everything he asked for is built: the foot offers more ("Say anything else").
+        return nextCanned == nil && !document.parts.isEmpty ? "anything else" : DocumentRoom.sayObject
     }
 
     // MARK: How the room says no (sheet 361)
@@ -1091,6 +1095,8 @@ extension PartResolver {
         guard !RoomWalls.isWalled(bind) else { return nil }
         let all = data(bind)
         guard let field = doc.parts.first(where: { $0.kind == .top })?.props.text("field") else { return all.first }
-        return all.max { value($0, field) < value($1, field) }
+        guard let best = all.max(by: { value($0, field) < value($1, field) }),
+              value(best, field) > 0 else { return nil }
+        return best
     }
 }
