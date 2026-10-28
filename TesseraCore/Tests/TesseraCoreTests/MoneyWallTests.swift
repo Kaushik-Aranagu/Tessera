@@ -7,6 +7,7 @@ import Testing
 /// a capture the grammar cannot read goes whole to Claude, money and body included; only a key stays. What the grammar
 /// claimed with a question or a refusal, and the inbox, stay on the phone.
 @MainActor
+@Suite(.oldWalls)
 struct MoneyWallTests {
     final class Spy: TessModel {
         var heard: [String] = []

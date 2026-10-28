@@ -118,6 +118,7 @@ final class GalleyRoomDriver: ShellRoomDriver {
     var link: HomeLink?
     var recipe: KitchenCookCover?
     var cookCover: KitchenCookCover?
+    var shopping = false
     @ObservationIgnored private var facts: GalleyRoomContent.Facts?
     @ObservationIgnored private var front: KitchenFront?
     @ObservationIgnored private weak var model: AppModel?
@@ -163,7 +164,11 @@ final class GalleyRoomDriver: ShellRoomDriver {
             item(id)
         case let .action(id):
             if id == "get" {
-                link = .groceries
+                if Tier1b.shopModeIsOn {
+                    shopping = true
+                } else {
+                    link = .groceries
+                }
             } else if let meal = front?.tonight {
                 cook(meal)
             } else {
@@ -219,9 +224,10 @@ private struct GalleyPresenter: View {
         Color.clear
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .fullScreenCover(isPresented: $driver.shopping) { GalleyShopModePage() }
             .fullScreenCover(item: $driver.link) { $0.destination }
             .fullScreenCover(item: $driver.recipe) { RecipeView(recipeID: $0.id) }
-            .fullScreenCover(item: $driver.cookCover) { CookClockPage(cookID: $0.id) }
+            .fullScreenCover(item: $driver.cookCover) { CookEntry(cookID: $0.id) }
     }
 }
 
@@ -300,8 +306,19 @@ final class WatchRoomDriver: ShellRoomDriver {
                 opened = Opened(id: uuid)
             }
         case let .notNow(id):
+            // Sheet 355: "not now" hides it for today and carries a 10 s Undo that brings it back where it was.
             let name = facts?.trees.first { $0.id.uuidString == id }?.name ?? "It"
-            TessVoice.shared.say("\(name) can wait")
+            if let uuid = UUID(uuidString: id) {
+                let today = TesseraDay().today(AppClock.now)
+                RoutinesNotNow.set(uuid, on: today, hidden: true)
+                model?.touch()
+                TessVoice.shared.say("\(name) can wait", holds: .seconds(10), takeBack: { [weak self] in
+                    RoutinesNotNow.set(uuid, on: today, hidden: false)
+                    self?.model?.touch()
+                })
+            } else {
+                TessVoice.shared.say("\(name) can wait")
+            }
         case .back:
             return false
         case let .openDoor(id):

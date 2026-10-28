@@ -68,7 +68,7 @@ struct HarnessM0ReviewTests {
 }
 
 extension ClaudeBrainTests {
-    @Test func countTokensGoesThroughTheDoorsGate() async throws {
+    @Test(.oldWalls) func countTokensGoesThroughTheDoorsGate() async throws {
         let key = "sk-" + "ant-" + "CT-" + UUID().uuidString
         let brain = ClaudeBrain(model: .haiku, keys: InMemoryKeychain(key), session: BrainStub.session())
         let plain = BrainRequest(system: [TextBlock("Be brief")], messages: [BrainMessage(.user, text: "Hello")])

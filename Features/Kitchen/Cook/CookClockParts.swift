@@ -261,7 +261,7 @@ struct ClockTick<Content: View>: View {
                 content(AppClock.adjust(context.date))
             }
         } else {
-            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !active)) { context in
+            LiveClock(LiveFeatures.cookClock, minimumInterval: 1.0 / 30, paused: !active) { context in
                 content(AppClock.adjust(context.date))
             }
         }

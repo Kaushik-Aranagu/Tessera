@@ -455,7 +455,8 @@ struct MosaicFaceTests {
         engine.reduceMotion = true
         let core = engine.liveCore
         let column = core.left + 40
-        // Walking out from the window's top edge (the left side runs off a 402 pt screen at 88 tiles) the colour climbs from the scene's toward the page's in whole tiles:
+        // Walking out from the window's top edge (the left side runs off a 402 pt screen at 88 tiles) the colour climbs
+        // from the scene's toward the page's in whole tiles:
         // never an alpha ramp, always a solid colour between the two, and nothing is drawn 16 tiles out.
         var levels: [Double] = []
         for step in 0 ..< MosaicRim.reach {

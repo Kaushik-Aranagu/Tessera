@@ -331,6 +331,7 @@ struct RootShellTests {
         #expect(ShellRoomIDs.room(for: HomeV2Door.lookout) == "lookout")
         #expect(ShellRoomIDs.room(for: HomeV2Door.app(.kitchen)) == "galley")
         #expect(ShellRoomIDs.room(for: HomeLink.today) == nil)
-        #expect(Set(ShellRooms.drivers().keys) == Set(Self.rooms), "every room has a driver")
+        #expect(Set(ShellRooms.drivers().keys) == Set(Self.rooms + (ChartRoomFlag.isOn ? [DocumentRoom.room] : [])),
+                "every room has a driver")
     }
 }

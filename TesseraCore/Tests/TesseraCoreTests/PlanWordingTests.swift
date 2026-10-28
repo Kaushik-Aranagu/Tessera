@@ -73,7 +73,7 @@ final class PlanStub: URLProtocol, @unchecked Sendable {
 
 /// Plan my day through Claude (plan-my-day-prompt.md; fixtures/plan-my-day-claude.md d01): the pack, the checks,
 /// and every way back to the rules plan.
-@Suite(.serialized) @MainActor
+@Suite(.oldWalls, .serialized) @MainActor
 struct PlanWordingTests {
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]

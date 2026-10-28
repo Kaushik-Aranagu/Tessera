@@ -6,25 +6,16 @@ struct DepartureBoardTests {
         #expect(DepartureSteps.sequence(from: "a", to: "a").isEmpty)
     }
 
-    @Test func aStepRunsForwardAlongTheStripAndEndsOnTheNewLetter() {
-        let steps = DepartureSteps.sequence(from: " ", to: "c")
-        #expect(steps == ["a", "b", "c"])
-    }
-
-    @Test func noMoreThanNineStepsAndTheLastIsTheTarget() {
-        for target in DepartureSteps.strip {
-            for start in DepartureSteps.strip {
-                let steps = DepartureSteps.sequence(from: start, to: target)
-                #expect(steps.count <= DepartureSteps.maxSteps)
-                if start != target {
-                    #expect(steps.last == target)
-                }
+    /// A changed letter flips once, straight to the new letter: the board shows only the letters of the two words.
+    @Test func aChangedLetterFlipsOnceStraightToTheNewLetter() {
+        #expect(DepartureSteps.sequence(from: " ", to: "c") == ["c"])
+        #expect(DepartureSteps.sequence(from: "d", to: "e") == ["e"])
+        #expect(DepartureSteps.sequence(from: "a", to: "é") == ["é"])
+        for old in "Tuesday, Oct 27" {
+            for new in "Tue, Oct 27" where old != new {
+                #expect(DepartureSteps.sequence(from: old, to: new) == [new])
             }
         }
-    }
-
-    @Test func aLetterOffTheStripLandsAtOnce() {
-        #expect(DepartureSteps.sequence(from: "a", to: "é") == ["é"])
     }
 
     @Test func theDelayIsLineTimesFivePlusIndexTimes14() {

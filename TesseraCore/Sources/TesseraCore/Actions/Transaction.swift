@@ -7,7 +7,8 @@ public struct Transaction {
     public let store: ObjectStore
     public let classes: [SystemCatalog.Key: ClassDef]
     public private(set) var ops: [Op] = []
-    /// The engine's clock and calendar when this action started (not `Date.now`: the app and the test world set theirs).
+    /// The engine's clock and calendar when this action started (not `Date.now`: the app and the test world set
+    /// theirs).
     public let now: Date
     public let calendar: Calendar
 

@@ -6,6 +6,7 @@ import Testing
 /// Research 134 (docs/research/fixtures/secret-words.md): a line with a secret word becomes a private note on the
 /// phone and never reaches the model, Claude, memory or the miss log. Every value below is a made-up placeholder.
 @MainActor
+@Suite(.oldWalls)
 struct SecretWordsTests {
     static let la = TimeZone(identifier: "America/Los_Angeles")!
 

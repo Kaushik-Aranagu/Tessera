@@ -5,6 +5,7 @@ import Testing
 
 /// Design sheet 115: the number and the unit as two planes. Conversion is display only.
 @MainActor
+@Suite(.oldWalls)
 struct MeasureTests {
     let store = ObjectStore.open(inMemory: true)
 
@@ -124,7 +125,7 @@ struct MeasureTests {
 
 /// The rates file and the one fetch.
 @MainActor
-@Suite(.serialized)
+@Suite(.oldWalls, .serialized)
 struct CurrencyRatesTests {
     static let xml = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -216,6 +217,7 @@ struct CurrencyRatesTests {
 
 /// The lows from #1176.
 @MainActor
+@Suite(.oldWalls)
 struct MeasureLowsTests {
     @Test func theRatesFilesAreExcludedFromBackup() throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "rates-\(UUID().uuidString).json")

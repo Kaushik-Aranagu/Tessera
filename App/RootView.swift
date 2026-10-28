@@ -14,6 +14,8 @@ struct RootView: View {
     /// `-openCook "Paprika chicken"` (simulator only, read through LaunchFlags): starts that cook and opens its clock
     /// page, for recordings.
     @State private var demoCook: DemoCookCover?
+    @State private var demoShop = false
+    @State private var demoRoutine: DemoCookCover?
     /// Settings, opened from the entry at the top right of any page below Home.
     @State private var settingsOpen = false
     #if DEBUG
@@ -125,8 +127,32 @@ struct RootView: View {
                     .environment(\.animateEntrance, true)
             }
         }
-        .fullScreenCover(item: $demoCook) { CookClockPage(cookID: $0.id) }
+        .fullScreenCover(item: $demoCook) { CookEntry(cookID: $0.id) }
+        .fullScreenCover(item: $model.cookLink) { CookEntry(cookID: $0.id, alert: $0.alert) }
         #if DEBUG
+            .fullScreenCover(isPresented: $demoShop) { GalleyShopModePage() }
+            .fullScreenCover(item: $demoRoutine) { RoutineModePage(routineID: $0.id) }
+            .task {
+                // Simulator only (LaunchFlags): `-openRoutine` opens the sample Evening in routine mode, for stills.
+                guard LaunchFlags.has("-openRoutine") else { return }
+                let routine = (try? RoutineSample.evening(in: model.engine)) ?? nil
+                guard let routine else { return }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoRoutine = DemoCookCover(id: routine.id)
+            }
+            .task {
+                // Simulator only (LaunchFlags): `-openShop` opens the Galley's shopping mode, for stills.
+                guard LaunchFlags.has("-openShop") else { return }
+                if LaunchFlags.has("-demoKitchen") {
+                    _ = try? model.engine.perform(
+                        AddGroceries(lines: ["milk", "2 lemons", "sourdough", "kitchen roll"]),
+                        by: .user
+                    )
+                    model.touch()
+                }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoShop = true
+            }
             .fullScreenCover(isPresented: $layoutModeOpen) {
                 NavigationStack { LayoutModeView() }
             }

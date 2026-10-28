@@ -5,6 +5,7 @@ import Testing
 
 /// G654: the month's spend lives in a file beside the store, outside backup; the higher of the two totals wins.
 @MainActor
+@Suite(.oldWalls)
 struct TessSpendFileTests {
     func folder() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

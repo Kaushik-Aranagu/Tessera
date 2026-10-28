@@ -110,6 +110,26 @@ final class AppModel {
     var session: WorkoutSession?
     /// The workout cover zooms out of Training's first lane (set by START; cleared when the cover goes).
     var workoutRisesFromLane = false
+    /// The cook a Live Activity link opened (`tessera://cook?cook=<id>&alert=<food>`): the cooking cover shows it, with
+    /// the alert printed when one came with the link.
+    struct CookLink: Identifiable, Equatable {
+        let id: UUID
+        let alert: String?
+    }
+
+    var cookLink: CookLink?
+
+    /// The link from the cooking activity: its own cook if the link names one that still runs, else the cook running
+    /// now; nothing opens when no cook runs.
+    func openCook(from url: URL) {
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let named = items.first { $0.name == "cook" }?.value.flatMap { UUID(uuidString: $0) }
+        let running = KitchenFront(model: self, now: AppClock.now).cooking?.id
+        guard let id = [named, running].compactMap(\.self).first(where: { store.object(id: $0) != nil }) else { return }
+        let alert = items.first { $0.name == "alert" }?.value.flatMap { $0.isEmpty ? nil : $0 }
+        cookLink = CookLink(id: id, alert: alert)
+    }
+
     var isWorkoutPresented = false {
         didSet {
             if isWorkoutPresented {

@@ -50,7 +50,8 @@ public struct MemoryIndex {
         .sorted { ($0.createdAt, $0.id.uuidString) < ($1.createdAt, $1.id.uuidString) }
 
         for record in objects where !record.title.isEmpty {
-            let label = ObjectPrivacy.shownLabel(of: record, in: store, classes: classes)
+            // Under lab a private thing is indexed by its own words (his Oct 27 call: Claude sees everything).
+            let label = ClaudeSees.label(of: record, in: store, classes: classes, strict: scope.policy == .strict)
             let shown = label ?? TessAskRouter.shownSentence(record, in: store, classes: classes, calendar: calendar)
                 ?? record.title
             let base = Self.path(of: record, label: label, store: store)

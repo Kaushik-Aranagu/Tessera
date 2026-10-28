@@ -7,6 +7,7 @@ import Testing
 /// its notebook is its own, recall pages in what scores above the floor by path, a private thing reads by its label
 /// only, and remember keeps a maybe only with evidence.
 @MainActor
+@Suite(.oldWalls)
 struct RecallToolsTests {
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]

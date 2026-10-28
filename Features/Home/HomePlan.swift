@@ -114,8 +114,9 @@ final class HomePlanModel {
         // Claude's wording ships off until its eval passes (AI architecture): rules wording only, no call made.
         guard let plan, model.asksClaude, AppModel.planWordingReady else { return }
         wordingCalls += 1
+        // Event titles go as they are while Claude sees everything (his Oct 27 call).
         let pack = PlanPack(plan: plan, now: now, calendar: calendar, calendarKnown: false, restDay: restDay,
-                            otherNames: plan.notPlanned.map(\.title), includesEventTitles: false,
+                            otherNames: plan.notPlanned.map(\.title), includesEventTitles: ClaudeSees.everything,
                             lastWeightKg: BodyWeight.lastKg(in: model.store))
         wording?.cancel()
         wording = Task { @MainActor [weak self] in
@@ -290,7 +291,7 @@ struct PlanRows: View {
                     .frame(height: QueueWindow.rowHeight, alignment: .leading)
             }
             if model.showsPrivacy {
-                Text("Titles and counts only. Never notes, places, health or money")
+                Text("Everything but your key")
                     .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -328,7 +329,7 @@ struct PlanRow: View {
         ))
         let time = Text(Format.clock(block.start)).font(Theme.Typography.font(Theme.concept.scale.label))
             .monospacedDigit()
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || kept)) { context in
+        LiveClock(LiveFeatures.planBlock, minimumInterval: 1 / 30, paused: reduceMotion || kept) { context in
             words(title: title, time: time,
                   breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }

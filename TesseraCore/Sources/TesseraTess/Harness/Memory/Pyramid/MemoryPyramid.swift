@@ -8,8 +8,8 @@ import Foundation
 // This slice is the time axis, built from plain leaves so the test world can drive it before the store does. The
 // words (a gist per node) come in a later slice from a model; everything here is exact and deterministic.
 
-/// One thing that happened, word for word: a set of lifts, a meal, a spend. A private thing's `text` is its shown
-/// label, never its title.
+/// One thing that happened, word for word: a set of lifts, a meal, a spend. A private thing is `deviceOnly`; its `text`
+/// is its own words while Claude sees everything (`ClaudeSees`), its shown label otherwise.
 public struct PyramidLeaf: Sendable, Equatable {
     public var id: String
     public var at: Date
@@ -117,11 +117,19 @@ public enum PyramidStats {
         Shown(key: "events", label: "calendar events", taint: .deviceOnly, value: sum("events")),
         Shown(key: "spentUSD", label: "dollars spent", taint: .deviceOnly, value: sum("spentUSD")),
         Shown(key: "spentEUR", label: "euros spent", taint: .deviceOnly, value: sum("spentEUR")),
+        Shown(key: "spentGBP", label: "pounds spent", taint: .deviceOnly, value: sum("spentGBP")),
+        Shown(key: "spentINR", label: "rupees spent", taint: .deviceOnly, value: sum("spentINR")),
         Shown(key: "earnedUSD", label: "dollars in", taint: .deviceOnly, value: sum("earnedUSD")),
+        Shown(key: "earnedEUR", label: "euros in", taint: .deviceOnly, value: sum("earnedEUR")),
+        Shown(key: "earnedGBP", label: "pounds in", taint: .deviceOnly, value: sum("earnedGBP")),
+        Shown(key: "earnedINR", label: "rupees in", taint: .deviceOnly, value: sum("earnedINR")),
         Shown(key: "sleep", label: "hours of sleep a night", taint: .deviceOnly,
               value: average("sleepHours", over: "nights")),
         Shown(key: "weight", label: "kg body weight on average", taint: .deviceOnly,
               value: average("weightKg", over: "weighIns")),
+        Shown(key: "steps", label: "steps", taint: .deviceOnly, value: sum("steps")),
+        Shown(key: "restingBpm", label: "bpm resting heart rate on average", taint: .deviceOnly,
+              value: average("restingBpm", over: "heartDays")),
     ]
 
     /// The totals strict shows. Only a claude-safe leaf adds to them.

@@ -6,6 +6,7 @@ import Testing
 /// `about` links can point at any class. A query that walks one must read a Spend, an event or a sleep night as no
 /// value, so money, calendar and sleep never reach an answer through a note, a task or a list item.
 @MainActor
+@Suite(.oldWalls)
 struct QueryWallTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine

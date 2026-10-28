@@ -25,6 +25,15 @@ the ones that fail. The full design, with prior art and the diagram, is the "Tes
 - **The store slice must also:**
   - build leaf text from his titles through `ObjectPrivacy.shownLabel` and the PrivateWords taint;
   - taint a told line by `isPrivateText`.
+  - **Money (built):** each spend and each money in is a `deviceOnly` leaf ("Spent $12.40 on food: lunch", "Got
+    $1,200.00 from paycheck"). Its words are its own while Claude sees everything, else "Private spend" or "Private
+    inflow", and always the label when they hold a key. Its typed amount adds to its currency's total (dollars,
+    euros, pounds or rupees, spent and in), which only lab reads; strict reads as if no money moved.
+  - **Health, body and the calendar (built):** each sleep night, steps day, resting heart rate and past calendar
+    event (not cancelled) is a `deviceOnly` leaf ("Slept 7 h 20 min", "On the calendar: Dentist"), and a weigh-in
+    (a private note `BodyWeight` reads as his weight) adds to the body weight average. Words follow the money rule;
+    the totals (sleep, steps, resting heart rate, weight, events) are lab's alone. The pyramid lives in memory, so
+    none of it reaches a backup, a log or a widget.
 - **Forward pass.** The night pass rebuilds only the nodes whose hash changed.
 - **Backward pass** (P3). A read ledger records which nodes were read, which lines were cited, where Tess had to go
   deeper, and how the checks came out. It stores paths only. Each night:
@@ -300,6 +309,8 @@ Each has a pass line set before it runs. A failure gets written up here too.
      Ask words become weight keys, so `learn` takes only `PyramidTerms.walled`: an ask holding a key, a secret, a
      private title or a private word teaches nothing, key-shaped pieces are dropped, and a word walled later is
      dropped at night. The router's file is excluded from backups and its keys are never logged.
+     Any future file that keeps gists or the topic tree must be excluded from backups the same way: under lab their
+     words can hold a private thing's own words (his Oct 27 ruling), and backups keep their walls.
 4. **P4: more axes and more sources.**
    - **Topic axis (Swift, built; simulated in `scripts/ai/pyramid_topic_sim.py`, #1480):** `TopicTree` files free-text
      leaves by their words. A node past 24 children splits by 2-means. Sibling holders merge when asks keep using both

@@ -5,6 +5,7 @@ import Testing
 
 /// Together piece 5: write anywhere. The router reads on the phone only; walled lines are classified first.
 @MainActor
+@Suite(.oldWalls)
 struct WriteRouterTests {
     let store = ObjectStore.open(inMemory: true)
     let engine: ActionEngine

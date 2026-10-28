@@ -5,6 +5,7 @@ import Testing
 
 /// Tess tries it first (docs/ai/harness/rehearsal.md): the copy, the diff, the checks and the wall.
 @MainActor
+@Suite(.oldWalls)
 struct RehearsalTests {
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]

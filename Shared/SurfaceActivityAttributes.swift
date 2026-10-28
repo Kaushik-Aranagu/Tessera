@@ -17,7 +17,8 @@ struct CookActivityAttributes: ActivityAttributes {
         var others: Int
         /// The next step's text, nil for a private recipe or when there is none.
         var nextStep: String?
-        /// Sheet 344: set when a pan timer has hit zero, the food that is ready ("Chicken"). "Timer" for a private cook,
+        /// Sheet 344: set when a pan timer has hit zero, the food that is ready ("Chicken"). "Timer" for a private
+        /// cook,
         /// never a food name. The activity stays open after the last timer ends.
         var readyFood: String?
         /// The next timer's label ("onions to go") and its end, for `Text(timerInterval:)` ("5:58, onions to go").
@@ -72,8 +73,47 @@ struct CookTimerInput: Equatable {
 
 enum CookFace {
     static let privateRecipe = "Private recipe"
-    /// The lock screen's line when a pan timer ends (sheet 344).
+    /// Sheet 344: what the activity and the island say when a pan timer ends.
     static let readyLine = "READY, OFF THE HEAT"
+
+    /// The deep link the activity opens: the cook's ticket with the alert already printed. A private cook names no food
+    /// in the link, only that something is ready.
+    static func alertLink(cook: UUID, food: String?) -> URL? {
+        var parts = URLComponents()
+        parts.scheme = "tessera"
+        parts.host = "cook"
+        parts.queryItems = [URLQueryItem(name: "cook", value: cook.uuidString),
+                            URLQueryItem(name: "alert", value: food ?? "")]
+        return parts.url
+    }
+
+    /// "Chicken" from a timer's label ("Brown the chicken" reads "Chicken"); a hidden label reads "Timer".
+    static func food(from label: String) -> String {
+        let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "Timer" }
+        for lead in [
+            "brown the ",
+            "sear the ",
+            "char the ",
+            "soften the ",
+            "cook the ",
+            "fry the ",
+            "bake the ",
+            "roast the ",
+        ]
+            where trimmed.lowercased().hasPrefix(lead)
+        {
+            let rest = String(trimmed.dropFirst(lead.count))
+            return rest.prefix(1).uppercased() + rest.dropFirst()
+        }
+        return trimmed.prefix(1).uppercased() + trimmed.dropFirst()
+    }
+
+    /// "onions to go": the next timer's label as the words after its countdown.
+    static func toGo(_ label: String) -> String {
+        "\(food(from: label).lowercased()) to go"
+    }
+
     /// The Island's words: "Chicken ready". A private cook has no food name, so it reads "Timer ready".
     static func readyWord(food: String) -> String {
         "\(food) ready"
@@ -130,14 +170,30 @@ enum CookFace {
                       realNow: Date) -> CookActivityAttributes.ContentState?
     {
         let running = timers.filter { $0.endsAt > appNow }.sorted { $0.endsAt < $1.endsAt }
-        guard let soonest = running.first else { return nil }
+        let ended = timers.filter { $0.endsAt <= appNow }.sorted { $0.endsAt > $1.endsAt }
         let shift = realNow.timeIntervalSince(appNow)
+        // The last timer has just ended: the activity stays to say so (sheet 344) until the cook dismisses it.
+        guard let soonest = running.first else {
+            guard let done = ended.first else { return nil }
+            let end = Date(timeIntervalSinceReferenceDate: done.endsAt.addingTimeInterval(shift)
+                .timeIntervalSinceReferenceDate.rounded())
+            return CookActivityAttributes.ContentState(
+                timerLabel: isPrivate ? "Timer" : done.label, endsAt: end,
+                total: max(done.endsAt.timeIntervalSince(done.startedAt), 1), others: 0, nextStep: nil,
+                readyFood: isPrivate ? "Timer" : food(from: done.label)
+            )
+        }
         let end = Date(timeIntervalSinceReferenceDate: soonest.endsAt.addingTimeInterval(shift)
             .timeIntervalSinceReferenceDate.rounded())
         return CookActivityAttributes.ContentState(
             timerLabel: isPrivate ? "Timer" : soonest.label, endsAt: end,
             total: max(soonest.endsAt.timeIntervalSince(soonest.startedAt), 1),
-            others: running.count - 1, nextStep: isPrivate ? nil : nextStep
+            others: running.count - 1, nextStep: isPrivate ? nil : nextStep,
+            readyFood: ended.first.map { isPrivate ? "Timer" : food(from: $0.label) },
+            nextLabel: running.count > 1 ? (isPrivate ? "timer to go" : toGo(running[1].label)) : nil,
+            nextEndsAt: running.count > 1
+                ? Date(timeIntervalSinceReferenceDate: running[1].endsAt.addingTimeInterval(shift)
+                    .timeIntervalSinceReferenceDate.rounded()) : nil
         )
     }
 }

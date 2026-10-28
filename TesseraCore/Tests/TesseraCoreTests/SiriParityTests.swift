@@ -9,6 +9,7 @@ import Testing
 /// rulings): one phrase lands as one kind of object on the Ask bar, Tell Tess and Add a Task, and Siri never speaks a
 /// walled phrase. Every value is a made-up placeholder.
 @MainActor
+@Suite(.oldWalls)
 struct SiriParityTests {
     static let la = TimeZone(identifier: "America/Los_Angeles")!
 
