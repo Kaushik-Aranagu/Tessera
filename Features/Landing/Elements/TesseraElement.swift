@@ -233,6 +233,7 @@ enum ElementWalls {
 enum ElementRegistry {
     static let all: [any TesseraElement] = [
         DoorsDialElement(),
+        PartsKeystoneElement(),
     ]
 
     static func contains(_ name: String) -> Bool {

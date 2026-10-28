@@ -8,12 +8,15 @@ import TesseraCore
 enum AppsListRows {
     struct Row: Identifiable, Equatable {
         /// Bridge's dial also holds two doors that are not apps (sheet 283): the weather landing and Settings.
-        enum Extra: String { case lookout, settings }
+        enum Extra: String { case lookout, settings, chart }
 
         let app: HomeApp
         let summary: String
         let opens: HomeSentence.Opens?
         var extra: Extra?
+        /// A room that names itself (the Chart room): its own name and colour, read from its document.
+        var ownName: String?
+        var ownColor: Color?
 
         var id: String {
             extra?.rawValue ?? app.rawValue
@@ -24,6 +27,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: "Lookout"
             case .settings: "Settings"
+            case .chart: ownName ?? "Chart room"
             case nil: app.shipName
             }
         }
@@ -32,6 +36,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
             case .settings: Theme.Colors.ink
+            case .chart: ownColor ?? Theme.Colors.Accent.chart
             case nil: app.accent
             }
         }
@@ -41,6 +46,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: .lookout
             case .settings: .settings
+            case .chart: .chart
             case nil: .app(app)
             }
         }
@@ -72,6 +78,12 @@ enum AppsListRows {
             let line = lines.first { $0.app == app }
             return Row(app: home(app), summary: line.map { $0.text.isEmpty ? quiet : $0.text } ?? "",
                        opens: line?.opens)
+        }
+        // The Chart room sits after Purse (experimental, behind its flag; it has no line of its own yet).
+        if ChartRoomFlag.isOn, let purse = rows.firstIndex(where: { $0.app == .money && $0.extra == nil }) {
+            let chart = ChartRoomSummary.row()
+            rows.insert(Row(app: .tasks, summary: chart.line, opens: nil, extra: .chart, ownName: chart.name,
+                            ownColor: chart.color), at: purse + 1)
         }
         rows.append(Row(app: .tasks, summary: "", opens: nil, extra: .settings))
         return rows

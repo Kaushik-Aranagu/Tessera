@@ -17,6 +17,8 @@ struct PlaceHost: View {
             if let content {
                 PlaceRenderer(place: place, content: content, style: style, size: size, reduceMotion: reduceMotion,
                               navigator: navigator, act: act)
+                    .opacity(content.ghost ? PartGhost.opacity : 1)
+                    .tesseraAnimation(PartGhost.sets, value: content.ghost)
                     .id(content.id)
                     .transition(PlaceTransition.make(place, style, reduceMotion: reduceMotion))
             }
@@ -78,6 +80,13 @@ private struct PlaceRenderer: View {
                 ShellScenePlace(key: key)
                     .frame(width: size.width, height: size.height, alignment: .topLeading)
             }
+        case let .parts(tree):
+            // A document room's parts. The Line sits in the Switcher's place but runs the whole 354 pt (the Needs
+            // beside it is empty in a room built by talking).
+            PartsView(tree: tree)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .frame(width: tree.width ?? size.width, height: size.height,
+                       alignment: .topLeading)
         case let .widget(items):
             LandingWidget(items: items, index: navigator.binding(\.widgetIndex),
                           open: { act(.openItem($0.id)) }, strike: { act(.done($0.id)) }, glyph: { _ in Color.clear })

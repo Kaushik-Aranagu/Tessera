@@ -65,6 +65,8 @@ enum SlotKind: String, Equatable {
     /// A room's own drawn keystone (Deck's board, Watch's woods, Lookout's skypiece, Purse's chart, Galley's rail),
     /// drawn by the room's `shellScene` renderer; the payload carries only its key.
     case scene
+    /// A room built from a document (the Chart room, R1): the places drawn from a tree of kit parts (`PartNode`).
+    case parts
 }
 
 /// One row of a door page: an id the shell hands back on tap, a title and a short detail. A private row never
@@ -104,12 +106,24 @@ enum SlotPayload: Equatable {
     /// A room's own keystone, by key ("deck.board"). The room's host supplies the drawing through the environment
     /// value `shellScene`, so content stays free of views. The key changes only when the drawing must be rebuilt.
     case scene(String, label: String)
+    /// A document room's own composition for one place: a tree of kit parts, drawn by `PartView`.
+    case parts(PartTree)
+}
+
+/// What the `parts` payload carries: the top-level parts of one place, in order, and the room's colour.
+struct PartTree: Equatable {
+    var nodes: [PartNode]
+    var accent: Color
+    /// A width wider than the place's own (the Line runs 354 pt while the Needs beside it is empty).
+    var width: CGFloat?
 }
 
 struct SlotContent: Identifiable, Equatable {
     let id: ContentID
     let kind: SlotKind
     let payload: SlotPayload
+    /// A proposed change, not yet set: the place draws it at 38% ink (the Chart room's ghost, sheet 357).
+    var ghost = false
 }
 
 /// What the shell shows for one route: the layout and the content of each place. A missing place is `nil`: kept,

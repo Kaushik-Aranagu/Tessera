@@ -98,6 +98,8 @@ public enum FeatureFlags {
         .init("tessLabPolicy", "Lab mode for Claude", .everywhere, claude: true),
         .init("tessDirectorPlaybook", "Tess picks her looks", .everywhere, claude: true),
         .init("tessAsks", "Ask Tess anything", .everywhere, claude: true),
+        // The Chart room: the experimental room Tess builds by talking (R1).
+        .init("chartRoom", "Chart room", .everywhere),
     ]
 
     /// Not flags: switches with more than two values, connections he makes by hand, and tools. A test keeps this list

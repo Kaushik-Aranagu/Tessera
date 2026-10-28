@@ -41,6 +41,14 @@ enum ShellRooms {
     }
 
     static var all: [Entry] {
+        var rooms = base
+        if ChartRoomFlag.isOn {
+            rooms.append(Entry(id: DocumentRoom.room, driver: { ChartRoomDriver() }) { AnyView(ChartShellHost()) })
+        }
+        return rooms
+    }
+
+    private static var base: [Entry] {
         [
             Entry(id: NotesRoomContent.room, driver: { NotesRoomDriver() }) { AnyView(NotesShellHost()) },
             Entry(id: DeckRoomContent.room, driver: { DeckRoomDriver() }) { AnyView(DeckShellHost()) },

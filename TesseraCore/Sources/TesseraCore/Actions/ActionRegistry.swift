@@ -205,6 +205,7 @@ public enum ActionRegistry {
         },
         RememberFact.descriptor.name: { try decode(RememberFact.self, RememberFact.descriptor.name, $0) },
         ForgetMemory.descriptor.name: { try decode(ForgetMemory.self, ForgetMemory.descriptor.name, $0) },
+        PatchRoom.descriptor.name: { try decode(PatchRoom.self, PatchRoom.descriptor.name, $0) },
         SetPinned.descriptor.name: { try decode(SetPinned.self, SetPinned.descriptor.name, $0) },
         SetRainAlert.descriptor.name: { try decode(SetRainAlert.self, SetRainAlert.descriptor.name, $0) },
         TakeRest.descriptor.name: { try decode(TakeRest.self, TakeRest.descriptor.name, $0) },
