@@ -12,6 +12,9 @@ public final class TessCaptureEngine: TessCapturing {
     public var model: (any TessModelCapturing)?
     /// The last step: Claude, for what the phone missed. Nil until a key is saved; it checks its own switches.
     public var claude: ClaudeTessModel?
+    /// Whether a phrase the phone missed goes to `claude` inside the capture. The app turns it off once the live Tess
+    /// (`TessLive`, through `TessRun`) answers misses; `claude` stays for the phrases that waited offline.
+    public var claudeInline = true
 
     public init(engine: ActionEngine, model: (any TessModelCapturing)? = nil) {
         self.engine = engine
@@ -146,7 +149,7 @@ public final class TessCaptureEngine: TessCapturing {
         if let model {
             models.append(OnDeviceTessModel(model))
         }
-        if let claude {
+        if let claude, claudeInline {
             models.append(claude)
         }
         return TessRouter(engine: engine, models: models)

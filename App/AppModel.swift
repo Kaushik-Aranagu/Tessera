@@ -207,6 +207,13 @@ final class AppModel {
             // Only when a request really leaves the phone: the Ask shows "Asking Claude." with Cancel (batch 3).
             claudeFlags.willSend = { [weak self] in self?.isAskingClaude = true }
             refreshKeyQuestion()
+            // What he says to Tess that the phone's grammar missed goes through TessRun and the Door, with the key from
+            // the Keychain: her reply, her tools, the ledger and "What was sent". The old Claude capture step now only
+            // reads the phrases that waited offline.
+            capture.claudeInline = false
+            tessLive = TessLive(engine: engine, keys: SystemKeychain(), asksClaude: { [weak self] in
+                self?.asksClaude ?? false
+            }, folder: TesseraSchema.defaultURL.deletingLastPathComponent())
         }
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
@@ -307,7 +314,16 @@ final class AppModel {
         if let routed = routedWrite(phrase) {
             return routed
         } // Write anywhere (135 part 5)
-        let result = await runtime.tess.capture(phrase, context: captureContext())
+        var result = await runtime.tess.capture(phrase, context: captureContext())
+        // The phone's grammar and model understood nothing: a question or a free sentence goes to Tess herself.
+        if let live = tessLive, result.source == .none, result.records.isEmpty, result.asking == nil,
+           !result.isRefusal
+        {
+            // "Asking Claude." shows only when the Door may really send; with Claude off she still answers on the
+            // phone.
+            isAskingClaude = asksClaude
+            result = await live.capture(phrase, screen: nil)
+        }
         isAskingClaude = false
         return land(result)
     }
@@ -318,6 +334,9 @@ final class AppModel {
     var homeTessLayerActive = false
     /// The pixel doorway (sheets 206 and 211): one for the whole app, drawn over everything at the root.
     let doorway = Doorway()
+
+    /// The live Tess (`TessRun` behind the Door). Nil in a demo, where nothing leaves the phone.
+    @ObservationIgnored var tessLive: TessLive?
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
     var pendingSetAsk: TessSetCountAsk? {

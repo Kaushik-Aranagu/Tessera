@@ -57,7 +57,11 @@ public struct ClaudeTessModel: TessModel {
 
     public func run(_ request: TessRequest, engine: ActionEngine) async -> TessResult {
         // Siri and Shortcuts commit at once (no ghost, no UNDO): Claude never writes for them (QA R3 on #283).
-        guard !request.context.commitImmediately, let key = keys.read() else { return .missed }
+        guard !request.context.commitImmediately else { return .missed }
+        guard let key = keys.read() else {
+            flags.lastFailure = .noKey
+            return .missed
+        }
         // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
         // caller must not skip them (a4-bypass item 3).
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
@@ -84,6 +88,7 @@ public struct ClaudeTessModel: TessModel {
                 .formatted(.dateTime.month(.abbreviated).day())
             // Idle, the router keeps the phrase to sort later instead (Product ruling, Oct 19); this line is for a
             // live set or a shop, which keep their own lines.
+            flags.lastFailure = .capReached
             var paused = TessCapture(records: [], line: "Claude paused until \(reset).", source: .none)
             paused.claudeAtCap = true
             return .asked(paused)
@@ -170,6 +175,7 @@ public struct ClaudeTessModel: TessModel {
                 held.keepsWords = true
                 return .asked(held)
             }
+            flags.lastFailure = ClaudeFailure(outcome: failure.outcome) ?? .other
             guard error is Failure else { return .missed }
             var failed = TessCapture(records: [], line: failure.line, source: .none)
             failed.keepsWords = failure.line == Self.unreachedLine || ["timeout", "busy", "badKey"]
@@ -180,6 +186,7 @@ public struct ClaudeTessModel: TessModel {
                       costNano: usage.cost, latency: Date().timeIntervalSince(started),
                       outcome: records.isEmpty ? "nothing" : "works", requestID: requestID, at: now())
         logSent(request, requestID: requestID, engine: engine)
+        flags.lastFailure = nil
         guard !records.isEmpty else { return .missed }
         // Never claim more than was done: Claude's own line only if it passes Tess's voice checks.
         var line = reply.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -395,11 +402,35 @@ public struct ClaudeTessModel: TessModel {
     }
 }
 
+/// Why the last call to Claude gave no answer, so a status line can say "Your Claude key didn't work" and not guess
+/// from
+/// a reply that stayed on the phone. Never carries the key or any key-shaped text.
+public enum ClaudeFailure: String, Sendable, Equatable {
+    case noKey, authFailed, network, timeout, capReached, busy, paused, refused, other
+
+    /// From a call outcome's word ("badKey", "offline", "capReached", ...); nil for one that worked or was cancelled.
+    public init?(outcome: String) {
+        switch outcome {
+        case "badKey", "notAllowed", "notAKey", "notSaved": self = .authFailed
+        case "offline": self = .network
+        case "timeout": self = .timeout
+        case "capReached": self = .capReached
+        case "accountPaused": self = .paused
+        case "busy": self = .busy
+        case "refused": self = .refused
+        case "other": self = .other
+        default: return nil
+        }
+    }
+}
+
 /// Device-only switches for misses going to Claude, in UserDefaults (never in a backup): the "Not today" pause
 /// Builder B sets from Settings: Claude, and whether the one-time "Sent … to Claude" line has shown.
 @MainActor
 public final class ClaudeMissFlags {
     let defaults: UserDefaults
+    /// Why the last call to Claude gave no answer; nil after one that worked, or before any.
+    public var lastFailure: ClaudeFailure?
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
