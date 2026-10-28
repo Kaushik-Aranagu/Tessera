@@ -89,3 +89,31 @@ struct UnrollShape: Shape {
         return path
     }
 }
+
+/// Sheet 373: stopping a drying change. The line holds where it got to for 120 ms, then runs back to 0 at Undo's pace
+/// (600 ms for a whole line, so a part of it takes the same part of the time), ease in. Under Reduce Motion it stops
+/// at once. Pure, so it tests without a screen.
+enum StopRun {
+    static let hold = 0.12
+    static let unDry = 0.6
+
+    /// How long the run-back takes from progress `p` (0 to 1): the same pace as Undo, so a shorter way is quicker.
+    static func runBack(from p: Double) -> Double {
+        unDry * min(max(p, 0), 1)
+    }
+
+    /// The whole stop, from the touch to the line at 0.
+    static func total(from p: Double, reduceMotion: Bool) -> Double {
+        reduceMotion ? 0 : hold + runBack(from: p)
+    }
+
+    /// The line's progress `time` seconds after the touch: held at `p`, then back to 0 (ease in).
+    static func progress(at time: Double, from p: Double, reduceMotion: Bool) -> Double {
+        guard !reduceMotion else { return 0 }
+        guard time > hold else { return p }
+        let run = runBack(from: p)
+        guard run > 0 else { return 0 }
+        let t = min((time - hold) / run, 1)
+        return p * (1 - t * t)
+    }
+}

@@ -526,6 +526,42 @@ struct ChartRoomTests {
         #expect(RoomBook(store: app.store, classes: app.classes).room(named: "Chart room") != nil)
     }
 
+    // MARK: Sheet 373: stopping a drying change
+
+    @Test func aStopHoldsThenRunsBackAtUndosPace() {
+        #expect(StopRun.progress(at: 0.05, from: 0.5, reduceMotion: false) == 0.5)
+        #expect(abs(StopRun.progress(at: 0.12 + 0.3, from: 0.5, reduceMotion: false)) < 1e-9)
+        #expect(StopRun.progress(at: 0.2, from: 0.5, reduceMotion: false) < 0.5)
+        #expect(abs(StopRun.total(from: 1, reduceMotion: false) - 0.72) < 1e-9)
+        #expect(StopRun.total(from: 1, reduceMotion: true) == 0)
+        #expect(StopRun.progress(at: 0.01, from: 0.5, reduceMotion: true) == 0)
+    }
+
+    @Test func cancellingADryingChangeWritesNothingAndSaysSo() {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let said = Said()
+        let room = model(said: said)
+        room.attach(app.engine)
+        room.saySomething()
+        #expect(room.pending != nil)
+        #expect(room.cancelPending())
+        #expect(room.pending == nil && room.document.parts.isEmpty)
+        #expect(said.lines.last == "Stopped, nothing changed")
+        #expect(room.retry == "Make this my plant room")
+        #expect(app.engine.pendingRecords().filter { $0.action == "patchRoom" }.isEmpty, "no pending group is left")
+        let book = RoomBook(store: app.store, classes: app.classes)
+        #expect(book.room(named: "Chart room") == nil || book.room(named: "Chart room").map(book.document(of:))?.parts
+            .isEmpty == true)
+    }
+
+    @Test func aChangeThatHasSetCanOnlyBeUndone() {
+        let room = model()
+        room.saySomething()
+        room.tapGhost()
+        #expect(!room.cancelPending(), "past the drying it falls through to Undo")
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {

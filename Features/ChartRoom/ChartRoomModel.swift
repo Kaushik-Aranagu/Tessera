@@ -332,6 +332,30 @@ final class ChartRoomModel {
         }
     }
 
+    /// Sheet 373: while a change is drying, touching his own words or saying "wait" or "stop" calls this. Nothing is
+    /// written: the staged group is thrown away (`RoomPatcher.stop`), the ghost lets go, and Tess says "Stopped,
+    /// nothing changed" with no Undo, and the same sentence is offered again. Past the 2 s the change has set and can
+    /// only be undone, so then the normal Undo receipt stands. Returns whether anything was stopped.
+    @discardableResult
+    func cancelPending() -> Bool {
+        guard let current = pending, !unDrying, !current.dried || current.needsAllow else { return false }
+        if let engine, let record {
+            guard RoomPatcher.stop([record], in: engine) else { return false }
+        }
+        dryTask?.cancel()
+        let again = current.patch.heard
+        record = nil
+        pending = nil
+        heard = ""
+        cue.play(.selection)
+        retry = again.isEmpty ? nil : again
+        say("Stopped, nothing changed") {}
+        return true
+    }
+
+    /// The sentence the action word offers again after a stop.
+    private(set) var retry: String?
+
     /// A tap on the ghost sets it now (a patch that widens reach never sets this way).
     func tapGhost() {
         guard let pending, !pending.needsAllow, !unDrying else { return }
