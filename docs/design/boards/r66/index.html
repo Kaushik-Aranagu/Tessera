@@ -312,7 +312,9 @@ function dial(host,items,opts){let f=opts.start||0;const n=items.length,S=opts.s
  function draw(){els.forEach((d,i)=>{const o=rel(i),it=items[i];d.innerHTML=opts.label(it,o===0);
   d.style.transform='translateY('+((o+1)*S)+'px)'+(o?' scale(.66)':'');d.style.opacity=Math.abs(o)>1?0:o?.6:1;d.style.pointerEvents=Math.abs(o)>1?'none':'auto';
   d.style.filter=o&&!RM?'blur('+(opts.blur??1.8)+'px)':'none';d.style.color=o?'var(--ink2)':(it.color||'var(--room)')});opts.change&&opts.change(items[f],f)}
- function turn(s){const raw=f+s,wrap=n>2&&(raw>=n||raw<0);f=((raw)%n+n)%n;draw();
+ /* 386: Tess watches the dial with him. Her eyes follow the word in focus as it turns and come home a moment after the
+    last turn. Going all the way round, past the zero notch, she blinks */
+ function turn(s){const raw=f+s,wrap=n>2&&(raw>=n||raw<0);f=((raw)%n+n)%n;draw();if(s&&els[f]){tessLook(els[f],900);if(wrap&&!RM)window.__tblink=performance.now()+130}
   /* 290: a detent, the focus word settles a hair past and back. 306: passing the zero notch (the last door back to the
      first) clicks twice as deep and a little slower, so he can feel he has gone all the way round without looking */
   if(!RM&&s&&els[f]){const k=wrap?2:1;els[f].animate([{translate:'0 '+((s>0?3:-3)*k)+'px'},{translate:'0 0'}],{duration:wrap?380:280,easing:'cubic-bezier(.3,1.7,.5,1)',composite:'add'})}}
@@ -330,7 +332,8 @@ let tessMix=0;
    watch the place it fills; as she speaks, they go to each thing her line names, in time with the word, and with
    nothing named they look at you. A glance is quick and coming home is slow, the cloud leans a little after the eyes,
    and a thing that moves is followed. The farther the thing, the farther the eyes turn, as if she sat just behind the
-   glass, so the title and the line under her read as different looks. Reduce Motion: the eyes are placed at once and rest on the first thing named */
+   glass, so the title and the line under her read as different looks; a thing just above her still gets a clear look
+   (386). Reduce Motion: the eyes are placed at once and rest on the first thing named */
 const gz={x:0,y:0,m:0};let gzA=null,gzQ=[];
 function tessLook(a,ms,still){gzQ.forEach(clearTimeout);gzQ=[];gzA=a?{a,end:performance.now()+(ms||2000),still}:null}
 function tessGaze(seq){seq=seq.filter(s=>s[0]);if(!seq.length)return;if(RM){const f=seq.find(s=>s[0]!=='you')||seq[0];return tessLook(f[0],seq.reduce((n,s)=>n+s[1],0))}
@@ -338,7 +341,7 @@ function tessGaze(seq){seq=seq.filter(s=>s[0]);if(!seq.length)return;if(RM){cons
 window.__tgaze=()=>{const a=gzA&&gzA.a;return {x:+gz.x.toFixed(2),y:+gz.y.toFixed(2),m:+gz.m.toFixed(2),a:!a?null:a==='you'?'you':(a.dataset&&a.dataset.k?'k:'+a.dataset.k:a.className||a.tagName)}};
 function gazeStep(){let tx=0,ty=0,want=0;
  if(gzA){const a=gzA.a;if(performance.now()>gzA.end||(a!=='you'&&!a.isConnected)||(gzA.still&&!gzA.still()))gzA=null;
-  else{want=1;if(a!=='you'){const r=a.getBoundingClientRect(),c=tessCv.getBoundingClientRect();if(r.width||r.height){const dx=r.left+r.width/2-(c.left+c.width/2),dy=r.top+r.height/2-(c.top+c.height/2),L=Math.hypot(dx,dy)||1,f=Math.min(1,L/(phone.getBoundingClientRect().height*.85||1));tx=dx/L*f*6;ty=dy/L*f*4.4}}}}
+  else{want=1;if(a!=='you'){const r=a.getBoundingClientRect(),c=tessCv.getBoundingClientRect();if(r.width||r.height){const dx=r.left+r.width/2-(c.left+c.width/2),dy=r.top+r.height/2-(c.top+c.height/2),L=Math.hypot(dx,dy)||1,f=Math.max(.45,Math.min(1,L/(phone.getBoundingClientRect().height*.85||1)));tx=dx/L*f*6;ty=dy/L*f*4.4}}}}
  const k=RM?1:want?.3:.07;gz.x+=(tx-gz.x)*k;gz.y+=(ty-gz.y)*k;gz.m+=(want-gz.m)*(RM?1:.12)}
 function tessDraw(now){tessT=now/1000;const t=tessT;tc.clearRect(0,0,192,192);gazeStep();
  const black=phone.dataset.look==='black';let ember=black?[[255,107,61],[255,74,51],[255,194,61]]:[[255,90,38],[229,52,28],[255,169,15]];
@@ -2955,9 +2958,11 @@ function travel(el,pairs){if(RM)return;pairs=pairs.filter(p=>p.src);if(!pairs.le
  requestAnimationFrame(()=>{const er=el.getBoundingClientRect();pairs.forEach((p,i)=>{const d=p.dst();if(!d)return;d.style.visibility='';const D=capText(d);if(!D)return;d.style.visibility='hidden';
   const mk=(T,X)=>{const c=h('div','fx tv',T.text);c.style.cssText='position:absolute;z-index:9;pointer-events:none;white-space:nowrap;transform-origin:0 0;line-height:normal;left:'+((T.l-er.left)/K)+'px;top:'+((T.t-er.top)/K)+'px;font-family:'+T.fam+';font-weight:'+T.fw+';font-size:'+T.fs+'px;letter-spacing:'+T.ls+';color:'+(X||T.color);el.appendChild(c);return c};
   const sc=D.fs/p.src.fs,dx=(D.l-p.src.l)/K,dy=(D.t-p.src.t)/K,E='cubic-bezier(.25,1,.35,1)',land=c=>{d.style.visibility='';c.animate([{opacity:1},{opacity:0}],{duration:60,fill:'forwards'}).onfinish=()=>c.remove()};
-  if(p.src.text===D.text){const c=mk(p.src);c.animate([{transform:'none',color:p.src.color},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:D.color}],{duration:480,delay:i*40,easing:E,fill:'both'}).onfinish=()=>land(c);return}
+  // 386: her eyes ride the first word that flies and land with it on the new page, then come home
+  const ride=(c,ms)=>{if(!i)tessGaze([[c,ms],[d,700]])};
+  if(p.src.text===D.text){const c=mk(p.src);ride(c,480);c.animate([{transform:'none',color:p.src.color},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:D.color}],{duration:480,delay:i*40,easing:E,fill:'both'}).onfinish=()=>land(c);return}
   // the words differ (Today and 0): the old word fades where it stands and the new one flies, so a wide word never sweeps the row
-  const a=mk(p.src),b=mk(D),from='translate('+(-dx)+'px,'+(-dy)+'px) scale('+(1/sc)+')';a.dataset.k='out';b.dataset.k='in';
+  const a=mk(p.src),b=mk(D),from='translate('+(-dx)+'px,'+(-dy)+'px) scale('+(1/sc)+')';a.dataset.k='out';b.dataset.k='in';ride(b,580);
   a.animate([{opacity:1},{opacity:0}],{duration:100,fill:'forwards'}).onfinish=()=>a.remove();
   b.animate([{transform:from,opacity:0,color:p.src.color,easing:'linear'},{offset:.2,transform:from,opacity:1,color:p.src.color,easing:E},{transform:'none',opacity:1,color:D.color}],{duration:580,delay:i*40,fill:'both'}).onfinish=()=>land(b)})})}
 const WHERE={Orchid:'By the east window',Monstera:'By the couch',Fern:'In the bathroom',Basil:'On the kitchen sill'},CARE={Orchid:'Ice cubes, not a pour',Monstera:'When the top inch is dry',Fern:'Keep it out of the sun',Basil:'Pinch the flowers off'};

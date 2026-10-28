@@ -352,3 +352,16 @@ When he marks the orchid watered in the room (sheet 364), its number rolls down 
 - Reduce Motion: the colors change in place
 - Core: nothing new. Builder A: in the keystone and the dial label, a color change that belongs to the plant whose days changed is drawn as a mask instead of a color crossfade. A `LinearGradient` three times the text's height, old color above and new below with a band a quarter of the text's height between them, is masked by the text and slides up by two text heights (`.timingCurve(0.25, 0.6, 0.3, 1, duration: 0.76)` up, `(0.45, 0, 0.55, 1)` down), then swapped for the plain foreground style. Other color changes keep their crossfade
 - Probe: `docs/design/boards/r66/pdi.js` with `pdi_an.py` (midway through watering, the foot of the 0 and of "Orchid" is the new color and the top is still wine; the focused door drinks; afterwards nothing is left on the number and the sentence names the monstera; midway through Undo the top of the 6 is wine and the foot is still ink, then it is the plain thirsty 6 again; paper, black; Reduce Motion: in place)
+
+## Sheet 386: Tess watches with you
+
+Sheet 384 gave Tess's eyes a reason to move when she listens and speaks. Now she also watches what he does with his hands, the way someone sitting beside him would.
+
+- Turning any dial (the room's doors, Bridge's rooms), her eyes follow the word in focus as it turns. About 0.9 s after the last turn they come home
+- Going all the way round, past the zero notch (sheet 306's deeper click), she blinks once. Turning back through the notch, she blinks again. A plain turn never makes her blink
+- Opening a door, her eyes ride the word that flies (sheet 377: the plant's name from the dial to the page's title). They land with it on the title and stay there for 0.7 s, then come home. Coming back, they ride "Today" turning into 0 the same way
+- A thing just above her, like the dial, still gets a clear look. Her eyes turn at least 45% of their full reach, so the look reads even when the thing is close. Farther things still get farther looks (384)
+- Watching never speaks or changes any text. The latest thing wins: a turn while she is speaking takes her eyes to the dial, because he is what's moving
+- Reduce Motion: her eyes still follow the dial, placed at once with no glide, and there is no blink at the notch. A door opens without a flight, so there is nothing to ride
+- Core: nothing new. Builder A: the shared `RoomDial` sets the Tess face's gaze target to the focused label's frame on each detent (0.9 s), and asks for one blink when the detent wraps. `SharedElementFlight` hands its first flying label to the face as the target for its duration, then the destination's frame for 0.7 s. Gaze size has a floor of 0.45
+- Probe: `docs/design/boards/r66/pwt.js` (turning to the monstera, she looks at it, then comes home; past the notch to the basil she blinks; to the fern she doesn't; opening the orchid's door, her eyes are on the flying name, then on the title, then home; paper, black; Reduce Motion: she follows the dial with no blink and nothing to ride)
