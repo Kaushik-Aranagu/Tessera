@@ -278,8 +278,10 @@ struct ChartPlainPage: View {
                 .offset(x: ShellLayout.ownFrame(.navWord).minX + dx, y: ShellLayout.ownFrame(.navWord).minY * scale)
                 tessLine(scale: scale)
                 routineLines(parts: parts, scale: scale)
-                if let seedError {
-                    Text("seed error: \(seedError)").font(.system(size: 11)).offset(x: 24, y: 560 * scale)
+                if LaunchFlags.has("-chartMistedPart") {
+                    let linked = model.store.linkedObjects("misted", of: object)
+                    Text("seed \(seedError ?? "ok") parts \(parts.map(\.id).joined(separator: ",")) linked \(linked.map(\.title)) parent \(linked.first?.parent?.title ?? "none")")
+                        .font(.system(size: 11)).offset(x: 24, y: 560 * scale)
                 }
                 if pages?.wasWatered() == true {
                     sayWords(scale: scale)
