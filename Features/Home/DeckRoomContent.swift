@@ -4,7 +4,8 @@ import TesseraCore
 /// Deck (Training) as content for the standing shell (sheet 283 v5): level 0 is the landing, the same content as
 /// `TrainingWallLanding` (both read `TrainingWallFacts` and `TrainingDeckFacts`, and the words and foot below);
 /// level 1 is a door page: the Door title and a Page of that door's ranked rows (sheet 284); level 2 is an item page:
-/// the Item title, Facts and a Body drawn by the item's kind (sets for a lift, siblings for the rest). The keystone is the blackboard, drawn by
+/// the Item title, Facts and a Body drawn by the item's kind (sets for a lift, siblings for the rest). The keystone is
+/// the blackboard, drawn by
 /// the host through `shellScene`; its id is the same at both levels, so opening a door never touches it. Private
 /// routines read "Private workout" and never reach the board, the switcher or a page. Pure: no views, no store reads.
 struct DeckRoomContent: RoomContent {
@@ -74,12 +75,13 @@ struct DeckRoomContent: RoomContent {
         let page = facts.pages.doors[id]
         let rows = page?.rows ?? []
         let line = page?.line ?? door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet" : "")
-        let at = doors.firstIndex { $0.id == id }
-        let previous = at.flatMap { doors.count > 1 ? ($0 + doors.count - 1) % doors.count : nil }
-        let next = at.flatMap { doors.count > 1 ? ($0 + 1) % doors.count : nil }
+        let place = doors.firstIndex { $0.id == id }
+        let previous = place.flatMap { doors.count > 1 ? ($0 + doors.count - 1) % doors.count : nil }
+        let next = place.flatMap { doors.count > 1 ? ($0 + 1) % doors.count : nil }
         let title = PageTitle(
             name: door?.name ?? "Today", line: line,
-            previous: previous.map { .door(Self.room, doors[$0].id) }, next: next.map { .door(Self.room, doors[$0].id) },
+            previous: previous.map { .door(Self.room, doors[$0].id) },
+            next: next.map { .door(Self.room, doors[$0].id) },
             previousFocus: previous, nextFocus: next
         )
         return Screen(layout: .door, slots: [
@@ -102,10 +104,10 @@ struct DeckRoomContent: RoomContent {
         let doors = facts.wall.doors
         let door = doors.first { $0.id == id }
         let rows = facts.pages.doors[id]?.rows ?? []
-        let at = rows.firstIndex { $0.id == itemID }
-        let row = at.map { rows[$0] }
-        let previous = at.flatMap { rows.count > 1 ? ($0 + rows.count - 1) % rows.count : nil }
-        let next = at.flatMap { rows.count > 1 ? ($0 + 1) % rows.count : nil }
+        let place = rows.firstIndex { $0.id == itemID }
+        let row = place.map { rows[$0] }
+        let previous = place.flatMap { rows.count > 1 ? ($0 + rows.count - 1) % rows.count : nil }
+        let next = place.flatMap { rows.count > 1 ? ($0 + 1) % rows.count : nil }
         var name = row?.title ?? "Nothing here"
         var line = row?.sub ?? ""
         var shownFacts: [ItemFact] = []
@@ -115,8 +117,8 @@ struct DeckRoomContent: RoomContent {
             line = lift.line
             shownFacts = lift.facts
             body = .sets(lift.sets)
-        } else if let row, !row.isPrivate, let at {
-            shownFacts = Self.plainFacts(row, index: at, count: rows.count, door: door?.name ?? "", doorID: id)
+        } else if let row, !row.isPrivate, let place {
+            shownFacts = Self.plainFacts(row, index: place, count: rows.count, door: door?.name ?? "", doorID: id)
         }
         let title = PageTitle(
             name: name, line: line,

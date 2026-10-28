@@ -82,8 +82,13 @@ struct SetsBody: ItemBodyKind {
         render.lost = lines.count - shown.count
         if !lastTime.isEmpty {
             let top = frame.maxY - Self.lastHeight
-            render.runs.append(ElementRun(text: "Last time", rect: CGRect(x: frame.minX, y: top, width: 200, height: 14),
-                                          size: ItemPageLayout.labelSize, ink: .ink2, isUnit: true))
+            render.runs.append(ElementRun(
+                text: "Last time",
+                rect: CGRect(x: frame.minX, y: top, width: 200, height: 14),
+                size: ItemPageLayout.labelSize,
+                ink: .ink2,
+                isUnit: true
+            ))
             render.runs.append(ElementRun(text: lastTime, rect: CGRect(x: frame.minX, y: top + 18,
                                                                        width: frame.width, height: 24),
                                           size: 15, ink: .ink2))
@@ -118,10 +123,10 @@ struct SiblingsBody: ItemBodyKind {
 
     /// At most seven rows, the current one always among them, centred where it can be.
     static func make(rows: [RankedRow], current: String) -> Self {
-        guard rows.count > maxRows, let at = rows.firstIndex(where: { $0.id == current }) else {
+        guard rows.count > maxRows, let place = rows.firstIndex(where: { $0.id == current }) else {
             return Self(rows: Array(rows.prefix(maxRows)), current: current)
         }
-        let start = min(max(at - maxRows / 2, 0), rows.count - maxRows)
+        let start = min(max(place - maxRows / 2, 0), rows.count - maxRows)
         return Self(rows: Array(rows[start ..< start + maxRows]), current: current)
     }
 
@@ -230,7 +235,8 @@ private struct SetLineView: View {
         let number = SetsBody.numberSize * scale
         HStack(spacing: 0) {
             Text(line.label)
-                .font(.custom("Figtree", fixedSize: SetsBody.labelSize * scale).weight(line.state == .next ? .bold : .medium))
+                .font(.custom("Figtree", fixedSize: SetsBody.labelSize * scale)
+                    .weight(line.state == .next ? .bold : .medium))
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

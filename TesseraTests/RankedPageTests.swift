@@ -26,7 +26,7 @@ struct RankedPageTests {
     }
 
     @Test func titleSizeIsAThirtySixthPercentOfTheRowClampedTo17To34() {
-        #expect(RankedLayout.titleSize(rowHeight: 80) == 28.8)
+        #expect(abs(RankedLayout.titleSize(rowHeight: 80) - 28.8) < 0.001)
         #expect(RankedLayout.titleSize(rowHeight: 20) == 17)
         #expect(RankedLayout.titleSize(rowHeight: 364) == 34)
     }

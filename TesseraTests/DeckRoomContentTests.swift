@@ -47,7 +47,14 @@ struct DeckRoomContentTests {
                     ItemFact(number: "3", unit: "sets", label: "Planned"),
                     ItemFact(number: "100", unit: "kg", label: "Best")],
             sets: SetsBody(lines: [SetLine(id: "s0", label: "Set 1", weight: "80", unit: "kg", reps: "5", state: .done),
-                                   SetLine(id: "s1", label: "Set 2", weight: "80", unit: "kg", reps: "5", state: .next)],
+                                   SetLine(
+                                       id: "s1",
+                                       label: "Set 2",
+                                       weight: "80",
+                                       unit: "kg",
+                                       reps: "5",
+                                       state: .next
+                                   )],
                            lastTime: "80 kg \u{00D7} 5, 5, 4")
         )
         return DeckRoomContent.Facts(wall: wall, deck: deck, rows: DeckRoomContent.Facts.rows(wall: wall, deck: deck),
@@ -124,7 +131,8 @@ struct DeckRoomContentTests {
     @Test func acrossOnTheDoorTitleGoesToTheNextDoorAndWraps() {
         let content = DeckRoomContent(facts: Self.facts())
         func title(_ door: String) -> PageTitle? {
-            guard case let .pageTitle(title)? = content.screen(for: .door("deck", door), state: RoomState())[.doorTitle]?
+            guard case let .pageTitle(title)? = content
+                .screen(for: .door("deck", door), state: RoomState())[.doorTitle]?
                 .payload else { return nil }
             return title
         }
@@ -159,7 +167,7 @@ struct DeckRoomContentTests {
 
     @Test func aRowWithoutItsOwnPageDrawsItsSiblings() {
         let item = DeckRoomContent(facts: Self.facts()).screen(for: .item("deck", "today", "page#t1"),
-                                                                 state: RoomState())
+                                                               state: RoomState())
         guard case let .item(data)? = item[.page]?.payload, case let .siblings(siblings) = data.body else {
             Issue.record("a plain row draws siblings")
             return

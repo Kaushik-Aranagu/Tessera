@@ -115,7 +115,8 @@ enum SlotPayload: Equatable {
     case ranked(RankedPageData)
     /// Sheet 284, level 2: Facts over a Body drawn by the item's kind (`ItemPage`).
     case item(ItemPageData)
-    /// Sheet 284: the Door title (level 1) or the Item title (level 2): the name in 34 pt bold ink over one line. Across
+    /// Sheet 284: the Door title (level 1) or the Item title (level 2): the name in 34 pt bold ink over one line.
+    /// Across
     /// goes to the neighbour route (`PageTitle`).
     case pageTitle(PageTitle)
 }

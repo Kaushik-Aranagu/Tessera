@@ -58,7 +58,8 @@ struct RankedPageElement: TesseraElement {
         answers[.meaning] = .says("items are the rows (kind row), focus the first, call openItem")
         answers[.moves] = .says("replace: rows leave softly and settle from the top, 0.38 s, 45 ms apart")
         answers[.look] = .says("title 0.36 x row height, 17 to 34 pt; first row bold in the room colour mixed 58% with "
-            + "ink; value Outfit Light at 0.82 of the title, unit at half size; sub line 13 pt only when taller than 40")
+            +
+            "ink; value Outfit Light at 0.82 of the title, unit at half size; sub line 13 pt only when taller than 40")
         answers[.privacy] = .says("a private row is only its label (Private workout), never a value or sub line")
         answers[.stage] = .says("sub lines are the first thing a larger size drops; a value never wraps")
         let rows = rows
@@ -70,8 +71,12 @@ struct RankedPageElement: TesseraElement {
             frames: [1: PageFrames.block],
             levels: [1],
             neighbours: [1: PageFrames.neighbours],
-            forms: [ElementFormSpec(name: "ranked", sizeSteps: Self.sizeSteps, densitySteps: ["designed", "no sub lines"],
-                                    sizeFloor: 24)],
+            forms: [ElementFormSpec(
+                name: "ranked",
+                sizeSteps: Self.sizeSteps,
+                densitySteps: ["designed", "no sub lines"],
+                sizeFloor: 24
+            )],
             moves: [ElementMove(name: "replace", milliseconds: 850)],
             answers: answers,
             render: { Self.draw($0, rows: rows) },
@@ -202,7 +207,8 @@ struct ItemPageElement: TesseraElement {
 
     var spec: ElementSpec {
         var answers = inheritedAnswers()
-        let kind = body.name
+        let itemBody = body
+        let kind = itemBody.name
         answers[.identity] = .says("Item page (\(kind)), a BodyElement at level 2: Facts over Body")
         answers[.frame] = .says("Facts 24,412 354 x 64 (columns 1.2 : 1 : 1), Body 24,484 354 x 292")
         answers[.shape] = .says("few: three facts over the kind's body")
@@ -212,7 +218,6 @@ struct ItemPageElement: TesseraElement {
         answers[.look] = .says("number Outfit Light 28 pt, the first in the room colour, unit at half size; label 10.5 pt "
             + "tracked caps in slate; \(kind) body in its own block")
         answers[.privacy] = .says("a private item is only its label; no value reaches Facts or Body")
-        let body = body
         return ElementSpec(
             name: "Item page (\(kind))",
             kind: .body,
@@ -224,9 +229,9 @@ struct ItemPageElement: TesseraElement {
             forms: [ElementFormSpec(name: kind, sizeSteps: [1], sizeFloor: 1)],
             moves: [ElementMove(name: "replace", milliseconds: 600)],
             answers: answers,
-            render: { Self.draw($0, body: body) },
-            meaning: { _ in Self.meaning(body) },
-            landing: { Self.draw($0, body: body) },
+            render: { Self.draw($0, body: itemBody) },
+            meaning: { _ in Self.meaning(itemBody) },
+            landing: { Self.draw($0, body: itemBody) },
             unseen: unchanged
         )
     }

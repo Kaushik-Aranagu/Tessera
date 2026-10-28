@@ -133,6 +133,65 @@ extension DeckPages {
         }
     }
 
+    /// Today's source (the workout running, tonight's, the routine, or the one finished today), its rows, and the
+    /// sets each lift plans. A private workout is one row and nothing else.
+    private static func today(model: AppModel, now: Date,
+                              calendar: Calendar) -> (source: ObjectRecord?, rows: [RankedRow], planned: [UUID: Int])
+    {
+        let store = model.store
+        let source: ObjectRecord? = model.session?.workout ?? model.tonightWorkout(around: now)
+            ?? model.triedRoutine() ?? model.todaysRoutine(now: now) ?? model.finishedToday(now: now).first?.workout
+        if let source, ObjectPrivacy.routineTitle(source.title, in: store) == ObjectPrivacy.routineLabel {
+            return (source, [RankedRow(id: "page#private", title: ObjectPrivacy.routineLabel, isPrivate: true)], [:])
+        }
+        var planned: [UUID: Int] = [:]
+        var rows: [RankedRow] = []
+        for (index, slot) in (source?.orderedChildren.filter { !$0.isDeleted } ?? []).enumerated() {
+            guard let exercise = store.linkedClass("exercise", of: slot),
+                  !ObjectPrivacy.isPrivateWord(exercise.name, in: store) else { continue }
+            let count = max(Int(store.number("targetSets", of: slot) ?? 3), 1)
+            planned[exercise.id] = count
+            let sessions = model.ledger.sessions(of: exercise)
+            let logged = sessions.first.flatMap { calendar.isDate($0.date, inSameDayAs: now) ? $0 : nil }
+            let open = sessions.first { !calendar.isDate($0.date, inSameDayAs: now) }?.sets.first ?? logged?.sets.first
+            let text = DeckSets.weightText(open?.weight ?? 0)
+            let doneCount = logged?.sets.count ?? 0
+            var sub = open.map { "\(count) sets of \(DeckSets.repsText($0.reps))" } ?? "\(count) sets"
+            if doneCount > 0, doneCount < count {
+                sub = "\(doneCount) of \(count) sets"
+            }
+            rows.append(RankedRow(
+                id: "\(TrainingWallTarget.exercise(exercise.id).id)#t\(index)", title: exercise.name,
+                value: open == nil ? "" : text.number, unit: open == nil ? "" : text.unit, sub: sub,
+                state: doneCount >= count ? .done : .none
+            ))
+        }
+        return (source, rows, planned)
+    }
+
+    /// A lift's item page: facts and sets.
+    private static func item(_ lift: Lift, planned: [UUID: Int], now: Date, calendar: Calendar) -> DeckItem {
+        let logged = lift.sessions.first.flatMap { calendar.isDate($0.date, inSameDayAs: now) ? $0 : nil }
+        let before = lift.sessions.first { !calendar.isDate($0.date, inSameDayAs: now) }
+        func sets(_ session: TrainingLedger.Session?) -> [DeckSets.Entry] {
+            session?.sets.map { DeckSets.Entry(weight: $0.weight, reps: $0.reps) } ?? []
+        }
+        let count = planned[lift.exercise.id] ?? before?.sets.count ?? logged?.sets.count ?? 3
+        let lines = DeckSets.lines(last: sets(before), today: sets(logged), planned: count)
+        let open = (before ?? logged)?.sets.first.map { DeckSets.weightText($0.weight) }
+        let best = lift.best.map { DeckSets.weightText($0.weight) }
+        return DeckItem(
+            title: lift.exercise.name,
+            line: DeckSets.line(for: lines, hasHistory: true),
+            facts: [
+                ItemFact(number: open?.number ?? "None", unit: open?.unit ?? "", label: "Opens at"),
+                ItemFact(number: "\(min(max(count, 1), 6))", unit: "sets", label: "Planned"),
+                ItemFact(number: best?.number ?? "None", unit: best?.unit ?? "", label: "Best"),
+            ],
+            sets: SetsBody(lines: lines, lastTime: DeckSets.lastTime(sets(before)))
+        )
+    }
+
     static func load(model: AppModel, wall: TrainingWallFacts, deck: TrainingDeckFacts, now: Date = AppClock.now,
                      calendar: Calendar = .current) -> DeckPages
     {
@@ -152,38 +211,7 @@ extension DeckPages {
             return Lift(exercise: exercise, sessions: sessions, best: model.ledger.bestSet(of: exercise))
         }.sorted { $0.last > $1.last }
 
-        // Today: the workout running, tonight's, the routine, or the one finished today.
-        let source: ObjectRecord? = model.session?.workout ?? model.tonightWorkout(around: now)
-            ?? model.triedRoutine() ?? model.todaysRoutine(now: now) ?? model.finishedToday(now: now).first?.workout
-        let privateToday = source.map { shown($0.title) == ObjectPrivacy.routineLabel } ?? false
-        var planned: [UUID: Int] = [:]
-        var todayRows: [RankedRow] = []
-        if privateToday {
-            todayRows = [RankedRow(id: "page#private", title: ObjectPrivacy.routineLabel, isPrivate: true)]
-        } else if let source {
-            for (index, slot) in source.orderedChildren.filter({ !$0.isDeleted }).enumerated() {
-                guard let exercise = store.linkedClass("exercise", of: slot),
-                      !ObjectPrivacy.isPrivateWord(exercise.name, in: store) else { continue }
-                let count = max(Int(store.number("targetSets", of: slot) ?? 3), 1)
-                planned[exercise.id] = count
-                let sessions = model.ledger.sessions(of: exercise)
-                let logged = sessions.first.flatMap { calendar.isDate($0.date, inSameDayAs: now) ? $0 : nil }
-                let open = sessions.first { !calendar.isDate($0.date, inSameDayAs: now) }?.sets.first
-                    ?? logged?.sets.first
-                let text = DeckSets.weightText(open?.weight ?? 0)
-                let doneCount = logged?.sets.count ?? 0
-                let reps = open.map { DeckSets.repsText($0.reps) }
-                var sub = reps.map { "\(count) sets of \($0)" } ?? "\(count) sets"
-                if doneCount > 0, doneCount < count {
-                    sub = "\(doneCount) of \(count) sets"
-                }
-                todayRows.append(RankedRow(
-                    id: "\(TrainingWallTarget.exercise(exercise.id).id)#t\(index)", title: exercise.name,
-                    value: open == nil ? "" : text.number, unit: open == nil ? "" : text.unit, sub: sub,
-                    state: doneCount >= count ? .done : .none
-                ))
-            }
-        }
+        let (source, todayRows, planned) = today(model: model, now: now, calendar: calendar)
 
         // The week: today first, then the days that follow, then the days gone by.
         let weekdays = calendar.weekdaySymbols
@@ -210,7 +238,8 @@ extension DeckPages {
         let monthAgo = calendar.date(byAdding: .day, value: -30, to: now) ?? now
         let bests = lifts.compactMap { lift -> (Lift, TrainingLedger.LoggedSet, Date)? in
             guard let best = lift.best, best.weight > 0,
-                  let when = lift.sessions.first(where: { $0.sets.contains { $0.id == best.id } })?.date else { return nil }
+                  let when = lift.sessions.first(where: { $0.sets.contains { $0.id == best.id } })?.date
+            else { return nil }
             return (lift, best, when)
         }.sorted { $0.2 > $1.2 }
         let bestRows = bests.map { lift, best, when in
@@ -251,28 +280,9 @@ extension DeckPages {
         )
         pages.doors["plan"] = DeckDoorPage(line: line("plan", "No plan yet"), rows: planRows)
 
-        // Each lift's item page.
         for lift in lifts {
-            let exercise = lift.exercise
-            let logged = lift.sessions.first.flatMap { calendar.isDate($0.date, inSameDayAs: now) ? $0 : nil }
-            let before = lift.sessions.first { !calendar.isDate($0.date, inSameDayAs: now) }
-            func sets(_ session: TrainingLedger.Session?) -> [DeckSets.Entry] {
-                session?.sets.map { DeckSets.Entry(weight: $0.weight, reps: $0.reps) } ?? []
-            }
-            let count = planned[exercise.id] ?? before?.sets.count ?? logged?.sets.count ?? 3
-            let lines = DeckSets.lines(last: sets(before), today: sets(logged), planned: count)
-            let open = (before ?? logged)?.sets.first.map { DeckSets.weightText($0.weight) }
-            let best = lift.best.map { DeckSets.weightText($0.weight) }
-            pages.items[TrainingWallTarget.exercise(exercise.id).id] = DeckItem(
-                title: exercise.name,
-                line: DeckSets.line(for: lines, hasHistory: true),
-                facts: [
-                    ItemFact(number: open?.number ?? "None", unit: open?.unit ?? "", label: "Opens at"),
-                    ItemFact(number: "\(min(max(count, 1), 6))", unit: "sets", label: "Planned"),
-                    ItemFact(number: best?.number ?? "None", unit: best?.unit ?? "", label: "Best"),
-                ],
-                sets: SetsBody(lines: lines, lastTime: DeckSets.lastTime(sets(before)))
-            )
+            pages.items[TrainingWallTarget.exercise(lift.exercise.id).id] = item(lift, planned: planned, now: now,
+                                                                                 calendar: calendar)
         }
         return pages
     }

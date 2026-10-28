@@ -110,13 +110,15 @@ private struct PlaceRenderer: View {
             PageTitleView(title: title, size: size, navigator: navigator)
         case let .ranked(data):
             RankedPage(data: data, settle: style.context != .state, reduceMotion: reduceMotion,
-                       start: style.context == .route ? 0.2 : 0, merging: style.context == .merge) {
+                       start: style.context == .route ? 0.2 : 0, merging: style.context == .merge)
+            {
                 act(.openItem($0))
             }
             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .item(data):
             ItemPage(data: data, settle: style.context != .state, reduceMotion: reduceMotion,
-                     start: style.context == .route ? 0.2 : 0, merging: style.context == .merge) {
+                     start: style.context == .route ? 0.2 : 0, merging: style.context == .merge)
+            {
                 act(.openItem($0))
             }
             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
