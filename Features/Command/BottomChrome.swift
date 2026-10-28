@@ -235,6 +235,14 @@ struct BottomChrome: View {
                 .shadow(color: Theme.Colors.paper.opacity(0.9), radius: 6)
                 .transition(.offset(x: 12).combined(with: .opacity))
             }
+            if !model.isCommandExpanded, line == nil, !canUndo, setAsk == nil, liftAsk == nil, holdHint != 1 {
+                // The corner Tess says whether Claude is behind her (the key's presence only).
+                Text(TessLayerModel.statusLine(keyPresent: model.claudeKeyPresent))
+                    .font(Theme.voice(size: 12))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("tess.claudeStatus")
+            }
             soulKey
         }
         .padding(.leading, Theme.Spacing.gutter)

@@ -250,6 +250,9 @@ final class AppModel {
     private(set) var isAskingClaude = false
     /// "Use the Claude key still on this phone?" is due: a key is here and he has never answered (G687).
     private(set) var keyQuestionDue = false
+    /// Whether a Claude key is stored: a Bool only, for Tess's status line ("Claude is on" or "No key yet"). The key's
+    /// text is never kept.
+    private(set) var claudeKeyPresent = false
     /// He said Later, or Now already showed it this launch: Now stays quiet until the next cold launch.
     var keyQuestionQuietOnNow = false
 
@@ -811,8 +814,10 @@ extension AppModel {
     /// Whether the question is due now. Key presence is a Bool only: the key's text is read by the Keychain call and
     /// dropped here, never kept, logged or written. Never in a demo or on a throwaway store.
     func refreshKeyQuestion(keys: any TessKeychain = SystemKeychain()) {
+        let present = keys.read() != nil
+        claudeKeyPresent = present
         keyQuestionDue = !Self.isDemo && settingsAreReal
-            && SettingsStore(engine: engine).claudeQuestionDue(keyPresent: keys.read() != nil)
+            && SettingsStore(engine: engine).claudeQuestionDue(keyPresent: present)
     }
 
     /// His answer: Yes or No writes one op and returns its receipt; Later (nil) writes nothing and quiets Now for

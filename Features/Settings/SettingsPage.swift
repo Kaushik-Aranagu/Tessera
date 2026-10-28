@@ -114,6 +114,12 @@ struct SettingsPage: View {
                     .accessibilityHint("Where your history is kept")
 
                     #if DEBUG
+                        // The stored Off list, so a hidden landing can be told from a missing one.
+                        Text("featureFlags.off: " + FeatureFlagStore.off().sorted().joined(separator: ", "))
+                            .font(.footnote)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .padding(.top, Theme.Spacing.l)
+                            .accessibilityIdentifier("debug.featureFlagsOff")
                         // Design 283 v8: the shared landing layout as raised glass, read-only. A debug surface.
                         NavigationLink {
                             LayoutModeView()

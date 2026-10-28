@@ -179,6 +179,7 @@ struct TessLineView: View {
 
 struct TessConversationLayer: View {
     @Bindable var model: TessLayerModel
+    @Environment(AppModel.self) private var app
     /// Closes the layer (tap on Home, swipe down, tap her, Escape, "That's all").
     var close: () -> Void
     /// What she says to a reply that is not "That's all": from the host.
@@ -248,6 +249,12 @@ struct TessConversationLayer: View {
         let lines = model.lines
         let markers = TessTimeMarker.markers(for: lines.map(\.date))
         return VStack(alignment: .leading, spacing: 12) {
+            // Whether Claude is behind her: the key's presence only, never its text.
+            Text(TessLayerModel.statusLine(keyPresent: app.claudeKeyPresent))
+                .font(Theme.voice(size: 13))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .lineLimit(1)
+                .accessibilityIdentifier("tess.claudeStatus")
             ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                 if let marker = markers[index] ?? (index == lines.count - 1 ? nil : nil) {
                     timeMarker(marker)

@@ -22,6 +22,8 @@ final class TessLayerModel {
     /// Who answered a reply, for the one small line under it on her sheet.
     enum AnswerSource: Equatable {
         case claude, phone
+        /// The phone answered because there is no Claude key: say so and where to add one.
+        case phoneNoKey
 
         /// The capture's source: Claude only when Claude answered; the grammar, the on-device model, a routed write
         /// or a miss kept on the phone are all this phone.
@@ -29,13 +31,24 @@ final class TessLayerModel {
             self = source == .claude ? .claude : .phone
         }
 
+        /// As above, but with no key stored the phone's answer says why Claude did not answer.
+        init(_ source: TessCapture.Source?, keyPresent: Bool) {
+            self = source == .claude ? .claude : (keyPresent ? .phone : .phoneNoKey)
+        }
+
         /// Plain small text, sentence case, no full stop.
         var line: String {
             switch self {
             case .claude: "Answered by Claude"
             case .phone: "Answered on this phone"
+            case .phoneNoKey: "No Claude key yet, so this stayed on the phone. Add one in Settings > Claude"
             }
         }
+    }
+
+    /// Whether Claude is behind her, in two plain words for her sheet and the corner (the key's presence only).
+    static func statusLine(keyPresent: Bool) -> String {
+        keyPresent ? "Claude is on" : "No key yet"
     }
 
     /// Today's earlier turns, oldest first, then the newest exchange.
