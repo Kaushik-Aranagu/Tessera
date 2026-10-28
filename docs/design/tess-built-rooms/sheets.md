@@ -301,3 +301,15 @@ Once every plant's page shows "Last three times" (sheet 376), watering a plant c
 - Reduce Motion: the line just changes
 - Core: nothing new. Builder A: the line is a `Text` built from runs, and each date run's identity is its place (0, 1, 2), not its value. So a changed value rolls in place with `.contentTransition(.numericText(countsDown:))`, staggered by place, inside `withTesseraAnimation`. Use `countsDown: true` for Undo
 - Probe: `docs/design/boards/r66/psh.js` (the fern's page with the dates set: watering rolls all three places with Oct 17 leaving, and the text is right at once; Undo rolls them back; nothing cut; paper, black; Reduce Motion: no movement)
+
+## Sheet 382: one Undo everywhere
+
+Sheet 307 (`docs/design/delights-290.md`) gave Tess's Undo line its manners: the word Undo thins as its 10 s run down, the line fades when they run out, and tapping Undo winds the line back. Every other Undo line on the board still cut out at 10 s, and a tap on Undo cut it at once: the receipts in every room ("Basil, watered", "Every plant's page, set") and Bridge's foot line ("Room taken down, not the plants"). Now they all behave the same.
+
+- The word Undo stays at full ink for six seconds, then thins to 45% by the tenth. That is the only sign of time running out. There is no bar, ring or number, and the word is still a full-size target until it goes
+- When the 10 s run out, the line fades over a quarter second instead of vanishing
+- Tapping Undo reverses the change at once (the number goes back on the plant's page in the same frame). The line winds back from its right end in 0.22 s, as if the sentence were taken back
+- A new line takes over at once at full ink, with its own 10 s. A line that was fading out is caught and shown whole
+- Reduce Motion: no thinning and no winding. The line goes at 10 s, or at once on Undo
+- Core: nothing new. Builder A and B: this is the shared `UndoLine` view that every room already uses. Its opacity for the word is a `TimelineView`-driven value (1 until 6 s, then down to 0.45 at 10 s), its removal is `.opacity`, and its Undo removal is a leading-edge mask. Rooms never draw their own Undo line
+- Probe: `docs/design/boards/r66/pun.js` (a plant page's receipt at 1, 8, 9.8 and 10.5 s: full ink, thinning, nearly 45%, gone; Undo winds the line while the change is already reversed, then it's gone; a new line comes back at full ink; Bridge's "Room taken down" line thins and fades the same way; paper, black; Reduce Motion: none of it)

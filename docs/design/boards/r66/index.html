@@ -275,8 +275,19 @@ function doorway(el,x0,y0,color,done){const cv=$('#doorway'),c=cv.getContext('2d
 /* receipts, petals */
 let rT=null;
 function receipt(el,msg,undo,word){msg=String(msg).replace(/\.\s*$/,'');let r=$('.receipt',el);if(!r){r=h('div','receipt');el.appendChild(r)}
- r.innerHTML=msg+(undo?' <button style="color:var(--room)">'+(word||'Undo')+'</button>':'');
- if(undo)r.querySelector('button').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT);rT=setTimeout(()=>{r.innerHTML=''},10000)}
+ r.innerHTML=msg+(undo?' <button style="color:var(--room)">'+(word||'Undo')+'</button>':'');holdUndo(r,undo)}
+/* 382: one Undo everywhere. Sheet 307 gave Tess's Undo line its manners; every other Undo line now has them too. The
+   word Undo thins over its 10 s (full ink for six, then down to 45%), so the time it has left shows without a bar, a
+   ring or a number. When the 10 s run out the line fades. Tapping Undo winds the line back from the right while the
+   change reverses. Never a cut. A new line takes over at once, at full ink. Reduce Motion: no thinning, no wind, it
+   simply goes */
+function holdUndo(r,onUndo){r._gen=(r._gen||0)+1;r.getAnimations().forEach(a=>a.cancel());clearTimeout(r._t);const b=r.querySelector('button');
+ if(b&&!RM)b.animate([{opacity:1},{opacity:1,offset:.6},{opacity:.45}],{duration:10000,fill:'forwards'});
+ const leave=how=>{const gen=r._gen;if(RM){r.innerHTML='';return}
+  const a=how==='rewind'?r.animate([{clipPath:'inset(0 0 0 0)',opacity:1},{clipPath:'inset(0 100% 0 0)',opacity:.6}],{duration:220,easing:'cubic-bezier(.5,0,.75,0)'}):r.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out'});
+  a.onfinish=()=>{if(r._gen===gen)r.innerHTML=''}};
+ if(b&&onUndo)b.onclick=()=>{b.onclick=null;clearTimeout(r._t);onUndo();leave('rewind')};
+ r._t=setTimeout(()=>leave('fade'),10000)}
 /* 354: Undo takes the pen back. The strike pulls out right to left, then the line comes back to full ink */
 function unstrike(row,then){if(!row||RM||!row.classList.contains('got'))return then();if(row.classList.contains('ungot'))return;row.classList.remove('justgot');row.classList.add('ungot');setTimeout(then,280)}
 function petals(host,x,y){if(RM)return;const cols=['#E7A6C9','#F1D27A','#9ED3B6','#F4B7A1'];for(let i=0;i<7;i++){const p=h('i','petal');p.style.left=x+'px';p.style.top=y+'px';p.style.background=cols[i%4];p.style.setProperty('--dx',(Math.random()*70-35)+'px');p.style.setProperty('--dy',(-30-Math.random()*50)+'px');p.style.setProperty('--rot',(Math.random()*240-120)+'deg');host.appendChild(p);setTimeout(()=>p.remove(),1400)}}
@@ -525,15 +536,14 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
   open:d=>flipTo(d.a),change:d=>{bf.textContent=ROOMS[d.a].fact;window.fitLine&&fitLine(bf);if(!bf._on){bf._on=1;return}bf.classList.remove('rise');void bf.offsetWidth;if(!RM)bf.classList.add('rise')}});
  document.fonts&&document.fonts.ready.then(()=>window.fitLine&&fitLine(bf));
  // foot: the Undo line
- const ul=h('div','undoline');el.appendChild(ul);let uT=null;
- function setUndo(m){m=String(m).replace(/\.\s*$/,'');ul.innerHTML=m+' <button>Undo</button>';ul.querySelector('button').onclick=()=>{ul.innerHTML='';show((oi-1+ONE.length)%ONE.length,'y')};clearTimeout(uT);uT=setTimeout(()=>{ul.innerHTML=''},10000)}
+ const ul=h('div','undoline');el.appendChild(ul);
+ function setUndo(m){m=String(m).replace(/\.\s*$/,'');ul.innerHTML=m+' <button>Undo</button>';holdUndo(ul,()=>show((oi-1+ONE.length)%ONE.length,'y'))}
  /* 371: a room he took down leaves its row. The rows from its place down close up into the gap, the one that slides
     into focus growing to full size, and the foot reads what went, with Undo for 10 s; Undo opens the gap again and the
     row drops back into it. Reduce Motion: the rows are simply where they end up */
  {const D=window.__chDown,U=window.__chUp;window.__chDown=null;window.__chUp=null;const rows=[...ap.children],n=rows.length;
   if(D){const f=D.i%n;ul.innerHTML='Room taken down, not the plants <button>Undo</button>';
-   ul.querySelector('button').onclick=()=>{ul.innerHTML='';clearTimeout(uT);if(!APPS.includes('chart'))APPS.splice(D.i,0,'chart');ROOMS.chart.replay=true;window.__chUp=D.i;reset('home')};
-   clearTimeout(uT);uT=setTimeout(()=>{ul.innerHTML=''},10000);
+   holdUndo(ul,()=>{if(!APPS.includes('chart'))APPS.splice(D.i,0,'chart');ROOMS.chart.replay=true;window.__chUp=D.i;reset('home')});
    // the row sliding into focus starts as the neighbor it was: small, gray and soft
    // (a frame later, once Bridge is in the page and the neighbor's gray can be read; the room still covers it then)
    if(!RM){[f,(f+1)%n].forEach(j=>rows[j].style.translate='0 40px');rows[f].style.scale='.66';rows[(f+1)%n].style.visibility='hidden';
