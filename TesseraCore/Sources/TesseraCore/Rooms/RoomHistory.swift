@@ -24,6 +24,10 @@ public enum RoomHistory {
     /// Every sentence said to a room, newest first: groups that are applied (committed or still drying), not undone.
     public static func entries(of room: String, engine: ActionEngine) -> [Entry] {
         let prefix = "Told \(room): "
+        // A room taken down keeps its history with it, out of sight until he brings it back.
+        if RoomBook(store: engine.store, classes: engine.classes).room(named: room) == nil {
+            return []
+        }
         return engine.store.context.all(OpRecord.self)
             .filter { actions.contains($0.action) && $0.summary.hasPrefix(prefix) && $0.state != .undone }
             .sorted { $0.createdAt > $1.createdAt }

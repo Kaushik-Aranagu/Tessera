@@ -127,6 +127,11 @@ public enum RoomReach {
         }
     }
 
+    /// Whether a change is still waiting for Allow on this room.
+    public static func isWaiting(_ room: ObjectRecord, in store: ObjectStore) -> Bool {
+        store.context.all(OpRecord.self).contains { holds($0, in: store) && $0.objectIDs.contains(room.id) }
+    }
+
     /// Not now: the held patch plays backwards (the change and its grant together). Nothing is written to the history.
     @discardableResult
     public static func notNow(_ record: OpRecord, in engine: ActionEngine) -> Bool {
