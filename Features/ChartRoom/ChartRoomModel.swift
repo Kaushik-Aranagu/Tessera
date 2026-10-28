@@ -189,6 +189,7 @@ final class ChartRoomModel {
         self.engine = engine
         // The real store: Core's sample Plant class (until he says production-ready) and the binds read through it.
         _ = try? RoomSample.seedPlants(store: engine.store, classes: engine.classes, now: AppClock.now)
+        engine.store.invalidateCaches()
         data = EngineRoomData(engine: engine)
         // Simulator only: the orchid's own "Last misted" part, so a UI test can open its page (sheets 378, 379).
         if LaunchFlags.has("-chartMistedPart"),
