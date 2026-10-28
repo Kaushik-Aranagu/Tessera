@@ -33,6 +33,7 @@ public enum SystemCatalog {
         case tessTurn
         case belief
         case routineRun, rest
+        case leftover
         case tessAgent, notebookPage, agentEpisode
 
         public var systemKey: String {
@@ -621,6 +622,16 @@ public enum SystemCatalog {
             FieldSpec(key: "cookedAt", name: "Cooked", kind: .date),
             FieldSpec(key: "note", name: "Note", kind: .text),
         ]),
+        // Food kept from a cook (Design's Galley levels): what it is, when it was cooked, the day it goes out, and the Cook
+        // it came from. Open until it is eaten or thrown out (`doneAt`). Nothing is guessed: no day goes out unless said.
+        ClassSpec(key: .leftover, name: "Leftover", parent: .thing, symbol: "takeoutbag.and.cup.and.straw",
+                  colorRole: "health", fields: [
+                      FieldSpec(key: "what", name: "What", kind: .text),
+                      FieldSpec(key: "cookedOn", name: "Cooked on", kind: .date),
+                      FieldSpec(key: "goesOutOn", name: "Goes out on", kind: .date),
+                      FieldSpec(key: "source", name: "From", kind: .ref, target: .cook),
+                      FieldSpec(key: "doneAt", name: "Eaten or thrown out", kind: .date),
+                  ]),
         // Several recipes cooked in one session on one clock (multi-dish Cook, Part A). Status: planned, running,
         // paused, done or dropped. The plan itself is never stored: it is derived from the dishes on every read.
         ClassSpec(key: .cookSession, name: "Cook Session", parent: .thing, symbol: "flame.circle", colorRole: "health",

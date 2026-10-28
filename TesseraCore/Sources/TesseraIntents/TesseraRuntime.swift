@@ -92,6 +92,8 @@ public enum TesseraIntentsCatalog {
         "markArrived": "in-app only: Home mosaic",
         "joinTwins": "in-app only: Twins",
         "keepTwinsApart": "in-app only: Twins",
+        "addLeftover": "in-app only: the Galley's Leftovers",
+        "finishLeftover": "in-app only: the Galley's Leftovers",
         "unlinkFromOccasion": "in-app only: Occasions",
         "logShopTotal": "in-app only: the groceries total",
         "skipShopTotal": "in-app only: the groceries total",
