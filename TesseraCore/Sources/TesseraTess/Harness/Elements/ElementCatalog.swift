@@ -78,9 +78,11 @@ public enum ElementCatalog {
     static let createRecipe = ElementCall("createRecipe", phrases: ["save the recipe", "new recipe"],
                                           inputs: [CallInput("title", from: .asked)], reaction: .keystoneTakes)
     /// The sink's ticket on the rail (sheet 388): Wash takes it off; dishes he names go on it.
-    static let washDishes = ElementCall("washDishes", phrases: ["wash", "did the dishes", "dishes done", "washed up"],
+    /// Never a bare "wash" or "used": "wash the rice" and "I used the last eggs" are not the sink.
+    static let washDishes = ElementCall("washDishes", phrases: ["wash up", "wash the dishes", "did the dishes",
+                                                                "dishes done", "washed up"],
                                         reaction: .strike)
-    static let addDishes = ElementCall("addDishes", phrases: ["used", "dirty", "in the sink", "more plates"],
+    static let addDishes = ElementCall("addDishes", phrases: ["more plates", "dirty dishes", "dishes"],
                                        inputs: [CallInput("count", from: .asked),
                                                 CallInput("label", from: .asked, required: false)],
                                        reaction: .keystoneTakes)

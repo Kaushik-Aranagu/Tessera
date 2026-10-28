@@ -23,15 +23,21 @@ struct SinkToolsTests {
         #expect(added.count == 1 && added.first?.action == "addDishes" && added.first?.state == .pending)
         let unlabeled = try call("addDishes", #"{"count":2,"label":"  "}"#, engine)
         #expect(unlabeled.first?.action == "addDishes")
-        #expect(throws: TessToolError.self) {
-            try call("addDishes", #"{"count":0,"label":null}"#, engine)
+        for count in [0, 51] {
+            #expect(throws: TessToolError.self) {
+                try call("addDishes", "{\"count\":\(count),\"label\":null}", engine)
+            }
         }
+        #expect(try call("addDishes", #"{"count":50,"label":null}"#, engine).count == 1)
     }
 
     @Test func washingIsOneGhostAndAClearSinkIsSaid() throws {
         let engine = try engine()
-        #expect(throws: TessToolAnswer.self) {
-            try call("washDishes", "{}", engine)
+        do {
+            _ = try call("washDishes", "{}", engine)
+            Issue.record("a clear sink wrote something")
+        } catch let answer as TessToolAnswer {
+            #expect(answer.line == "The sink is clear")
         }
         #expect(engine.history().isEmpty)
         _ = try Sink.seedSample(store: engine.store, classes: engine.classes, now: .now)
@@ -47,5 +53,9 @@ struct SinkToolsTests {
             #expect(AgentSpec.kitchen.tools.contains(name) && TessTools.writeNames.contains(name))
             #expect(TessTools.tool(named: name)?.deviceOnly == false)
         }
+        // Only the sink: "wash the rice", "I used the last eggs" and "put the pan in the sink" name neither.
+        let phrases = ElementCatalog.calls(room: "galley", place: .actionWord)
+            .filter { ["washDishes", "addDishes"].contains($0.name) }.flatMap(\.phrases)
+        #expect(!phrases.contains { ["wash", "used", "dirty", "in the sink"].contains($0) })
     }
 }
