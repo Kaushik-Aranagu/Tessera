@@ -67,6 +67,8 @@ enum ElementLook: String, CaseIterable, Sendable {
 /// What colour a run is set in, by role: a leaf never names a colour of its own (there is no colour trait).
 enum ElementInk: Equatable, Sendable {
     case ink, ink2, room
+    /// The state colours of sheet 241 (done green, late wine, best gold, planned slate).
+    case done, late, best, planned
 }
 
 /// One run of text as an element draws it, in the shell's frame (402 x 874), rect included.
@@ -171,6 +173,9 @@ struct ElementSpec: Sendable {
     var shape: ContentShape
     /// Its frame per level (0 the landing, 1 a door page); nil where it is merged away.
     var frames: [Int: CGRect]
+    /// The levels the suite draws it at (sheet 284: the Page is level 1 and the item page level 2); the landing
+    /// elements draw at level 0 only.
+    var levels: [Int] = [0]
     /// Every other element's frame per level, for Bounds.
     var neighbours: [Int: [CGRect]] = [:]
     var forms: [ElementFormSpec]
@@ -234,6 +239,9 @@ enum ElementRegistry {
     static let all: [any TesseraElement] = [
         DoorsDialElement(),
         PartsKeystoneElement(),
+        RankedPageElement(),
+        ItemPageElement.sets,
+        ItemPageElement.siblings,
     ]
 
     static func contains(_ name: String) -> Bool {

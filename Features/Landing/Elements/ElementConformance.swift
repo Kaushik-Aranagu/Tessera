@@ -95,19 +95,22 @@ enum ElementConformance {
             add(check, nil, nil, nil, outcome)
         }
         for (index, form) in spec.forms.enumerated() {
-            for look in ElementLook.allCases {
-                for scale in scales {
-                    for reduce in [false, true] {
-                        let request = RenderRequest(variant: ElementVariant(form: index), look: look, typeScale: scale,
-                                                    reduceMotion: reduce)
-                        for check in [ElementCheckName.renders, .lands, .walls, .floor, .touch, .contrast, .bounds,
-                                      .colours]
-                        {
-                            // The look and scale matter; Reduce Motion only changes moves, so one pass is enough.
-                            if reduce, check != .lands {
-                                continue
+            for level in spec.levels {
+                for look in ElementLook.allCases {
+                    for scale in scales {
+                        for reduce in [false, true] {
+                            let request = RenderRequest(variant: ElementVariant(form: index), look: look,
+                                                        typeScale: scale, reduceMotion: reduce, level: level)
+                            for check in [ElementCheckName.renders, .lands, .walls, .floor, .touch, .contrast,
+                                          .bounds, .colours]
+                            {
+                                // The look and scale matter; Reduce Motion only changes moves, so one pass is enough.
+                                if reduce, check != .lands {
+                                    continue
+                                }
+                                let name = spec.levels.count > 1 ? "\(form.name) L\(level)" : form.name
+                                add(check, name, look, scale, resolve(check, spec: spec, request: request))
                             }
-                            add(check, form.name, look, scale, resolve(check, spec: spec, request: request))
                         }
                     }
                 }
@@ -330,6 +333,10 @@ enum ElementConformance {
         case .ink: (look.ink, 1)
         case .ink2: look.ink2.map { ($0, 1) } ?? (look.ink, look.isDark ? 0.72 : 0.66)
         case .room: (look.accents?.notes ?? look.context, 1)
+        case .done: look.isDark ? (0x8FC9A0, 1) : (0x25803D, 1)
+        case .late: look.isDark ? (0xEE8E9C, 1) : (0x9A2541, 1)
+        case .best: look.isDark ? (0xD9C27A, 1) : (0x7E6A1E, 1)
+        case .planned: look.isDark ? (0xA7BCD6, 1) : (0x34506F, 1)
         }
     }
 
