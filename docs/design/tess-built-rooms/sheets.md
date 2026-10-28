@@ -175,3 +175,16 @@ A room Tess built is a view over his things, so taking it down is the end of the
 - Reduce Motion: Bridge simply appears with the row gone and the foot line; Undo simply puts it back
 - Core: taking a room down archives the Room object and its patch history in one op group (`archivedAt`), and deletes nothing it binds to. Undo is that op group's revert. An archived room keeps its sentences, so "Bring back my plant room" later restores it exactly. Taking a room down also ends its wishes (no notices from a room he can't see) and its grants. Builder A: the dial's rows are a `ForEach` over Room objects with stable ids, so removing one moves the rows below with the dial's spring; the fold is the 366 `trim` run from 1 to 0, staggered from the last place to the first
 - Probe: `docs/design/boards/r66/pdn.js` (outlines up doors first, the room gone, Bridge on the Lookout with the row closed up, the foot line and Undo, Undo puts the row back; no overlap with the foot; Reduce Motion)
+
+## Sheet 372: a room comes back the way it was made
+
+- A room keeps itself while he is away. Leaving and coming back shows it as he left it, with every sentence and grant in place. Before this, the board's Chart room started blank each time
+- A room he took down (sheet 371) and brought back, by Undo or later by saying "Bring back my plant room", rebuilds itself the first time he opens it, the way he made it. The frame sketches in as for a new room (sheet 366). Then his own sentences go by in his line, softer (55%) and quick, and each sets its places with a short drying line (240 ms, then 80 ms to the next), in the order he said them. It is a time-lapse of his own building, about 2.2 s from the door
+- Sentences that changed nothing are skipped: the box Tess refused and the ring still queued for the next install. So the replay is the room's real recipe and not a transcript
+- The numbers land on today's values, not the ones from when it was built, because the plants kept going while the room was away. The grant comes back with the sentence that asked for it. If he never tapped Allow, it comes back still waiting
+- Tess ends it in her line: "Back the way you made it"
+- While it plays, the action word reads "Skip" with "to the room as you left it". A tap anywhere does the same: the room is there whole at once, and that tap does nothing else, so it can't water a plant by accident
+- It plays once. After that the room is simply there
+- Reduce Motion: the room is simply there whole
+- Core: an archived room keeps its patch history in order. Restoring it replays the patches that set parts (`changed: true`), skipping refused and queued ones, against today's data. The replay is display only and writes nothing new. The room's `restoredAt` marks that the replay is owed, and the first open clears it. Builder A: the replay runs the R1 player's own patch animation at 0.12× duration, under one `withTesseraAnimation` task that a tap cancels by jumping to the final document. No haptic until the last step, then one soft one with Tess's line
+- Probe: `docs/design/boards/r66/prb.js` (kept on a quick return; the replay plays, skips the refused and queued sentences and ends whole with the grant; once only; a tap finishes it and does nothing else; Reduce Motion)

@@ -532,7 +532,7 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
     row drops back into it. Reduce Motion: the rows are simply where they end up */
  {const D=window.__chDown,U=window.__chUp;window.__chDown=null;window.__chUp=null;const rows=[...ap.children],n=rows.length;
   if(D){const f=D.i%n;ul.innerHTML='Room taken down, not the plants <button>Undo</button>';
-   ul.querySelector('button').onclick=()=>{ul.innerHTML='';clearTimeout(uT);if(!APPS.includes('chart'))APPS.splice(D.i,0,'chart');window.__chUp=D.i;reset('home')};
+   ul.querySelector('button').onclick=()=>{ul.innerHTML='';clearTimeout(uT);if(!APPS.includes('chart'))APPS.splice(D.i,0,'chart');ROOMS.chart.replay=true;window.__chUp=D.i;reset('home')};
    clearTimeout(uT);uT=setTimeout(()=>{ul.innerHTML=''},10000);
    // the row sliding into focus starts as the neighbor it was: small, gray and soft
    // (a frame later, once Bridge is in the page and the neighbor's gray can be read; the room still covers it then)
@@ -2871,6 +2871,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-hist button.on{color:var(--ink);font-weight:600}
 .ch-hist b{font:400 14px var(--num);color:var(--ink2);white-space:nowrap}
 .ch-tess{left:36px;top:440px;width:330px;font:italic 400 20px/28px Newsreader,serif;color:var(--ink)}
+.ch-heard.fast{opacity:.55;transition:none}
 .chart .ch-c[data-p]{cursor:pointer}
 .ch-wish{left:24px;top:584px;width:354px;font:400 15px/22px var(--sans);color:var(--ink2);white-space:nowrap;transition:color .3s}.ch-wish.on{color:var(--ink)}
 .ch-nm{font-style:normal;display:inline-block}
@@ -2924,17 +2925,18 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(hist){const N=realAt??at;s+='<div class="ch-c ch-hist">'+SAY.slice(0,N).map((x,i)=>({x,i})).reverse().map(({x,i})=>'<button data-v="'+i+'" class="'+(i===at-1?'on':'')+'"><span>'+x.s+'</span><b>'+tm(i)+'</b></button>').join('')+'</div>'}
   if(!hist&&at>=WI)s+='<div class="ch-c ch-wish'+(tmw?' on':'')+'" data-p="wid">Tess tells you when one goes a week dry</div>';
   if(hist);else if(at>=RI&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
-  if(hist);else if(heard)s+='<div class="ch-c ch-heard">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
+  if(hist);else if(heard)s+='<div class="ch-c ch-heard'+(rp?' fast':'')+'">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
   layer.innerHTML=s;
   if(realAt!=null)ghost=['title','line','key','cap'];if(tmw)ghost=['line','key','cap'];
   if(ghost)ghost.forEach(k=>layer.querySelectorAll('[data-p="'+k+'"]').forEach(e=>{if(e.classList.contains('ch-wish')&&at!==WI)return;e.classList.add('gh')}));
   Object.entries(pls).forEach(([k,p])=>p.classList.toggle('ghp',!!layer.querySelector('[data-p="'+k+'"].gh')));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('set',!!layer.querySelector('[data-p="'+k+'"]:not(.gh)')||(k==='wid'&&reach)));Object.entries(pls).forEach(([k,p])=>p.classList.toggle('pt',sel===k));
   const water=at>=RI&&reach&&t.d>0&&!tmw;act.className='ch-act'+(water?' water':'');
-  act.innerHTML=tmw?'<span class="av">Back</span><span class="ao">to today</span>':realAt!=null?'<span class="av">Go back</span><span class="ao">to how it was at '+tm(at-1)+'</span>':hist?'<span class="av">Close</span><span class="ao">the history</span>':wv!=null?'<span class="av">Keep</span><span class="ao">'+WW[WAYS[wv]]+'</span>':sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.replace(/^./,c=>c.toLowerCase())+'</span>':(at>=RI&&!reach?'<span class="av">Say</span><span class="ao">anything else</span>':'<span class="av">Say</span><span class="ao">take this room down</span>')}
+  if(!rp)snap();
+  act.innerHTML=rp?'<span class="av">Skip</span><span class="ao">to the room as you left it</span>':tmw?'<span class="av">Back</span><span class="ao">to today</span>':realAt!=null?'<span class="av">Go back</span><span class="ao">to how it was at '+tm(at-1)+'</span>':hist?'<span class="av">Close</span><span class="ao">the history</span>':wv!=null?'<span class="av">Keep</span><span class="ao">'+WW[WAYS[wv]]+'</span>':sel?'<span class="av">Say</span><span class="ao">what to change about the '+NAME[sel]+'</span>':water?'<span class="av">Watered</span><span class="ao">the '+t.n.toLowerCase()+'</span>':at<SAY.length?'<span class="av">Say</span><span class="ao">'+SAY[at].s.replace(/^./,c=>c.toLowerCase())+'</span>':(at>=RI&&!reach?'<span class="av">Say</span><span class="ao">anything else</span>':'<span class="av">Say</span><span class="ao">take this room down</span>')}
  /* 362: the room remembers every sentence. Hold the title for its history, newest first, each with the time it was
     said. Tap one to see the room as it was then, in ghost; Go back sets it, and the receipt's Undo returns to now */
  let hist=false,realAt=null,held=false,hT=0;const tm=i=>'1:'+String(12+i*3).padStart(2,'0')+' pm';
- let tline='',big=false,queued=false,heard='',sel=null,selT=0,calm=false;
+ let tline='',big=false,queued=false,heard='',sel=null,selT=0,calm=false,rp=false;
  /* 363: other ways. Swipe across a set keystone (the glass lens under the finger) and Tess shows the next way she would
     draw it, as a ghost: one big number, then a ladder, then back to the row. Every number flies to its place in the new
     way. Keep runs the drying line and sets it; swiping back to the one that is set drops the ghost. Nothing is written
@@ -2992,7 +2994,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
     closes up and the foot reads "Room taken down, not the plants" with Undo for 10 s. Reduce Motion: it goes at once */
  function down(){if(dry)return;heard='Take this room down';tline='';sel=null;{const rc=el.querySelector('.receipt');if(rc)rc.remove()}
   // the room is empty by now, so nothing slides: what is left of it dissolves over Bridge
-  const leave=()=>{const i=APPS.indexOf('chart');if(i<0)return;APPS.splice(i,1);window.__chDown={i};
+  const leave=()=>{const i=APPS.indexOf('chart');if(i<0)return;snap();APPS.splice(i,1);window.__chDown={i};
    if(!(stack.length>=2&&stack[stack.length-2].id==='home'))return reset('home');
    stack.pop();const old=current,oldC=cleanup,{el:hm,c}=mount('home');stage.insertBefore(hm,old);current=hm;cleanup=c;tessCue(null);drawMap();
    const gone=()=>{old.remove();oldC&&oldC()};if(RM)return gone();old.animate([{opacity:1},{opacity:0}],{duration:240,easing:'ease-out',fill:'forwards'}).onfinish=gone};
@@ -3040,8 +3042,27 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  layer.addEventListener('pointerup',wend);layer.addEventListener('pointercancel',wend);
  layer.onclick=e=>{if(swiped){swiped=false;return}if(held){held=false;if(e.target.closest('.ch-ttl'))return}if(e.target.closest('.ch-wish')&&!dry){tomorrow(!tmw);return}const v=e.target.closest('[data-v]');if(v){const n=+v.dataset.v+1;if(realAt==null)realAt=at;at=n;if(at===realAt){realAt=null}return draw()}if(hist)return;const b=e.target.closest('[data-a="allow"]');if(b&&!dry)return allowNow();const c=e.target.closest('.ch-c[data-p]');if(!c||c.classList.contains('gh')||dry)return;
   sel=sel===c.dataset.p?null:c.dataset.p;clearTimeout(selT);if(sel)selT=setTimeout(()=>{sel=null;draw()},30000);if(navigator.vibrate)try{navigator.vibrate(4)}catch(e){}draw()};
- draw();
- window.__ch={say,get n(){return SAY.length},get tmw(){return tmw},tomorrow,get at(){return at},get way(){return way},get wv(){return wv},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>allowNow(),down:()=>down(),plants:()=>plants};
+ /* 372: the room keeps itself while he is away, and a room he brings back after taking it down rebuilds itself the way
+    he made it. The frame sketches in (366), then his sentences go by in his line, softer and quick, each setting its
+    places with a short drying line (240 ms), in the order he said them. Sentences that changed nothing (the box Tess
+    refused, the ring still queued) are skipped. The numbers land on today's, since the plants kept going while the room
+    was away. Tess ends it with "Back the way you made it". A tap anywhere finishes it at once. It plays once; after that
+    the room is simply there. Reduce Motion: the room is simply there */
+ function snap(){ROOMS.chart.saved={at:realAt??at,plants:plants.map(p=>({...p,d:p.d-(tmw?1:0)})),reach,way,calm,big,queued}}
+ function replay(N){const keep=reach,steps=SAY.slice(0,N).map((S,i)=>({S,i})).filter(x=>x.S.fills);let k=0;rp=true;at=0;reach=false;draw();
+  const swallow=e=>{e.stopPropagation();e.preventDefault()};
+  const fin=()=>{if(!rp)return;rp=false;clearTimeout(dry);dry=null;el.querySelectorAll('.ch-dry').forEach(l=>l.remove());el.removeEventListener('pointerdown',skip,true);
+   at=N;reach=keep;heard='';tline='Back the way you made it';draw();if(navigator.vibrate)try{navigator.vibrate(6)}catch(_){}setTimeout(()=>el.removeEventListener('click',swallow,true),400)};
+  const skip=e=>{swallow(e);fin()};el.addEventListener('pointerdown',skip,true);el.addEventListener('click',swallow,true);
+  const step=()=>{if(k>=steps.length)return fin();const {S,i}=steps[k++];at=i+1;if(S.reach)reach=keep;heard=S.s;draw(S.fills);
+   const ls=S.fills.map(f=>{const [x,y,w,hh]=PL[f];const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
+    l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:240,easing:'linear',fill:'both'});return l});
+   dry=setTimeout(()=>{ls.forEach(l=>l.remove());draw();dry=setTimeout(step,80)},240)};
+  dry=setTimeout(step,600)}
+ {const R=ROOMS.chart,SV=R.saved,again=R.replay;R.replay=false;
+  if(SV){plants=SV.plants.map(p=>({...p}));reach=SV.reach;way=SV.way;calm=SV.calm;big=SV.big;queued=SV.queued;at=SV.at}
+  if(SV&&again&&!RM&&SV.at>0)replay(SV.at);else draw()}
+ window.__ch={say,get n(){return SAY.length},get tmw(){return tmw},tomorrow,get at(){return at},get way(){return way},get wv(){return wv},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>allowNow(),down:()=>down(),get rp(){return rp},get tline(){return tline},get reach(){return reach},plants:()=>plants};
  return ()=>{clearTimeout(dry);clearTimeout(selT);clearTimeout(hT)}}};
 
 
