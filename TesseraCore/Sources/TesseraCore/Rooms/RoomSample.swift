@@ -20,12 +20,32 @@ public enum RoomSample {
             def.owner = plant
             store.context.insert(def)
         }
+        // The orchid's misting lives in a routine: a link field to a routine step that can be checked off (sheet 378).
+        let misted = FieldDef(name: "Misted", key: "misted", kind: .ref, sortIndex: 2)
+        misted.targetClassID = classes[.routineStep]?.id
+        misted.owner = plant
+        store.context.insert(misted)
         store.invalidateCaches()
+        var mist: ObjectRecord?
+        if let routineClass = classes[.routine], let stepClass = classes[.routineStep] {
+            let routine = store.create(routineClass, title: "Water houseplants")
+            for (index, title) in ["Water the plants", "Check the soil", "Mist the orchid"].enumerated() {
+                let step = store.create(stepClass, title: title, parent: routine)
+                try store.set("minutes", to: .number(2), on: step)
+                step.sortIndex = index
+                if title == "Mist the orchid" {
+                    mist = step
+                }
+            }
+        }
         for (name, every, daysAgo) in [("Orchid", 7.0, 6), ("Monstera", 7, 4), ("Basil", 3, 1), ("Fern", 5, 2)] {
             let object = store.create(plant, title: name)
             try store.set("waterEvery", to: .number(every), on: object)
             let day = calendar.date(byAdding: .day, value: -daysAgo, to: calendar.startOfDay(for: now))
             try store.set("lastWatered", to: day.map { .date($0) }, on: object)
+            if name == "Orchid", let mist {
+                try store.setLinks("misted", on: object, to: [mist])
+            }
         }
         return plant
     }

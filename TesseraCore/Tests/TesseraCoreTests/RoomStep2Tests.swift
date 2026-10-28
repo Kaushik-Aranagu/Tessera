@@ -369,4 +369,16 @@ struct RoomStep2Tests {
         #expect(RoomRefusals.refusal(for: long, against: RoomDocument(name: "Chart room"), store: store,
                                      classes: classes)?.line.contains("A record holds") == true)
     }
+
+    @Test func theSamplePlantsCarryAMistedLinkToARoutineStepThatCanBeCheckedOff() throws {
+        let orchid = try #require(store.classDef(named: "Plant")).objects?.first { $0.title == "Orchid" }
+        let step = try #require(orchid.flatMap { store.linkedObjects("misted", of: $0).first })
+        #expect(step.title == "Mist the orchid" && step.parent?.title == "Water houseplants")
+        let book = RestBook(store: store, classes: classes)
+        #expect(book.lastDone(ofStep: step.id) == nil)
+        try engine.perform(TendRoutineStep(step: step.id, at: now), by: .user)
+        #expect(book.lastDone(ofStep: step.id) == now)
+        let fern = try #require(store.classDef(named: "Plant")).objects?.first { $0.title == "Fern" }
+        #expect(fern.flatMap { store.linkedObjects("misted", of: $0).first } == nil, "only the orchid is misted")
+    }
 }

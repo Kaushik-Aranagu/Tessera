@@ -61,6 +61,7 @@ public enum TessTools {
         "logSet", "createTask", "completeTask", "rescheduleTask", "addGroceries", "addToList", "createList",
         "createNote", "createRecipe", "startShop", "cookTogether", "setServeTime", "checkListItem", "startWorkout",
         "startCooking", "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine",
+        "patchRoom",
     ]
 
     /// The tools Claude may be given: money too while `ClaudeSees.moneyWrites` is on. Never the rehearsal, which is
