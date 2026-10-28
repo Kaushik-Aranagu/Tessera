@@ -2959,7 +2959,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  const act=h('button','ch-act');el.appendChild(act);
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
  function draw(ghost){const t=th();let s='';
-  {const R=ROOMS.chart;R.n=at>=1?'Plants':'Chart room';R.c=at>=1?'var(--lists)':'var(--slate)';R.fact=at>=1?(t.d>0?t.n+', '+t.d+(t.d===1?' day':' days'):'All watered'):'Say what it’s for'}if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
+  {const R=ROOMS.chart;R.th=at>=1&&t.d>0?t.n:'';R.n=at>=1?'Plants':'Chart room';R.c=at>=1?'var(--lists)':'var(--slate)';R.fact=at>=1?(t.d>0?t.n+', '+t.d+(t.d===1?' day':' days'):'All watered'):'Say what it’s for'}if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> is thirsty':', all watered')+'</div>';
   if(at>=2)s+='<div class="ch-c ch-key w-'+WAYS[wv??way]+(calm?' calm':'')+(big?' big':'')+'" data-p="key">'+keyHTML(WAYS[wv??way],t)+'</div>'+
    '<div class="ch-c ch-cap" data-p="cap">'+(tmw?(t.d>=7?'Tomorrow, the <em class="ch-nm">'+t.n.toLowerCase()+'</em> has gone a week':'Tomorrow, none has gone a week'):'Days since water'+(at>=3&&t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> first':''))+'</div>';
@@ -3012,8 +3012,19 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
     ...(late?[{color:oc[id(e)],offset:.72}]:[]),{transformOrigin:'0 0',transform:'none',color:c}],{duration:520,easing:'cubic-bezier(.22,.9,.24,1)'})});
   const nb=layer.querySelector('.ch-key b[data-k="'+p.n+'"]');
   if(nb&&from!==d){const sg=Math.sign(d-from);let v=from;nb.textContent=v;const tick=()=>{if(!nb.isConnected)return;v+=sg;nb.textContent=v;if(v!==d)setTimeout(tick,Math.max(40,380/Math.abs(d-from)))};setTimeout(tick,60)}
-  if(top0!==top1){layer.querySelectorAll('.ch-nm').forEach(e=>e.animate([{opacity:0,transform:'translateY(.4em)'},{opacity:1,transform:'none'}],{duration:260,delay:180,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
-   setTimeout(()=>{if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}},380)}}
+  if(top0!==top1){swapNames(top0.d>0?top0.n:'',180);setTimeout(()=>{if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}},380)}}
+ /* 380: when the thirstiest plant changes, the sentence catches up in front of him: the old name lifts away, the words
+    after it slide over as the gap takes the new name's width, and the new name rises into it. Same in the room and on
+    the way back from a plant's page. If every plant is watered, the sentence has no name, and the new one fades in whole.
+    The old word is drawn on the layer, never inside the sentence, so the sentence's text is right from the first frame */
+ function swapNames(old,delay){if(RM||!old)return;const lr=layer.getBoundingClientRect(),E='cubic-bezier(.2,.8,.2,1)',ns=[...layer.querySelectorAll('.ch-nm')];old=old.toLowerCase();
+  if(!ns.length){const ln=layer.querySelector('.ch-line');if(ln)ln.animate([{opacity:0},{opacity:1}],{duration:320,delay,easing:E,fill:'backwards'});return}
+  ns.forEach(e=>{if(e.textContent===old)return;const nw=e.getBoundingClientRect().width/K,cs=getComputedStyle(e),m=h('span','',old);m.style.cssText='position:absolute;visibility:hidden;white-space:nowrap;font:inherit';e.appendChild(m);const ow=m.getBoundingClientRect().width/K;m.remove();
+   const r=e.getBoundingClientRect(),o=h('div','fx sw',old);o.setAttribute('aria-hidden','true');o.style.cssText='position:absolute;z-index:8;pointer-events:none;white-space:nowrap;line-height:'+cs.lineHeight+';left:'+((r.left-lr.left)/K)+'px;top:'+((r.top-lr.top)/K)+'px;font:'+cs.font+';color:'+cs.color;layer.appendChild(o);
+   o.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-.45em)'}],{duration:170,delay,easing:'cubic-bezier(.4,0,.8,.4)',fill:'both'}).onfinish=()=>o.remove();
+   // the gap clips the new name at its sides only, so a longer name never spills over the words after it while it grows
+   e.style.clipPath='inset(-1em 0 -1em 0)';e.animate([{width:ow+'px'},{width:nw+'px'}],{duration:260,delay:delay+40,easing:E,fill:'backwards'}).onfinish=()=>{e.style.clipPath=''};
+   e.animate([{opacity:0,transform:'translateY(.4em)'},{opacity:1,transform:'none'}],{duration:280,delay:delay+170,easing:E,fill:'backwards'})})}
  const wpull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget',doors:'doors'};
  function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;{const rc=el.querySelector('.receipt');if(rc)rc.innerHTML=''}
   if(S.no){draw();cur={ls:[],t0:performance.now(),back:()=>{at--}};dry=setTimeout(()=>{dry=null;cur=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
@@ -3119,15 +3130,18 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
     l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:240,easing:'linear',fill:'both'});return l});
    dry=setTimeout(()=>{ls.forEach(l=>l.remove());draw();dry=setTimeout(step,80)},240)};
   dry=setTimeout(step,600)}
- {const R=ROOMS.chart,SV=R.saved,again=R.replay;R.replay=false;
+ {const R=ROOMS.chart,SV=R.saved,again=R.replay,was=R.th;R.replay=false;
   if(SV){plants=SV.plants.map(p=>({...p}));reach=SV.reach;way=SV.way;calm=SV.calm;big=SV.big;queued=SV.queued;at=SV.at}
   if(SV&&again&&!RM&&SV.at>0)replay(SV.at);else{draw();
-   if(current&&current.dataset.id==='plant'){const pt=current.querySelector('.ttl2'),pb=current.querySelector('.pl-key b'),nm=pt&&pt.textContent,S1=capText(pt),S2=capText(pb);[pt,pb].forEach(e=>e&&(e.style.visibility='hidden'));
+   if(current&&current.dataset.id==='plant'){const pt=current.querySelector('.ttl2'),pb=current.querySelector('.pl-key b'),nm=pt&&pt.textContent,fr=[...layer.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1'),same=!!fr&&fr.querySelector('span')?.textContent===nm,S1=same?capText(pt):null,S2=capText(pb);[same&&pt,pb].forEach(e=>e&&(e.style.visibility='hidden'));
     // the number goes first and the name a beat after, so the name never crosses the big word; the other plants' numbers
     // wait until it has passed, so it comes home along an empty row
+    // the name flies only to a dial row that names the same plant
     travel(el,[{src:S2,dst:()=>{const c=[...layer.querySelectorAll('.ch-key > div')].find(x=>x.querySelector('span')?.textContent===nm);return c&&c.querySelector('b')}},
-     {src:S1,dst:()=>{const r=[...layer.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1');return r&&r.querySelector('span')}}]);
-    if(!RM&&S2)layer.querySelectorAll('.ch-key > div').forEach(c=>{if(c.querySelector('span')?.textContent!==nm)c.querySelector('b').animate([{opacity:0},{opacity:0,offset:.55},{opacity:1}],{duration:640,fill:'backwards'})})}}}
+     {src:S1,dst:()=>{const r=[...layer.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1'),sp=r&&r.querySelector('span');return sp&&sp.textContent===nm?sp:null}}]);
+    if(!RM&&S2)layer.querySelectorAll('.ch-key > div').forEach(c=>{if(c.querySelector('span')?.textContent!==nm)c.querySelector('b').animate([{opacity:0},{opacity:0,offset:.55},{opacity:1}],{duration:640,fill:'backwards'})});
+    // the room is measured once it is on the stage, so the swap waits a frame, like the flight
+    if(was&&was!==R.th)requestAnimationFrame(()=>swapNames(was,260))}}}
  window.__ch={say,get n(){return SAY.length},get tmw(){return tmw},tomorrow,get at(){return at},get way(){return way},get wv(){return wv},get sel(){return sel},get calm(){return calm},get big(){return big},get hist(){return hist},get realAt(){return realAt},get queued(){return queued},allow:()=>allowNow(),down:()=>down(),stop:()=>stop(),get dry(){return !!dry},get rp(){return rp},get tline(){return tline},get reach(){return reach},plants:()=>plants};
  return ()=>{clearTimeout(dry);clearTimeout(selT);clearTimeout(hT)}}};
 

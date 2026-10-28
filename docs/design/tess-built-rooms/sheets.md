@@ -275,3 +275,16 @@ Sheet 378 bound the orchid's misting line to the Water houseplants routine throu
 - Reduce Motion: the day doesn't lift. The line and Tess's words are the same
 - Core: the part reads the step's last done date through the link, and the step's check op is the only write. No new op type and no sync between the two pages. Builder B: in `RoutineView`, when it is pushed with `from`, the step label that names `from` gets `from`'s color, and only that word. Builder A: `ObjectPage` compares a bound part's value with the one it last showed, and when it changed while he was away it plays the lift once inside `withTesseraAnimation`. Tess's line comes from the op's source (the routine's name)
 - Probe: `docs/design/boards/r66/pmi.js` (the routine opens with "Orchid" and an olive "orchid" in paper and black; checking it off makes the page read "today", with the lift and Tess's line; the next visit has neither; the routine shows the step done when opened again; unchecking and Undo put Thursday back; opened from the Watch nothing is marked; no overlap; Reduce Motion)
+
+## Sheet 380: the sentence catches up
+
+When the thirstiest plant changes, the room's sentence and caption change their name ("4 plants, the orchid is thirsty" becomes "the monstera"). Until now the new name only rose into place in the room (sheet 364), and coming back from a plant's page it was simply there. Now the change happens in front of him, the same way in both places.
+
+- The old name lifts away and fades. The gap then takes the new name's width, so the words after it slide over (or down a line, if the sentence now wraps). Then the new name rises into the gap. The old and new names are never on screen at the same time
+- Coming back from a plant's page, it starts a beat after the room arrives, while his plant's number is still flying home (sheet 377). In the room, it starts as the keystone settles. One light tick, as before
+- If every plant is watered, the sentence has no name ("4 plants, all watered"), so it fades in whole
+- The sentence's text is right from the first frame. The leaving word is drawn on top of the room, not in the sentence, so VoiceOver and anything reading the line never see two names
+- Fixed with it: the name flies back to the dial (sheet 377) only when the dial's focused row names the same plant. Otherwise the title stays where it is and fades with its page
+- Reduce Motion: the names change in place
+- Core: nothing new. Builder A: the sentence is a `Text` built from runs, and the name run has a stable identity per role ("thirstiest"), not per plant. When its value changes, the old run's text goes into a transient overlay with a `.move(edge: .top)` plus opacity removal. The name run's frame animates from the old width to the new, clipped at its sides only. The new text comes in with `.move(edge: .bottom)` and opacity, 170 ms after the old one starts to leave. Run it all inside `withTesseraAnimation`
+- Probe: `docs/design/boards/r66/prn.js` (back from the orchid's page after watering it: the line and caption already say "monstera", the old "orchid" is on the layer for the first frames and then gone, the new names animate; again from the monstera's page to "fern"; paper, black; Reduce Motion: no overlay)
