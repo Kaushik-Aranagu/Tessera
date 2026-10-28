@@ -132,7 +132,7 @@ struct RoomPatchTests {
         #expect(refusal(patch(.init(op: "look", trait: "motion", value: "wild")))?.contains("takes") == true)
         #expect(refusal(patch(add("a", "glyph", "glyph", ["symbol": .string("leaf"), "color": .string("#fff")])))?
             .contains("role") == true)
-        let colors = ["ember", "wine", "cobalt", "sage"].enumerated().map { index, role in
+        let colors = ["ochre", "wine", "violet", "sage"].enumerated().map { index, role in
             add("g\(index)", "title", index == 0 ? "title" : "caption", ["color": .string(role)])
         }
         #expect(refusal(patch(
@@ -272,6 +272,17 @@ struct RoomPatchTests {
         #expect(RoomReach.allow(result.record, in: engine) && result.record.state == .committed)
         engine.undo(result.record)
         #expect(book.room(named: "Chart room") == nil, "the room and its grant go back together")
+    }
+
+    @Test func notNowPlaysAWaitingPatchBackwardsAndOnlyAllowedPatchesShowTheirReceipt() throws {
+        let widening = patch(add("w", "actionWord", "actionWord", ["does": .string("write Plant.lastWatered")]))
+        let result = try engine.perform(PatchRoom(patch: widening), by: .tess, pending: true)
+        #expect(result.output.needsAllow)
+        #expect(RoomReach.notNow(result.record, in: engine) && result.record.state == .undone)
+        #expect(book.room(named: "Chart room") == nil)
+        let plain = try engine.perform(PatchRoom(patch: patch(add("t", "title", "title", ["text": .string("A")]))),
+                                       by: .tess, pending: true)
+        #expect(!plain.output.needsAllow && !RoomReach.notNow(plain.record, in: engine))
     }
 
     @Test func undoingAWideningPatchRemovesItsGrantInTheSameGroup() throws {

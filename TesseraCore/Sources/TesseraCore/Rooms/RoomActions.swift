@@ -12,6 +12,11 @@ public struct PatchRoom: EngineAction {
         public let say: String
         /// The grants this patch adds; non-empty means the patch waits for Allow.
         public let widening: [String]
+
+        /// The receipt waits ("Waiting for your Allow", with "Not now") and shows `say` only after Allow.
+        public var needsAllow: Bool {
+            !widening.isEmpty
+        }
     }
 
     public static let descriptor = ActionDescriptor(
@@ -21,9 +26,12 @@ public struct PatchRoom: EngineAction {
     )
 
     public var patch: RoomPatch
+    /// What he said, kept as the op group's note so the room's history can read it back.
+    public var sentence: String?
 
-    public init(patch: RoomPatch) {
+    public init(patch: RoomPatch, sentence: String? = nil) {
         self.patch = patch
+        self.sentence = sentence
     }
 
     public func apply(_ transaction: inout Transaction) throws -> Output {
@@ -37,14 +45,14 @@ public struct PatchRoom: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: reason)
         case let .ok(document, widening):
             let room = try roomObject ?? transaction.create(transaction.classDef(.room), title: patch.room)
-            try write(document, over: current, on: room, in: &transaction)
+            try Self.write(document, over: current, on: room, in: &transaction)
             return Output(room: room.id, say: RoomPatchValidator.stripped(patch.say), widening: widening)
         }
     }
 
     /// Writes only what differs, so undo puts back exactly the old room.
-    @MainActor private func write(_ document: RoomDocument, over current: RoomDocument, on room: ObjectRecord,
-                                  in transaction: inout Transaction) throws
+    @MainActor static func write(_ document: RoomDocument, over current: RoomDocument, on room: ObjectRecord,
+                                 in transaction: inout Transaction) throws
     {
         let store = transaction.store
         if document.name != current.name || store.value("name", of: room) == nil {
@@ -85,7 +93,7 @@ public struct PatchRoom: EngineAction {
     }
 
     public func summary(in _: ObjectStore) -> String {
-        "Changed \(patch.room)"
+        RoomHistory.note(room: patch.room, sentence: sentence ?? patch.say)
     }
 
     public func receipt(in _: ObjectStore, output: Output) -> String? {
@@ -117,6 +125,18 @@ public enum RoomReach {
             // Only a grant the room did not have before widens it; setting an empty reach does not.
             return !grants(new).subtracting(grants(old)).isEmpty
         }
+    }
+
+    /// Whether a change is still waiting for Allow on this room.
+    public static func isWaiting(_ room: ObjectRecord, in store: ObjectStore) -> Bool {
+        store.context.all(OpRecord.self).contains { holds($0, in: store) && $0.objectIDs.contains(room.id) }
+    }
+
+    /// Not now: the held patch plays backwards (the change and its grant together). Nothing is written to the history.
+    @discardableResult
+    public static func notNow(_ record: OpRecord, in engine: ActionEngine) -> Bool {
+        guard holds(record, in: engine.store) else { return false }
+        return (try? engine.discard(record)) != nil
     }
 
     /// Allow: the held patch commits with its grants. Undo on its receipt reverts the patch and the grants together.

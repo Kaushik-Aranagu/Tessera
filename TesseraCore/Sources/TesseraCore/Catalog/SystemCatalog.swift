@@ -606,6 +606,12 @@ public enum SystemCatalog {
             FieldSpec(key: "look", name: "Look", kind: .text),
             // JSON array of grants, e.g. ["write Plant.lastWatered"]; reads of the classes a part binds are implicit.
             FieldSpec(key: "reach", name: "Reach", kind: .text),
+            // JSON array of part names he asked for that the kit does not have yet; the install notes read it (R5 builds them).
+            FieldSpec(key: "queue", name: "Queued parts", kind: .text),
+            // When he took the room down (Design sheet 371); empty is a room that is up. Nothing it binds to is touched.
+            FieldSpec(key: "archivedAt", name: "Taken down", kind: .date),
+            // Set when a taken-down room is brought back: a replay of how it was made is owed until its first open.
+            FieldSpec(key: "restoredAt", name: "Brought back", kind: .date),
         ]),
         ClassSpec(key: .roomPart, name: "Room Part", parent: .thing, symbol: "square.on.square.dashed",
                   colorRole: "neutral", fields: [

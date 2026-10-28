@@ -112,13 +112,31 @@ public struct RoomBook {
         self.classes = classes
     }
 
+    /// The rooms that are up; a room taken down (`archivedAt`) is not among them.
     public func rooms() -> [ObjectRecord] {
+        allRooms().filter { !isTakenDown($0) }
+    }
+
+    public func allRooms() -> [ObjectRecord] {
         guard let roomClass = classes[.room] else { return [] }
         return store.objects(of: roomClass)
     }
 
+    public func takenDownRooms() -> [ObjectRecord] {
+        allRooms().filter(isTakenDown)
+    }
+
+    public func isTakenDown(_ room: ObjectRecord) -> Bool {
+        store.value("archivedAt", of: room)?.dateValue != nil
+    }
+
     public func room(named name: String) -> ObjectRecord? {
         rooms().first { $0.title.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// What a room may do right now: its grants while it is up, none once it is taken down.
+    public func grants(of room: ObjectRecord) -> [String] {
+        isTakenDown(room) ? [] : document(of: room).reach
     }
 
     public func document(of room: ObjectRecord) -> RoomDocument {
