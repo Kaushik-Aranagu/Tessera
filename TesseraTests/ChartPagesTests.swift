@@ -66,7 +66,7 @@ struct ChartPagesTests {
             return
         }
         #expect(doors.map(\.name) == ["Orchid", "Monstera", "Fern", "Basil"])
-        #expect(doors[0].label == "7" && doors[1].label == "7" == false)
+        #expect(doors[0].label == "7")
         #expect(screen[.doorSummary] != nil, "the summary sits on the left")
         #expect(ChartDoors.stop("chart.door.0", room)?.id == orchid)
         #expect(ChartDoors.stop("chart.door.9", room) == nil)

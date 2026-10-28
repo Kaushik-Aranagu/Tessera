@@ -8,6 +8,7 @@ import TesseraCore
 // uses.
 
 /// The page's content as kit nodes, by place. Pure over a page and the words its tokens read.
+@MainActor
 enum PlainPage {
     /// Which parts draw where: title, caption, keystone and the page's own lines.
     static func nodes(parts: [RoomPart], object: ObjectRecord, book: PageBook, engine: ActionEngine?)
@@ -56,7 +57,7 @@ enum PlainPage {
     }
 
     /// A routine named in a line through `{@field.parent.title}` (sheet 378): the field that links to it, if any.
-    static func routineLink(in template: String) -> String? {
+    nonisolated static func routineLink(in template: String) -> String? {
         guard let open = template.range(of: "{@"), let close = template[open.upperBound...].firstIndex(of: "}") else {
             return nil
         }
