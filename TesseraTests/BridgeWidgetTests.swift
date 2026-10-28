@@ -43,7 +43,9 @@ struct BridgeWidgetTests {
         let names = Set(rows.map(\.name))
         #expect(names.isSuperset(of: ["Deck", "Galley", "Purse", "Log", "Watch"]))
         #expect(!names.contains("Training") && !names.contains("Kitchen") && !names.contains("Money"))
-        #expect(rows.map(\.name) == ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse", "To do", "Settings"])
+        // The Chart room sits after Purse while its flag is On (it is On unless turned Off in Developer mode).
+        let chart = ChartRoomFlag.isOn ? [ChartRoomSummary.row().name] : []
+        #expect(rows.map(\.name) == ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse"] + chart + ["To do", "Settings"])
         #expect(rows.first { $0.name == "Lookout" }?.door == .lookout)
         #expect(rows.first { $0.name == "Settings" }?.door == .settings)
         #expect(rows.first { $0.name == "Galley" }?.door == .app(.kitchen))
