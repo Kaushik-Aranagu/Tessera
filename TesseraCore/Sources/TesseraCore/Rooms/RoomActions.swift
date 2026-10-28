@@ -12,6 +12,11 @@ public struct PatchRoom: EngineAction {
         public let say: String
         /// The grants this patch adds; non-empty means the patch waits for Allow.
         public let widening: [String]
+
+        /// The receipt waits ("Waiting for your Allow", with "Not now") and shows `say` only after Allow.
+        public var needsAllow: Bool {
+            !widening.isEmpty
+        }
     }
 
     public static let descriptor = ActionDescriptor(
@@ -120,6 +125,18 @@ public enum RoomReach {
             // Only a grant the room did not have before widens it; setting an empty reach does not.
             return !grants(new).subtracting(grants(old)).isEmpty
         }
+    }
+
+    /// Whether a change is still waiting for Allow on this room.
+    public static func isWaiting(_ room: ObjectRecord, in store: ObjectStore) -> Bool {
+        store.context.all(OpRecord.self).contains { holds($0, in: store) && $0.objectIDs.contains(room.id) }
+    }
+
+    /// Not now: the held patch plays backwards (the change and its grant together). Nothing is written to the history.
+    @discardableResult
+    public static func notNow(_ record: OpRecord, in engine: ActionEngine) -> Bool {
+        guard holds(record, in: engine.store) else { return false }
+        return (try? engine.discard(record)) != nil
     }
 
     /// Allow: the held patch commits with its grants. Undo on its receipt reverts the patch and the grants together.

@@ -223,4 +223,40 @@ struct RoomStep2Tests {
         engine.undo(back)
         #expect(book.document(of: room) == nowDocument)
     }
+
+    // MARK: Taking a room down
+
+    @Test func takingARoomDownKeepsHisThingsAndBringingItBackRestoresIt() throws {
+        let steps = RoomFixture.chart.parts.map {
+            RoomPatch.Step(op: "add", id: $0.id, kind: $0.kind, place: $0.place, props: $0.props, bind: $0.bind)
+        }
+        let made = try engine.perform(PatchRoom(patch: RoomPatch(room: "Chart room", say: "Plants, set", ops: steps),
+                                                sentence: "Make this my plant room"), by: .tess, pending: true)
+        let room = try #require(book.room(named: "Chart room"))
+        // Waiting for Allow, the room stays up.
+        #expect(throws: ActionError.self) { try engine.perform(TakeDownRoom(room: room.id), by: .user) }
+        #expect(RoomReach.allow(made.record, in: engine))
+        let plants = try #require(store.classDef(named: "Plant")).objects?.count ?? 0
+        let down = try engine.perform(TakeDownRoom(room: room.id), by: .user)
+        #expect(book.room(named: "Chart room") == nil && book.rooms().isEmpty)
+        #expect(book.takenDownRoom(named: "Chart room")?.id == room.id)
+        #expect(book.grants(of: room).isEmpty && RoomHistory.entries(of: "Chart room", engine: engine).isEmpty)
+        #expect((store.classDef(named: "Plant")?.objects?.count ?? 0) == plants, "his plants are untouched")
+        #expect(down.record.ops.allSatisfy {
+            if case .setValue = $0 {
+                true
+            } else {
+                false
+            }
+        })
+        // Bring it back: the room, its history and its grants are as they were.
+        try engine.perform(BringBackRoom(room: room.id), by: .user)
+        #expect(book.room(named: "Chart room")?.id == room.id)
+        #expect(book.grants(of: room) == ["write Plant.lastWatered"])
+        #expect(RoomHistory.entries(of: "Chart room", engine: engine).map(\.note) == ["Make this my plant room"])
+        // Undo of the take-down is the same thing.
+        let again = try engine.perform(TakeDownRoom(room: room.id), by: .user)
+        engine.undo(again.record)
+        #expect(book.room(named: "Chart room") != nil)
+    }
 }
