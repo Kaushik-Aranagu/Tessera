@@ -1,7 +1,8 @@
 import XCTest
 
 /// The Chart room's controls take plain taps (QA G13): Say plays a sentence as a ghost, Allow on the wine line sets
-/// the widening patch, and Undo on the receipt takes it back. Opened in the standing shell from Bridge (`-shellWalk chart`: the dial reel only exposes rows near its centre).
+/// the widening patch, and Undo on the receipt takes it back. Opened in the standing shell from Bridge (`-shellWalk
+/// chart`: the dial reel only exposes rows near its centre).
 /// Simulator only.
 @MainActor
 final class ChartRoomUITests: SimulatorOnlyTestCase {
@@ -59,5 +60,37 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(undo.waitForExistence(timeout: 5), "The receipt has Undo")
         undo.tap()
         XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 5), "Undo took the word back")
+    }
+
+    /// Sheet 375: the dial's focused door opens the plant's plain page, and its back word comes back to the room.
+    func testADoorOpensThePlainPageAndTheBackWordComesBack() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-demoTime",
+            "18:10",
+            "-resetChart",
+            "-chartPlantDoors",
+            "-shellProbe",
+            "-shellWalk",
+            "chart",
+        ]
+        app.launch()
+        let ask = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Don’t Allow"]
+        if ask.waitForExistence(timeout: 4) {
+            ask.tap()
+        }
+        XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 30), "The Chart room is open")
+        let door = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Orchid")).firstMatch
+        XCTAssertTrue(door.waitForExistence(timeout: 15), "The thirsty plant's door is the dial's focus")
+        door.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["chart.plainPage"].waitForExistence(timeout: 10),
+                      "The door opened the plant's plain page")
+        let back = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Back to")).firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 5), "The page has a back word")
+        back.tap()
+        XCTAssertTrue(
+            app.buttons["Say, what to build"].waitForExistence(timeout: 10),
+            "The back word came back to the room"
+        )
     }
 }

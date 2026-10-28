@@ -522,6 +522,7 @@ final class ChartRoomModel {
     func load(_ doc: ChartDoc) {
         document = doc
         cursor = Self.canned.count
+        persist()
     }
 
     // MARK: History (sheet 362)

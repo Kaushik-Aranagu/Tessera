@@ -24,7 +24,22 @@ extension ChartRoomModel {
         }
         let model = ChartRoomModel(defaults: defaults)
         // Simulator stills: `-chartSentences N` sets the first N canned sentences, `-chartFixture` loads Core's room.
-        if LaunchFlags.has("-chartFixture") {
+        if LaunchFlags.has("-chartPlantDoors") {
+            // Simulator stills and UI tests: a plant room with one door per plant (sheet 375).
+            var doc = ChartDoc(name: "Chart room", color: "olive")
+            doc.parts = [
+                ChartPart(id: "title", kind: .title, place: "title", props: ["text": .text("Plants")]),
+                ChartPart(id: "row", kind: .row, place: "keystone",
+                          props: ["big": .text("lastWatered"), "sort": .text("-daysSince(lastWatered)")],
+                          bind: "Plant"),
+                ChartPart(id: "glow", kind: .top, place: "keystone",
+                          props: ["on": .text("row"), "field": .text("lastWatered")]),
+                ChartPart(id: "doors", kind: .doors, place: "dial",
+                          props: ["summary": .text("waterEvery"), "sort": .text("-daysSince(lastWatered)")],
+                          bind: "Plant"),
+            ]
+            model.load(doc)
+        } else if LaunchFlags.has("-chartFixture") {
             var doc = ChartDoc(RoomFixture.chart)
             doc.color = "olive"
             model.load(doc)
