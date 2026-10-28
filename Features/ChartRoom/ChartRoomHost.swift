@@ -53,7 +53,8 @@ final class ChartRoomDriver: ShellRoomDriver {
 
     func content(model: AppModel, scheme _: ColorScheme) -> any RoomContent {
         chart.attach(model.engine)
-        return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent, sayObject: chart.sayObject)
+        return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent, sayObject: chart.sayObject,
+                            footSteps: chart.historyFoot)
     }
 
     func handle(_ intent: ShellIntent, navigator _: ShellNavigator) -> Bool {
@@ -75,6 +76,10 @@ final class ChartRoomDriver: ShellRoomDriver {
 func run(_ step: String, _ chart: ChartRoomModel) {
     if step == "say" {
         chart.saySomething()
+    } else if step == "close" {
+        chart.closeHistory()
+    } else if step == "goback" {
+        chart.goBack()
     } else if step.hasPrefix("does:") {
         chart.does(String(step.dropFirst(5)))
     }
@@ -90,7 +95,12 @@ struct ChartShellHost: View {
         let _ = app.revision
         let _ = chart.attach(app.engine)
         ShellView(
-            room: DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, sayObject: chart.sayObject),
+            room: DocumentRoom(
+                nodes: chart.nodes,
+                ghost: chart.ghostPlaces,
+                sayObject: chart.sayObject,
+                footSteps: chart.historyFoot
+            ),
             navigator: navigator,
             accent: ChartRoomSummary.color(chart.document.color)
         ) { intent in
@@ -107,5 +117,16 @@ struct ChartShellHost: View {
             try? await Task.sleep(for: .seconds(3))
             chart.saySomething()
         }
+    }
+}
+
+extension ChartRoomModel {
+    /// The foot while the history is open: Close, and Go back to how it was at 1:18 pm while a version is previewed.
+    var historyFoot: [ShellStep]? {
+        guard historyOpen else { return nil }
+        if let object = goBackObject {
+            return [ShellStep(id: "goback", verb: "Go back", object: object), ShellStep(id: "close", verb: "Close")]
+        }
+        return [ShellStep(id: "close", verb: "Close")]
     }
 }

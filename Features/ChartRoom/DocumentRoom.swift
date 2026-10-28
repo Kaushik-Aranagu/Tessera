@@ -22,6 +22,8 @@ struct DocumentRoom: RoomContent {
     var accent: Color = Theme.Colors.Accent.chart
     /// The small line the Say word carries (it names the place he pointed at).
     var sayObject = DocumentRoom.sayObject
+    /// While the history is open the foot reads Close (and Go back while a version is previewed).
+    var footSteps: [ShellStep]?
 
     func screen(for _: ShellRoute, state: RoomState) -> Screen {
         func slot(_ place: Place, _ kind: SlotKind, _ payload: SlotPayload?, id: String? = nil) -> SlotContent? {
@@ -148,6 +150,10 @@ struct DocumentRoom: RoomContent {
     /// The foot: the room's own action word when it has one (and the grant for what it does), then Say. A
     /// swipe across the word turns to the next.
     private var foot: SlotContent {
+        if let footSteps, let first = footSteps.first {
+            return SlotContent(id: ContentID("chart.action.history.\(first.id)"), kind: .action,
+                               payload: .action(footSteps, accent: accent))
+        }
         var steps: [ShellStep] = []
         for node in nodes[.actionWord] ?? [] {
             if case let .actionWord(id, verb, object, _) = node {

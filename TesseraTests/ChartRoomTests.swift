@@ -195,12 +195,16 @@ struct ChartRoomTests {
         #expect(room.pending == nil && room.document.parts.count == 2)
     }
 
-    @Test func undoPutsTheRoomBack() {
+    @Test func undoUnDriesThenPutsTheRoomBack() async throws {
         let said = Said()
         let room = model(said: said)
         room.saySomething()
         room.tapGhost()
         said.undo?()
+        // Sheet 368: the change is a ghost again while its drying line runs back; it is undone only at 0.
+        #expect(room.unDrying && room.pending != nil && room.document.parts.count == 2)
+        try await Task.sleep(for: .seconds(ChartRoomModel.unDrySeconds + 0.3))
+        #expect(!room.unDrying && room.pending == nil)
         #expect(room.document.parts.isEmpty && room.cursor == 0)
     }
 
@@ -227,6 +231,7 @@ struct ChartRoomTests {
         #expect(room.document.reach == ["write Plant.lastWatered"])
         #expect(room.nodes[.actionWord]?.count == 1)
         said.undo?()
+        try await Task.sleep(for: .seconds(ChartRoomModel.unDrySeconds + 0.3))
         #expect(room.document.reach.isEmpty, "undo takes the grant back with the change")
     }
 

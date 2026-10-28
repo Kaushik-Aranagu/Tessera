@@ -80,9 +80,15 @@ final class ChartRoomModel {
     private(set) var cursor: Int
     /// The place he pointed at (sheet 360): a tap on a filled place picks it for 30 s. Writes nothing.
     private(set) var picked: Place?
+    /// Sheet 362: the room's history, open, and the version he is previewing (nothing is written by looking).
+    private(set) var historyOpen = false
+    private(set) var previewing: HistoryRow?
+    private(set) var historyRows: [HistoryRow] = []
+    @ObservationIgnored var now: () -> Date = { AppClock.now }
+    @ObservationIgnored private var memory: [HistoryRow] = []
     /// Tess's line with one receipt button (sheet 361): a refusal and her offer, run as a normal ghost change.
     private(set) var note: RoomNote?
-    @ObservationIgnored let data: RoomData
+    @ObservationIgnored private(set) var data: RoomData
     @ObservationIgnored private var pickTask: Task<Void, Never>?
     @ObservationIgnored var pickFor: Duration = .seconds(30)
     @ObservationIgnored private let defaults: UserDefaults?
@@ -119,6 +125,13 @@ final class ChartRoomModel {
     func attach(_ engine: ActionEngine) {
         guard self.engine == nil else { return }
         self.engine = engine
+        // The real store: Core's sample Plant class (until he says production-ready) and the binds read through it.
+        _ = try? RoomSample.seedPlants(store: engine.store, classes: engine.classes, now: AppClock.now)
+        data = EngineRoomData(engine: engine)
+        // Another room's colour is never taken: the whole dial's table, from the rooms' own colours.
+        RoomColor.otherRooms = Dictionary(uniqueKeysWithValues: LayoutRoom.allCases.compactMap { room in
+            room.hex.map { (room.name, RoomColor.Pair($0.light, $0.dark)) }
+        })
         if let stored = storedDocument() {
             document = stored
         }
@@ -132,6 +145,9 @@ final class ChartRoomModel {
 
     /// The document as it should draw now: the pending patch applied (as a ghost) over the committed room.
     var shown: ChartDoc {
+        if let previewing {
+            return previewing.doc ?? document
+        }
         guard let pending else { return document }
         // A patch that widens reach does not hold its grant until Allow, so what needs the grant stays away.
         var after = pending.after
@@ -148,8 +164,12 @@ final class ChartRoomModel {
 
     /// The places a ghost fills, whose outline lets go and whose drying line runs.
     var ghostPlaces: Set<Place> {
+        // A preview of the room as it was: every filled place is a ghost, and nothing is written.
+        if previewing != nil {
+            return Set(nodes.keys)
+        }
         guard let pending else { return [] }
-        let now = PartResolver.resolve(document) { [data] in data.items($0) }
+        let now = PartResolver.resolve(pending.before) { [data] in data.items($0) }
         let next = nodes
         var places = Set(Place.allCases.filter { now[$0] != next[$0] })
         // The reach line sits in the Widget's place, so the Widget's outline lets go for it.
@@ -198,12 +218,30 @@ final class ChartRoomModel {
         var after = document.applying(patch)
         record = nil
         if let engine {
-            // The engine's validator speaks for the store: a refusal (a class it has not got) shows the demo ghost.
-            if let result = try? engine.perform(PatchRoom(patch: core), by: .tess, pending: true) {
-                record = result.record
-                after = storedDocument() ?? after
+            // Core's house rules and validator speak for the store: a refusal is Tess's line (sheet 361), never a
+            // ghost.
+            do {
+                switch try RoomPatcher.apply(core, sentence: said, picked: picked?.rawValue, engine: engine) {
+                case let .applied(applied, _):
+                    record = applied
+                    after = storedDocument() ?? after
+                case let .refused(refusal, queued):
+                    var offer: (label: String, patch: RoomPatch)?
+                    if let label = refusal.offerLabel, let patch = refusal.offer {
+                        offer = (label, patch)
+                    }
+                    refuse(refusal.line, offer: offer)
+                    if let queued {
+                        say(refusal.receipt) { [weak engine] in engine?.undo(queued) }
+                    }
+                    return
+                }
+            } catch {
+                refuse("That did not change the room")
+                return
             }
         }
+        picked = nil
         heard = said
         let next = PendingPatch(patch: patch, before: before, after: after)
         pending = next
@@ -229,14 +267,14 @@ final class ChartRoomModel {
 
     /// A tap on the ghost sets it now (a patch that widens reach never sets this way).
     func tapGhost() {
-        guard let pending, !pending.needsAllow else { return }
+        guard let pending, !pending.needsAllow, !unDrying else { return }
         commit()
     }
 
     /// Allow: the widening patch sets, and its grant with it (`RoomReach.allow` when the engine holds it). Undo takes
     /// both back in one step.
     func allow() {
-        guard let pending, pending.needsAllow else { return }
+        guard let pending, pending.needsAllow, !unDrying else { return }
         if let engine, let record {
             guard RoomReach.allow(record, in: engine) else { return }
         }
@@ -271,19 +309,45 @@ final class ChartRoomModel {
         cursor = min(Self.canned.count, cursor + 1)
         cue.play(.selection)
         persist()
-        say(patch.say) { [weak self] in self?.restore(before, cursor: cursorBefore, record: kept) }
+        remember(patch, after: current.after)
+        say(patch.say) { [weak self] in self?.restore(before, cursor: cursorBefore, record: kept, patch: patch) }
     }
 
     /// Undo: the document before the patch (and so its grant, which lives in the same document), as it was.
-    func restore(_ before: ChartDoc, cursor: Int, record: OpRecord? = nil) {
-        if let engine, let record {
-            engine.undo(record)
+    func restore(_ before: ChartDoc, cursor: Int, record: OpRecord? = nil, patch: ChartPatch? = nil) {
+        guard !unDrying else { return }
+        func finish() {
+            if let engine, let record {
+                engine.undo(record)
+            }
+            document = before
+            self.cursor = cursor
+            pending = nil
+            unDrying = false
+            cue.play(.undo)
+            persist()
         }
-        document = before
-        self.cursor = cursor
-        cue.play(.undo)
-        persist()
+        guard let patch, pending == nil else {
+            finish()
+            return
+        }
+        // Sheet 368: Undo un-dries. The change goes back to a ghost, its drying line runs right to left in 600 ms
+        // (ease in), and the op group is marked undone only when the line reaches 0.
+        dryTask?.cancel()
+        pending = PendingPatch(patch: patch, before: before, after: document, dried: true)
+        unDrying = true
+        dryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Self.unDrySeconds))
+            guard !Task.isCancelled else { return }
+            finish()
+        }
     }
+
+    /// How long Undo's drying line takes to run back to 0.
+    static let unDrySeconds = 0.6
+
+    /// An undo is running its drying line backwards; nothing else may change the room meanwhile.
+    private(set) var unDrying = false
 
     // MARK: Saying (canned sentences until Core's `patchRoom` job lands)
 
@@ -322,6 +386,94 @@ final class ChartRoomModel {
     func load(_ doc: ChartDoc) {
         document = doc
         cursor = Self.canned.count
+    }
+
+    // MARK: History (sheet 362)
+
+    /// One sentence he said to the room, with when, and the room as it stood right after it.
+    struct HistoryRow: Identifiable, Equatable {
+        let id: UUID
+        let note: String
+        let at: Date
+        var doc: ChartDoc?
+        var entry: RoomHistory.Entry?
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.id == rhs.id
+        }
+    }
+
+    /// "1:18 pm".
+    static func clock(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.amSymbol = "am"
+        formatter.pmSymbol = "pm"
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
+    }
+
+    private func remember(_ patch: ChartPatch, after doc: ChartDoc) {
+        memory.append(HistoryRow(id: UUID(), note: patch.heard.isEmpty ? patch.say : patch.heard, at: now(), doc: doc))
+    }
+
+    /// Every sentence he said, newest first: Core's op log filtered to the room's patch groups when the store is
+    /// attached; else the sentences of this run.
+    func openHistory() {
+        guard pending == nil else { return }
+        if let engine {
+            historyRows = RoomHistory.entries(of: document.name, engine: engine).map {
+                HistoryRow(id: $0.record, note: $0.note, at: $0.at, doc: nil, entry: $0)
+            }
+        } else {
+            historyRows = memory.reversed()
+        }
+        previewing = nil
+        historyOpen = true
+    }
+
+    func closeHistory() {
+        historyOpen = false
+        previewing = nil
+    }
+
+    /// A tap on a row: the room as it was then, every place a ghost. Writes nothing.
+    func preview(_ row: HistoryRow) {
+        var shown = row
+        if let engine, let entry = row.entry,
+           let version = try? RoomHistory.version(of: document.name, after: entry, engine: engine)
+        {
+            shown.doc = ChartDoc(version)
+        }
+        previewing = shown
+    }
+
+    /// What the action word reads while previewing: "Go back to how it was at 1:18 pm".
+    var goBackObject: String? {
+        previewing.map { "to how it was at \(Self.clock($0.at))" }
+    }
+
+    /// Go back: ONE inverse op group through the same write a Tess patch uses, receipt "Back to 1:18 pm" with a 10 s
+    /// Undo that returns to the latest version.
+    func goBack() {
+        guard let row = previewing else { return }
+        let label = "Back to \(Self.clock(row.at))"
+        let latest = document
+        if let engine, let entry = row.entry,
+           let record = try? RoomHistory.goBack(room: document.name, to: entry, label: label, engine: engine)
+        {
+            document = storedDocument() ?? document
+            say(label) { [weak self] in
+                engine.undo(record)
+                self?.document = self?.storedDocument() ?? latest
+            }
+        } else if let doc = row.doc {
+            document = doc
+            memory.append(HistoryRow(id: UUID(), note: label, at: now(), doc: doc))
+            say(label) { [weak self] in self?.document = latest }
+            persist()
+        }
+        closeHistory()
     }
 
     // MARK: Point, then say (sheet 360)

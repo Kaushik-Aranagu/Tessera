@@ -53,7 +53,7 @@ struct ChartRoomLayer: View {
                 if let pending = model.pending {
                     ForEach(Place.allCases.filter { ghosts.contains($0) && $0 != .actionWord }, id: \.self) { place in
                         let rect = frame(place, scale: scale, dx: dx)
-                        DryingLine(reduceMotion: reduceMotion)
+                        DryingLine(reduceMotion: reduceMotion, reverse: model.unDrying)
                             .frame(width: rect.width - 4, height: 1)
                             .offset(x: rect.minX + 2, y: rect.maxY - 2)
                             .allowsHitTesting(false)
@@ -81,6 +81,7 @@ struct ChartRoomLayer: View {
                             .frame(width: rect.width, height: rect.height)
                             .contentShape(Rectangle())
                             .onTapGesture { model.pick(place) }
+                            .onLongPressGesture(minimumDuration: place == .title ? 0.45 : 60) { model.openHistory() }
                             .offset(x: rect.minX, y: rect.minY)
                             .accessibilityHidden(true)
                     }
@@ -95,6 +96,7 @@ struct ChartRoomLayer: View {
                         .accessibilityHidden(true)
                 }
                 noteLine(scale: scale)
+                historyPanel(scale: scale)
                 widgetNote(scale: scale, dx: dx)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -141,6 +143,49 @@ struct ChartRoomLayer: View {
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .frame(width: 354, alignment: .leading)
             .offset(x: 24, y: 730 * scale)
+        }
+    }
+
+    /// Sheet 362: every sentence he said, newest first, each with its time. A tap previews the room as it was then.
+    @ViewBuilder
+    private func historyPanel(scale: CGFloat) -> some View {
+        if model.historyOpen, model.previewing == nil {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if model.historyRows.isEmpty {
+                        Text("Nothing said yet")
+                            .font(.custom("Figtree", size: 20, relativeTo: .body).weight(.medium))
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .frame(height: 56, alignment: .leading)
+                    }
+                    ForEach(model.historyRows) { row in
+                        Button { model.preview(row) } label: {
+                            VStack(alignment: .leading, spacing: 0) {
+                                FitLine(
+                                    forms: FitLine.cuts(row.note),
+                                    size: 20,
+                                    color: Theme.Colors.ink,
+                                    weight: .medium
+                                )
+                                Text(ChartRoomModel.clock(row.at))
+                                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
+                                    .foregroundStyle(Theme.Colors.inkSecondary)
+                            }
+                            .padding(.vertical, 6)
+                            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(row.note), \(ChartRoomModel.clock(row.at))")
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            .frame(width: 354, height: 560 * scale, alignment: .topLeading)
+            .background { ThemedBackground() }
+            .offset(x: 24, y: 130 * scale)
+            .accessibilityIdentifier("chart.history")
         }
     }
 
@@ -213,15 +258,26 @@ private struct Outline: View {
 /// Motion draws it whole (the 2 s wait still applies).
 private struct DryingLine: View {
     let reduceMotion: Bool
+    /// Undo un-dries (sheet 368): the line starts whole and runs back to 0, right to left, 600 ms, ease in.
+    var reverse = false
     @State private var drawn = false
+
+    private var scale: CGFloat {
+        if reduceMotion {
+            return 1
+        }
+        return reverse ? (drawn ? 0.001 : 1) : (drawn ? 1 : 0.001)
+    }
 
     var body: some View {
         Rectangle()
             .fill(Theme.Colors.Accent.chart)
-            .scaleEffect(x: reduceMotion || drawn ? 1 : 0.001, y: 1, anchor: .leading)
+            .scaleEffect(x: scale, y: 1, anchor: reverse ? .trailing : .leading)
             .onAppear {
                 guard !reduceMotion else { return }
-                withTesseraAnimation(.linear(duration: PartGhost.drying), reduceMotion: false) { drawn = true }
+                let run = reverse ? Animation.easeIn(duration: ChartRoomModel.unDrySeconds)
+                    : Animation.linear(duration: PartGhost.drying)
+                withTesseraAnimation(run, reduceMotion: false) { drawn = true }
             }
             .accessibilityHidden(true)
     }
