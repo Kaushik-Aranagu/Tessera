@@ -99,6 +99,8 @@ public final class TessRun {
     /// What the run in flight has read (input-hygiene H4): once a page is in it, a call that teaches (`remember`, a
     /// notebook write) is refused. Dropped when the run ends.
     private(set) var reading: (runID: UUID, read: RunProvenance)?
+    /// What the run that asked this room had read (`ask_agent`): a room asked after a page starts from it.
+    var inherited: RunProvenance?
     /// The time one rehearsal try may take (`Rehearsal.seconds`); a test sets it lower.
     var rehearsalSeconds = Rehearsal.seconds
     /// What she hears when a rehearsal ran out of time, and on every write after it in the same ask.
@@ -468,6 +470,9 @@ public final class TessRun {
         // The pack, and on a resume every block the earlier rounds were sent: a page read before the phone was
         // interrupted still counts.
         var read = RunProvenance(fragments: pack.fragments)
+        if let inherited {
+            read.read(inherited)
+        }
         read.read(blocks: state.messages.filter { $0.role == .assistant }.flatMap { message in
             message.content.compactMap { piece -> Data? in
                 if case let .raw(block) = piece { block } else { nil }

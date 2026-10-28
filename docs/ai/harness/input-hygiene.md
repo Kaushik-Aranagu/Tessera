@@ -82,7 +82,10 @@ the Claude Doc "Tess AI layer: input hygiene"; this file is the copy the builder
 H4 in the Tess loop (built): `TessRun.rounds` keeps the run's `RunProvenance`, from the pack, every web search or
 fetch result in her replies, and on a resume the blocks the earlier rounds were sent. Once a page is in it, `remember`
 and every notebook command but `view` hear `RunProvenance.refusal`; a write he keeps or not still lands as a ghost row.
-The run's reading is saved on `TessRunState.reading`, so its digest (H6) is learned from only when no page was read.
+A room asked through `ask_agent` starts from what Tess had read, so after a page its own `remember` and notebook
+writes are refused too, and its report is not kept as an episode. The run's reading is saved on
+`TessRunState.reading`, so its digest (H6) is learned from only when no page was read. Not counted yet: page text that
+arrives through a tool rather than a search or fetch block (QA on #1500).
 
 Tuning rules, as the shipped tuner already has them: move toward right answers, cost is never an input, and a wall is
 never loosened by a tuner.

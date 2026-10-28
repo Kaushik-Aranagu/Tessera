@@ -84,7 +84,52 @@ struct TessRunPageWallTests {
         #expect(state.reading?.untrusted == true)
     }
 
+    @Test func aRoomAskedAfterAPageCantTeachItselfEither() async throws {
+        let page = Data(SearchBlocks.result.utf8)
+        let deckNote = helper.use("n1", AgentNotebook.name,
+                                  #"{"command":"create","path":"/memories/training/bench.md","text":"nuts","#
+                                      + #""old":null,"line":null,"newPath":null}"#)
+        // Tess reads a page and asks the Deck; the Deck tries to write its notebook, then answers; Tess answers.
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [.assistant([page]), helper.use("a1", TessRun.askAgent, #"{"agents":["Deck"],"question":"Bench?"}"#)],
+            [deckNote],
+            [.text("Bench is up.")],
+            [.text("The Deck says bench is up.")],
+        ])
+        let r = try helper.rig([.haiku: haiku])
+        let events = await collect(r, "how was bench this week")
+        #expect(events.last == .finished("The Deck says bench is up"))
+        let deckResults = haiku.requestsSeen[2].messages.last?.content.compactMap { piece -> String? in
+            if case let .toolResult(id, content, _) = piece, id == "n1" { content } else { nil }
+        }
+        #expect(deckResults == [RunProvenance.refusal])
+        // Its report is not kept as an episode its next run would start from.
+        #expect(AgentEpisodes(engine: r.engine).recent(agent: "Training", policy: .lab).isEmpty)
+    }
+
     func collect(_ r: TessRunTests.Rig, _ ask: String) async -> [TessRunEvent] {
         await helper.collect(r.run.ask(ask))
+    }
+}
+
+/// The same wall under the shipped switches (Claude sees everything, money writes on): they change what reaches
+/// Claude, never what a page may teach.
+@MainActor
+@Suite
+struct TessRunPageWallShippedTests {
+    let walls = TessRunPageWallTests()
+
+    @Test func aPageStillTeachesNothing() async throws {
+        #expect(ClaudeSees.everything && ClaudeSees.moneyWrites)
+        let path = try TessReflectTests().taskPath("Water the plants")
+        let page = Data(SearchBlocks.result.utf8)
+        let haiku = ScriptedBrain(.haiku, rounds: [[.assistant([page]), walls.remember(path), walls.task],
+                                                   [.text("Added it.")]])
+        let r = try walls.helper.rig([.haiku: haiku])
+        _ = try walls.evidence(r, path)
+        let events = await walls.collect(r, "find a nut soup and add the shopping")
+        let sent = walls.helper.sentResults(haiku)
+        #expect(sent["r1"]?.text == RunProvenance.refusal && sent["c1"]?.isError == false)
+        #expect(walls.ghosts(events) == 1)
     }
 }
