@@ -2460,81 +2460,81 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
 const LVU=(n,u)=>'<span class="o">'+n+'</span>'+(u?'<span class="u">'+u+'</span>':'');
 const LV={
  notes:{color:'var(--notes)',doors:[
-  {k:'All notes',line:'16 notes, newest first',cap:'Tap a word on the wall to jump to its note.',rows:[
+  {k:'All notes',line:'16 notes, newest first',cap:'Tap a word on the wall to jump to its note',rows:[
    {t:'Trip packing',s:'A list, 8 left, due Friday',v:'noon',it:'pack'},{t:'Run plan',s:'From Tess, this morning',v:'9:12',c:'var(--tessblue)',it:'run'},
    {t:'Lamp repair',s:'Due by 6 today',v:'Mon',c:'var(--wine)'},{t:'Garden',s:'Ideas, three sketches',v:'Sun'},{t:'Book club',s:'At Sam’s, Thursday',v:'Sat'},{t:'Weekend',s:'Two plans, pick one',v:'Fri'}]},
-  {k:'Ideas',line:'10 ideas, the newest on top',cap:'Ideas glow on the wall until you use them.',rows:[
+  {k:'Ideas',line:'10 ideas, the newest on top',cap:'Ideas glow on the wall until you use them',rows:[
    {t:'Garden',s:'Three sketches, raised beds',v:'Sun',it:'garden'},{t:'Lamp shade',s:'Paper, from the old map',v:'Thu'},{t:'Kitchen shelf',s:'Above the window',v:'Tue'},{t:'Cold brew',s:'Try the coarse grind',v:'Oct 18'},{t:'Bike route',s:'Along the creek',v:'Oct 12'}]},
-  {k:'From Tess',line:'2 kept for you',cap:'Tess’s notes sit in her blue.',rows:[
+  {k:'From Tess',line:'2 kept for you',cap:'Tess’s notes sit in her blue',rows:[
    {t:'Run plan',s:'Easy 5 k, then strides',v:'9:12',c:'var(--tessblue)',it:'run'},{t:'Sleep',s:'You slept better after walks',v:'Tue',c:'var(--tessblue)'}]},
-  {k:'Voice memos',line:'3 voice notes, typed by Tess',cap:'Hold a word on the wall to hear it.',rows:[
+  {k:'Voice memos',line:'3 voice notes, typed by Tess',cap:'Hold a word on the wall to hear it',rows:[
    {t:'Call about the lease',s:'0:42, from the car',v:'Fri'},{t:'Gift for Maya',s:'0:18',v:'Wed'},{t:'Song in the cafe',s:'0:09, a hum',v:'Oct 19'}]},
-  {k:'Pinned',line:'2 pinned, they stay on top',cap:'Pinned words sit at the top of the wall.',rows:[{t:'Trip packing',s:'Pinned Monday',v:'noon',it:'pack'},{t:'Taxes',s:'Pinned until Oct 15',v:'Oct 15',c:'var(--gold)'}]},
-  {k:'Mentions',line:'4 notes that name someone',cap:'Names on the wall are the people you wrote about.',rows:[{t:'Sam',s:'Book club, Thursday',v:'2'},{t:'Maya',s:'Gift idea',v:'1'},{t:'Mom',s:'Call on Sunday',v:'1'}]},
-  {k:'Private',line:'Locked',cap:'Private notes never leave the phone.',rows:[{t:'3 private notes',s:'Unlock to read',v:''}]},
-  {k:'Archive',line:'24 put away',cap:'Archived words leave the wall.',rows:[{t:'Summer trip',s:'Archived Sep 3',v:'Sep'},{t:'Old run plan',s:'Archived Aug 20',v:'Aug'},{t:'Moving list',s:'Archived Jul 2',v:'Jul'}]}],
+  {k:'Pinned',line:'2 pinned, they stay on top',cap:'Pinned words sit at the top of the wall',rows:[{t:'Trip packing',s:'Pinned Monday',v:'noon',it:'pack'},{t:'Taxes',s:'Pinned until Oct 15',v:'Oct 15',c:'var(--gold)'}]},
+  {k:'Mentions',line:'4 notes that name someone',cap:'Names on the wall are the people you wrote about',rows:[{t:'Sam',s:'Book club, Thursday',v:'2'},{t:'Maya',s:'Gift idea',v:'1'},{t:'Mom',s:'Call on Sunday',v:'1'}]},
+  {k:'Private',line:'Locked',cap:'Private notes never leave the phone',rows:[{t:'3 private notes',s:'Unlock to read',v:''}]},
+  {k:'Archive',line:'24 put away',cap:'Archived words leave the wall',rows:[{t:'Summer trip',s:'Archived Sep 3',v:'Sep'},{t:'Old run plan',s:'Archived Aug 20',v:'Aug'},{t:'Moving list',s:'Archived Jul 2',v:'Jul'}]}],
   items:{pack:{name:'Trip packing',line:'A list, due Friday',facts:[['8','','left'],['6','','done'],['Fri','','due']],body:{kind:'checks',l:[['Passports',1],['Phone charger',1],['The adapter',0],['The book',0],['Socks',0],['Rain jacket',0],['Sunglasses',1],['Camera',0]]},acts:[{v:'Check',o:'the next thing'},{v:'Add',o:'something to pack'}]},
    run:{name:'Run plan',line:'Tess kept this for you, 9:12 am',facts:[['5','k','easy'],['4','','strides'],['Sat','','long run']],body:{kind:'tess',t:'You ran best last week when you started slow. Keep today easy for five, then four short strides on the flat by the creek. Saturday stays the long one.'},acts:[{v:'Keep',o:'as a note'},{v:'Ask',o:'Tess to change it'}]},
    garden:{name:'Garden',line:'Idea, Sunday',facts:[['3','','sketches'],['2','','beds'],['Spring','','start']],body:{kind:'text',t:'Two raised beds along the fence, the taller one at the back so the low one gets the morning. Herbs nearest the door. Ask about cedar at the yard on Saturday.'},acts:[{v:'Write',o:'more'},{v:'Plan',o:'make it a list'}]}}},
  weather:{color:'var(--weather)',doors:[
-  {k:'Hours',line:'Rain from 7, clear by 1 am',cap:'The glass beads up an hour before rain.',rows:[
+  {k:'Hours',line:'Rain from 7, clear by 1 am',cap:'The glass beads up an hour before rain',rows:[
    {t:'7 PM',s:'Rain starts',v:LVU('60','°'),it:'h7'},{t:'8 PM',s:'Rain',v:LVU('58','°')},{t:'9 PM',s:'Rain, steady',v:LVU('57','°')},{t:'10 PM',s:'Easing',v:LVU('56','°')},{t:'11 PM',s:'Light rain',v:LVU('55','°')},{t:'Midnight',s:'Drizzle',v:LVU('54','°')}]},
-  {k:'Tonight',line:'Rain until midnight',cap:'The sky darkens with the hour.',rows:[
+  {k:'Tonight',line:'Rain until midnight',cap:'The sky darkens with the hour',rows:[
    {t:'Rain',s:'From 7 until midnight',v:LVU('90','%'),it:'h7'},{t:'Low',s:'Around 3 am',v:LVU('54','°')},{t:'Clear',s:'By 1 am, stars after 2',v:'1 AM'},{t:'Wind',s:'Gusts ease after 10',v:LVU('9','mph')}]},
-  {k:'This week',line:'Driest on Thursday',cap:'Swipe the sky across for each day.',rows:[
+  {k:'This week',line:'Driest on Thursday',cap:'Swipe the sky across for each day',rows:[
    {t:'Thursday',s:'Dry and bright',v:LVU('68','°')},{t:'Friday',s:'Clouds by afternoon',v:LVU('65','°')},{t:'Saturday',s:'Rain again',v:LVU('59','°')},{t:'Sunday',s:'Showers',v:LVU('60','°')},{t:'Monday',s:'Cooler, clear',v:LVU('58','°')}]},
-  {k:'Air',line:'Clean air, a light wind',cap:'The clouds move with the wind.',rows:[
+  {k:'Air',line:'Clean air, a light wind',cap:'The clouds move with the wind',rows:[
    {t:'Wind',s:'From the west, gusting',v:LVU('9','mph')},{t:'Humidity',s:'Rising toward rain',v:LVU('58','%')},{t:'Air',s:'Clean',v:LVU('21','AQI')},{t:'Pressure',s:'Falling slowly',v:LVU('29.9','in')}]},
-  {k:'Sky',line:'Sunset at 6:08',cap:'Night comes into the glass at sunset.',rows:[
+  {k:'Sky',line:'Sunset at 6:08',cap:'Night comes into the glass at sunset',rows:[
    {t:'Sunset',s:'Behind the rain',v:LVU('6:08','pm')},{t:'Moon',s:'Waxing, half',v:'Half'},{t:'Sunrise',s:'Tomorrow',v:LVU('7:24','am')},{t:'Daylight',s:'Two minutes less',v:LVU('10:44','h')}]}],
   items:{h7:{name:'7 PM',line:'Rain starts, 60 degrees',facts:[['60','°','temp'],['90','%','rain'],['9','mph','wind']],body:{kind:'hours',l:[['6 PM','Cloudy, dry','62°'],['7 PM','Rain starts','60°'],['8 PM','Rain','58°'],['9 PM','Steady rain','57°']],note:'Take the umbrella if you go out after 6:30.'},acts:[{v:'Alert',o:'30 min before'},{v:'Walk',o:'before 6:30'}]}}},
  training:{color:'var(--training)',doors:[
-  {k:'Today',line:'Push A, 4 lifts, about 45 min',cap:'The board keeps what you chalk on it.',rows:[
+  {k:'Today',line:'Push A, 4 lifts, about 45 min',cap:'The board keeps what you chalk on it',rows:[
    {t:'Bench',s:'4 sets of 5',v:LVU('185','lb'),it:'bench'},{t:'Overhead press',s:'3 sets of 8',v:LVU('95','lb')},{t:'Cable row',s:'3 sets of 10',v:LVU('110','lb')},{t:'Dips',s:'2 sets to near failure',v:'Body'}]},
-  {k:'This week',line:'3 of 5 done',cap:'Swipe fast left on the board to wipe it.',rows:[
+  {k:'This week',line:'3 of 5 done',cap:'Swipe fast left on the board to wipe it',rows:[
    {t:'Monday',s:'Push B, done',v:'50 min',c:'var(--green)'},{t:'Wednesday',s:'Pull A, done',v:'46 min',c:'var(--green)'},{t:'Thursday',s:'Legs, done',v:'55 min',c:'var(--green)'},{t:'Today',s:'Push A',v:'6:30'},{t:'Saturday',s:'Pull B',v:'Plan'}]},
-  {k:'Library',line:'28 workouts in 6 kinds',cap:'Hold a name on the board to see it.',rows:[
+  {k:'Library',line:'28 workouts in 6 kinds',cap:'Hold a name on the board to see it',rows:[
    {t:'Push A',s:'Bench, press, row, dips',v:'45 min',it:'bench'},{t:'Hill sprints',s:'New, 8 rounds',v:'20 min',c:'var(--gold)'},{t:'Pull A',s:'Deadlift, pull-ups',v:'50 min'},{t:'Legs',s:'Squat, lunges',v:'55 min'},{t:'Easy run',s:'Zone 2',v:'30 min'},{t:'Private workout',s:'Kept on the phone',v:''}]},
-  {k:'Bests',line:'3 new since Oct 1',cap:'Bests are written in gold.',rows:[
+  {k:'Bests',line:'3 new since Oct 1',cap:'Bests are written in gold',rows:[
    {t:'Bench',s:'5 reps, three weeks ago',v:LVU('205','lb'),c:'var(--gold)',it:'bench'},{t:'Squat',s:'3 reps, Oct 9',v:LVU('275','lb'),c:'var(--gold)'},{t:'Deadlift',s:'1 rep, Oct 2',v:LVU('315','lb'),c:'var(--gold)'},{t:'5 k',s:'Oct 14',v:LVU('24:10','')}]},
-  {k:'Plan',line:'Week 5 of 6, then a deload',cap:'Drag on the board to write.',rows:[
+  {k:'Plan',line:'Week 5 of 6, then a deload',cap:'Drag on the board to write',rows:[
    {t:'This block',s:'Strength, 6 weeks',v:'5 of 6'},{t:'Next week',s:'Deload, lighter',v:'Nov 2'},{t:'New block',s:'Hypertrophy',v:'Nov 9'},{t:'Goal',s:'Bench 225 by spring',v:LVU('225','lb')}]}],
   items:{bench:{name:'Bench',line:'Push A, first lift',facts:[['185','lb','today'],['205','lb','best'],['221','lb','est. 1 rep']],body:{kind:'sets',l:[['Warm-up','95 lb, 10',1],['Set 1','185 lb, 5',0],['Set 2','185 lb, 5',0],['Set 3','185 lb, 5',0],['Set 4','185 lb, 5',0]],note:'Last time: 180 lb, 4 sets of 5, easy.'},acts:[{v:'Start',o:'set 1, 185 lb',hold:1},{v:'Swap',o:'for dumbbells'}]}}},
  kitchen:{color:'var(--kitchenText)',doors:[
-  {k:'Tonight',line:'Tacos, 25 min, you have all 8',cap:'Swipe a ticket up for its next page.',rows:[
+  {k:'Tonight',line:'Tacos, 25 min, you have all 8',cap:'Swipe a ticket up for its next page',rows:[
    {t:'Tacos',s:'25 min, char the tortillas first',v:'7:00',it:'tacos'},{t:'Rice',s:'Leftover, goes out today',v:'side',c:'var(--wine)'},{t:'Dishes',s:'7 waiting since lunch',v:'7'}]},
-  {k:'Pantry',line:'31 things, milk and eggs low',cap:'Tickets on the rail are what you can cook.',rows:[
+  {k:'Pantry',line:'31 things, milk and eggs low',cap:'Tickets on the rail are what you can cook',rows:[
    {t:'Fridge',s:'Milk and eggs low',v:'12',c:'var(--wine)'},{t:'Freezer',s:'Chicken, peas, bread',v:'7'},{t:'Shelf',s:'Rice, lentils, tortillas',v:'9'},{t:'Counter',s:'Limes, onions',v:'3'}]},
-  {k:'Recipes',line:'4 you can make now',cap:'A ticket prints for each one you can make.',rows:[
+  {k:'Recipes',line:'4 you can make now',cap:'A ticket prints for each one you can make',rows:[
    {t:'Tacos',s:'25 min, all 8 things here',v:'25',it:'tacos'},{t:'Dal',s:'40 min, all here',v:'40'},{t:'Shakshuka',s:'30 min, need eggs',v:'30'},{t:'Fried rice',s:'15 min, use the rice',v:'15'}]},
-  {k:'Groceries',line:'3 to get on the way',cap:'Swipe right on a thing when it is in the bag.',rows:[
+  {k:'Groceries',line:'3 to get on the way',cap:'Swipe right on a thing when it is in the bag',rows:[
    {t:'Milk',s:'The usual, 1 gallon',v:'1'},{t:'Eggs',s:'A dozen',v:'12'},{t:'Cilantro',s:'For tacos',v:'1'}]},
-  {k:'Leftovers',line:'Eat the rice today',cap:'Leftovers print on the left of the rail.',rows:[
+  {k:'Leftovers',line:'Eat the rice today',cap:'Leftovers print on the left of the rail',rows:[
    {t:'Rice',s:'Goes out today',v:'Today',c:'var(--wine)'},{t:'Dal',s:'Cooked Thursday',v:'Fri'}]}],
   items:{tacos:{name:'Tacos',line:'Tonight, 25 min, serves 2',facts:[['25','min','time'],['8','','of 8 here'],['2','','serves']],body:{kind:'steps',l:['Char the tortillas on the flame, then wrap them.','Chicken thighs in the pan, 5 minutes a side.','Slice onions and peppers while it rests.','Lime, cilantro, salt. Fill and fold.']},acts:[{v:'Cook',o:'start the 25 min'},{v:'Swap',o:'for dal'}]}}},
  routines:{color:'var(--routines)',doors:[
-  {k:'Today',line:'3 tended, 4 to go',cap:'Hold a tree to water it.',rows:[
+  {k:'Today',line:'3 tended, 4 to go',cap:'Hold a tree to water it',rows:[
    {t:'Walk',s:'Around 6, 20 min',v:'6:00',it:'walk'},{t:'Stretch',s:'Tended at 8 am',v:'done',c:'var(--green)'},{t:'Journal',s:'Thirsty since Saturday',v:'thirsty',c:'var(--wine)',it:'journal'},{t:'Read',s:'Tonight at 9',v:'9:00'},{t:'Water',s:'Tended today',v:'done',c:'var(--green)'}]},
-  {k:'Body',line:'Walk is next',cap:'Each tree is one routine.',rows:[
+  {k:'Body',line:'Walk is next',cap:'Each tree is one routine',rows:[
    {t:'Walk',s:'Every evening',v:'6:00',it:'walk'},{t:'Stretch',s:'Mornings',v:'done',c:'var(--green)'},{t:'Swim',s:'Thursdays',v:'Thu'},{t:'Badminton',s:'Wednesdays',v:'Wed'}]},
-  {k:'Mind',line:'Journal is thirsty',cap:'Thirsty trees lean, they never wither.',rows:[
+  {k:'Mind',line:'Journal is thirsty',cap:'Thirsty trees lean, they never wither',rows:[
    {t:'Journal',s:'One line is enough',v:'thirsty',c:'var(--wine)',it:'journal'},{t:'Read',s:'In fruit, 12 days',v:'9:00',c:'var(--green)'}]},
-  {k:'Home',line:'Tidy tonight',cap:'The grove by the house is Home.',rows:[
+  {k:'Home',line:'Tidy tonight',cap:'The grove by the house is Home',rows:[
    {t:'Water',s:'Done today',v:'done',c:'var(--green)'},{t:'Lunch',s:'Packed at noon',v:'done',c:'var(--green)'},{t:'Tidy',s:'Ten minutes tonight',v:'8:30'},{t:'Backup',s:'Ran at 4 am',v:'auto',c:'var(--slate)'}]},
-  {k:'Weekly',line:'3 this week',cap:'Weekly trees grow across the lake.',rows:[
+  {k:'Weekly',line:'3 this week',cap:'Weekly trees grow across the lake',rows:[
    {t:'Badminton',s:'Wednesday at 7',v:'Wed'},{t:'Swim',s:'Thursday at 6',v:'Thu'},{t:'Call family',s:'Sunday afternoon',v:'Sun'}]}],
   items:{walk:{name:'Walk',line:'Body, every evening',facts:[['20','min','today'],['5','','this week'],['6:00','pm','next']],body:{kind:'week',l:[['Mon',1],['Tue',1],['Wed',0],['Thu',1],['Fri',1],['Sat',1],['Sun',2]],note:'Rain from 7 tonight. Go before 6:30.'},acts:[{v:'Water',o:'mark it walked'},{v:'Pause',o:'today, nothing is lost'}]},
    journal:{name:'Journal',line:'Mind, one line a day',facts:[['1','','line is enough'],['4','','this week'],['Sat','','last line']],body:{kind:'week',l:[['Mon',1],['Tue',1],['Wed',1],['Thu',1],['Fri',0],['Sat',0],['Sun',2]],note:'Thirsty, not lost. One line waters it.'},acts:[{v:'Water',o:'write one line'},{v:'Pause',o:'this week'}]}}},
  money:{color:'var(--purse)',doors:[
-  {k:'This month',line:'About $2,125 still yours',cap:'Across for a category, up and down for an index.',rows:[
+  {k:'This month',line:'About $2,125 still yours',cap:'Across for a category, up and down for an index',rows:[
    {t:'Still yours',s:'Until the 31st',v:LVU('about 2,125','')},{t:'Pace',s:'Calm, 74',v:'74'},{t:'Closes at',s:'If it keeps this pace',v:LVU('179','')},{t:'Next drop',s:'Rent, Nov 1',v:LVU('about 1,800','')}]},
-  {k:'Kinds',line:'October so far',cap:'Each index line is one kind.',rows:[
+  {k:'Kinds',line:'October so far',cap:'Each index line is one kind',rows:[
    {t:'Home',s:'Rent and the lamp',v:LVU('about 1,450',''),c:'var(--clay)'},{t:'Food',s:'Groceries and two dinners',v:LVU('about 412',''),c:'var(--kitchenText)',it:'food'},{t:'Going out',s:'One concert',v:LVU('about 96',''),c:'var(--slate)'},{t:'Getting around',s:'Gas and the train',v:LVU('about 74','')}]},
-  {k:'Saving',line:'On plan',cap:'Savings rise as their own index.',rows:[
+  {k:'Saving',line:'On plan',cap:'Savings rise as their own index',rows:[
    {t:'Japan',s:'Spring trip',v:LVU('about 3,400',''),c:'var(--gold)'},{t:'Rainy day',s:'Three months',v:LVU('about 2,000','')},{t:'Next move',s:'In 6 days',v:'Oct 31'}]},
-  {k:'Investing',line:'Quiet this week',cap:'The index line is the portfolio.',rows:[{t:'Portfolio',s:'Above cost since Oct 3',v:'102.4'},{t:'Monthly add',s:'On the 1st',v:LVU('about 300','')}]},
-  {k:'Debts',line:'Ahead of schedule',cap:'Debts fall as their own index.',rows:[{t:'Car loan',s:'Paid off by May 2028',v:LVU('about 6,200','')},{t:'Card',s:'Paid in full monthly',v:'0'}]},
-  {k:'Mine',line:'Your own indices',cap:'Make one with Tess.',rows:[{t:'INDIA',s:'12 months',v:'12'},{t:'DEBTS',s:'4 children',v:'4'}]}],
+  {k:'Investing',line:'Quiet this week',cap:'The index line is the portfolio',rows:[{t:'Portfolio',s:'Above cost since Oct 3',v:'102.4'},{t:'Monthly add',s:'On the 1st',v:LVU('about 300','')}]},
+  {k:'Debts',line:'Ahead of schedule',cap:'Debts fall as their own index',rows:[{t:'Car loan',s:'Paid off by May 2028',v:LVU('about 6,200','')},{t:'Card',s:'Paid in full monthly',v:'0'}]},
+  {k:'Mine',line:'Your own indices',cap:'Make one with Tess',rows:[{t:'INDIA',s:'12 months',v:'12'},{t:'DEBTS',s:'4 children',v:'4'}]}],
   items:{food:{name:'Food',line:'October so far',facts:[['about 412','','spent'],['about 550','','usual'],['6','','days left']],body:{kind:'ledger',l:[['Oct 24','Groceries','about 64'],['Oct 22','Dinner with Sam','about 38'],['Oct 20','Groceries','about 71'],['Oct 17','Coffee beans','about 18'],['Oct 15','Takeout','about 26']]},acts:[{v:'Log',o:'a food spend'},{v:'Look',o:'last October'}]}}}};
 // a door's rows fill the Page exactly, sized by rank: the first is the biggest, the rest step down, never all equal
 /* 293: the Page's forms. ranked (designed), even, columns (names only, two across), time (a 52 pt time column, in time order) */
