@@ -45,7 +45,8 @@ pip install mlx==0.32.3 mlx-lm==0.32.0 transformers==5.19.0 tokenizers==0.23.2 h
 pip install --no-deps contrastive-lm==0.1.0
 export STAGE2_CACHE=$HOME/stage2_cache
 python -I get_data.py locomo lme
-python -I clm_heads.py --verify          # under a minute
+# optional cross-check against contrastive-lm's own heads (already done in the cloud, max difference 0.0); it needs
+# requests==2.34.2, which env B leaves out: python -I clm_heads.py --verify
 python -I s23_clm.py --threads 8         # 15 to 25 min; caches all 14 taps of the LoCoMo texts for s24
 python -I s24_tap.py --backend mlx --model mlx-community/Qwen3-8B-8bit --threads 8 --device cpu   # about 1.5 to 3 h
 # optional, only if the Mac is free for hours: python -I s23_clm.py --threads 8 --lme --max-seconds 14400 (re-run resumes)
