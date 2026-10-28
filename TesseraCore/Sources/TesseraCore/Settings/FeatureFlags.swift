@@ -39,6 +39,7 @@ public enum FeatureFlags {
         .init("homeMosaicMoods", "Mosaic moods", .home), .init("homeMosaicMoments", "Mosaic moments", .home),
         .init("homeAppsList", "Apps list", .home), .init("daySentence", "Day sentence", .home),
         .init("quietHoursV2", "Quiet hours", .home),
+        .init("routineMode", "Routine mode", .home),
         .init("awayV2", "Away", .home), .init("finishMoments", "Finish moments", .home),
         .init("finishV2", "Finishing marks", .home), .init("surfacesV2", "Surfaces v2", .home),
         // Training
@@ -57,6 +58,8 @@ public enum FeatureFlags {
         .init("pantryLevelsV2", "Pantry levels", .kitchen), .init("shopV2", "Shop run", .kitchen),
         .init("linkFetch", "Link reader v2", .kitchen, claude: true),
         .init("kitchenRoomsV2", "Kitchen rooms", .kitchen),
+        .init("galleyCookMode", "Cooking mode", .kitchen),
+        .init("galleyShopMode", "Shopping mode", .kitchen),
         // Notes and lists
         .init("notesMargin", "Notes margin", .notesAndLists), .init(
             "notesLinkSuggest",
