@@ -242,6 +242,7 @@ enum ElementRegistry {
         RankedPageElement(),
         ItemPageElement.sets,
         ItemPageElement.siblings,
+        ItemPageElement.hours,
     ]
 
     static func contains(_ name: String) -> Bool {

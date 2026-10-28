@@ -38,7 +38,7 @@ struct LookoutRoomContent: RoomContent {
                          label: snapshot.hours.first
                              .map { _ in "Now \(WeatherWords.degrees(snapshot.temperature)), next hours" },
                          lines: WeatherWords.hourLines(snapshot)),
-                DialDoor(id: "week", name: "Week", color: Theme.Colors.Accent.rain,
+                DialDoor(id: "week", name: "This week", color: Theme.Colors.Accent.rain,
                          label: WeatherWords.weekLines(snapshot).isEmpty ? "A steady week" : "Days to note",
                          lines: WeatherWords.weekLines(snapshot)),
                 DialDoor(id: "air", name: "Air",
@@ -83,6 +83,88 @@ struct LookoutRoomContent: RoomContent {
             }
         }
 
+        /// The Door title's second line.
+        func line(_ door: WeatherDoor) -> String {
+            switch door {
+            case .hours: "The next \(snapshot.hours.count) hours"
+            case .week: WeatherWords.weekLines(snapshot).isEmpty ? "A steady week" : "The days to note"
+            case .air: "Air, sun and wind now"
+            }
+        }
+
+        /// A door page's ranked rows, only what the snapshot can answer: each hour (its word and temperature), each
+        /// day from tomorrow (its word and high), the air (wind, air word, UV). Row ids are "door.index".
+        func rows(_ door: WeatherDoor, calendar: Calendar = .current) -> [LevelRow] {
+            switch door {
+            case .hours:
+                snapshot.hours.enumerated().map { index, hour in
+                    LevelRow(id: "hours.\(index)", title: WeatherWords.hour(hour.date, calendar: calendar).uppercased(),
+                             value: "\(hour.temperature)", unit: "\u{00B0}",
+                             sub: WeatherWords.name(hour.kind, night: false))
+                }
+            case .week:
+                snapshot.week.dropFirst().enumerated().map { index, day in
+                    let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: day.date) - 1]
+                    return LevelRow(id: "week.\(index)", title: weekday, value: "\(day.high)", unit: "\u{00B0}",
+                                    sub: WeatherWords.name(day.kind, night: false))
+                }
+            case .air:
+                [
+                    LevelRow(id: "air.0", title: "Wind", value: "\(snapshot.wind)",
+                             unit: WeatherWords.windUnit(snapshot.fahrenheit)),
+                    LevelRow(
+                        id: "air.1",
+                        title: "Air",
+                        sub: snapshot.air.prefix(1).uppercased() + snapshot.air.dropFirst()
+                    ),
+                    LevelRow(id: "air.2", title: "UV", value: "\(snapshot.uvIndex)"),
+                ]
+            }
+        }
+
+        /// An item page: an hour opens the `hours` body (the hour before to two after, one advice line); any other
+        /// row draws its siblings until its own page is drawn.
+        func item(door: WeatherDoor, rowID: String, calendar: Calendar = .current) -> LookoutItem {
+            let all = rows(door, calendar: calendar)
+            let parts = rowID.split(separator: ".")
+            let index = parts.count == 2 ? Int(parts[1]) : nil
+            guard let index, all.indices.contains(index) else {
+                return LookoutItem(
+                    title: "Nothing here",
+                    line: "",
+                    facts: [],
+                    body: .siblings(SiblingsBody.make(rows: all,
+                                                      current: rowID))
+                )
+            }
+            let row = all[index]
+            guard door == .hours else {
+                let facts = DeckRoomContent.plainFacts(row, index: index, count: all.count, door: door.name,
+                                                       doorID: door.rawValue)
+                return LookoutItem(title: row.title, line: row.sub, facts: facts,
+                                   body: .siblings(SiblingsBody.make(rows: all, current: rowID)))
+            }
+            let hour = snapshot.hours[index]
+            let wet = WeatherWords.isWet(hour.kind)
+            // The hour before, the hour and the two after; slid to keep four where the day's ends allow.
+            let first = min(max(index - 1, 0), max(snapshot.hours.count - 4, 0))
+            let window = snapshot.hours.indices.filter { $0 >= first && $0 < first + 4 }
+            let lines = window.map { at in
+                HoursLine(id: "hours.\(at)", time: all[at].title, word: all[at].sub, temp: all[at].value,
+                          unit: all[at].unit, isOpen: at == index)
+            }
+            let word = WeatherWords.name(hour.kind, night: false)
+            return LookoutItem(
+                title: row.title, line: "\(word), \(hour.temperature) degrees",
+                facts: [ItemFact(number: "\(hour.temperature)", unit: "\u{00B0}", label: "Temp"),
+                        ItemFact(number: "\(snapshot.wind)", unit: WeatherWords.windUnit(snapshot.fahrenheit),
+                                 label: "Wind"),
+                        ItemFact(number: "\(snapshot.uvIndex)", label: "UV")],
+                body: .hours(HoursBody(lines: lines, advice: wet ? "Wet, take a coat" : "Dry")),
+                isHour: true
+            )
+        }
+
         /// What a door page row opens: one hour, one day, or the air now (`ShellRow.id` is "door.index").
         func detail(forRow id: String, calendar: Calendar = .current) -> LookoutDetail? {
             let parts = id.split(separator: ".")
@@ -95,7 +177,7 @@ struct LookoutRoomContent: RoomContent {
                 let wet = WeatherWords.isWet(hour.kind)
                 return LookoutDetail(id: id, title: WeatherWords.hour(hour.date, calendar: calendar), lines: [
                     "\(WeatherWords.degrees(hour.temperature)), \(WeatherWords.name(hour.kind, night: false).lowercased())",
-                    wet ? "Wet. Take a coat" : "Dry.",
+                    wet ? "Wet, take a coat" : "Dry",
                     "Wind \(snapshot.wind) \(WeatherWords.windUnit(snapshot.fahrenheit))",
                 ])
             case .week:
@@ -106,7 +188,7 @@ struct LookoutRoomContent: RoomContent {
                 return LookoutDetail(id: id, title: weekday, lines: [
                     WeatherWords.name(day.kind, night: false),
                     "High \(WeatherWords.degrees(day.high)), low \(WeatherWords.degrees(day.low))",
-                    WeatherWords.isWet(day.kind) ? "Wet. Plan for rain" : "Dry.",
+                    WeatherWords.isWet(day.kind) ? "Wet, plan for rain" : "Dry",
                 ])
             case .air:
                 return LookoutDetail(id: id, title: "Air", lines: WeatherWords.airLines(snapshot))
@@ -122,7 +204,12 @@ struct LookoutRoomContent: RoomContent {
     let facts: Facts
 
     func screen(for route: ShellRoute, state: RoomState) -> Screen {
-        route.level == 0 ? landing(state) : door(WeatherDoor(rawValue: route.door ?? "hours") ?? .hours)
+        let door = WeatherDoor(rawValue: route.door ?? "hours") ?? .hours
+        return switch route.level {
+        case 0: landing(state)
+        case 1: self.door(door)
+        default: item(door: door, id: route.item ?? "")
+        }
     }
 
     private var accent: Color {
@@ -160,25 +247,77 @@ struct LookoutRoomContent: RoomContent {
     // MARK: Level 1
 
     private func door(_ door: WeatherDoor) -> Screen {
-        let dial = facts.doors.first { $0.id == door.rawValue }
-        let lines = facts.lines(door)
-        let rows = lines.enumerated().map { ShellRow(id: "\(door.rawValue).\($0.offset)", title: $0.element) }
-        let line = switch door {
-        case .hours: "The next \(lines.count) hours"
-        case .week: lines.isEmpty ? "A steady week" : "The days to note"
-        case .air: "Air, sun and wind now"
-        }
+        let all = WeatherDoor.allCases
+        let at = all.firstIndex(of: door) ?? 0
+        let previous = (at + all.count - 1) % all.count
+        let next = (at + 1) % all.count
+        let title = PageTitle(
+            name: door.name, line: facts.line(door),
+            previous: .door(Self.room, all[previous].rawValue), next: .door(Self.room, all[next].rawValue),
+            previousFocus: previous, nextFocus: next
+        )
         return Screen(layout: .door, slots: [
-            .title: title,
-            .navWord: SlotContent(id: "lookout.nav.lookout", kind: .text, payload: .navWord("Lookout")),
+            .title: self.title,
+            .navWord: SlotContent(id: "lookout.nav.doors", kind: .text, payload: .navWord("Doors")),
             .doorTitle: SlotContent(id: ContentID("lookout.door.\(door.rawValue).title"), kind: .text,
-                                    payload: .doorTitle(name: door.name, line: line, color: dial?.color ?? accent)),
+                                    payload: .pageTitle(title)),
             .keystone: keystone,
             .caption: caption,
-            .page: SlotContent(id: ContentID("lookout.door.\(door.rawValue).page"), kind: .list, payload: .list(rows)),
-            .actionWord: action,
+            .page: SlotContent(id: ContentID("lookout.door.\(door.rawValue).page"), kind: .rows,
+                               payload: .ranked(RankedPageData(rows: facts.rows(door), accent: accent))),
+            .actionWord: doorFoot(door),
             .tess: nil,
         ])
+    }
+
+    // MARK: Level 2
+
+    private func item(door: WeatherDoor, id: String) -> Screen {
+        let rows = facts.rows(door)
+        let place = rows.firstIndex { $0.id == id }
+        let previous = place.flatMap { rows.count > 1 ? ($0 + rows.count - 1) % rows.count : nil }
+        let next = place.flatMap { rows.count > 1 ? ($0 + 1) % rows.count : nil }
+        let page = facts.item(door: door, rowID: id)
+        let title = PageTitle(
+            name: page.title, line: page.line,
+            previous: previous.map { .item(Self.room, door.rawValue, rows[$0].id) },
+            next: next.map { .item(Self.room, door.rawValue, rows[$0].id) }, isItem: true
+        )
+        return Screen(layout: .door, slots: [
+            .title: self.title,
+            .navWord: SlotContent(id: ContentID("lookout.nav.door.\(door.rawValue)"), kind: .text,
+                                  payload: .navWord(door.name)),
+            .doorTitle: SlotContent(id: ContentID("lookout.item.\(door.rawValue).\(id).title"), kind: .text,
+                                    payload: .pageTitle(title)),
+            .keystone: keystone,
+            .caption: caption,
+            .page: SlotContent(id: ContentID("lookout.item.\(door.rawValue).\(id).page"), kind: .rows,
+                               payload: .item(ItemPageData(facts: page.facts, body: page.body, accent: accent))),
+            .actionWord: itemFoot(page),
+            .tess: nil,
+        ])
+    }
+
+    /// The foot at level 1: Alert before rain, Ask Tess about the door. (The Lookout has nothing to add to.)
+    private func doorFoot(_ door: WeatherDoor) -> SlotContent {
+        SlotContent(id: "lookout.action.door", kind: .action, payload: .action([
+            ShellStep(id: "alert", verb: "Alert", object: "before rain"),
+            ShellStep(id: "ask", verb: "Ask", object: "Tess about \(door.name)"),
+        ], accent: accent))
+    }
+
+    /// The foot at level 2: an hour has its own verbs; any other row opens or asks.
+    private func itemFoot(_ page: LookoutItem) -> SlotContent {
+        if page.isHour {
+            return SlotContent(id: "lookout.action.hour", kind: .action, payload: .action([
+                ShellStep(id: "alert", verb: "Alert", object: "30 min before"),
+                ShellStep(id: "walk", verb: "Walk", object: "Best time today"),
+            ], accent: accent))
+        }
+        return SlotContent(id: "lookout.action.row", kind: .action, payload: .action([
+            ShellStep(id: "open", verb: "Open", object: page.title),
+            ShellStep(id: "ask", verb: "Ask", object: "Tess about \(page.title)"),
+        ], accent: accent))
     }
 
     // MARK: Shared by both levels (same ids: the skypiece, title, caption and foot are not touched)
@@ -198,6 +337,15 @@ struct LookoutRoomContent: RoomContent {
     private var action: SlotContent {
         SlotContent(id: "lookout.action", kind: .action, payload: .action(facts.steps, accent: accent))
     }
+}
+
+/// An item page of the Lookout (level 2): its title and line, its facts and its body.
+struct LookoutItem: Equatable {
+    var title: String
+    var line: String
+    var facts: [ItemFact]
+    var body: ItemBody
+    var isHour = false
 }
 
 /// One hour, one day or the air, opened from a door page row: a title and up to three short lines. Never a city.
@@ -248,6 +396,12 @@ enum LookoutActions {
             WeatherRainAlert.set(was)
             changed(was)
         })
+    }
+
+    /// Ask has no page of its own yet: Tess says how to reach her.
+    static func ask(_ door: String?) {
+        let name = door.flatMap(WeatherDoor.init(rawValue:))?.name ?? "the weather"
+        TessVoice.shared.say("Hold me and ask about \(name.lowercased())")
     }
 
     static func walk(_ snapshot: WeatherSnapshot) {
@@ -314,18 +468,31 @@ struct LookoutShellHost: View {
         case let .openDoor(id):
             navigator.push(.door(LookoutRoomContent.room, id))
         case let .openItem(id):
-            // A widget card opens its door; a page row opens the hour, the day or the air it names.
-            if let opened = facts.detail(forRow: id) {
-                detail = opened
-            } else {
-                navigator.push(.door(LookoutRoomContent.room, facts.door(forItem: id).rawValue))
-            }
+            LookoutRouting.open(id, navigator: navigator, facts: facts)
         case .action("hours"):
             navigator.push(.door(LookoutRoomContent.room, "hours"))
         case .action("walk"):
             LookoutActions.walk(facts.snapshot)
+        case .action("ask"):
+            LookoutActions.ask(navigator.route.door)
+        case .action("open"):
+            break
         case .action:
             LookoutActions.toggleAlert { alertOn = $0 }
+        }
+    }
+}
+
+/// What a tap on a card or row does in the Lookout: a widget card opens its door; a door page row opens its item page
+/// (level 2); an item page's sibling replaces it.
+@MainActor
+enum LookoutRouting {
+    static func open(_ id: String, navigator: ShellNavigator, facts: LookoutRoomContent.Facts) {
+        let route = navigator.route
+        switch route.level {
+        case 0: navigator.push(.door(route.room, facts.door(forItem: id).rawValue))
+        case 1: navigator.push(.item(route.room, route.door ?? "hours", id))
+        default: navigator.replace(.item(route.room, route.door ?? "hours", id))
         }
     }
 }

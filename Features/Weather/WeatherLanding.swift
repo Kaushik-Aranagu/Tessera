@@ -25,7 +25,7 @@ enum WeatherDoor: String, Hashable, Identifiable, CaseIterable {
     var name: String {
         switch self {
         case .hours: "Hours"
-        case .week: "Week"
+        case .week: "This week"
         case .air: "Air"
         }
     }

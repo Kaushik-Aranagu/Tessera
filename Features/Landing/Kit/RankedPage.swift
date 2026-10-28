@@ -147,8 +147,8 @@ enum RankedLayout {
             let sub = subSize * min(scale, 1.2)
             let fitsSub = title * 1.25 + sub * 1.3 + 4 <= height
             let layout = LevelRowLayout(rect: CGRect(x: frame.minX, y: y, width: frame.width, height: height),
-                                         titleSize: title, valueSize: value, unitSize: unit, subSize: sub,
-                                         showsSub: !dropSubs && height > subMinHeight && fitsSub)
+                                        titleSize: title, valueSize: value, unitSize: unit, subSize: sub,
+                                        showsSub: !dropSubs && height > subMinHeight && fitsSub)
             y += height
             return layout
         }

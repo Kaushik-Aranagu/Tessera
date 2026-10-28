@@ -168,6 +168,85 @@ struct SiblingsBody: ItemBodyKind {
     }
 }
 
+// MARK: - hours (Lookout)
+
+/// One hour of the hours body: its time, its word and its temperature.
+struct HoursLine: Identifiable, Equatable, Sendable {
+    let id: String
+    var time: String
+    var word: String
+    var temp: String
+    var unit: String
+    /// The hour that is open: ink for the word, the room colour for the temperature.
+    var isOpen = false
+}
+
+/// The hour before, the hour opened and the two after (four rows of 44 pt), then one advice line (sheet 284 and 391).
+struct HoursBody: ItemBodyKind {
+    static let name = "hours"
+
+    var lines: [HoursLine]
+    var advice = ""
+
+    static let rowHeight: CGFloat = 44
+    static let timeWidth: CGFloat = 64
+    static let timeSize: CGFloat = 14
+    static let wordSize: CGFloat = 17
+    static let numberSize: CGFloat = 20
+    static let adviceGap: CGFloat = 12
+    static let adviceHeight: CGFloat = 22
+    static let maxLines = 4
+
+    var shown: [HoursLine] {
+        Array(lines.prefix(Self.maxLines))
+    }
+
+    func render(in frame: CGRect, scale: CGFloat) -> ElementRender {
+        var render = ElementRender()
+        for (index, line) in shown.enumerated() {
+            let top = frame.minY + CGFloat(index) * Self.rowHeight
+            let number = min(Self.numberSize * scale, Self.rowHeight * 0.62)
+            let unitSize = max(10, number * 0.41)
+            let numberWidth = DoorText.width(line.temp, size: number, bold: false)
+            let unitWidth = line.unit.isEmpty ? 0 : DoorText.width(line.unit, size: unitSize, bold: false) + 2
+            let timeWidth = Self.timeWidth * max(scale, 1)
+            let wordWidth = frame.width - timeWidth - numberWidth - unitWidth - 16
+            let wordInk: ElementInk = line.isOpen ? .ink : .ink2
+            render.runs.append(ElementRun(text: line.time, rect: CGRect(x: frame.minX, y: top + 2, width: timeWidth - 4,
+                                                                        height: Self.rowHeight - 4),
+                                          size: Self.timeSize * scale, ink: .ink2))
+            render.runs.append(ElementRun(text: line.word, rect: CGRect(x: frame.minX + timeWidth, y: top + 2,
+                                                                        width: max(0, wordWidth),
+                                                                        height: Self.rowHeight - 4),
+                                          size: Self.wordSize * scale, ink: wordInk))
+            if DoorText.width(line.word, size: Self.wordSize * scale, bold: false) > wordWidth {
+                render.clipped = true
+            }
+            let x = frame.maxX - numberWidth - unitWidth
+            render.runs.append(ElementRun(text: line.temp, rect: CGRect(x: x, y: top + 2, width: numberWidth,
+                                                                        height: Self.rowHeight - 4),
+                                          size: number, ink: line.isOpen ? .room : .ink))
+            if unitWidth > 0 {
+                render.runs.append(ElementRun(text: line.unit, rect: CGRect(x: x + numberWidth + 2, y: top + 2,
+                                                                            width: unitWidth - 2,
+                                                                            height: Self.rowHeight - 4),
+                                              size: unitSize, ink: .ink, isUnit: true))
+            }
+            render.shown.append(line.time)
+        }
+        if !advice.isEmpty {
+            let top = frame.minY + CGFloat(shown.count) * Self.rowHeight + Self.adviceGap
+            render.runs.append(ElementRun(text: advice, rect: CGRect(x: frame.minX, y: top, width: frame.width,
+                                                                     height: Self.adviceHeight),
+                                          size: 15, ink: .ink2))
+            if DoorText.width(advice, size: 15, bold: false) > frame.width {
+                render.clipped = true
+            }
+        }
+        return render
+    }
+}
+
 // MARK: - The view
 
 /// Draws the kind's body.
@@ -180,6 +259,7 @@ struct ItemBodyView: View {
         switch kind {
         case let .sets(data): SetsBodyView(data: data, accent: accent)
         case let .siblings(data): SiblingsBodyView(data: data, accent: accent, open: open)
+        case let .hours(data): HoursBodyView(data: data, accent: accent)
         }
     }
 }
@@ -271,6 +351,59 @@ private struct SetLineView: View {
         case .next: accent
         case .todo: Theme.Colors.ink
         }
+    }
+}
+
+private struct HoursBodyView: View {
+    let data: HoursBody
+    let accent: Color
+
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let scale = RankedLayout.typeScale(typeSize)
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(data.shown) { line in
+                HStack(alignment: .lastTextBaseline, spacing: 0) {
+                    Text(line.time)
+                        .font(.custom("Figtree", fixedSize: HoursBody.timeSize * scale))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .frame(width: HoursBody.timeWidth * max(scale, 1), alignment: .leading)
+                    Text(line.word)
+                        .font(.custom("Figtree", fixedSize: HoursBody.wordSize * scale)
+                            .weight(line.isOpen ? .semibold : .regular))
+                        .foregroundStyle(line.isOpen ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: 8)
+                    Text(line.temp)
+                        .font(.custom("Outfit", fixedSize: HoursBody.numberSize * scale)
+                            .weight(line.isOpen ? .regular : .light))
+                        .foregroundStyle(line.isOpen ? accent : Theme.Colors.ink)
+                    if !line.unit.isEmpty {
+                        Text(line.unit)
+                            .font(.custom("Outfit", fixedSize: max(10, HoursBody.numberSize * scale * 0.41))
+                                .weight(.light))
+                            .foregroundStyle(Theme.Colors.ink)
+                            .padding(.leading, 2)
+                    }
+                }
+                .lineLimit(1)
+                .frame(height: HoursBody.rowHeight)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    "\(line.time), \(line.word), \(line.temp) \(line.unit)\(line.isOpen ? ", opened" : "")"
+                )
+            }
+            if !data.advice.isEmpty {
+                Text(data.advice)
+                    .font(.custom("Figtree", fixedSize: 15 * min(scale, 1.2)))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(2)
+                    .padding(.top, HoursBody.adviceGap)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 

@@ -36,6 +36,7 @@ enum ShownLines {
         switch body {
         case let .sets(sets): sets.lines.map(\.label) + [sets.lastTime]
         case let .siblings(siblings): siblings.rows.flatMap { [$0.title, $0.sub] }
+        case let .hours(hours): hours.lines.map(\.word) + [hours.advice]
         }
     }
 

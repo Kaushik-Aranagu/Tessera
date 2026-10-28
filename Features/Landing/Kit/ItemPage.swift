@@ -90,11 +90,14 @@ enum ItemBody: Equatable, Sendable {
     case sets(SetsBody)
     /// Any row without its own page yet: the door's rows with this one in the room colour.
     case siblings(SiblingsBody)
+    /// Lookout: the hour before, the hour opened and the two after, then one advice line.
+    case hours(HoursBody)
 
     var name: String {
         switch self {
         case .sets: SetsBody.name
         case .siblings: SiblingsBody.name
+        case .hours: HoursBody.name
         }
     }
 
@@ -102,6 +105,7 @@ enum ItemBody: Equatable, Sendable {
         switch self {
         case let .sets(body): body.render(in: frame, scale: scale)
         case let .siblings(body): body.render(in: frame, scale: scale)
+        case let .hours(body): body.render(in: frame, scale: scale)
         }
     }
 }

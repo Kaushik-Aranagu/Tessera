@@ -611,14 +611,15 @@ final class LookoutRoomDriver: ShellRoomDriver {
         case let .openDoor(id):
             navigator.push(.door(room, id))
         case let .openItem(id):
-            // A widget card opens its door; a page row has nothing deeper yet.
-            if navigator.route.level == 0 {
-                navigator.push(.door(room, facts.door(forItem: id).rawValue))
-            }
+            LookoutRouting.open(id, navigator: navigator, facts: facts)
         case .action("hours"):
             navigator.push(.door(room, "hours"))
         case .action("walk"):
             LookoutActions.walk(facts.snapshot)
+        case .action("ask"):
+            LookoutActions.ask(navigator.route.door)
+        case .action("open"):
+            break
         case .action:
             LookoutActions.toggleAlert { [weak self] in self?.alertOn = $0 }
         }

@@ -140,7 +140,8 @@ struct RankedPageTests {
     }
 
     @Test func thePageElementsAreRegisteredAndPassTheSuite() {
-        let elements: [any TesseraElement] = [RankedPageElement(), ItemPageElement.sets, ItemPageElement.siblings]
+        let elements: [any TesseraElement] = [RankedPageElement(), ItemPageElement.sets, ItemPageElement.siblings,
+                                              ItemPageElement.hours]
         for element in elements {
             #expect(ElementRegistry.contains(element.spec.name), "\(element.spec.name) is registered")
             let results = ElementConformance.run(spec: element.spec)

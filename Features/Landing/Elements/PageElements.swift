@@ -165,7 +165,7 @@ struct RankedPageElement: TesseraElement {
 /// The item page: Facts over a Body drawn by the item's kind. One element per kind, so the suite proves each.
 struct ItemPageElement: TesseraElement {
     enum Sample {
-        case sets, siblings
+        case sets, siblings, hours
     }
 
     var sample: Sample
@@ -177,6 +177,20 @@ struct ItemPageElement: TesseraElement {
     static var siblings: Self {
         Self(sample: .siblings)
     }
+
+    static var hours: Self {
+        Self(sample: .hours)
+    }
+
+    static let hoursBody = HoursBody(
+        lines: [
+            HoursLine(id: "h6", time: "6 PM", word: "Cloudy", temp: "62", unit: "\u{00B0}"),
+            HoursLine(id: "h7", time: "7 PM", word: "Rain starts", temp: "60", unit: "\u{00B0}", isOpen: true),
+            HoursLine(id: "h8", time: "8 PM", word: "Rain", temp: "58", unit: "\u{00B0}"),
+            HoursLine(id: "h9", time: "9 PM", word: "Easing", temp: "57", unit: "\u{00B0}"),
+        ],
+        advice: "Wet, take a coat"
+    )
 
     static let setsBody = SetsBody(
         lines: [
@@ -202,6 +216,7 @@ struct ItemPageElement: TesseraElement {
         switch sample {
         case .sets: .sets(Self.setsBody)
         case .siblings: .siblings(Self.siblingsBody)
+        case .hours: .hours(Self.hoursBody)
         }
     }
 
