@@ -244,7 +244,34 @@ final class ChartRoomModel {
 
     /// The nodes of every place, resolved against what the binds read now.
     var nodes: [Place: [PartNode]] {
-        PartResolver.resolve(shown) { [data] in data.items($0) }
+        var resolved = PartResolver.resolve(shown) { [data] in data.items($0) }
+        // A doors part bound to a class has one door per object, ranked like its sort (sheet 375).
+        if let part = shown.parts(in: .dial).first(where: { $0.kind == .doors && $0.bind != nil }),
+           let doors = realDoors(part)
+        {
+            let top = PartResolver.topItem(in: shown, bind: part.bind ?? "") { [data] in data.items($0) }?.name
+            let records = doors.map { door in
+                [door.title, door.summary, door.title == top ? "wine" : ""].joined(separator: "|")
+            }
+            resolved[.dial] = [.doors(id: part.id, names: records)]
+        }
+        return resolved
+    }
+
+    /// The real doors of a doors part: one per object of its class, from Core's `PageBook`. Nil without a store.
+    func realDoors(_ part: ChartPart) -> [PageBook.Door]? {
+        guard let engine else { return nil }
+        let doors = PageBook(store: engine.store, classes: engine.classes)
+            .doors(for: part.core, rows: RoomBind(store: engine.store, classes: engine.classes))
+        return doors.isEmpty ? nil : doors
+    }
+
+    /// The object a door opens: the page of the object, by the door's place in the dial.
+    func doorObject(at index: Int) -> UUID? {
+        guard let part = shown.parts(in: .dial).first(where: { $0.kind == .doors && $0.bind != nil }),
+              let doors = realDoors(part), doors.indices.contains(index)
+        else { return nil }
+        return doors[index].object
     }
 
     /// The places a ghost fills, whose outline lets go and whose drying line runs.

@@ -57,9 +57,13 @@ final class ChartRoomDriver: ShellRoomDriver {
                             footSteps: chart.historyFoot)
     }
 
+    /// The object whose page a door opened (a sheet over the shell).
+    var opened: ObjectStop?
+
     func handle(_ intent: ShellIntent, navigator _: ShellNavigator) -> Bool {
         switch intent {
         case .back: return false
+        case let .openDoor(id): opened = ChartDoors.stop(id, chart)
         case let .action(id): run(id, chart)
         default: break
         }
@@ -68,6 +72,39 @@ final class ChartRoomDriver: ShellRoomDriver {
 
     func overlay(navigator _: ShellNavigator) -> AnyView {
         AnyView(ChartRoomLayer(model: chart))
+    }
+
+    func presenter() -> AnyView {
+        AnyView(ChartRoomPresenter(driver: self))
+    }
+}
+
+/// An object's page opened from a door.
+struct ObjectStop: Identifiable, Equatable {
+    let id: UUID
+}
+
+enum ChartDoors {
+    /// The door the dial names ("chart.door.2") to the object it opens.
+    @MainActor
+    static func stop(_ door: String, _ chart: ChartRoomModel) -> ObjectStop? {
+        guard let index = door.split(separator: ".").last.flatMap({ Int($0) }),
+              let object = chart.doorObject(at: index)
+        else { return nil }
+        return ObjectStop(id: object)
+    }
+}
+
+private struct ChartRoomPresenter: View {
+    @Bindable var driver: ChartRoomDriver
+
+    var body: some View {
+        Color.clear
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .sheet(item: $driver.opened) { stop in
+                NavigationStack { ObjectPage(route: .object(stop.id)) }
+            }
     }
 }
 
@@ -90,6 +127,7 @@ struct ChartShellHost: View {
     @Environment(AppModel.self) private var app
     @State private var navigator = ShellNavigator(root: .landing(DocumentRoom.room))
     @State private var chart = ChartRoomModel.live()
+    @State private var opened: ObjectStop?
 
     var body: some View {
         let _ = app.revision
@@ -106,11 +144,15 @@ struct ChartShellHost: View {
         ) { intent in
             switch intent {
             case .back: navigator.pop()
+            case let .openDoor(id): opened = ChartDoors.stop(id, chart)
             case let .action(id): run(id, chart)
             default: break
             }
         }
         .overlay { ChartRoomLayer(model: chart) }
+        .sheet(item: $opened) { stop in
+            NavigationStack { ObjectPage(route: .object(stop.id)) }
+        }
         .task {
             // Simulator stills: `-chartSay` plays the next sentence 3 s after launch, so a ghost can be photographed.
             guard LaunchFlags.has("-chartSay") else { return }

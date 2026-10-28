@@ -140,9 +140,12 @@ struct DocumentRoom: RoomContent {
                 if wine {
                     f.removeLast()
                 }
+                if f.last == "" {
+                    f.removeLast()
+                }
                 return DialDoor(id: "chart.door.\(index)", name: f.first ?? "",
                                 color: wine ? Theme.Colors.Accent.wine : accent,
-                                label: f.count > 1 ? f[1] : nil, lines: Array(f.dropFirst(2)))
+                                label: f.count > 1 && !f[1].isEmpty ? f[1] : nil, lines: Array(f.dropFirst(2)))
             }
         }
     }

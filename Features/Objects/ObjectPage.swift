@@ -55,6 +55,9 @@ struct ObjectPage: View {
         {
             // A note opens as itself, as from Notes, never as a property list of its text (PN-MENTION).
             NoteEditor(noteID: note.id)
+        } else if case let .object(id) = route, let object = model.object(id), ChartPlainPage.applies(to: object) {
+            // The plain page of an object of a class he made (Chart room, sheets 375 to 378).
+            ChartPlainPage(object: object)
         } else {
             generic
         }

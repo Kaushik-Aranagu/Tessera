@@ -82,3 +82,10 @@ extension ChartPatch {
         self.init(room: patch.room, say: patch.say, ops: ops, heard: heard)
     }
 }
+
+extension ChartPart {
+    /// The part as Core reads it (props back to raw JSON).
+    var core: RoomPart {
+        RoomPart(id: id, kind: kind.rawValue, place: place, props: props.mapValues(\.raw), bind: bind)
+    }
+}
