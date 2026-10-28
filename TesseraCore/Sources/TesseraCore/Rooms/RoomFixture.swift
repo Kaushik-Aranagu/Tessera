@@ -36,8 +36,9 @@ public enum RoomFixture {
                              "sort": .string("-daysSince(lastWatered)"), "max": .number(8)], bind: "Plant"),
             RoomPart(id: "leaf", kind: "glyph", place: "glyph",
                      props: ["symbol": .string("leaf"), "color": .string("sage")]),
-            RoomPart(id: "doors", kind: "doors", place: "dial",
-                     props: ["doors": .array([.object(["name": .string("Plants"), "bind": .string("Plant")])])]),
+            // One door per plant, in the room's order; each opens the plant's own page.
+            RoomPart(id: "doors", kind: "doors", place: "dial", props: ["summary": .string("lastWatered")],
+                     bind: "Plant"),
             RoomPart(id: "water", kind: "actionWord", place: "actionWord",
                      props: ["verb": .string("Water"), "object": .string("the thirstiest plant"),
                              "does": .string("write Plant.lastWatered")]),

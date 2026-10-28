@@ -15,6 +15,8 @@ public struct RoomPatchValidator {
 
     let store: ObjectStore
     let classes: [SystemCatalog.Key: ClassDef]
+    /// A page layer: its parts read the page's own object, so tokens and fields need no bound class.
+    var page = false
 
     public init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
         self.store = store
@@ -211,7 +213,7 @@ public struct RoomPatchValidator {
     }
 
     /// Every trait the studio drew, by name, with the values it takes in any place.
-    static let traitValues: [String: Set<String>] = {
+    public static let traitValues: [String: Set<String>] = {
         var all: [String: Set<String>] = [:]
         for forms in LookCatalog.places.values {
             for trait in forms.traits {
@@ -350,7 +352,8 @@ public struct RoomPatchValidator {
         var rest = Substring(text)
         while let open = rest.firstIndex(of: "{"), let close = rest[open...].firstIndex(of: "}") {
             let token = String(rest[rest.index(after: open) ..< close])
-            if !["count", "top"].contains(token) {
+            // A page's parts read the page's own object, so its tokens (field, recent(...), @link...) need no bind.
+            if !["count", "top"].contains(token), !(page && part.bind == nil) {
                 guard let bound else { return "{\(token)} needs the part to bind a class" }
                 if ClassResolver.field(token, of: bound) == nil {
                     return "\(bound.name) has no field called \(token)"
@@ -366,7 +369,9 @@ public struct RoomPatchValidator {
     {
         func field(_ key: String) -> String? {
             guard let name = part.text(key) else { return nil }
-            guard let bound else { return "A \(part.kind) needs a class to bind before it can show \(name)" }
+            guard let bound else {
+                return page ? nil : "A \(part.kind) needs a class to bind before it can show \(name)"
+            }
             if name == "title" {
                 return nil
             }
@@ -383,7 +388,7 @@ public struct RoomPatchValidator {
             if part.text("field") == nil, part.text("agg") != nil, part.text("agg") != "count" {
                 return "That aggregate needs a field"
             }
-            if part.bind == nil {
+            if part.bind == nil, !page {
                 return "A number needs a class to bind"
             }
         case "row", "list":

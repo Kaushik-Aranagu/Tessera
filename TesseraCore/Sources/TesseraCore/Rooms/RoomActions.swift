@@ -55,16 +55,20 @@ public struct PatchRoom: EngineAction {
                                  in transaction: inout Transaction) throws
     {
         let store = transaction.store
-        if document.name != current.name || store.value("name", of: room) == nil {
+        // A page layer has a name and parts only; a room also has a color, a look and a reach.
+        func has(_ key: String) -> Bool {
+            room.classDef.flatMap { store.field(key, of: $0) } != nil
+        }
+        if has("name"), document.name != current.name || store.value("name", of: room) == nil {
             try transaction.set("name", to: .text(document.name), on: room)
         }
-        if document.color != current.color || store.value("color", of: room) == nil {
+        if has("color"), document.color != current.color || store.value("color", of: room) == nil {
             try transaction.set("color", to: .choice(document.color), on: room)
         }
-        if document.look != current.look || store.value("look", of: room) == nil {
+        if has("look"), document.look != current.look || store.value("look", of: room) == nil {
             try transaction.set("look", to: .text(RoomDocument.text(document.look)), on: room)
         }
-        if document.reach != current.reach || store.value("reach", of: room) == nil {
+        if has("reach"), document.reach != current.reach || store.value("reach", of: room) == nil {
             try transaction.set("reach", to: .text(RoomDocument.text(document.reach)), on: room)
         }
         let partClass = try transaction.classDef(.roomPart)

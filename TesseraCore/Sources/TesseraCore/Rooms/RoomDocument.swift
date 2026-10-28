@@ -151,7 +151,7 @@ public struct RoomBook {
                             bind: bind?.isEmpty == false ? bind : nil)
         }
         return RoomDocument(name: store.value("name", of: room)?.stringValue ?? room.title,
-                            color: store.value("color", of: room)?.stringValue ?? "slate",
+                            color: store.value("color", of: room)?.stringValue ?? "olive",
                             look: look, reach: reach, parts: parts)
     }
 
