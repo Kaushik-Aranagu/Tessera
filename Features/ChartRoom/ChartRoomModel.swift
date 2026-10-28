@@ -189,6 +189,12 @@ final class ChartRoomModel {
         return "This room can now " + Self.words(for: grant)
     }
 
+    /// A kit-miss refusal for a part the kit does have, only in another case (Core compares lowercased).
+    static func isCoreCaseBug(_ refusal: RoomRefusal) -> Bool {
+        guard let part = refusal.queue?.lowercased() else { return false }
+        return PartKind.allCases.contains { $0.rawValue.lowercased() == part }
+    }
+
     /// "write Plant.lastWatered" in words. Unknown writes read as the field they change.
     static func words(for grant: String) -> String {
         let table = ["write Plant.lastWatered": "mark plants watered"]
@@ -225,6 +231,12 @@ final class ChartRoomModel {
                 case let .applied(applied, _):
                     record = applied
                     after = storedDocument() ?? after
+                case let .refused(refusal, queued) where Self.isCoreCaseBug(refusal):
+                    // Core looks a kit kind up lowercased ("actionword") and so refuses a kind the kit has. Until it
+                    // is fixed there, the queue entry it wrote is taken back and the patch shows as an in-memory ghost.
+                    if let queued {
+                        engine.undo(queued)
+                    }
                 case let .refused(refusal, queued):
                     var offer: (label: String, patch: RoomPatch)?
                     if let label = refusal.offerLabel, let patch = refusal.offer {
