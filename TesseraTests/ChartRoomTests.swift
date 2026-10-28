@@ -725,6 +725,28 @@ struct ChartRoomTests {
         #expect(OutlineUnroll.trim(at: 0, rank: 3, reduceMotion: true) == 1)
     }
 
+    @Test func touchingHisWordsOrSayingWaitOrStopStopsAChangeThatDries() {
+        let room = model()
+        room.saySomething()
+        #expect(!room.hear("what is this"), "other words are not a stop")
+        #expect(room.change == .staged)
+        #expect(room.hear("Wait."))
+        #expect(room.change == .idle && room.pending == nil, "stopped, nothing written, at rest")
+        #expect(room.document.parts.isEmpty)
+        room.saySomething()
+        #expect(room.hear("stop"))
+        room.saySomething()
+        room.tapGhost()
+        #expect(!room.hear("stop"), "a change that has set can only be undone")
+    }
+
+    @Test func aStopRunsItsLineBackFromWhereItGot() {
+        let room = model()
+        room.saySomething()
+        #expect(room.cancelPending())
+        #expect(room.stopping != nil && (room.stopping?.progress ?? 2) <= 1, "the layer runs the line back from here")
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {

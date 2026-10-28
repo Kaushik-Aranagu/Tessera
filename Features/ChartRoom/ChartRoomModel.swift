@@ -78,6 +78,9 @@ final class ChartRoomModel {
     private(set) var phase: RoomPhase = .blank
     /// A new sentence arrived while one was drying: its line runs to the end in 160 ms.
     private(set) var completing = false
+    /// A stop running its line back (sheet 373): the places whose line was drying and how far it had got (0 to 1).
+    private(set) var stopping: (places: Set<Place>, progress: Double)?
+    @ObservationIgnored private var stagedAt = Date.now
     /// How long a drying line takes to finish when a new sentence arrives.
     static let completeSeconds = 0.16
     /// Reduce Motion shows every end state at once (the 2 s drying wait still applies; nothing else waits).
@@ -415,6 +418,7 @@ final class ChartRoomModel {
         heard = said
         fire(.sentence)
         receipt = nil
+        stagedAt = .now
         let next = PendingPatch(patch: patch, before: before, after: after)
         pending = next
         dryTask?.cancel()
@@ -449,6 +453,17 @@ final class ChartRoomModel {
             guard RoomPatcher.stop([record], in: engine) else { return false }
         }
         guard fire(ChangeEvent.touchWords) else { return false }
+        // The line holds 120 ms and runs back from where it got to (Reduce Motion: it stops at once).
+        let progress = min(1, max(0, Date.now.timeIntervalSince(stagedAt) / PartGhost.drying))
+        if !reduceMotion {
+            let places = ghostPlaces.subtracting([.actionWord])
+            stopping = (places, progress)
+            let total = StopRun.total(from: progress, reduceMotion: false)
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(total))
+                self?.stopping = nil
+            }
+        }
         dryTask?.cancel()
         let again = current.patch.heard
         record = nil
@@ -459,6 +474,14 @@ final class ChartRoomModel {
         retry = again.isEmpty ? nil : again
         say("Stopped, nothing changed") {}
         return true
+    }
+
+    /// His words reach the room through the existing say path: "wait" or "stop" while a change dries stops it.
+    @discardableResult
+    func hear(_ words: String) -> Bool {
+        let word = words.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased()
+        guard ["wait", "stop"].contains(word) else { return false }
+        return cancelPending()
     }
 
     /// The sentence the action word offers again after a stop.

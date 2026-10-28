@@ -98,6 +98,15 @@ struct ChartRoomLayer: View {
                 noteLine(scale: scale)
                 historyPanel(scale: scale)
                 receiptLine(scale: scale)
+                if let stopping = model.stopping {
+                    ForEach(Place.allCases.filter { stopping.places.contains($0) }, id: \.self) { place in
+                        let rect = frame(place, scale: scale, dx: dx)
+                        StopLine(progress: stopping.progress)
+                            .frame(width: rect.width - 4, height: 1)
+                            .offset(x: rect.minX + 2, y: rect.maxY - 2)
+                            .allowsHitTesting(false)
+                    }
+                }
                 widgetNote(scale: scale, dx: dx)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -228,16 +237,20 @@ struct ChartRoomLayer: View {
             .frame(width: rect.width, alignment: .leading)
             .offset(x: rect.minX, y: rect.minY + 128 * scale)
         } else if !model.heard.isEmpty {
-            Text("\u{201C}\(PartText.shown(model.heard))\u{201D}")
-                .font(.custom("Newsreader", size: 20, relativeTo: .body).italic())
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .frame(width: rect.width - 12, alignment: .leading)
-                .offset(x: rect.minX + 12, y: rect.minY + 28 * scale)
-                .allowsHitTesting(false)
-                .accessibilityIdentifier("chart.heard")
+            Button { model.cancelPending() } label: {
+                Text("\u{201C}\(PartText.shown(model.heard))\u{201D}")
+                    .font(.custom("Newsreader", size: 20, relativeTo: .body).italic())
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: rect.width - 12, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .offset(x: rect.minX + 12, y: rect.minY + 28 * scale)
+            .accessibilityLabel("Stop. You said \(PartText.shown(model.heard))")
+            .accessibilityIdentifier("chart.heard")
         }
     }
 }
@@ -306,6 +319,32 @@ private struct DryingLine: View {
                 // From where it got to (SwiftUI starts from the presentation value) to the end.
                 withTesseraAnimation(.linear(duration: ChartRoomModel.completeSeconds), reduceMotion: false) {
                     drawn = true
+                }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// Sheet 373: the drying line a stop turns back: it holds where it got to for 120 ms, then runs back to 0 at Undo's
+/// pace
+/// (ease in).
+private struct StopLine: View {
+    let progress: Double
+    @State private var value: Double
+
+    init(progress: Double) {
+        self.progress = progress
+        _value = State(initialValue: progress)
+    }
+
+    var body: some View {
+        Rectangle()
+            .fill(Theme.Colors.Accent.chart)
+            .scaleEffect(x: max(0.001, value), y: 1, anchor: .leading)
+            .task {
+                try? await Task.sleep(for: .seconds(StopRun.hold))
+                withTesseraAnimation(.easeIn(duration: StopRun.runBack(from: progress)), reduceMotion: false) {
+                    value = 0
                 }
             }
             .accessibilityHidden(true)
