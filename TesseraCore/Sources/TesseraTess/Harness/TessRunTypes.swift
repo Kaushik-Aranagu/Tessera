@@ -176,6 +176,9 @@ public struct TessRunState: Codable, Equatable, Sendable {
     public var toolResults: [String: String]
     /// Words streamed so far, over all rounds.
     public var words: String
+    /// What the run has read so far (H4), for its digest (`RunDigest.all(from:readings:)`). Nil on a run saved before
+    /// it was kept, which a digest reads as `.unknown`.
+    public var reading: RunDigest.Reading?
 
     public init(id: UUID = UUID(), startedAt: Date, askText: String, aboutIDs: [UUID], messages: [BrainMessage]) {
         self.id = id

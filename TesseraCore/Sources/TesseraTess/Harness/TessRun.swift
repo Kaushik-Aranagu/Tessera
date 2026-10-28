@@ -96,6 +96,9 @@ public final class TessRun {
     /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's. Dropped when the run ends,
     /// with its copy of his store.
     private(set) var rehearsal: (runID: UUID, rehearsal: Rehearsal, slow: Bool)?
+    /// What the run in flight has read (input-hygiene H4): once a page is in it, a call that teaches (`remember`, a
+    /// notebook write) is refused. Dropped when the run ends.
+    private(set) var reading: (runID: UUID, read: RunProvenance)?
     /// The time one rehearsal try may take (`Rehearsal.seconds`); a test sets it lower.
     var rehearsalSeconds = Rehearsal.seconds
     /// What she hears when a rehearsal ran out of time, and on every write after it in the same ask.
@@ -462,10 +465,21 @@ public final class TessRun {
     {
         var budget = TessTools.maxRecordsPerPhrase
         var pauses = 0
+        // The pack, and on a resume every block the earlier rounds were sent: a page read before the phone was
+        // interrupted still counts.
+        var read = RunProvenance(fragments: pack.fragments)
+        read.read(blocks: state.messages.filter { $0.role == .assistant }.flatMap { message in
+            message.content.compactMap { piece -> Data? in
+                if case let .raw(block) = piece { block } else { nil }
+            }
+        })
+        reading = (runID, read)
+        state.reading = RunDigest.Reading(read)
         defer {
-            // The copy of his store and the tries live only as long as the ask.
+            // The copy of his store, the tries and what the run read live only as long as the ask.
             rehearsal = nil
             tries = nil
+            reading = nil
         }
         while state.round <= Self.maxRounds {
             let request = BrainRequest(system: pack.system, messages: state.messages, tools: pack.tools,
@@ -517,6 +531,12 @@ public final class TessRun {
                         failure = outcome
                     case let .assistant(blocks):
                         roundBlocks = blocks
+                        // A web search or fetch result is a page read. The calls that teach wait for the whole reply,
+                        // so they are judged after it.
+                        reading?.read.read(blocks: blocks)
+                        if let read = reading?.read {
+                            state.reading = RunDigest.Reading(read)
+                        }
                     case let .done(_, stop: reason):
                         stop = reason
                     case .status:
@@ -623,6 +643,9 @@ public final class TessRun {
             result = ("That isn't a call I can make here.", true)
         case _ where misfit != nil:
             result = (misfit ?? "", true)
+        case _ where reading?.runID == runID && reading?.read.allows(name, input: input) == false:
+            // After a page, she may still write rows he keeps or not, but nothing a page said may teach her about him.
+            result = (RunProvenance.refusal, true)
         case TessOpenTool.name:
             // A path (from recall) resolves through the agent's slice; a pack handle needs no index.
             let isPath = ((try? JSONSerialization.jsonObject(with: input)) as? [String: Any])?["handle"]
