@@ -95,7 +95,7 @@ final class ChartRoomDriver: ShellRoomDriver {
 }
 
 /// An object's page opened from a door.
-struct ObjectStop: Identifiable, Equatable {
+struct ObjectStop: Identifiable, Hashable {
     let id: UUID
 }
 
