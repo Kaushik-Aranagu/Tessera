@@ -83,7 +83,7 @@ struct DayStoryTests {
         try task("print tickets", at: Self.at(21, 19, 5))
         try workout("Push Day B", start: Self.at(21, 23, 20),
                     sets: [(Self.at(21, 23, 28), 80, 8), (Self.at(22, 0, 40), 85, 8)], end: Self.at(22, 0, 52))
-        #expect(lines(Self.at(21, 12)) == ["19:05  Added 2 tasks", "23:20  Push Day B, 92 min. Bench 85 × 8."])
+        #expect(lines(Self.at(21, 12)) == ["19:05  Added 2 tasks", "23:20  Push Day B, 92 min. Bench 85 × 8"])
         #expect(lines(Self.at(22, 12)).isEmpty)
     }
 
@@ -120,7 +120,7 @@ struct DayStoryTests {
         try task("call mom", at: Self.at(9, 11))
         let day = lines(Self.at(9, 12))
         #expect(day.count == 6)
-        #expect(day.last == "Also: New list: List 5, New list: List 6, 1 task.")
+        #expect(day.last == "Also: New list: List 5, New list: List 6, 1 task")
     }
 
     @Test func doneReopenedAndDoneAgainIsOneDone() throws {
@@ -148,10 +148,10 @@ struct DayStoryTests {
         // Product 72954ac: the set carries "was a record" from the moment it was logged.
         try workout("Push A", start: Self.at(5, 18), sets: [(Self.at(5, 18, 5), 60, 8)], end: Self.at(5, 18, 40))
         try workout("Push A", start: Self.at(8, 18), sets: [(Self.at(8, 18, 5), 70, 8)], end: Self.at(8, 18, 40))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, best."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, best"])
         try workout("Push A", start: Self.at(12, 18), sets: [(Self.at(12, 18, 5), 80, 8)], end: Self.at(12, 18, 40))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, best."])
-        #expect(lines(Self.at(12, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, best."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, best"])
+        #expect(lines(Self.at(12, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, best"])
         // Every working set carries the decision; the first ever set had nothing to beat.
         let setClass = try #require(classes[.set])
         let sets = store.objects(of: setClass)
@@ -168,10 +168,10 @@ struct DayStoryTests {
         #expect(store.value("wasRecord", of: typo) == .bool(true))
         try run(EditSet(set: typo.id, weight: 50), at: Self.at(8, 19))
         #expect(store.value("wasRecord", of: typo) == .bool(false))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 50 × 8."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 50 × 8"])
         try run(EditSet(set: typo.id, weight: 80), at: Self.at(8, 19, 30))
         #expect(store.value("wasRecord", of: typo) == .bool(true))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, best."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, best"])
     }
 
     @Test func pastUnfinishedWorkoutIsMarkedUnfinished() throws {
@@ -181,7 +181,7 @@ struct DayStoryTests {
                     end: nil)
         let story = DayStory.lines(store: store, classes: classes, records: engine.history(limit: 100),
                                    on: Self.at(14, 12), calendar: Self.calendar(), now: Self.at(20, 12))
-        #expect(story.map(\.text) == ["Pull Day A, 3 sets. Bench 60 × 10."] && story.first?.kind == .unfinished)
+        #expect(story.map(\.text) == ["Pull Day A, 3 sets. Bench 60 × 10"] && story.first?.kind == .unfinished)
     }
 
     @Test func noteAt0210BelongsToEveningBefore() throws {
@@ -213,7 +213,7 @@ struct DayStoryTests {
         // DL9, DL10: exactly one line, on Saturday, never a Sunday 04:02 line.
         try workout("Pull Day A", start: Self.at(25, 3, 50),
                     sets: [(Self.at(25, 3, 58), 55, 10), (Self.at(25, 4, 2), 60, 10)], end: Self.at(25, 4, 30))
-        #expect(lines(Self.at(24, 12)) == ["03:50  Pull Day A, 40 min. Bench 60 × 10."])
+        #expect(lines(Self.at(24, 12)) == ["03:50  Pull Day A, 40 min. Bench 60 × 10"])
         #expect(lines(Self.at(25, 12)).isEmpty)
     }
 
@@ -224,7 +224,7 @@ struct DayStoryTests {
         try workout("Mobility", start: Self.at(26, 21, 40), sets: [(Self.at(26, 21, 45), 20, 10)],
                     end: Self.at(26, 22, 15))
         try run(CreateNote(body: "seat 14C, no sleep"), at: Self.at(27, 1, 30))
-        #expect(lines(Self.at(26, 12)) == ["07:30  Done: water the plants", "21:40  Mobility, 35 min. Bench 20 × 10.",
+        #expect(lines(Self.at(26, 12)) == ["07:30  Done: water the plants", "21:40  Mobility, 35 min. Bench 20 × 10",
                                            "01:30  Note: seat 14C, no sleep"])
         let monday = try #require(Self.calendar(Self.newYork).date(from: DateComponents(
             year: 2026,
@@ -233,7 +233,7 @@ struct DayStoryTests {
             hour: 12
         )))
         #expect(lines(monday, in: Self.newYork) == ["10:30  Done: water the plants",
-                                                    "00:40  Mobility, 35 min. Bench 20 × 10.",
+                                                    "00:40  Mobility, 35 min. Bench 20 × 10",
                                                     "04:30  Note: seat 14C, no sleep"])
         // The same store read in LA again: no stale zone cache.
         #expect(lines(Self.at(26, 12)).first == "07:30  Done: water the plants")
@@ -248,7 +248,7 @@ struct DayStoryTests {
         // 00:50 PDT to 01:20 PST is 90 minutes.
         try workout("Push Day B", start: hall.addingTimeInterval(-2400), sets: [(hall, 82.5, 8)],
                     end: hall.addingTimeInterval(-2400 + 5400))
-        #expect(lines(Self.at(31, 12)) == ["00:50  Push Day B, 90 min. Bench 82.5 × 8.", "01:30  Note: hall light out",
+        #expect(lines(Self.at(31, 12)) == ["00:50  Push Day B, 90 min. Bench 82.5 × 8", "01:30  Note: hall light out",
                                            "01:30  Done: bins"])
     }
 
@@ -259,7 +259,7 @@ struct DayStoryTests {
         let line = try #require(DayStory.lines(store: store, classes: classes, records: engine.history(limit: 100),
                                                on: Self.at(21, 12), calendar: Self.calendar()).first)
         #expect(line.clock(Self.calendar()) == "23:20")
-        #expect(line.spoken(Self.calendar()) == "11:20 pm, Push Day B, 92 minutes. Bench 30 by 10.")
+        #expect(line.spoken(Self.calendar()) == "11:20 pm, Push Day B, 92 minutes. Bench 30 by 10")
     }
 
     // MARK: Copy (DL20 to DL60)
@@ -344,7 +344,7 @@ struct DayStoryTests {
         }
         let day = lines(Self.at(8, 12))
         #expect(day.count == 6)
-        #expect(day.last == "Also: 3 notes, ticked 4 on Lisbon packing.")
+        #expect(day.last == "Also: 3 notes, ticked 4 on Lisbon packing")
         #expect(day.contains("09:00  Added 7 tasks, 5 groceries") && day.contains("08:30  4 tasks done"))
     }
 

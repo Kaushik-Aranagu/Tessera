@@ -26,13 +26,13 @@ struct RoutinesLandingTests {
 
     @Test func lr1NothingSetUp() {
         let result = facts([])
-        #expect(result.subtitle.text == "Nothing set up yet." && result.top.starts.isEmpty && result.lines.isEmpty)
+        #expect(result.subtitle.text == "Nothing set up yet" && result.top.starts.isEmpty && result.lines.isEmpty)
         #expect(result.top.sentence.text == "Nothing is running")
     }
 
     @Test func lr2OneWorkoutDay() {
         let result = facts([.init(name: "Push A", isWorkout: true, count: 5)])
-        #expect(result.subtitle.text == "1 routine." && result.top.starts == ["Start Push A"])
+        #expect(result.subtitle.text == "1 routine" && result.top.starts == ["Start Push A"])
         #expect(result.lines == ["Push A, 5 exercises"])
     }
 
@@ -46,7 +46,7 @@ struct RoutinesLandingTests {
             )
         }
         let result = facts(items)
-        #expect(result.subtitle.text == "5 routines.")
+        #expect(result.subtitle.text == "5 routines")
         #expect(result.top.starts == ["Start Morning", "Start Evening", "Start Push A"])
         #expect(result.lines.count == 3)
     }
@@ -104,13 +104,13 @@ struct RoutinesLandingTests {
         let done = RoutinesLanding.Item(name: "Morning", count: 6, doneToday: at(22, 6, 58))
         let other = RoutinesLanding.Item(name: "Evening", count: 4)
         let result = facts([done, other])
-        #expect(result.subtitle.text == "2 routines, 1 done today.")
+        #expect(result.subtitle.text == "2 routines, 1 done today")
         #expect(result.lines == ["Evening, 4 steps", "Morning, done at 6:58 am"])
     }
 
     @Test func lr11EverythingDone() {
         let result = facts([.init(name: "Morning", count: 6, doneToday: at(22, 6, 58))])
-        #expect(result.top.sentence.text == "Everything is done today" && result.subtitle.text == "All done today.")
+        #expect(result.top.sentence.text == "Everything is done today" && result.subtitle.text == "All done today")
         #expect(result.top.starts.isEmpty)
     }
 

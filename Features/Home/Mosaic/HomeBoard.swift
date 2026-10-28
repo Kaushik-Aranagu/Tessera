@@ -15,6 +15,23 @@ enum BoardTarget: Equatable {
 struct BoardLine: Equatable {
     var segments: [DepartureSegment]
     var target: BoardTarget
+
+    /// Every board row is shown with no closing full stop (Kaushik, Oct 26), a stop between sentences as a comma:
+    /// the same rule as Tess's lines (`ShownLine`), on the row's last segment.
+    init(segments: [DepartureSegment], target: BoardTarget) {
+        var shown = segments
+        if let last = shown.indices.last {
+            shown[last].text = ShownLine.unstopped(shown[last].text, between: ", ")
+        }
+        // A time keeps its "am" or "pm" on the same line ("9:35 pm" never wraps "pm" alone).
+        for index in shown.indices {
+            shown[index].text = shown[index].text.replacingOccurrences(
+                of: #"(\d) (am|pm)\b"#, with: "$1\u{00A0}$2", options: .regularExpression
+            )
+        }
+        self.segments = shown
+        self.target = target
+    }
 }
 
 /// The three lines of Home (sheet 212): the date, then two notices from a ranked list that rolls every 6 seconds.
@@ -27,6 +44,8 @@ enum HomeBoard {
     static let rotationSeconds: Double = 6
     static let maxNotices = 6
     static let defaultWidth: CGFloat = 340
+    /// The Bridge board row's width: the narrowest board, used until a row is measured.
+    static let firstDrawWidth: CGFloat = 238
     /// The room the top-left Settings word takes from the date's row, plus a gap, so the date never runs into it.
     static let settingsReserve: CGFloat = 104
 
@@ -107,6 +126,16 @@ enum HomeBoard {
         return line
     }
 
+    /// No full stop on a shown line (Kaushik, Oct 26). The board flips letter by letter, so a trailing "." would arrive
+    /// as a piece of its own and slip past a whole-line check: the stops go before the flap split.
+    static func unstopped(_ segments: [DepartureSegment]) -> [DepartureSegment] {
+        segments.map { segment in
+            var shown = segment
+            shown.text = ShownLine.unstopped(segment.text, between: ", ")
+            return shown
+        }
+    }
+
     private static func line(of notice: HomeNotice) -> BoardLine {
         let target: BoardTarget = switch notice.target {
         case let .room(app): .room(app)
@@ -125,9 +154,9 @@ enum HomeBoard {
                     segments.append(DepartureSegment(text: String(word), kind: kind))
                 }
             }
-            return BoardLine(segments: segments, target: target)
+            return BoardLine(segments: unstopped(segments), target: target)
         }
-        return BoardLine(segments: DepartureLines.segments(of: notice.clause), target: target)
+        return BoardLine(segments: unstopped(DepartureLines.segments(of: notice.clause)), target: target)
     }
 
     /// The three lines at `rotation`: the date; the notice at `rotation` and the one after it (wrapping). A moment's

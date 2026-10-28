@@ -22,7 +22,6 @@ struct WeatherWordEffects: ViewModifier {
     var placement = WeatherCloudPlacement.standard
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
     @State private var size = CGSize.zero
 
     private var plan: WeatherPlan {
@@ -33,7 +32,7 @@ struct WeatherWordEffects: ViewModifier {
         if reduceMotion {
             content.foregroundStyle(kind.colour(night: night))
         } else {
-            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: scenePhase != .active)) { timeline in
+            LiveTimeline(LiveFeatures.weatherWords, minimumInterval: 1.0 / 30) { timeline in
                 let time = timeline.date.timeIntervalSinceReferenceDate
                 word(content, time: time)
                     .background { layer(back: true, time: time) }

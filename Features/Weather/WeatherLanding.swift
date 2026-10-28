@@ -51,26 +51,23 @@ struct WeatherLandingPage: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
-            let snapshot = WeatherSample.snapshot(now: AppClock.now)
-            let cards = WeatherWords.cards(snapshot, alertOn: alertOn)
+            let facts = LookoutRoomContent.Facts(snapshot: WeatherSample.snapshot(now: AppClock.now), alertOn: alertOn)
+            let snapshot = facts.snapshot
             let plate = LookoutPlate.pick(kind: snapshot.kind, at: snapshot.now, dark: scheme == .dark)
             LandingScaffold(title: "Lookout", accent: WeatherAccent.room, navWord: "Bridge", onBack: { dismiss() },
                             switcher: WeatherWords.switcher, switcherIndex: $switcherIndex,
                             switcherVerticalIndex: $switcherVerticalIndex,
-                            needs: WeatherWords.needs(snapshot, switcher: switcherIndex),
+                            needs: facts.needs(switcherIndex),
                             keystone: { LookoutSkypiece(snapshot: snapshot) { openDoor(.hours) } },
-                            caption: WeatherWords.briefForms(snapshot).map { $0.lead + $0.rest },
-                            widget: cards.map(item), widgetIndex: $widgetIndex,
-                            openWidget: { item in
-                                let card = cards.first { $0.id == item.id }
-                                openDoor(card?.opens == .week ? .week : .hours)
-                            },
+                            caption: facts.caption,
+                            widget: facts.widget, widgetIndex: $widgetIndex,
+                            openWidget: { item in openDoor(facts.door(forItem: item.id)) },
                             glyph: { item in
                                 LandingGlyph(item: item, color: item.bigColor ?? WeatherAccent.room, room: .lookout)
                             },
-                            doors: doors(snapshot), focus: $focus,
+                            doors: facts.doors, focus: $focus,
                             openDoor: { door in openDoor(WeatherDoor(rawValue: door.id) ?? .hours) },
-                            action: action(snapshot),
+                            action: action(facts),
                             backdrop: AnyView(LookoutPlateView(plate: plate, fallback: AnyView(
                                 LookoutSkyView(kind: snapshot.kind, now: snapshot.now)
                             ))),
@@ -83,49 +80,21 @@ struct WeatherLandingPage: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    private func item(_ card: LookoutCard) -> WidgetItem {
-        WidgetItem(id: card.id, header: card.header, big: card.big, bigIsNumber: card.bigIsNumber, unit: card.unit,
-                   middle: card.middle, small: card.small,
-                   bigColor: card.wet ? Theme.Colors.Accent.rain : nil, strikeable: false)
-    }
-
-    private func doors(_ snapshot: WeatherSnapshot) -> [DialDoor] {
-        let next = snapshot.hours.first
-        let wet = Theme.Colors.Accent.rain
-        return [
-            DialDoor(id: "hours", name: "Hours", count: nil,
-                     color: snapshot.kind.colour(night: snapshot.night),
-                     label: next.map { _ in "Next hours" },
-                     lines: WeatherWords.hourLines(snapshot)),
-            DialDoor(id: "week", name: "Week", color: wet, label: "Days to note",
-                     lines: WeatherWords.weekLines(snapshot)),
-            DialDoor(id: "air", name: "Air", color: snapshot.air == "good" ? WeatherAccent.good : Theme.Colors.ink,
-                     label: "Now", lines: WeatherWords.airLines(snapshot)),
-        ]
-    }
-
-    /// Verb over object (283 v3): Alert (rain), then Hours and Walk across. Never "Rain alert" as one word.
-    private func action(_ snapshot: WeatherSnapshot) -> LandingFootAction {
-        LandingFootAction(word: "Alert", object: WeatherWords.alertObject(on: alertOn),
-                          hint: alertOn ? "Turns the rain alert off" : "Tells you before rain",
-                          alternates: [
-                              .init(verb: "Hours", object: "Next 12 hours") { openDoor(.hours) },
-                              .init(verb: "Walk", object: "Best time today") {
-                                  TessVoice.shared.say(WeatherWords.walkLine(snapshot))
-                              },
-                          ]) {
-            toggle()
+    /// Verb over object (283 v3), from the shared steps: Alert (rain), then Hours and Walk across.
+    private func action(_ facts: LookoutRoomContent.Facts) -> LandingFootAction {
+        let steps = facts.steps
+        return LandingFootAction(word: steps[0].verb, object: steps[0].object,
+                                 hint: alertOn ? "Turns the rain alert off" : "Tells you before rain",
+                                 alternates: [
+                                     .init(verb: steps[1].verb, object: steps[1].object) { openDoor(.hours) },
+                                     .init(verb: steps[2].verb, object: steps[2].object) {
+                                         LookoutActions.walk(facts.snapshot)
+                                     },
+                                 ]) {
+            LookoutActions.toggleAlert { on in
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { alertOn = on }
+            }
         }
-    }
-
-    private func toggle() {
-        let was = alertOn
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { alertOn = !was }
-        WeatherRainAlert.set(!was)
-        TessVoice.shared.say(WeatherRainAlert.receipt(on: !was), takeBack: {
-            WeatherRainAlert.set(was)
-            alertOn = was
-        })
     }
 }
 
@@ -160,8 +129,11 @@ struct LookoutSkypiece: View {
     @Environment(\.colorScheme) private var scheme
 
     static let radius: CGFloat = 26
-    /// How far below the glass a shadow may reach: the caption starts 10 pt under the slot.
-    static let shadowFoot: CGFloat = 6
+    /// How far below the glass a shadow may reach: the caption starts 10 pt under the slot, so the shadows have faded
+    /// to nothing 1 pt above it.
+    static let shadowFoot: CGFloat = 9
+    /// How far the light and shadows fall off the other edges (inside the 24 pt gutters).
+    static let shadowReach: CGFloat = 22
 
     var body: some View {
         let size = LandingKeystone<EmptyView>.size
@@ -171,6 +143,8 @@ struct LookoutSkypiece: View {
                 .frame(width: size.width, height: size.height, alignment: .topLeading)
                 .background { LookoutGlass(shape: shape, onDark: scheme == .dark, foot: Self.shadowFoot) }
                 .contentShape(shape)
+                .keystoneBleed(EdgeInsets(top: Self.shadowReach, leading: Self.shadowReach,
+                                          bottom: Self.shadowFoot, trailing: Self.shadowReach))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(
@@ -184,11 +158,11 @@ struct LookoutSkypiece: View {
         let forms = WeatherWords.condition(snapshot.kind, night: snapshot.night)
         return ZStack(alignment: .topLeading) {
             (Text("\(snapshot.temperature)")
-                .font(.custom("Outfit", fixedSize: 112).weight(.ultraLight))
-                + Text("°").font(.custom("Outfit", fixedSize: 44).weight(.ultraLight))
+                .font(.custom("Outfit", fixedSize: 100).weight(.ultraLight))
+                + Text("°").font(.custom("Outfit", fixedSize: 40).weight(.ultraLight))
                 // Raised to the numeral's cap line, as on the board.
-                .baselineOffset(46))
-                .tracking(-0.03 * 112)
+                .baselineOffset(41))
+                .tracking(-0.03 * 100)
                 .monospacedDigit()
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize()
@@ -259,38 +233,47 @@ struct LookoutSkypiece: View {
     }
 }
 
-/// The glass's light and shadow, drawn outside the shape only: the inside is cut away so the sky stays untouched.
-/// The shadows end `foot` points under the glass, fading out, so they never reach the caption.
+/// The glass's light and shadow (sheet 254 v9, surface approved): the slot is the screen's own glass, raised a little.
+/// A soft light falls off the top-left edge (14 pt blur, 4 pt out, 38% white on bright skies, 22% on dark), a shadow
+/// off the bottom-right (20 pt blur, 8 pt down, 24% / 36%) and a wider fainter one (34 pt blur, 14 pt down, 9% /
+/// 16%), and a 1 pt hairline of the same light and shade just inside the edge. Everything is drawn outside the shape:
+/// the inside is cut away, so the sky shows through untouched (no fill, tint, frost or refraction). The shadows fade
+/// to nothing `foot` points under the glass, so they melt into the ground before the caption.
 struct LookoutGlass: View {
     let shape: RoundedRectangle
     let onDark: Bool
     let foot: CGFloat
 
-    private static let reach: CGFloat = 30
+    private static let reach: CGFloat = 40
 
     var body: some View {
         let reach = Self.reach
-        let insets = EdgeInsets(top: reach, leading: reach, bottom: foot, trailing: reach)
+        let insets = EdgeInsets(top: reach, leading: reach, bottom: reach, trailing: reach)
         ZStack {
-            shape.fill(.black).shadow(color: .white.opacity(onDark ? 0.22 : 0.38), radius: 7, x: -4, y: -4)
-            shape.fill(.black).shadow(color: .black.opacity(onDark ? 0.36 : 0.24), radius: 10, x: 5, y: 4)
-            shape.fill(.black).shadow(color: .black.opacity(onDark ? 0.16 : 0.09), radius: 17, x: 2, y: 6)
+            shape.fill(.black)
+                .shadow(color: .white.opacity(onDark ? 0.22 : 0.38), radius: 7, x: -4, y: -4)
+            shape.fill(.black)
+                .shadow(color: .black.opacity(onDark ? 0.36 : 0.24), radius: 10, x: 3, y: 8)
+            shape.fill(.black)
+                .shadow(color: .black.opacity(onDark ? 0.16 : 0.09), radius: 17, x: 5, y: 14)
         }
         .padding(insets)
         .mask {
             VStack(spacing: 0) {
+                // Full strength down to the glass's foot, then gone `foot` points below it.
                 Rectangle()
                 LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: foot)
+                Color.clear.frame(height: reach - foot)
             }
             .overlay { shape.padding(insets).blendMode(.destinationOut) }
             .compositingGroup()
         }
-        .padding(EdgeInsets(top: -reach, leading: -reach, bottom: -foot, trailing: -reach))
+        .padding(-reach)
         .overlay {
             shape.strokeBorder(LinearGradient(stops: [
-                .init(color: .white.opacity(onDark ? 0.18 : 0.3), location: 0),
+                .init(color: .white.opacity(onDark ? 0.22 : 0.38), location: 0),
                 .init(color: .white.opacity(0), location: 0.5),
-                .init(color: .black.opacity(onDark ? 0.14 : 0.08), location: 1),
+                .init(color: .black.opacity(onDark ? 0.30 : 0.16), location: 1),
             ], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
         }
         .allowsHitTesting(false)
@@ -312,7 +295,7 @@ struct LookoutDropHandover: View {
         if !reduceMotion, !done {
             GeometryReader { proxy in
                 let scale = max(0.86, min(1.1, proxy.size.height / 874))
-                TimelineView(.animation(minimumInterval: 1 / 60)) { context in
+                LiveTimeline(minimumInterval: 1 / 60) { context in
                     let elapsed = context.date.timeIntervalSince(start)
                     Canvas { canvas, size in
                         Self.draw(&canvas, width: size.width, scale: scale, elapsed: elapsed)
@@ -322,6 +305,7 @@ struct LookoutDropHandover: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .liveRegion(LiveFeatures.lookoutHandover)
             .task {
                 start = .now
                 try? await Task.sleep(for: .seconds(Self.length + 0.4))
@@ -354,6 +338,7 @@ struct LookoutDropHandover: View {
 struct WeatherDoorPage: View {
     let door: WeatherDoor
     @Environment(\.dismiss) private var dismiss
+    @State private var detail: LookoutDetail?
 
     var body: some View {
         let snapshot = WeatherSample.snapshot(now: AppClock.now)
@@ -367,12 +352,17 @@ struct WeatherDoorPage: View {
                 .font(.custom("Figtree", size: 34, relativeTo: .largeTitle).weight(.bold))
                 .foregroundStyle(WeatherAccent.room)
                 .accessibilityAddTraits(.isHeader)
-            ForEach(Array(lines(snapshot).enumerated()), id: \.offset) { _, line in
-                Text(line)
-                    .font(.custom("Figtree", size: 17, relativeTo: .body))
-                    .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+            ForEach(Array(lines(snapshot).enumerated()), id: \.offset) { index, line in
+                // A row opens what it names: the hour, the day or the air (the same detail as the shell's rows).
+                Button {
+                    detail = LookoutRoomContent.Facts(snapshot: snapshot).detail(forRow: "\(door.rawValue).\(index)")
+                } label: {
+                    FitLine(forms: FitLine.cuts(line), size: 17, color: Theme.Colors.ink)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens it")
             }
             Spacer(minLength: 0)
         }
@@ -380,24 +370,10 @@ struct WeatherDoorPage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background { ThemedBackground() }
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(item: $detail) { LookoutDetailPage(detail: $0) }
     }
 
     private func lines(_ snapshot: WeatherSnapshot) -> [String] {
-        switch door {
-        case .hours:
-            snapshot.hours.map { hour in
-                let name = WeatherWords.name(hour.kind, night: false).lowercased()
-                return "\(WeatherWords.hour(hour.date)) \(WeatherWords.degrees(hour.temperature)) \(name)"
-            }
-        case .week:
-            snapshot.week.dropFirst().map { day in
-                let calendar = Calendar.current
-                let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: day.date) - 1]
-                let name = WeatherWords.name(day.kind, night: false).lowercased()
-                return "\(weekday) \(name), high \(WeatherWords.degrees(day.high)), low \(WeatherWords.degrees(day.low))"
-            }
-        case .air:
-            WeatherWords.airLines(snapshot)
-        }
+        LookoutRoomContent.Facts(snapshot: snapshot).lines(door)
     }
 }

@@ -86,7 +86,7 @@ public struct FocusBlock: Equatable, Sendable {
     /// The wrap-up, counts only: "Focus done. 25 minutes on Reply to the landlord."
     public func wrapUpLine(endedAt: Date) -> String {
         let spent = min(max(Int((endedAt.timeIntervalSince(startedAt) / 60).rounded()), 1), minutes)
-        return "Focus done. \(spent) \(spent == 1 ? "minute" : "minutes") on \(title)."
+        return "Focus done. \(spent) \(spent == 1 ? "minute" : "minutes") on \(title)"
     }
 }
 

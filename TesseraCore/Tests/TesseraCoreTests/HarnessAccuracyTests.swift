@@ -73,7 +73,7 @@ struct HarnessAccuracyTests {
     }
 
     @Test func theSentLogShowsWordsNotBracesSignaturesOrBlobs() {
-        let thinking = Data(#"{"type":"thinking","thinking":"Counting sets.","signature":"SIGNATUREBLOB=="}"#.utf8)
+        let thinking = Data(#"{"type":"thinking","thinking":"Counting sets","signature":"SIGNATUREBLOB=="}"#.utf8)
         let result = Data(HarnessM0Tests.searchResult.utf8)
         let use = Data(#"{"type":"tool_use","id":"toolu_9","name":"query","input":{"from":"tasks"}}"#.utf8)
         let request = BrainRequest(messages: [BrainMessage(.assistant, [.raw(thinking), .raw(result), .raw(use)])])
@@ -81,7 +81,7 @@ struct HarnessAccuracyTests {
         for noise in ["{", "}", "SIGNATUREBLOB", "EqgfCioIAhgB", "toolu_9", "srvtoolu_1", "tool_use"] {
             #expect(!words.contains(noise), "\(noise)")
         }
-        #expect(words.contains("Counting sets.") && words.contains("query") && words.contains("tasks"))
+        #expect(words.contains("Counting sets") && words.contains("query") && words.contains("tasks"))
         #expect(words.contains("https://x.test/a"))
     }
 
@@ -95,8 +95,10 @@ struct HarnessAccuracyTests {
     }
 
     @Test func thePriceRowsMatchThePricingPage() {
-        /// Per million tokens: Opus 5.5 $4 in, $5 / $8 cache writes (5m / 1h), $0.20 reads, $20 out; Sonnet 5.5 $2, $2.50 /
-        /// $4, $0.10 reads, $10 out; Haiku 5.5 $0.10, $0.125 / $0.20, $0.01 reads, $0.50 out, and over 100K tokens $0.50,
+        /// Per million tokens: Opus 5.5 $4 in, $5 / $8 cache writes (5m / 1h), $0.20 reads, $20 out; Sonnet 5.5 $2,
+        /// $2.50 /
+        /// $4, $0.10 reads, $10 out; Haiku 5.5 $0.10, $0.125 / $0.20, $0.01 reads, $0.50 out, and over 100K tokens
+        /// $0.50,
         /// $0.625 / $1, $0.05 reads, $2.50 out.
         func cost(_ model: String, input: Int = 0, output: Int = 0, read: Int = 0, write: Int = 0,
                   write1h: Int = 0) -> Int64

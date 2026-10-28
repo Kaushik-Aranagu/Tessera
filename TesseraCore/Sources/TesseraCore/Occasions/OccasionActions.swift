@@ -93,7 +93,7 @@ public struct CreateOccasion: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output occasion: ObjectRecord) -> String? {
-        "\(occasion.title), started."
+        "\(occasion.title), started"
     }
 
     public func receipt(in _: ObjectStore) -> String? {

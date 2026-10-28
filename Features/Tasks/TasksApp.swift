@@ -97,11 +97,11 @@ enum TasksActions {
     @discardableResult
     static func finish(_ line: TasksFront.Line, model: AppModel) -> Bool {
         guard let record = try? model.engine.perform(SetTaskDone(task: line.id, done: true), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return false
         }
         model.touch()
-        TessVoice.shared.say("\(line.title), done.", undo: record)
+        TessVoice.shared.say("\(line.title), done", undo: record)
         return true
     }
 
@@ -115,14 +115,14 @@ enum TasksActions {
         guard let record = try? model.engine.perform(MoveTask(task: line.id, to: target, time: AppClock.now), by: .user)
             .record
         else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return false
         }
         model.touch()
         let moved = model.store.object(id: line.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
         let when = line.when == nil ? "next week"
             : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
-        TessVoice.shared.say("\(line.title), \(when).", undo: record)
+        TessVoice.shared.say("\(line.title), \(when)", undo: record)
         return true
     }
 }

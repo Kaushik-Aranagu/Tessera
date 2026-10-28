@@ -36,7 +36,7 @@ struct RecipesOpeningTests {
     }
 
     @Test func noStepsReadsAsAnInvitationNeverStepOneOfZero() {
-        #expect(RecipeCopy.stepCount(0) == "No steps yet. Paste them below.")
+        #expect(RecipeCopy.stepCount(0) == "No steps yet. Paste them below")
         #expect(RecipeCopy.stepCount(1) == "1 step")
         #expect(RecipeCopy.stepCount(4) == "4 steps")
     }

@@ -84,11 +84,11 @@ public enum RoutinesLanding {
 
     static func subtitle(total: Int, done: Int) -> LandingSentence {
         switch (total, done) {
-        case (0, _): LandingSentence(text: "Nothing set up yet.", key: nil)
-        case let (count, finished) where finished == count: LandingSentence(text: "All done today.", key: nil)
-        case (1, _): LandingSentence(text: "1 routine.", key: nil)
-        case let (count, 0): LandingSentence(text: "\(count) routines.", key: nil)
-        case let (count, finished): LandingSentence(text: "\(count) routines, \(finished) done today.", key: nil)
+        case (0, _): LandingSentence(text: "Nothing set up yet", key: nil)
+        case let (count, finished) where finished == count: LandingSentence(text: "All done today", key: nil)
+        case (1, _): LandingSentence(text: "1 routine", key: nil)
+        case let (count, 0): LandingSentence(text: "\(count) routines", key: nil)
+        case let (count, finished): LandingSentence(text: "\(count) routines, \(finished) done today", key: nil)
         }
     }
 

@@ -10,23 +10,10 @@ enum DepartureSteps {
     static let flipMS = 70
     static let delayMS = 14
 
-    /// The letters shown from `old` to `new`: forward along the strip, at most nine, skipping evenly. A character
-    /// that is not on the strip lands at once.
+    /// The letters shown from `old` to `new`: one flip, straight to the new letter. A changing line only ever shows
+    /// the letters of the two words, never a scramble of other glyphs on the way (Design's review of sheet 324).
     static func sequence(from old: Character, to new: Character) -> [Character] {
-        guard old != new else { return [] }
-        guard let b = strip.firstIndex(of: new) else { return [new] }
-        let a = strip.firstIndex(of: old) ?? 0
-        var remaining = (b - a + strip.count) % strip.count
-        let skip = max(1, Int((Double(remaining) / Double(maxSteps)).rounded(.up)))
-        var at = a
-        var out: [Character] = []
-        while remaining > 0 {
-            let move = min(skip, remaining)
-            at = (at + move) % strip.count
-            remaining -= move
-            out.append(strip[at])
-        }
-        return out
+        old == new ? [] : [new]
     }
 
     /// The line as letters: the runs joined by one space cell each (an app word never runs into the next word).
@@ -148,8 +135,8 @@ struct DepartureBoard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(finalText)
+        // One element for the whole board (its flap letters never surface one by one), with each door an action.
+        .accessibilityRepresentation { Text(finalText) }
         .accessibilityActions {
             // Each door is a button: "Push day, opens Training".
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
@@ -196,8 +183,10 @@ struct DepartureBoard: View {
         let plain = TrailingWrap(spacing: 6, lineSpacing: 2.4) {
             ForEach(Array(line.enumerated()), id: \.offset) { _, seg in
                 plainSegment(seg, li: li)
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityHidden(true)
         if reduceMotion {
             // Reduce Motion: a plain swap, no letters.
             plain
@@ -207,25 +196,19 @@ struct DepartureBoard: View {
         } else {
             // The letters always click forward (sheet 200), on one line in its own row: the words are chosen to fit,
             // never shrunk, wrapped or crossfaded.
-            HStack(spacing: 6) {
-                ForEach(units(of: line, starts: starts)) { unit in
-                    unitView(unit, cells: lineCells, li: li)
-                        .fixedSize()
-                }
-                // Letters the new line no longer has flip to spaces and collapse once the pass is over.
-                let kept = DepartureSteps.flat(line).count
-                if lineCells.count > kept {
-                    HStack(spacing: 0) {
-                        ForEach(kept ..< lineCells.count, id: \.self) { k in
-                            Text(String(lineCells[k].shown))
-                                .font(font(for: lineCells[k].kind ?? .plain))
-                                .foregroundStyle(droppedStyle(lineCells[k].kind ?? .plain))
-                                .fixedSize()
-                                .frame(width: lineCells[k].width)
-                                .scaleEffect(x: 1, y: lineCells[k].squash ? 0.08 : 1, anchor: .center)
-                        }
+            HStack(spacing: 0) {
+                // The words, 6 pt apart; the letters going away sit after them with no gap, so the row's right edge
+                // is the last word's (x 378 on Bridge).
+                HStack(spacing: 6) {
+                    ForEach(units(of: line, starts: starts)) { unit in
+                        unitView(unit, cells: lineCells, li: li)
+                            .fixedSize()
+                            .accessibilityHidden(true)
                     }
                 }
+                .accessibilityHidden(true)
+                // Letters the new line no longer has go at once: the row's right edge stays at the last word (x 378),
+                // and nothing draws past it (Kaushik, Oct 26).
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
@@ -275,6 +258,8 @@ struct DepartureBoard: View {
     @ViewBuilder
     private func unitView(_ unit: Unit, cells: [Cell], li: Int) -> some View {
         let seg = unit.seg
+        // The flap letters are drawing only: the board is one accessibility element with the whole text and its doors
+        // as actions, so no letter cell reads (or measures) over its neighbours.
         let content = HStack(spacing: 6) {
             ForEach(Array(unit.words.enumerated()), id: \.offset) { _, word in
                 HStack(spacing: 0) {
@@ -614,7 +599,12 @@ enum CellMetrics {
             return cached
         }
         let family = isNumber ? "Outfit" : "Figtree"
-        guard !UIFont.fontNames(forFamilyName: family).isEmpty else { return nil }
+        guard !UIFont.fontNames(forFamilyName: family).isEmpty else {
+            // The fit and the fixed cells depend on these faces: a build without them must say so, loudly (a unit-test
+            // host does not load the app's fonts, so it estimates).
+            assert(FeatureFlagStore.isTestHost, "\(family) metrics not found: the board cannot be measured")
+            return nil
+        }
         let (size, weight): (CGFloat, UIFont.Weight) = switch kind {
         case .number: (DepartureBoard.size, .light)
         case .app, .sky: (DepartureBoard.size * 1.12, .bold)

@@ -82,7 +82,7 @@ public struct OneThing: Equatable, Sendable, Identifiable {
 
     /// "Pack the charger, done." or "Private, done." for the one Undo line.
     public var undoLine: String? {
-        done == nil ? nil : "\(isPrivate ? "Private" : big), done."
+        done == nil ? nil : "\(isPrivate ? "Private" : big), done"
     }
 }
 
@@ -337,7 +337,7 @@ public enum OneThings {
             .flatMap { AppSummaryLines.shown($0, in: engine.store, classes: engine.classes).isPrivate
                 ? nil : $0
             }
-        let small = note ?? (days == 0 ? "Today." : days == 1 ? "One day." : "\(word(days).capitalized) days.")
+        let small = note ?? (days == 0 ? "Today" : days == 1 ? "One day" : "\(word(days).capitalized) days")
         return OneThing(
             // Month, day and the place in the list: nothing of the name, not even a hash.
             id: "birthday-\(birthday.month)-\(birthday.day)-\(index)",

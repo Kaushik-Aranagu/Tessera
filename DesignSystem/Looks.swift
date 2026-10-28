@@ -235,9 +235,20 @@ final class ThemeStore {
         rebuild()
     }
 
+    /// Called, with the look that is leaving, just before a visible change of look is applied (sheet 299, ink goes
+    /// last: the app takes its snapshot of the old page here). Never at launch.
+    nonisolated(unsafe) static var willChangeLook: ((Look) -> Void)?
+    /// The look the screen is showing now (nil until the first build).
+    @ObservationIgnored private var shownLook: Look?
+
     private func rebuild() {
         let (day, night) = pair
-        concept = ThemeConcept.dressed(day: day, night: night, current: workoutHeld ?? current)
+        let next = workoutHeld ?? current
+        if let shownLook, shownLook != next {
+            Self.willChangeLook?(shownLook)
+        }
+        shownLook = next
+        concept = ThemeConcept.dressed(day: day, night: night, current: next)
     }
 
     /// The pin in force: the demo's, else his.

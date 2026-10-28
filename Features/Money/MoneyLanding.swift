@@ -80,11 +80,11 @@ struct MoneyWall: Equatable {
         var forms: [String] = []
         if let trend {
             let bare = trend.hasSuffix(".") ? String(trend.dropLast()) : trend
-            forms.append("\(bare), \(spends) so far.")
-            forms.append(trend)
+            forms.append("\(bare), \(spends) so far")
+            forms.append(bare)
         }
-        forms.append("\(spends) in \(monthName).")
-        forms.append("\(spends).")
+        forms.append("\(spends) in \(monthName)")
+        forms.append("\(spends)")
         return forms
     }
 
@@ -109,44 +109,32 @@ struct MoneyLandingView: View {
     @State private var switcherVerticalIndex = 0
     @State private var widgetIndex = 0
 
-    /// October, This year, Since May (283): the month by name, the year, and since the first spend.
-    private var switcher: [String] {
-        let month = AppClock.now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
-        return [month, "This year", "Since \(firstMonth)"]
-    }
-
-    private var firstMonth: String {
-        let first = model.classes[.spend].map { model.store.objects(of: $0) }?
-            .compactMap { model.store.value("spentAt", of: $0)?.dateValue }.min() ?? AppClock.now
-        return first.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
-    }
-
     var body: some View {
         let _ = model.revision
-        let wall = load()
-        let categories = PurseBook(model: model, now: AppClock.now).categories()
+        // One source with the standing shell: the facts and words come from PurseRoomContent.
+        let facts = PurseRoomContent.Facts.load(model: model, scheme: scheme)
         LandingScaffold(title: "Purse", accent: LandingAccent.money, navWord: "Bridge", onBack: { dismiss() },
-                        switcher: switcher, switcherIndex: $switcherIndex,
+                        switcher: facts.switcher, switcherIndex: $switcherIndex,
                         switcherVerticalIndex: $switcherVerticalIndex,
-                        needs: needs(wall),
+                        needs: facts.needs.indices.contains(switcherIndex) ? facts.needs[switcherIndex] : [],
                         keystone: {
                             LandingKeystone(label: "You are the stock") {
-                                PurseIndexView(categories: categories, category: $category, index: $index)
+                                PurseIndexView(categories: facts.categories, category: $category, index: $index)
                             }
                         },
-                        caption: [caption(wall)],
-                        widget: widget(categories), widgetIndex: $widgetIndex,
+                        caption: [facts.caption],
+                        widget: facts.widget, widgetIndex: $widgetIndex,
                         glyph: { item in LandingGlyph(item: item, color: LandingAccent.money, room: .purse) },
-                        doors: doors(categories), focus: $category,
+                        doors: facts.doors, focus: $category,
                         openDoor: { door in
-                            TessVoice.shared.say("\(door.name) opens with the full chart soon.")
+                            TessVoice.shared.say("\(door.name) opens with the full chart soon")
                         },
                         action: LandingFootAction(
                             word: "Log", object: "A spend", hint: "Logs a spend, like 12.40 lunch",
                             alternates: [
                                 .init(verb: "Look", object: "The month") { look() },
                                 .init(verb: "Plan", object: "This month") {
-                                    TessVoice.shared.say("Plans for the month come with Bills.")
+                                    TessVoice.shared.say("Plans for the month come with Bills")
                                 },
                             ]
                         ) {
@@ -160,31 +148,12 @@ struct MoneyLandingView: View {
                         .alert("Log a spend", isPresented: $adding) {
                             TextField("12.40 lunch", text: $draft)
                                 .keyboardType(.numbersAndPunctuation)
-                            Button("Log") { log() }
+                            Button("Log") {
+                                Self.logSpend(draft, model: model, reduceMotion: reduceMotion)
+                                draft = ""
+                            }
                             Button("Cancel", role: .cancel) {}
                         }
-    }
-
-    // MARK: Facts
-
-    private func load() -> MoneyWall {
-        let now = AppClock.now
-        let calendar = Calendar.current
-        let ledger = SpendLedger(store: model.store, classes: model.classes)
-        var spends: [SpendLedger.Entry] = []
-        for back in 0 ..< 3 {
-            guard let month = calendar.date(byAdding: .month, value: -back, to: now) else { continue }
-            spends += ledger.entries(inMonthOf: month, calendar: calendar)
-        }
-        let monthCount = ledger.entries(inMonthOf: now, calendar: calendar).count
-        let shown = spends.sorted { $0.spentAt > $1.spentAt }.map { entry in
-            MoneyWall.Spend(category: entry.category, at: entry.spentAt,
-                            isPrivate: ObjectPrivacy.isPrivateWord(entry.category, in: model.store))
-        }
-        let monthName = now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
-        let trend = MoneyTrend(store: model.store, classes: model.classes).compare(now: now, calendar: calendar)
-        let sentence = trend.map { LandingSentences.money(nothingLate: false, due: nil, trend: $0.clause).text }
-        return MoneyWall.build(spends: shown, monthCount: monthCount, monthName: monthName, trend: sentence)
     }
 
     /// Today's point on the chart, in design points: the chart runs x 24 to 292 (the index names take the rest).
@@ -203,74 +172,25 @@ struct MoneyLandingView: View {
         }
     }
 
-    /// The categories are the doors too (contract v2 §12): turning the dial turns the chart, and the other way round.
-    private func doors(_ categories: [PurseCategory]) -> [DialDoor] {
-        categories.map { item in
-            DialDoor(id: item.id, name: item.name, color: item.indices.isEmpty ? Theme.Colors.ink : LandingAccent.money,
-                     label: item.indices.isEmpty ? "Not set up yet" : "Indices",
-                     lines: item.indices.isEmpty ? []
-                         : ["\(item.indices.count) \(item.indices.count == 1 ? "index" : "indices")"]
-                         + item.indices.prefix(2).map(\.name.capitalized))
-        }
-    }
-
-    /// The chart in words, never a figure: "Heading down at this pace." / "Nothing yet".
-    private func caption(_ wall: MoneyWall) -> String {
-        wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month."
-    }
-
-    /// Two lines beside the switcher: the month in words, or that the longer views come next. Never a figure.
-    private func needs(_ wall: MoneyWall) -> [String] {
-        switch switcherIndex {
-        case 1: return ["The year view comes next", "Twelve months, payday to payday"]
-        case 2: return ["Since \(firstMonth) comes next", "Every month side by side"]
-        default:
-            guard wall.monthCount > 0 else { return ["Nothing yet", "Log a spend to start the line"] }
-            let last = wall.lastCategory.map { "Last on \($0)" } ?? (wall.lastIsPrivate ? "Last spend private" : "")
-            return [wall.monthCount == 1 ? "1 spend so far" : "\(wall.monthCount) spends so far", last]
-        }
-    }
-
-    /// The widget (283): still yours, spent today, spent this month. Numbers count up; no red or green; no strike.
-    private func widget(_ categories: [PurseCategory]) -> [WidgetItem] {
-        guard let month = categories.first?.indices.first, let spend = categories.first?.indices.dropFirst().first,
-              !month.isEmpty
-        else {
-            return [WidgetItem(id: "nothing", header: "This month", big: "Nothing yet", middle: "Log a spend",
-                               small: "It starts the line", strikeable: false)]
-        }
-        let today = (spend.solid.last ?? 0) - (spend.solid.dropLast().last ?? 0)
-        // "Still yours" needs money in to mean anything; with no inflow logged it steps aside.
-        let hasIncome = (month.solid.max() ?? 0) > 0
-        return [
-            WidgetItem(id: "yours", header: "Still yours", big: Self.figure(month.solid.last ?? 0), bigIsNumber: true,
-                       middle: "in minus out this month", small: "The solid line", strikeable: false),
-            WidgetItem(id: "today", header: "Today", big: Self.figure(today), bigIsNumber: true, middle: "spent today",
-                       small: "Every spend a tick down", strikeable: false),
-            WidgetItem(id: "month", header: "This month", big: Self.figure(spend.solid.last ?? 0), bigIsNumber: true,
-                       middle: "spent so far", small: "The dashed line is this pace", strikeable: false),
-        ].filter { hasIncome || $0.id != "yours" }
-    }
-
     /// A whole figure with grouping, no symbol and no cents: "2,125".
     static func figure(_ value: Double) -> String {
-        value.rounded().formatted(.number.precision(.fractionLength(0)).locale(Locale(identifier: "en_US")))
+        PurseRoomContent.Facts.figure(value)
     }
 
     // MARK: Adding
 
     /// "12.40 lunch": the amount first, then what it was for. The receipt names the category only, never the amount,
-    /// and Undo reads "Reversed".
-    private func log() {
+    /// and Undo reads "Reversed". Shared by the landing and the shell.
+    @MainActor
+    static func logSpend(_ draft: String, model: AppModel, reduceMotion: Bool) {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        draft = ""
         guard !text.isEmpty else { return }
         if looksLikeClaudeKey(text) {
             TessVoice.shared.say(claudeKeyLine)
             return
         }
         guard let amount = MoneyAmount.parse(text) else {
-            TessVoice.shared.say("Start with the amount, like 12.40 lunch.")
+            TessVoice.shared.say("Start with the amount, like 12.40 lunch")
             return
         }
         let note = MoneyAmount.note(after: text)
@@ -281,13 +201,13 @@ struct MoneyLandingView: View {
                      autoPool: pools ? true : nil),
             by: .user
         ) else {
-            TessVoice.shared.say("Didn't log that. Try again.")
+            TessVoice.shared.say("Didn't log that. Try again")
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
         let word = note.split(separator: " ").first.map { String($0).capitalized }
         let shown = word.map { ObjectPrivacy.isPrivateWord($0, in: model.store) ? "Private spend" : $0 } ?? "Spend"
-        TessVoice.shared.say("\(shown), logged.", undo: result.record)
+        TessVoice.shared.say("\(shown), logged", undo: result.record)
     }
 }
 

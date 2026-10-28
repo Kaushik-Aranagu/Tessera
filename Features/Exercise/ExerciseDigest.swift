@@ -166,13 +166,13 @@ struct ExerciseDigest {
     static func nextLine(for exercise: ClassDef, ledger: TrainingLedger) -> String? {
         let target = ledger.nextTarget(for: exercise)
         guard let weight = target.weight else {
-            return ledger.sessions(of: exercise).isEmpty ? "First time. Start light, \(target.reps) reps." : nil
+            return ledger.sessions(of: exercise).isEmpty ? "First time. Start light, \(target.reps) reps" : nil
         }
         var line = "Next time \(ExerciseWords.set(weight: weight, reps: Double(target.reps)))."
         if let top = ledger.sessions(of: exercise).first?.sets
             .max(by: { ($0.weight, $0.reps) < ($1.weight, $1.reps) })
         {
-            line += " Last time \(ExerciseWords.set(weight: top.weight, reps: top.reps))."
+            line += " Last time \(ExerciseWords.set(weight: top.weight, reps: top.reps))"
         }
         return line
     }
@@ -181,7 +181,7 @@ struct ExerciseDigest {
     static func nextTime(for exercise: ClassDef, ledger: TrainingLedger, store: ObjectStore) -> String? {
         let target = ledger.nextTarget(for: exercise)
         guard let weight = target.weight else {
-            return ledger.sessions(of: exercise).isEmpty ? "First time: start light, \(target.reps) reps." : nil
+            return ledger.sessions(of: exercise).isEmpty ? "First time: start light, \(target.reps) reps" : nil
         }
         let ruleText = store.classObject(of: exercise).flatMap { store.value("progression", of: $0)?.stringValue }
             ?? ClassResolver.field("progression", of: exercise)?.defaultValue?.stringValue
@@ -206,10 +206,10 @@ enum ExerciseWords {
 
     /// "Best set 85 × 5. About 104 kg for 1." in the chosen unit, or the first-time line.
     static func bestLine(bestSet: String?, aboutKilograms: Double?, unit: MassUnit = Format.unit) -> String {
-        guard let bestSet else { return "No best yet. The first logged set sets one." }
-        guard let aboutKilograms else { return "Best set \(bestSet)." }
+        guard let bestSet else { return "No best yet. The first logged set sets one" }
+        guard let aboutKilograms else { return "Best set \(bestSet)" }
         let about = unit.fromKilograms(aboutKilograms, rounded: false).rounded()
-        return "Best set \(bestSet). About \(Format.kilograms(about)) \(unit.symbol) for 1."
+        return "Best set \(bestSet). About \(Format.kilograms(about)) \(unit.symbol) for 1"
     }
 
     /// "chest, with triceps and front delts": what it works, in words.
@@ -281,7 +281,7 @@ enum ExerciseWords {
     /// "Next time: 82.5 for 9, then 85."
     static func nextTime(weight: Double, reps: Int, then: Double?) -> String {
         let base = "Next time: \(Format.shown(weight)) for \(reps)"
-        return then.map { "\(base), then \(Format.shown($0))." } ?? "\(base)."
+        return then.map { "\(base), then \(Format.shown($0))" } ?? "\(base)"
     }
 
     /// "primary", "half a set each"

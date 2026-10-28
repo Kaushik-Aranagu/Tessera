@@ -15,6 +15,27 @@ final class TessLayerModel {
         let date: Date
         /// The shown labels in `text` that are doors (weight 500, never broken across lines).
         var names: [String]
+        /// Who answered this line of hers: Claude or the phone's own routes (nil for lines she says first).
+        var answeredBy: AnswerSource?
+    }
+
+    /// Who answered a reply, for the one small line under it on her sheet.
+    enum AnswerSource: Equatable {
+        case claude, phone
+
+        /// The capture's source: Claude only when Claude answered; the grammar, the on-device model, a routed write
+        /// or a miss kept on the phone are all this phone.
+        init(_ source: TessCapture.Source?) {
+            self = source == .claude ? .claude : .phone
+        }
+
+        /// Plain small text, sentence case, no full stop.
+        var line: String {
+            switch self {
+            case .claude: "Answered by Claude"
+            case .phone: "Answered on this phone"
+            }
+        }
     }
 
     /// Today's earlier turns, oldest first, then the newest exchange.
@@ -100,9 +121,12 @@ final class TessLayerModel {
     }
 
     /// One line of hers: stored, shown with its words arriving, and the earlier mention of a name in it brightens.
-    func say(_ text: String, names: [String], about: [ObjectRecord] = [], at date: Date = .now) {
+    func say(_ text: String, names: [String], about: [ObjectRecord] = [], at date: Date = .now,
+             answeredBy: AnswerSource? = nil)
+    {
         let row = conversation?.append(role: .tess, text: text, about: about, at: date)
-        let line = Line(id: row?.id ?? UUID(), role: .tess, text: text, date: date, names: names)
+        let line = Line(id: row?.id ?? UUID(), role: .tess, text: text, date: date, names: names,
+                        answeredBy: answeredBy)
         let earlier = lines.map(\.text)
         lines.append(line)
         arriving = line.id

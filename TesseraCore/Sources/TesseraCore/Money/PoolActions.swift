@@ -31,7 +31,7 @@ enum PoolRules {
     }
 
     static func mismatch(_ action: String, holds currency: String) -> ActionError {
-        .invalidArguments(action: action, reason: "That pool holds \(currency).")
+        .invalidArguments(action: action, reason: "That pool holds \(currency)")
     }
 
     /// A pool's name wherever a receipt shows it: "Private pool" for a walled name.
@@ -130,7 +130,7 @@ public struct CreatePool: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output pool: ObjectRecord) -> String? {
-        "\(PoolRules.shown(pool, in: store)), started."
+        "\(PoolRules.shown(pool, in: store)), started"
     }
 
     public func receipt(in _: ObjectStore) -> String? {
@@ -220,7 +220,7 @@ public struct LogInflow: EngineAction {
         let currency = PoolRules.code(of: pool, in: store)
         let value = PoolBook.decimal(store.value("amountTyped", of: inflow)?.stringValue)
         let source = store.value("source", of: inflow)?.stringValue ?? "paycheck"
-        return "Got \(PoolFormat.amount(value, currency: currency, text: true)), \(source)."
+        return "Got \(PoolFormat.amount(value, currency: currency, text: true)), \(source)"
     }
 }
 
@@ -255,7 +255,7 @@ public struct ReassignSpend: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        store.object(id: pool).map { "Moved to \(PoolRules.shown($0, in: store))." }
+        store.object(id: pool).map { "Moved to \(PoolRules.shown($0, in: store))" }
     }
 }
 
@@ -311,7 +311,7 @@ public struct LogMove: EngineAction {
         if fromCurrency == toCurrency, arrivedValue != sentValue {
             throw ActionError.invalidArguments(
                 action: name,
-                reason: "Within one currency, what arrives is what was sent."
+                reason: "Within one currency, what arrives is what was sent"
             )
         }
         let move = try transaction.create(transaction.classDef(.poolMove), title: "Move")
@@ -354,7 +354,7 @@ public struct LogMove: EngineAction {
         let target = store.linkedObjects("toPool", of: move).first
         let fromCode = PoolRules.code(of: source, in: store), toCode = PoolRules.code(of: target, in: store)
         return "Moved \(PoolFormat.amount(sentValue, currency: fromCode, text: true)), got "
-            + "\(PoolFormat.amount(arrivedValue, currency: toCode, text: true))."
+            + "\(PoolFormat.amount(arrivedValue, currency: toCode, text: true))"
     }
 }
 
@@ -406,7 +406,7 @@ public struct RecordRate: EngineAction {
         let pair = store.value("pair", of: note)?.stringValue ?? ""
         let second = pair.split(separator: "/").last.map(String.init) ?? ""
         let value = PoolBook.decimal(store.value("valueTyped", of: note)?.stringValue)
-        return "Rate saved, \(second) \(PoolFormat.rate(value))."
+        return "Rate saved, \(second) \(PoolFormat.rate(value))"
     }
 }
 
@@ -433,6 +433,6 @@ public struct ArchivePool: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        store.object(id: pool).map { "\(PoolRules.shown($0, in: store)), archived." }
+        store.object(id: pool).map { "\(PoolRules.shown($0, in: store)), archived" }
     }
 }

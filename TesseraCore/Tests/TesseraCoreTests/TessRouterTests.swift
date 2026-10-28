@@ -18,7 +18,7 @@ struct TessRouterTests {
         func run(_ request: TessRequest, engine: ActionEngine) async -> TessResult {
             guard let record = try? engine.perform(CreateTask(title: request.text), by: .tess, pending: true).record
             else { return .missed }
-            return .handled(TessCapture(records: [record], line: "Added.", source: .model))
+            return .handled(TessCapture(records: [record], line: "Added", source: .model))
         }
     }
 
@@ -51,7 +51,7 @@ struct TessRouterTests {
             use: .capture
         ))
         // Nothing takes it and no Claude is there: it is kept as a note to sort later, not dropped.
-        #expect(none.keptToSort && none.records.count == 1 && none.line == "x, kept to sort later.")
+        #expect(none.keptToSort && none.records.count == 1 && none.line == "x, kept to sort later")
     }
 
     @Test func routeAndModelSurviveAReopenAndAnExport() throws {

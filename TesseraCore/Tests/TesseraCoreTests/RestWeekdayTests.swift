@@ -351,8 +351,8 @@ struct RestWeekdayTests {
 
     // MARK: Setting it
 
-    @Test(arguments: ["rest day Sunday", "Rest day sunday.", "make Sunday my rest day", "Sunday is my rest day",
-                      "my rest day is Sunday", "Sunday, rest day."])
+    @Test(arguments: ["rest day Sunday", "Rest day sunday", "make Sunday my rest day", "Sunday is my rest day",
+                      "my rest day is Sunday", "Sunday, rest day"])
     func rg3SetRestWeekdayIsAGrammarRuleNotATask(phrase: String) {
         let grammar = TessGrammar(store: store, classes: classes)
         let context = TessContext(now: Self.at(16, 20), calendar: calendar)
@@ -379,7 +379,7 @@ struct RestWeekdayTests {
         let context = TessContext(now: Self.at(16, 20), calendar: plain.calendar, commitImmediately: true)
         let before = plain.engine.history(limit: 100).count
         let capture = await tess.capture("rest day Sunday", context: context)
-        #expect(capture.line == "Sunday, rest day.")
+        #expect(capture.line == "Sunday, rest day")
         #expect(TessVoice.violations(in: capture.line).isEmpty)
         let record = try #require(capture.records.first)
         #expect(plain.engine.history(limit: 100).count == before + 1 && record.actor == .tess)
@@ -396,7 +396,7 @@ struct RestWeekdayTests {
         let tess = TessCaptureEngine(engine: plain.engine)
         let context = TessContext(now: Self.at(16, 20), calendar: plain.calendar, commitImmediately: true)
         let capture = await tess.capture("make Sunday my rest day", context: context)
-        #expect(capture.line == "Sunday, rest day." && capture.records.count == 1)
+        #expect(capture.line == "Sunday, rest day" && capture.records.count == 1)
         #expect(RestWeekday.current(in: plain.store) == 1)
     }
 
@@ -405,7 +405,7 @@ struct RestWeekdayTests {
         let context = TessContext(now: Self.at(25, 9), calendar: calendar, commitImmediately: true)
         let before = engine.history(limit: 200).count
         let capture = await tess.capture("rest day Sunday", context: context)
-        #expect(capture.line == "Sunday, rest day." && capture.records.isEmpty)
+        #expect(capture.line == "Sunday, rest day" && capture.records.isEmpty)
         #expect(engine.history(limit: 200).count == before)
         #expect(try store.objects(of: #require(classes[.task])).isEmpty)
     }
@@ -442,7 +442,7 @@ struct RestWeekdayTests {
         let before = plain.engine.history(limit: 100).count
         let record = try #require(settings.writeFirstRestWeekday(defaults: fresh()))
         #expect(plain.engine.history(limit: 100).count == before + 1)
-        #expect(RestWeekday.current(in: plain.store) == 1 && RestWeekday.receipt(for: 1) == "Sunday, rest day.")
+        #expect(RestWeekday.current(in: plain.store) == 1 && RestWeekday.receipt(for: 1) == "Sunday, rest day")
         // Once: a relaunch writes nothing, and neither does one after UNDO (his answer stands) or after "Any".
         #expect(settings.writeFirstRestWeekday(defaults: fresh()) == nil)
         plain.engine.undo(record)

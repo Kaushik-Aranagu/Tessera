@@ -57,10 +57,8 @@ final class AppModel {
     /// Whether the settings object lives in his real store (not a memory fallback or a failed seed).
     var settingsAreReal = false
 
-    /// "Tess asks Claude", for misses and Plan my day: the one settings field, and never on a throwaway store.
-    var asksClaude: Bool {
-        settingsAreReal && SettingsStore(engine: engine).read().sendsMissesToClaude
-    }
+    /// For the Sample data model: his own model, whose "Tess asks Claude" choice the sample follows (read only).
+    @ObservationIgnored weak var claudeOwner: AppModel?
 
     /// Plan my day's Claude wording stays off until Core's G4 and G9 land and its eval passes (AI architecture, Oct
     /// 16). Turning it on is their one-line change.
@@ -112,6 +110,26 @@ final class AppModel {
     var session: WorkoutSession?
     /// The workout cover zooms out of Training's first lane (set by START; cleared when the cover goes).
     var workoutRisesFromLane = false
+    /// The cook a Live Activity link opened (`tessera://cook?cook=<id>&alert=<food>`): the cooking cover shows it, with
+    /// the alert printed when one came with the link.
+    struct CookLink: Identifiable, Equatable {
+        let id: UUID
+        let alert: String?
+    }
+
+    var cookLink: CookLink?
+
+    /// The link from the cooking activity: its own cook if the link names one that still runs, else the cook running
+    /// now; nothing opens when no cook runs.
+    func openCook(from url: URL) {
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let named = items.first { $0.name == "cook" }?.value.flatMap { UUID(uuidString: $0) }
+        let running = KitchenFront(model: self, now: AppClock.now).cooking?.id
+        guard let id = [named, running].compactMap(\.self).first(where: { store.object(id: $0) != nil }) else { return }
+        let alert = items.first { $0.name == "alert" }?.value.flatMap { $0.isEmpty ? nil : $0 }
+        cookLink = CookLink(id: id, alert: alert)
+    }
+
     var isWorkoutPresented = false {
         didSet {
             if isWorkoutPresented {
@@ -195,8 +213,9 @@ final class AppModel {
         // A cold launch is a foreground too: told now, so her first frame already has her eyes shut if she wakes.
         soul.handle(.foregrounded(underLive: false))
         // Claude is the last capture step, gated on the one "Tess asks Claude" field, the key and the pause
-        // (it checks each at every call). Off in demos, so a fake key never goes over the network.
-        if !demo, let capture = runtime.tess as? TessCaptureEngine {
+        // (it checks each at every call). Off in demos, so a fake key never goes over the network. Sample data keeps
+        // it (Kaushik, Oct 24): its calls are counted in the sample's own store, never written to his.
+        if !Self.isDemo, let capture = runtime.tess as? TessCaptureEngine {
             capture.claude = ClaudeTessModel(
                 keys: SystemKeychain(),
                 ledger: TessUsageLedger(store: store, classes: classes),
@@ -218,8 +237,8 @@ final class AppModel {
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
         case .opened: nil
-        case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
-        case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
+        case .recoveredWithBackup: "Started fresh; your old data is saved in Backups"
+        case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time"
         }
         // Both are read, oldest first, one at a time (hunt 28 CALL 3 B); a restore says its copy's date (sheet 111).
         launchNotes = LaunchNoteQueue([TesseraSchema.launchNote.map(RestoreOffer.dated), outcome])
@@ -250,12 +269,6 @@ final class AppModel {
     /// Every UI write goes through typed actions, so it lands in the op log with undo (Core engine).
     @ObservationIgnored private(set) var engine: ActionEngine!
     @ObservationIgnored private(set) var ledger: TrainingLedger!
-
-    /// What's running (Core's process table): the running process is Now; suspended ones form Home's ledger.
-    var processes: ProcessTable {
-        _ = revision
-        return ProcessTable(engine: engine)
-    }
 
     // MARK: Tess captures (ghost rows)
 
@@ -292,10 +305,6 @@ final class AppModel {
         return record.objectIDs.first
     }
 
-    func isGhost(_ objectID: UUID) -> Bool {
-        pendingCaptures.contains { $0.objectIDs.contains(objectID) }
-    }
-
     /// Everything Tess just proposed (one phrase can become several actions).
     private(set) var pendingCaptures: [OpRecord] = []
 
@@ -312,6 +321,7 @@ final class AppModel {
             }
         #endif
         if let routed = routedWrite(phrase) {
+            lastAnswerSource = nil
             return routed
         } // Write anywhere (135 part 5)
         var result = await runtime.tess.capture(phrase, context: captureContext())
@@ -325,8 +335,13 @@ final class AppModel {
             result = await live.capture(phrase, screen: nil)
         }
         isAskingClaude = false
+        lastAnswerSource = result.source
         return land(result)
     }
+
+    /// Who answered the last Ask: Claude, or the phone's own routes (the grammar, the on-device model; nil for a
+    /// routed write). Tess's sheet shows it as one small line under her reply.
+    private(set) var lastAnswerSource: TessCapture.Source?
 
     private var isDrainingWaiting = false
 
@@ -802,12 +817,12 @@ extension AppModel {
         guard let last = read.last else { return }
         // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more
         // read together get a count.
-        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read.")
+        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read")
         // One landing for the lot, so every drained ghost stays pending together and is seen.
         _ = land(TessCapture(records: read.flatMap(\.records), line: line, source: .claude))
     }
 
-    /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled.".
+    /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled".
     func cancelAskingClaude() {
         claudeFlags.cancelAsking()
         tessLive?.cancel()
@@ -866,7 +881,7 @@ extension AppModel {
             return job
         }
         let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
-                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
+                                 cacheURL: Self.isDemo || isSample ? nil : ClaudeHomeDone.defaultCacheURL)
         {
             [weak self] in self?.asksClaude ?? false
         }
@@ -881,5 +896,33 @@ extension AppModel {
         else { return nil }
         let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
         return await homeDone.words(for: line, dayLabel: label, store: store)
+    }
+}
+
+/// "Tess asks Claude", kept out of the class body.
+extension AppModel {
+    /// "Tess asks Claude", for misses, Plan my day, Home's done words and day names: the one settings field (On
+    /// unless he chose Off), never on a throwaway store and never in a demo (`isDemo`: -demo, -resetDemo, -theme,
+    /// -fakeClaudeKey). Sample data is the stamped test world and may ask Claude (Kaushik, Oct 24): it follows his own
+    /// stored choice, read from his model and never written.
+    var asksClaude: Bool {
+        guard !Self.isDemo else { return false }
+        let source = isSample ? (claudeOwner ?? self) : self
+        guard source.settingsAreReal || source.isSample || TestStoreGate.allowsClaude(source.store)
+        else { return false }
+        return SettingsStore(engine: source.engine).read().sendsMissesToClaude
+    }
+}
+
+/// The process table and ghost lookups, kept out of the class body.
+extension AppModel {
+    /// What's running (Core's process table): the running process is Now; suspended ones form Home's ledger.
+    var processes: ProcessTable {
+        _ = revision
+        return ProcessTable(engine: engine)
+    }
+
+    func isGhost(_ objectID: UUID) -> Bool {
+        pendingCaptures.contains { $0.objectIDs.contains(objectID) }
     }
 }

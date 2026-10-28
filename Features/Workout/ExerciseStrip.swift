@@ -37,7 +37,7 @@ struct ExerciseStrip: View {
         case .remaining:
             Paint.cream.opacity(0.2)
         case .current:
-            TimelineView(.animation(minimumInterval: 1 / 60, paused: reduceMotion)) { context in
+            LiveTimeline(LiveFeatures.exerciseStrip, minimumInterval: 1 / 60) { context in
                 let time = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.period)
                     / Self.period
                 // The glint crosses in the first 30% of each period, then the segment just glows.
@@ -100,7 +100,7 @@ struct RunningOrderSheet: View {
             }
             .frame(height: CGFloat(entries.count) * Self.pitch, alignment: .top)
             .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.42), value: destination)
-            Text("Hold a name and drag. Today only; the plan keeps its order.")
+            Text("Hold a name and drag. Today only; the plan keeps its order")
                 .font(Theme.voice(size: 18))
                 .foregroundStyle(Paint.secondary)
                 .fixedSize(horizontal: false, vertical: true)

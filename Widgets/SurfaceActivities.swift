@@ -86,23 +86,41 @@ struct SetMarksRow: View {
 struct CookLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: CookActivityAttributes.self) { context in
-            CookLockScreen(recipe: context.attributes.recipeName, state: context.state)
-                .activityBackgroundTint(Color(red: 0x12 / 255, green: 0x0E / 255, blue: 0x1A / 255).opacity(0.9))
-                .activitySystemActionForegroundColor(ink)
-                .widgetURL(URL(string: "tessera://cook"))
+            Group {
+                if context.state.isReady {
+                    CookReadyLockScreen(state: context.state)
+                } else {
+                    CookLockScreen(recipe: context.attributes.recipeName, state: context.state)
+                }
+            }
+            .activityBackgroundTint(Color(red: 0x12 / 255, green: 0x0E / 255, blue: 0x1A / 255).opacity(0.9))
+            .activitySystemActionForegroundColor(ink)
+            .widgetURL(context.state.link ?? URL(string: "tessera://cook"))
         } dynamicIsland: { context in
             let accent = SurfaceStyle.accentOnDark("kitchen")
             let state = context.state
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Text(timerInterval: state.interval, countsDown: true)
-                        .font(SurfaceType.numerals(40, relativeTo: .largeTitle))
-                        .foregroundStyle(accent)
-                        .frame(width: 100, alignment: .leading)
-                        .padding(.leading, 8)
+                    if let food = state.readyFood {
+                        // A timer hit zero: "Chicken ready" in wine mixed toward white, swelling once.
+                        CookReadyWord(text: CookFace.readyWord(food: food), trigger: food)
+                            .padding(.leading, 8)
+                    } else {
+                        Text(timerInterval: state.interval, countsDown: true)
+                            .font(SurfaceType.numerals(40, relativeTo: .largeTitle))
+                            .foregroundStyle(accent)
+                            .frame(width: 100, alignment: .leading)
+                            .padding(.leading, 8)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    if let plus = state.plusWord {
+                    if state.isReady, let end = state.nextInterval {
+                        Text(timerInterval: end, countsDown: true)
+                            .font(SurfaceType.numerals(24, .regular, relativeTo: .title2))
+                            .foregroundStyle(accent)
+                            .frame(maxWidth: 80, alignment: .trailing)
+                            .padding(.trailing, 8)
+                    } else if let plus = state.plusWord {
                         Text(plus)
                             .font(SurfaceType.numerals(24, .regular, relativeTo: .title2))
                             .foregroundStyle(accent)
@@ -129,15 +147,90 @@ struct CookLiveActivity: Widget {
                     Image(systemName: "timer").foregroundStyle(accent)
                 }
             } compactTrailing: {
-                Text(timerInterval: state.interval, countsDown: true)
-                    .font(SurfaceType.numerals(15, .regular, relativeTo: .footnote))
-                    .foregroundStyle(accent)
-                    .frame(maxWidth: 48)
+                if state.isReady {
+                    Text("Ready").font(SurfaceType.words(14, .medium, relativeTo: .footnote)).foregroundStyle(CookReady.wine)
+                } else {
+                    Text(timerInterval: state.interval, countsDown: true)
+                        .font(SurfaceType.numerals(15, .regular, relativeTo: .footnote))
+                        .foregroundStyle(accent)
+                        .frame(maxWidth: 48)
+                }
             } minimal: {
-                Image(systemName: "timer").foregroundStyle(accent)
+                Image(systemName: "timer").foregroundStyle(state.isReady ? CookReady.wine : accent)
             }
             .keylineTint(accent)
         }
+    }
+}
+
+/// Sheet 344's ready colour: wine mixed 45% toward white.
+private enum CookReady {
+    static let wine: Color = {
+        let mixed = CookFace.readyWine
+        return Color(red: Double(mixed.red) / 255, green: Double(mixed.green) / 255, blue: Double(mixed.blue) / 255)
+    }()
+}
+
+/// "Chicken ready", which swells once (1.08 across by 1.14 up, 520 ms) each time the food changes. Reduce Motion: it
+/// just appears.
+private struct CookReadyWord: View {
+    let text: String
+    let trigger: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let word = Text(text)
+            .font(SurfaceType.words(22, .medium, relativeTo: .title3))
+            .foregroundStyle(CookReady.wine)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        if CookFace.swells(reduceMotion: reduceMotion) {
+            word.phaseAnimator([0.0, 1.0, 0.0], trigger: trigger) { content, phase in
+                content.scaleEffect(x: 1 + (CookFace.swell.x - 1) * phase, y: 1 + (CookFace.swell.y - 1) * phase)
+            } animation: { _ in
+                .easeInOut(duration: CookFace.swell.duration / 2)
+            }
+        } else {
+            word
+        }
+    }
+}
+
+/// "READY, OFF THE HEAT", the food big, and the next timer on the right ("5:58, onions to go").
+private struct CookReadyLockScreen: View {
+    let state: CookActivityAttributes.ContentState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(CookFace.readyLine)
+                .font(SurfaceType.words(14, .medium, relativeTo: .caption))
+                .tracking(1.2)
+                .foregroundStyle(CookReady.wine)
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(state.readyFood ?? "")
+                    .font(SurfaceType.words(44, .medium, relativeTo: .largeTitle))
+                    .foregroundStyle(ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Spacer(minLength: 8)
+                if let end = state.nextInterval {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(timerInterval: end, countsDown: true)
+                            .font(SurfaceType.numerals(24, .regular, relativeTo: .title2))
+                            .frame(maxWidth: 70, alignment: .trailing)
+                        if let label = state.nextLabel {
+                            Text(", \(label)").font(SurfaceType.words(15, .regular, relativeTo: .subheadline))
+                        }
+                    }
+                    .foregroundStyle(ink.opacity(0.85))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .accessibilityElement(children: .combine)
     }
 }
 

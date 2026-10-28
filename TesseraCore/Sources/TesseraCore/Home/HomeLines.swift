@@ -117,7 +117,7 @@ public struct HomeLine: Equatable, Sendable {
     /// without a comma ("Push A today."); a fact joins after a comma ("Tacos tonight, 2 to buy."); a context that
     /// repeats the hero's state drops and its clock becomes `widgetMeta`. "Push A done, a bench best."
     public var widgetLine: String {
-        widgetWords + "."
+        widgetWords
     }
 
     /// The inline Lock Screen face takes the line without its stop. A rest day is "Rest day" alone: widgets have no
@@ -156,7 +156,7 @@ public struct HomeLine: Equatable, Sendable {
     public let weekday: String
 
     /// Nothing on Home: "All quiet."
-    public static let quiet = "All quiet."
+    public static let quiet = "All quiet"
 
     init(text: String, hero: String, context: String?, contextShort: String?, detail: String?, fixed: Bool,
          fact: HomeFact, weekday: String)
@@ -192,12 +192,12 @@ public enum HomeLines {
             && trimmed.split(separator: " ").count <= contextWords
     }
 
-    /// Whether a sentence fits the detail slot: one sentence, 14 words, 80 characters, with its stop.
+    /// Whether a sentence fits the detail slot: one sentence, 14 words, 80 characters, no stop at its end.
     public static func fitsDetail(_ sentence: String) -> Bool {
         let trimmed = sentence.trimmingCharacters(in: .whitespaces)
-        return trimmed.hasSuffix(".") && trimmed.count <= detailCharacters
+        return !trimmed.isEmpty && !trimmed.hasSuffix(".") && trimmed.count <= detailCharacters
             && trimmed.split(separator: " ").count <= detailWords
-            && trimmed.dropLast().allSatisfy { !"?!".contains($0) } && !trimmed.dropLast().contains(". ")
+            && trimmed.allSatisfy { !"?!".contains($0) } && !trimmed.contains(". ")
     }
 
     /// The rules words for one fact.
@@ -219,27 +219,27 @@ public enum HomeLines {
     static func text(for fact: HomeFact, now: Date, calendar: Calendar) -> String {
         switch fact.kind {
         case .rest:
-            return "\(RestDay.line)."
+            return "\(RestDay.line)"
         case .workout:
             return workoutText(for: fact, now: now, calendar: calendar)
         case .cook:
             if fact.state == .planned {
-                return "\(cookWhen(fact, now: now, calendar: calendar)), \(toBuy(fact))."
+                return "\(cookWhen(fact, now: now, calendar: calendar)), \(toBuy(fact))"
             }
             if fact.state == .done {
-                return "\(fact.title) done."
+                return "\(fact.title) done"
             }
-            guard let step = fact.step else { return "\(fact.title), cooking." }
-            return "\(fact.title), on step \(step)."
+            guard let step = fact.step else { return "\(fact.title), cooking" }
+            return "\(fact.title), on step \(step)"
         case .shop:
-            guard let left = fact.step, left > 0 else { return "\(fact.title): all in the basket." }
-            return "\(fact.title): \(left) left."
+            guard let left = fact.step, left > 0 else { return "\(fact.title): all in the basket" }
+            return "\(fact.title): \(left) left"
         case .list:
-            guard let left = fact.step, left > 0 else { return "\(fact.title): all done." }
+            guard let left = fact.step, left > 0 else { return "\(fact.title): all done" }
             if fact.state == .paused {
-                return "\(fact.title): paused, \(left) left."
+                return "\(fact.title): paused, \(left) left"
             }
-            return "\(fact.title): \(left) left."
+            return "\(fact.title): \(left) left"
         case .task:
             // His own words; the time sits at the right, drawn by the page.
             return fact.title
@@ -250,24 +250,24 @@ public enum HomeLines {
         switch fact.state {
         case .done:
             // "Push A done. Bench best." (never "record" in a line; Design G3). No sets logged is no session.
-            guard fact.sets > 0 else { return "\(fact.title), no sets." }
+            guard fact.sets > 0 else { return "\(fact.title), no sets" }
             switch fact.records.count {
-            case 0: return "\(fact.title) done."
-            case 1: return "\(fact.title) done. \(fact.records[0]) best."
-            default: return "\(fact.title) done. \(fact.records.count) bests."
+            case 0: return "\(fact.title) done"
+            case 1: return "\(fact.title) done. \(fact.records[0]) best"
+            default: return "\(fact.title) done. \(fact.records.count) bests"
             }
         case .running:
             // Every set logged, finish not tapped: "Push A, all sets in." (Design G5).
-            guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title), all sets in." }
-            return "\(exercise), set \(step)."
+            guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title), all sets in" }
+            return "\(exercise), set \(step)"
         case .paused:
-            guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title) paused." }
-            return "\(exercise) paused at set \(step)."
+            guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title) paused" }
+            return "\(exercise) paused at set \(step)"
         case .planned:
             if let at = fact.startsAt, !fact.tomorrow {
-                return "\(fact.title), \(DayStoryClock.sentenceTime(at, calendar: calendar))."
+                return "\(fact.title), \(DayStoryClock.sentenceTime(at, calendar: calendar))"
             }
-            return "\(fact.title) \(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))."
+            return "\(fact.title) \(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))"
         }
     }
 
@@ -387,14 +387,14 @@ public enum HomeLines {
             if !fact.records.isEmpty {
                 parts.append(fact.records.count == 1 ? "1 new best" : "\(fact.records.count) new bests")
             }
-            return parts.joined(separator: ", ") + "."
+            return parts.joined(separator: ", ")
         case .cook where fact.state == .running || fact.state == .paused:
             guard let step = fact.step else { return nil }
-            return fact.steps.map { "Step \(step) of \($0)." } ?? "Step \(step)."
+            return fact.steps.map { "Step \(step) of \($0)" } ?? "Step \(step)"
         case .shop:
-            return fact.step.map { $0 == 0 ? "All in the basket." : "\(count($0, "item")) left." }
+            return fact.step.map { $0 == 0 ? "All in the basket" : "\(count($0, "item")) left" }
         case .list:
-            return fact.step.map { $0 == 0 ? "All done." : "\($0) left." }
+            return fact.step.map { $0 == 0 ? "All done" : "\($0) left" }
         default:
             return nil
         }

@@ -65,7 +65,7 @@ struct NightForgetTests {
         #expect(record.summaries["/summaries/day/2026-10-23"] == "1 workout: Pull Day")
         #expect(record.cites?["/summaries/day/2026-10-23"]?.contains(push.id) == false)
         // Nothing else was touched: the night's own summary is written as usual.
-        #expect(record.summaries["/summaries/day/2026-10-24"] == "A quiet day.")
+        #expect(record.summaries["/summaries/day/2026-10-24"] == "A quiet day")
     }
 
     @Test func aWeekForgetsToo() async throws {
@@ -89,7 +89,7 @@ struct NightForgetTests {
         await run(24, &record)
         store.softDelete(only)
         await run(25, &record)
-        #expect(record.summaries["/summaries/day/2026-10-23"] == "A quiet day.")
+        #expect(record.summaries["/summaries/day/2026-10-23"] == "A quiet day")
         #expect(record.cites?["/summaries/day/2026-10-23"] == [])
     }
 

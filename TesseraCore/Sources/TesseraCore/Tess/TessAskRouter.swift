@@ -23,7 +23,7 @@ public struct TessAsk: Equatable, Sendable {
 @MainActor
 public enum TessAskRouter {
     /// "That stays on this phone." and nothing else, for money, health, body, calories and the calendar.
-    public static let staysHere = "That stays on this phone."
+    public static let staysHere = "That stays on this phone"
 
     /// Classes whose shown text may go to Claude, when the object is plain and asksClaude is on.
     static let claudeClasses: [SystemCatalog.Key] = [.task, .list, .listItem, .recipe, .routine]
@@ -40,7 +40,7 @@ public enum TessAskRouter {
         if let label = ObjectPrivacy.shownLabel(of: object, in: store, classes: classes)
             ?? (Describe.isPrivate(object, in: store, classes: classes) ? classLabel(of: object) : nil)
         {
-            return TessAsk(phoneAnswer: "\(label).", claudeText: nil, actions: [])
+            return TessAsk(phoneAnswer: "\(label)", claudeText: nil, actions: [])
         }
         let shown = Describe.sentence(object, in: store, classes: classes, calendar: calendar)
             ?? (object.title.isEmpty ? nil : object.title)
@@ -53,7 +53,7 @@ public enum TessAskRouter {
         if walled {
             return TessAsk(phoneAnswer: staysHere, claudeText: nil, actions: [])
         }
-        let answer = shown ?? "I don't have much on that one."
+        let answer = shown ?? "I don't have much on that one"
         var actions: [TessAsk.Action] = []
         if let taskClass = classes[.task], let classDef = object.classDef,
            ClassResolver.isSubclass(classDef, of: taskClass), store.value("isDone", of: object) != .bool(true)
@@ -117,12 +117,12 @@ public enum TessRoomLog {
         }
     }
 
-    /// Takes one back through the op log. The line is "Reversed." for money and "Put back." for the rest.
+    /// Takes one back through the op log. The line is "Reversed" for money and "Put back." for the rest.
     @discardableResult
     public static func undo(_ entry: RoomLogEntry, engine: ActionEngine) -> UndoOutcome {
         let outcome = UndoLog.undo(entry.id, engine: engine)
         if case .putBack = outcome, entry.isMoney {
-            return .putBack(line: "Reversed.")
+            return .putBack(line: "Reversed")
         }
         return outcome
     }

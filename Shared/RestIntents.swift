@@ -28,7 +28,7 @@ enum RestIntentRelay {
 /// Done: logs the planned set, the same action as hold to log.
 struct LogPlannedSetIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Log Planned Set"
-    static let description = IntentDescription("Logs the planned set of the running workout.")
+    static let description = IntentDescription("Logs the planned set of the running workout")
     static let isDiscoverable = false
 
     func perform() async throws -> some IntentResult {

@@ -80,6 +80,17 @@ enum HomeThings {
     }
 }
 
+/// The one-thing swipe as a pure step: which card leaves and which comes in. Sheet 294 section 4: the widget must
+/// never be left empty, so the card that leaves is read BEFORE the index changes.
+enum OneThingSwipe {
+    /// A swipe by `dx` (negative is next; the travel must pass 50 pt): the index of the card that leaves and the one
+    /// that comes in, wrapping; nil when nothing turns.
+    static func step(index: Int, count: Int, dx: CGFloat) -> (leaving: Int, entering: Int)? {
+        guard count > 1, abs(dx) > 50 else { return nil }
+        return (index, ((index + (dx < 0 ? 1 : -1)) % count + count) % count)
+    }
+}
+
 /// The 196 pt space under the mosaic. A sideways swipe past 50 pt (here or on the mosaic) only triggers the change:
 /// nothing
 /// follows the finger. The old tiers fold away in place with a top-down clip over 0.26 s and the new ones reveal in the
@@ -100,7 +111,12 @@ struct HomeOneThing: View {
     var onSlot: (CGRect) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var strike: Double = 0
+    /// Sheet 290: the pen lifts at the end of the strike (a 4 pt flick, there and gone).
+    @State private var lift: Double = 0
+    /// Sheet 294: how far into the roll his finger has taken the card (0 at rest).
+    @State private var follow: CGFloat = 0
     @State private var holdTask: Task<Void, Never>?
     @State private var full = false
     /// The finger moved too far during this hold: it can no longer finish anything.
@@ -120,7 +136,12 @@ struct HomeOneThing: View {
         ZStack(alignment: .topLeading) {
             if things.indices.contains(index) {
                 let thing = things[index]
+                // The widget is the clipped place: the tiers roll over its top and bottom edges (sheets 294, 295).
                 page(thing)
+                    // Sheet 294: the card leans over the top edge as the finger drags it (no travel: the tiers carry
+                    // that on commit); nothing at rest.
+                    .modifier(EdgeRollPass(overflow: follow, axis: .vertical, side: .leading, preset: .card,
+                                           reduceMotion: reduceMotion))
                 // A's 80 pt pixel sign sits at the top right; its slot is left clear here.
                 Color.clear.frame(width: 80, height: 80)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
@@ -153,20 +174,24 @@ struct HomeOneThing: View {
         // 64 pt slot at 444, the Middle line (20 pt) at 522, the Small line (15 pt 500 ink 2) at 554. Fixed slots: text
         // cuts on whole words and never wraps; the type stops growing at AX1 so nothing overlaps.
         ZStack(alignment: .topLeading) {
-            tier(thing, delay: 0.12, height: 20) {
+            tier(thing, delay: 0.12, height: 20, inset: 17) {
                 Text(Self.header(thing.kind).uppercased())
                     .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.semibold))
                     .tracking(13 * 0.12)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    // The header ends where the Big line starts (429 + 15 = 444): fixed size, never over it.
+                    .dynamicTypeSize(...DynamicTypeSize.large)
+                    .frame(height: 15, alignment: .top)
             }
-            .offset(y: 17)
-            tier(thing, delay: 0.2, height: 64) { big(thing) }
-                .frame(height: 64, alignment: .leading)
+            // 428: its 15.7 pt line ends before the Big line at 444 (no overlap, bounds check).
+            .offset(y: 16)
+            tier(thing, delay: 0.2, height: Self.bigSlot, inset: 32) { big(thing) }
+                .frame(height: Self.bigSlot, alignment: .leading)
                 .offset(y: 32)
-            tier(thing, delay: 0.28, height: 28) { mid(thing) }
+            tier(thing, delay: 0.28, height: 28, inset: 110) { mid(thing) }
                 .offset(y: 110)
-            tier(thing, delay: 0.36, height: 22) {
+            tier(thing, delay: 0.36, height: 22, inset: 142) {
                 FitLine(forms: FitLine.cuts(thing.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
             }
             .offset(y: 142)
@@ -186,10 +211,10 @@ struct HomeOneThing: View {
         }
     }
 
-    /// One tier in its own fixed cell, so the old and the new overlap without moving anything: the old folds away with
-    /// a
-    /// top-down clip (0.26 s), the new reveals from the top after its stagger.
-    private func tier(_ thing: HomeThing, delay: Double, height: CGFloat,
+    /// One tier in its own fixed cell, so the old and the new overlap without moving anything. Sheet 294: the old tier
+    /// rolls out over the top edge and the new one comes in over the bottom edge, the same roll in reverse, each after
+    /// its stagger. Under Reduce Motion the roll is off and each is the short crossfade.
+    private func tier(_ thing: HomeThing, delay: Double, height: CGFloat, inset: CGFloat,
                       @ViewBuilder content: () -> some View) -> some View
     {
         ZStack(alignment: .topLeading) {
@@ -197,29 +222,40 @@ struct HomeOneThing: View {
                 .id(thing.id)
                 // Through the motion policy: under Reduce Motion each becomes the short crossfade.
                 .transition(.asymmetric(
-                    insertion: AnyTransition.modifier(active: TierClip(progress: 0, fromTop: true),
-                                                      identity: TierClip(progress: 1, fromTop: true))
-                        .animation(MotionPolicy.resolve(.easeOut(duration: 0.3).delay(delay),
-                                                        reduceMotion: reduceMotion)),
-                    removal: AnyTransition.modifier(active: TierClip(progress: 0, fromTop: false),
-                                                    identity: TierClip(progress: 1, fromTop: false))
-                        .animation(MotionPolicy.resolve(.easeIn(duration: 0.26), reduceMotion: reduceMotion))
+                    insertion: AnyTransition.modifier(
+                        active: roll(1, side: .trailing, inset: inset, arriving: true),
+                        identity: roll(0, side: .trailing, inset: inset, arriving: true)
+                    )
+                    .animation(MotionPolicy.resolve(.easeOut(duration: 0.3).delay(delay),
+                                                    reduceMotion: reduceMotion)),
+                    removal: AnyTransition.modifier(
+                        active: roll(1, side: .leading, inset: inset),
+                        identity: roll(0, side: .leading, inset: inset)
+                    )
+                    .animation(MotionPolicy.resolve(.easeIn(duration: 0.26), reduceMotion: reduceMotion))
                 ))
         }
         // The tier sizes to its content (a two-line big line, large Dynamic Type); `height` is only its least.
         .frame(maxWidth: .infinity, minHeight: height, alignment: .topLeading)
     }
 
+    private func roll(_ overflow: CGFloat, side: EdgeRoll.Side, inset: CGFloat,
+                      arriving: Bool = false) -> EdgeRollPass
+    {
+        EdgeRollPass(overflow: overflow, axis: .vertical, side: side, travel: Self.height, inset: inset,
+                     placeLength: Self.height, preset: .card, reduceMotion: reduceMotion, arriving: arriving)
+    }
+
     @ViewBuilder
     private func big(_ thing: HomeThing) -> some View {
         let colour = thing.accentColor
         // Sheet 283: a word at Figtree 38 700 on one line (cut on whole words), or an Outfit 56 number.
-        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, size: 38, width: 262))
-            .font(thing.bigIsNumber ? .custom("Outfit", size: 56, relativeTo: .largeTitle).weight(.light)
-                : .custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
+        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, width: 262, typeSize: typeSize))
+            .font(thing.bigIsNumber ? .custom("Outfit", fixedSize: 56).weight(.light)
+                : .custom("Figtree", fixedSize: Self.bigSize(typeSize)).weight(.bold))
             .foregroundStyle(colour)
             .lineLimit(1)
-            .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
+            .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink, lift: lift))
         if thing.taskID != nil {
             text.simultaneousGesture(hold(thing))
         } else {
@@ -236,7 +272,8 @@ struct HomeOneThing: View {
         .buttonStyle(.plain)
     }
 
-    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x with an underline in its accent
+    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x in its accent, no underline
+    /// (Kaushik, Oct 23)
     /// (ink
     /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
@@ -268,16 +305,58 @@ struct HomeOneThing: View {
         }
     }
 
-    /// The longest whole-word cut of `text` that fits `width` at Figtree `size` 700; never an ellipsis.
-    static func cut(_ text: String, size: CGFloat, width: CGFloat) -> String {
+    /// The Big word's size: Figtree 38 scaled with the reader's text size, clamped to AX1 like the page, and stepped
+    /// down so its line fits the 64 pt slot (sheet 288: size first), so it never reaches the line below.
+    static let bigSlot: CGFloat = 64
+
+    static func bigSize(_ typeSize: DynamicTypeSize) -> CGFloat {
+        let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
+        let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: 38, compatibleWith: traits)
+        // Never under the sheet's 38 pt, at the small text sizes too.
+        var size = max(scaled, 38)
+        while size > 38, bigFont(size).lineHeight > bigSlot {
+            size -= 1
+        }
+        return size
+    }
+
+    /// The height of the Big line at `size`, for the no-overlap check.
+    static func bigLineHeight(_ size: CGFloat) -> CGFloat {
+        bigFont(size).lineHeight
+    }
+
+    private static func bigFont(_ size: CGFloat) -> UIFont {
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
         ])
-        let font = UIFont(descriptor: descriptor, size: size)
+        return UIFont(descriptor: descriptor, size: size)
+    }
+
+    /// The longest whole-word cut of `text` that fits `width` at the Big size; never an ellipsis.
+    static func cut(_ text: String, width: CGFloat, typeSize: DynamicTypeSize = .large) -> String {
+        let font = bigFont(bigSize(typeSize))
         for form in FitLine.cuts(text) where (form as NSString).size(withAttributes: [.font: font]).width <= width {
             return form
         }
         return FitLine.cuts(text).last ?? text
+    }
+
+    private static func category(_ size: DynamicTypeSize) -> UIContentSizeCategory {
+        switch size {
+        case .xSmall: .extraSmall
+        case .small: .small
+        case .medium: .medium
+        case .large: .large
+        case .xLarge: .extraLarge
+        case .xxLarge: .extraExtraLarge
+        case .xxxLarge: .extraExtraExtraLarge
+        case .accessibility1: .accessibilityMedium
+        case .accessibility2: .accessibilityLarge
+        case .accessibility3: .accessibilityExtraLarge
+        case .accessibility4: .accessibilityExtraExtraLarge
+        case .accessibility5: .accessibilityExtraExtraExtraLarge
+        @unknown default: .large
+        }
     }
 
     // MARK: Gestures
@@ -286,11 +365,16 @@ struct HomeOneThing: View {
     /// previous. The dominant axis wins; it commits past 50 pt or on a flick faster than 300 pt/s.
     private var swipe: some Gesture {
         DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
-            .onChanged { _ in
+            .onChanged { value in
                 // A drag in any direction is a swipe, not a hold: the strike retracts.
                 cancelHold()
+                // Sheet 294: the roll follows the finger, from the first point of travel, up to a third of the roll
+                // before it commits (the commit's own roll then carries it the rest of the way).
+                let travel = max(abs(value.translation.width), abs(value.translation.height))
+                follow = reduceMotion ? 0 : min(travel / (Self.swipeDistance * 3), 0.3)
             }
             .onEnded { value in
+                withTesseraAnimation(.easeOut(duration: 0.28), reduceMotion: reduceMotion) { follow = 0 }
                 let sideways = abs(value.translation.width) >= abs(value.translation.height)
                 // A diagonal has no clear direction: the dominant axis must lead by 1.3x or the swipe is ignored.
                 let lead = sideways
@@ -335,6 +419,7 @@ struct HomeOneThing: View {
                         withTesseraAnimation(.linear(duration: 0.6), reduceMotion: false) { strike = 1 }
                         try? await Task.sleep(for: .milliseconds(600))
                         guard !Task.isCancelled else { return }
+                        penLift()
                     }
                     full = true
                 }
@@ -353,6 +438,16 @@ struct HomeOneThing: View {
             }
     }
 
+    /// The pen leaves the paper: the flick runs out and back inside 240 ms; it has no haptic of its own (the Done
+    /// pattern is this move's one). Reduce Motion drops it.
+    private func penLift() {
+        withTesseraAnimation(.easeOut(duration: 0.08), reduceMotion: false) { lift = 1 }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(80))
+            withTesseraAnimation(.easeIn(duration: 0.16), reduceMotion: false) { lift = 0 }
+        }
+    }
+
     private func cancelHold() {
         moved = true
         holdTask?.cancel()
@@ -363,18 +458,5 @@ struct HomeOneThing: View {
         holdTask = nil
         full = false
         withTesseraAnimation(.easeOut(duration: 0.22), reduceMotion: reduceMotion || !retract) { strike = 0 }
-    }
-}
-
-/// A tier folding in or out in place: a clip that runs top-down (the new tier grows from the top, the old one shrinks
-/// toward the bottom).
-private struct TierClip: ViewModifier {
-    var progress: CGFloat
-    var fromTop: Bool
-
-    func body(content: Content) -> some View {
-        content.mask {
-            Rectangle().scaleEffect(y: max(progress, 0.001), anchor: fromTop ? .top : .bottom)
-        }
     }
 }

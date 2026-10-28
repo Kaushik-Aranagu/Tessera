@@ -31,6 +31,8 @@ enum HomeV2Door: Identifiable, Hashable {
     /// Bridge's dial (sheet 283): the weather landing and Settings are doors too.
     case lookout
     case settings
+    /// The Chart room (experimental, behind the `chartRoom` flag).
+    case chart
 
     /// The doorway's colour for this room.
     var accent: Color {
@@ -39,6 +41,7 @@ enum HomeV2Door: Identifiable, Hashable {
         case let .app(app): app.accent
         case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
         case .settings: Theme.Colors.ink
+        case .chart: Theme.Colors.Accent.chart
         }
     }
 
@@ -62,6 +65,7 @@ enum HomeV2Door: Identifiable, Hashable {
         case let .app(app): app.rawValue
         case .lookout: "lookout"
         case .settings: "settings"
+        case .chart: "chart"
         }
     }
 }
@@ -176,6 +180,7 @@ struct HomeV2DoorPage: View {
                 // Routines' landing is Builder A's (sheet 131 L4); until then its plans.
                 ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
             case .lookout: WeatherLandingView()
+            case .chart: ChartShellHost()
             case .settings: NavigationStack { SettingsPage(cameFrom: "Bridge") }
             }
         }

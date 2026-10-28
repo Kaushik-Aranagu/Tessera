@@ -123,6 +123,6 @@ public struct SkipShopTotal: EngineAction {
     }
 
     public func receipt(in _: ObjectStore) -> String? {
-        "Groceries total, skipped."
+        "Groceries total, skipped"
     }
 }

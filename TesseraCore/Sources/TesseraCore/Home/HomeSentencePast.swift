@@ -26,7 +26,7 @@ public extension HomeSentence {
             case .listItem, .list: app = .lists
             default: break
             }
-            let sentence = text.hasSuffix(".") ? text : text + "."
+            let sentence = text
             return Clause(app: app, sentence: LandingSentence(text: sentence, key: nil),
                           opens: first.map { .object($0.id) } ?? .app(app ?? .notes), time: line.time)
         }

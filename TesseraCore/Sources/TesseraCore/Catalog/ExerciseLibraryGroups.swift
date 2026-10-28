@@ -24,7 +24,7 @@ public extension ObjectStore {
     func exerciseGroups(root: ClassDef?) -> [ExerciseGroup] {
         guard let root else { return [] }
         let everything = ClassResolver.descendants(of: root)
-        let patterns = everything.filter { $0.systemKey?.hasPrefix("library.pattern.") == true }
+        let patterns = everything.filter { $0.systemKey?.hasPrefix("library.pattern") == true }
         var placed = Set<UUID>()
         var groups: [ExerciseGroup] = patterns.map { pattern in
             let exercises = ClassResolver.descendants(of: pattern).dropFirst()

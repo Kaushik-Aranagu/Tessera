@@ -27,65 +27,59 @@ struct SettingsLandingPage: View {
         let facts = facts
         let seen = SettingsAreaSeen.all()
         let cards = SettingsLandingWords.cards(facts)
-        LandingScaffold(title: "Settings", accent: Theme.Colors.ink, navWord: "Bridge", onBack: { dismiss() },
-                        onTitle: { open(.everything) },
-                        switcher: SettingsLandingWords.switcher, switcherIndex: $switcherIndex,
-                        switcherVerticalIndex: $switcherVerticalIndex,
-                        needs: SettingsLandingWords.needs(facts, switcher: switcherIndex, opened: seen),
-                        keystone: {
-                            LandingKeystone(label: "Setting areas") {
-                                WordWallView(words: SettingsLandingWords.wall(opened: seen)) { id in
-                                    if let area = SettingsArea(rawValue: id) {
-                                        open(area)
-                                    }
-                                } label: { word in
-                                    "\(SettingsArea(rawValue: word.id)?.title ?? word.text.capitalized), setting"
-                                }
-                            }
-                        },
-                        caption: ["Tap an area to open it.", "Tap an area."],
-                        widget: cards, widgetIndex: $widgetIndex,
-                        openWidget: { item in
-                            if let area = SettingsArea(rawValue: item.id) {
-                                open(area)
-                            }
-                        },
-                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Theme.Colors.ink, room: .log) },
-                        doors: SettingsLandingWords.doors(facts, colors: colors), focus: $focus,
-                        openDoor: { door in
-                            if let area = SettingsArea(rawValue: door.id) {
-                                open(area)
-                            }
-                        },
-                        action: nil)
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(item: $area) { $0.destination }
-            .task {
-                // Read once, from the copies' own files; nothing is written.
-                backupLine = BackupKeeper.lastLine(copies: BackupKeeper.localCopies(), now: AppClock.now)
-            }
+        LandingScaffold(
+            title: SettingsRoomContent.title,
+            accent: Theme.Colors.ink,
+            navWord: "Bridge",
+            onBack: { dismiss() },
+            onTitle: { open(.everything) },
+            switcher: SettingsLandingWords.switcher,
+            switcherIndex: $switcherIndex,
+            switcherVerticalIndex: $switcherVerticalIndex,
+            needs: SettingsLandingWords.needs(facts, switcher: switcherIndex, opened: seen),
+            keystone: {
+                LandingKeystone(label: SettingsRoomContent.wallLabel) {
+                    WordWallView(words: SettingsLandingWords.wall(opened: seen)) { id in
+                        if let area = SettingsArea(rawValue: id) {
+                            open(area)
+                        }
+                    } label: { word in
+                        "\(SettingsArea(rawValue: word.id)?.title ?? word.text.capitalized), setting"
+                    }
+                }
+            },
+            caption: SettingsRoomContent.caption,
+            widget: cards,
+            widgetIndex: $widgetIndex,
+            openWidget: { item in
+                if let area = SettingsArea(rawValue: item.id) {
+                    open(area)
+                }
+            },
+            glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Theme.Colors.ink, room: .log) },
+            doors: SettingsLandingWords.doors(facts, colors: colors),
+            focus: $focus,
+            openDoor: { door in
+                if let area = SettingsArea(rawValue: door.id) {
+                    open(area)
+                }
+            },
+            action: nil
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationDestination(item: $area) { $0.destination }
+        .task {
+            // Read once, from the copies' own files; nothing is written.
+            backupLine = BackupKeeper.lastLine(copies: BackupKeeper.localCopies(), now: AppClock.now)
+        }
     }
 
     private var facts: SettingsLandingFacts {
-        let memory = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL)
-        let units = UnitsCopy.kinds.map { model.displayUnits.unit(for: $0) ?? UnitsCopy.standard($0) }
-        return SettingsLandingFacts(remembers: memory.countWord(), asksClaude: model.asksClaude, units: units,
-                                    backupLine: backupLine, build: BuildStamp.short,
-                                    privacyLines: privacyLines)
-    }
-
-    /// Core's privacy sentences, counts only, from his own store even while Sample data is on (as the Privacy page).
-    private var privacyLines: [String] {
-        let real = realModel ?? model
-        return PrivacyPage.lines(engine: real.engine, claudeOn: real.asksClaude, backupLine: backupLine ?? "")
+        SettingsLandingFacts.read(model: model, realModel: realModel, backupLine: backupLine)
     }
 
     private var colors: SettingsLandingWords.Colors {
-        let dark = scheme == .dark
-        return .init(ink: Theme.Colors.ink,
-                     slate: dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F),
-                     green: dark ? Color(hex: 0x8FC9A0) : Color(hex: 0x25803D),
-                     gold: dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E))
+        SettingsLandingWords.colors(scheme)
     }
 
     private func open(_ next: SettingsArea) {
@@ -172,12 +166,37 @@ struct SettingsLandingFacts: Equatable {
 }
 
 /// The landing's words, pure so tests can read them.
+extension SettingsLandingFacts {
+    /// The landing's facts from the store (one source for the scaffold and the shell). The privacy sentences come
+    /// from his own store even while Sample data is on, counts only, as the Privacy page. Nothing reads the Claude
+    /// key: only whether Tess asks Claude.
+    @MainActor
+    static func read(model: AppModel, realModel: AppModel?, backupLine: String?) -> Self {
+        let memory = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL)
+        let units = UnitsCopy.kinds.map { model.displayUnits.unit(for: $0) ?? UnitsCopy.standard($0) }
+        let real = realModel ?? model
+        let privacy = PrivacyPage.lines(engine: real.engine, claudeOn: real.asksClaude, backupLine: backupLine ?? "")
+        return Self(remembers: memory.countWord(), asksClaude: model.asksClaude, units: units,
+                    backupLine: backupLine.map(SettingsLandingWords.unstopped), build: BuildStamp.short,
+                    privacyLines: privacy.map(SettingsLandingWords.unstopped))
+    }
+}
+
 enum SettingsLandingWords {
-    struct Colors {
+    struct Colors: Equatable {
         let ink: Color
         let slate: Color
         let green: Color
         var gold: Color = .yellow
+    }
+
+    /// The kind colours for a scheme: slate, green and gold (241), ink for the rest.
+    static func colors(_ scheme: ColorScheme) -> Colors {
+        let dark = scheme == .dark
+        return Colors(ink: Theme.Colors.ink,
+                      slate: dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F),
+                      green: dark ? Color(hex: 0x8FC9A0) : Color(hex: 0x25803D),
+                      gold: dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E))
     }
 
     /// The header line, longest first; the last always fits (FitLine never wraps or ellipsizes).
@@ -186,9 +205,9 @@ enum SettingsLandingWords {
         let remembers = nothing ? "Tess remembers nothing yet" : "Tess remembers \(facts.remembers)"
         let claude = facts.asksClaude ? ", and asks Claude only with your key" : ", all on this phone"
         return [
-            "\(remembers)\(claude).",
-            "\(remembers).",
-            nothing ? "Nothing kept." : "Tess keeps \(facts.remembers.split(separator: " ").first ?? "").",
+            "\(remembers)\(claude)",
+            "\(remembers)",
+            nothing ? "Nothing kept" : "Tess keeps \(facts.remembers.split(separator: " ").first ?? "")",
         ]
     }
 
@@ -211,7 +230,9 @@ enum SettingsLandingWords {
                 let count = facts.remembers.split(separator: " ").first.map(String.init)
                 return DialDoor(id: area.rawValue, name: area.title,
                                 count: count.flatMap { Int($0) == nil ? nil : $0 }, color: colors.gold,
-                                label: "Tess remembers", lines: [facts.remembers.capitalizedFirst])
+                                label: "Tess remembers",
+                                lines: [facts.remembers.capitalizedFirst,
+                                        facts.asksClaude ? "Claude only with your key" : "All on this phone"])
             case .privacy:
                 return DialDoor(id: area.rawValue, name: area.title, color: colors.slate,
                                 label: "Kept on this phone", lines: Array(facts.privacyLines.prefix(2)))
@@ -237,6 +258,25 @@ enum SettingsLandingWords {
     }
 
     static let switcher = ["Changed", "All", "Private"]
+
+    /// A door page's one line under its title: the room's facts as a sentence, counts and on or off only (never the
+    /// key, never a backup's contents). The Door title cuts it on whole words.
+    static func doorLine(_ area: SettingsArea, facts: SettingsLandingFacts) -> String {
+        switch area {
+        case .tess:
+            stateLine(facts).first ?? "Tess remembers \(facts.remembers)"
+        case .privacy:
+            facts.privacyLines.first ?? "Everything stays on this phone"
+        case .units:
+            facts.units.isEmpty ? "Standard units" : "Measures in \(LandingList.joined(facts.units))"
+        case .claude:
+            facts.asksClaude ? "Tess asks Claude only with your key" : "Tess never asks Claude. Nothing leaves"
+        case .backups:
+            facts.backupLine.flatMap { sentences($0).first } ?? "No backup read yet"
+        default:
+            "Tessera, build \(facts.build)"
+        }
+    }
 
     /// The two needs lines beside the switcher (283), counts and on or off only.
     static func needs(_ facts: SettingsLandingFacts, switcher index: Int, opened: [String: Date]) -> [String] {
@@ -296,21 +336,28 @@ enum SettingsLandingWords {
         return first.lowercased() == "this" && words.count > 1 ? "this \(words[1])" : first
     }
 
-    /// "A. B." into ["A.", "B."].
+    /// A shown line without its closing full stop ("..." is never used, so it is left alone).
+    static func unstopped(_ line: String) -> String {
+        line.hasSuffix(".") && !line.hasSuffix("..") ? String(line.dropLast()) : line
+    }
+
+    /// "A. B." into ["A", "B"].
     static func sentences(_ text: String) -> [String] {
         var result: [String] = []
         var current = ""
         for word in text.split(separator: " ") {
             current += current.isEmpty ? String(word) : " \(word)"
             if word.hasSuffix(".") {
-                result.append(current)
+                // Each sentence is shown with no closing stop (Kaushik, Oct 26).
+                result.append(String(current.dropLast()))
                 current = ""
             }
         }
         if !current.isEmpty {
             result.append(current)
         }
-        return result
+        // No shown line ends in a full stop (Kaushik, Oct 26).
+        return result.map(Self.unstopped)
     }
 }
 

@@ -12,6 +12,11 @@ struct DialDoor: Identifiable, Equatable {
     var label: String?
     /// Up to four short lines beside the focus, the first bold (16 pt): the door's own summary, in the room's way.
     var lines: [String] = []
+    /// Sheet 320: ledger rows (name, right-aligned number, unit). When present `DoorSummary` draws the ledger
+    /// (`DoorLedger`) with `label` above and `more` below, instead of `lines`.
+    var rows: [DialDoor.Row] = []
+    /// The quiet last line of the ledger (12 pt): what opening the door adds.
+    var more: String?
 }
 
 /// The landing dial: 3 places (focus plus one above, one below), 48 pt slots, loops, a tick per door, a spring
@@ -49,6 +54,9 @@ struct DoorsDial: View {
     @State private var drag: CGFloat = 0
     @State private var cue = HapticCue()
     @State private var settledAt = Date.distantPast
+    /// Sheet 290, the detent: the new focus word settles 3 pt past its slot and back in 280 ms, like a dial clicking
+    /// into place. Zero at rest.
+    @State private var detent: CGFloat = 0
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
     private var large: Bool {
@@ -63,7 +71,45 @@ struct DoorsDial: View {
         !reduceMotion && !reduceTransparency && !ProcessInfo.processInfo.isLowPowerModeEnabled
     }
 
+    @Environment(\.doorsForm) private var requestedForm
+    @Environment(\.liveScope) private var isShown
+    /// "and N more" turns the place into the index form until the shell asks for another form.
+    @State private var turnedToIndex = false
+
+    /// The form on screen: the requested one, the index when "and N more" was tapped, and the reel again when the
+    /// form does not fit (a large Dynamic Type size, or doors that cannot be set in 160 pt) so a door is never lost.
+    private var formLayout: DoorFormLayout? {
+        guard style == .landing, !large else { return nil }
+        let form = turnedToIndex && requestedForm == .sentence ? DoorsForm.index : requestedForm
+        guard form != .reel, !doors.isEmpty else { return nil }
+        return DoorForms.fit(form, names: doors.map { ($0.id, $0.name) }, focus: wrapped(focus), scale: scale)
+    }
+
     var body: some View {
+        Group {
+            if let layout = formLayout {
+                DoorsFormView(
+                    doors: doors, layout: layout, isShown: isShown, open: open,
+                    turnTo: { door in
+                        if let index = doors.firstIndex(of: door) {
+                            move(index - wrapped(focus))
+                        }
+                    },
+                    turnBy: { move($0) },
+                    showAll: { turnedToIndex = true }
+                )
+                .frame(width: DoorForms.frame.width, height: DoorForms.frame.height, alignment: .topLeading)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            } else {
+                reelBody
+            }
+        }
+        .onChange(of: requestedForm) { turnedToIndex = false }
+        .tesseraAnimation(isShown ? Theme.Motion.fadeIn : .linear(duration: 0), value: formLayout?.form)
+    }
+
+    @ViewBuilder
+    private var reelBody: some View {
         let count = doors.count
         ZStack(alignment: .leading) {
             if count > 0 {
@@ -76,7 +122,7 @@ struct DoorsDial: View {
             }
         }
         .frame(height: slotHeight * CGFloat(places(count).count == 3 ? 3 : (large ? 2 : 3)))
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: style == .landing ? .trailing : .leading)
         .contentShape(Rectangle())
         .highPriorityGesture(turn)
         .tesseraFeedback(cue)
@@ -131,13 +177,13 @@ struct DoorsDial: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
             }
-            .frame(height: slotHeight, alignment: .leading)
+            .frame(height: slotHeight, alignment: style == .landing ? .trailing : .leading)
             .blur(radius: blurOn ? maxBlur * distance : 0)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: style == .landing ? 160 : 190, alignment: .leading)
-        .offset(y: offset)
+        .frame(maxWidth: style == .landing ? 160 : 190, alignment: style == .landing ? .trailing : .leading)
+        .offset(y: offset + (place == 0 ? detent : 0))
         .accessibilityLabel("\(door.name)\(door.count.map { ", \($0)" } ?? "")")
         .accessibilityAddTraits(place == 0 ? .isSelected : [])
         .accessibilityHint(place == 0 ? "Opens it" : "Turns to it")
@@ -198,6 +244,19 @@ struct DoorsDial: View {
         }
         cue.play(.selection)
         settledAt = Date()
+        click(delta)
+    }
+
+    /// The detent: as the spring arrives, the word goes 3 pt on in the direction it travelled (the list moves up when
+    /// the next door comes to the focus) and back, inside 280 ms. Reduce Motion drops it.
+    private func click(_ delta: Int) {
+        guard !reduceMotion else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            withTesseraAnimation(.easeOut(duration: 0.06), reduceMotion: reduceMotion) { detent = delta > 0 ? -3 : 3 }
+            try? await Task.sleep(for: .milliseconds(60))
+            withTesseraAnimation(.easeInOut(duration: 0.12), reduceMotion: reduceMotion) { detent = 0 }
+        }
     }
 }
 
@@ -219,6 +278,8 @@ struct DoorSummary: View {
     /// the summary keeps one identity.
     var ownMove = true
 
+    @ScaledMetric(relativeTo: .caption) private var labelHeight: CGFloat = 20
+    @ScaledMetric(relativeTo: .body) private var lineHeight: CGFloat = 24
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.doorSummaryStyle) private var style
 
@@ -232,23 +293,37 @@ struct DoorSummary: View {
     }
 
     /// The rows of the per-row styles (chalk, fog, grow), each in its fixed place, keyed by door so a turn swaps them.
-    static func rows(_ door: DialDoor, key: String? = nil) -> [Row] {
+    /// `label` and `line` are the rows' heights (20 and 24 at the default size; they grow with Dynamic Type so a
+    /// line never sits in a box shorter than itself, which is what drew "..." at AX5).
+    /// How many summary lines fit the doors place under the label (120 pt less its 12 pt top): 3 at default sizes,
+    /// fewer at accessibility sizes, never under 1, so the summary never runs into the foot.
+    static func fittingLines(label labelHeight: CGFloat, line lineHeight: CGFloat, hasLabel: Bool = true) -> Int {
+        let room = 108 - (hasLabel ? labelHeight : 0)
+        return max(1, min(3, Int(room / max(lineHeight, 1))))
+    }
+
+    static func rows(_ door: DialDoor, key: String? = nil, label labelHeight: CGFloat = 20,
+                     line lineHeight: CGFloat = 24) -> [Row]
+    {
         let key = key ?? door.id
         var rows: [Row] = []
         var y: CGFloat = 0
         if let label = door.label {
             rows.append(Row(id: "\(key)#label", text: label, isLabel: true, isFirst: false, index: 0, y: 0))
-            y = 20
+            y = labelHeight
         }
-        for (index, line) in door.lines.prefix(3).enumerated() {
+        let shown = fittingLines(label: labelHeight, line: lineHeight, hasLabel: door.label != nil)
+        for (index, line) in door.lines.prefix(shown).enumerated() {
             rows.append(Row(id: "\(key)#\(index)", text: line, isLabel: false, isFirst: index == 0,
-                            index: rows.count, y: y + CGFloat(index) * 24))
+                            index: rows.count, y: y + CGFloat(index) * lineHeight))
         }
         return rows
     }
 
     var body: some View {
-        if let door, door.label != nil || !door.lines.isEmpty {
+        if let door, !door.rows.isEmpty {
+            DoorLedger(label: door.label, rows: door.rows, more: door.more)
+        } else if let door, door.label != nil || !door.lines.isEmpty {
             switch style {
             case .plain:
                 // The standing shell plays the move itself (`ownMove` false): then the summary keeps one identity.
@@ -278,20 +353,18 @@ struct DoorSummary: View {
     private func lines(_ door: DialDoor) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let label = door.label {
-                Text(label)
-                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
-                    .frame(height: 20, alignment: .leading)
+                FitLine(forms: FitLine.cuts(label), size: 13, color: Theme.Colors.inkSecondary)
+                    .frame(width: 192, height: labelHeight, alignment: .leading)
             }
-            ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+            let shown = Self.fittingLines(label: labelHeight, line: lineHeight, hasLabel: door.label != nil)
+            ForEach(Array(door.lines.prefix(shown).enumerated()), id: \.offset) { index, line in
                 FitLine(
                     forms: FitLine.cuts(line),
                     size: 16,
                     color: Theme.Colors.ink,
                     weight: index == 0 ? .bold : .regular
                 )
-                .frame(width: 192, height: 24, alignment: .leading)
+                .frame(width: 192, height: lineHeight, alignment: .leading)
             }
         }
         .frame(width: 192, alignment: .leading)
@@ -301,7 +374,7 @@ struct DoorSummary: View {
     /// Deck, Lookout and Watch: each row has its own place, so the old and new rows overlap while they change and
     /// nothing moves the layout. Without its own move the rows keep one identity and change in place.
     private func staged(_ door: DialDoor) -> some View {
-        let rows = Self.rows(door, key: ownMove ? nil : "summary")
+        let rows = Self.rows(door, key: ownMove ? nil : "summary", label: labelHeight, line: lineHeight)
         return ZStack(alignment: .topLeading) {
             ForEach(rows) { row in
                 rowView(row)
@@ -311,7 +384,7 @@ struct DoorSummary: View {
                         : .identity)
             }
         }
-        .frame(width: 192, height: 92, alignment: .topLeading)
+        .frame(width: 192, height: min(108, labelHeight + 3 * lineHeight), alignment: .topLeading)
         .tesseraAnimation(style.animation(rows: rows.count), value: ownMove ? door.id : "summary")
         .accessibilityElement(children: .combine)
     }
@@ -319,15 +392,13 @@ struct DoorSummary: View {
     @ViewBuilder
     private func rowView(_ row: Row) -> some View {
         if row.isLabel {
-            Text(row.text)
-                .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .lineLimit(1)
-                .frame(width: 192, height: 20, alignment: .leading)
+            // Whole-word cuts, never "..." (contract §7).
+            FitLine(forms: FitLine.cuts(row.text), size: 13, color: Theme.Colors.inkSecondary)
+                .frame(width: 192, height: labelHeight, alignment: .leading)
         } else {
             FitLine(forms: FitLine.cuts(row.text), size: style.lineSize, color: Theme.Colors.ink,
                     weight: row.isFirst ? .bold : .regular, family: style.family)
-                .frame(width: 192, height: 24, alignment: .leading)
+                .frame(width: 192, height: lineHeight, alignment: .leading)
         }
     }
 }

@@ -9,8 +9,8 @@ import TesseraTess
 enum PasteLinkWait {
     /// The start line: the host alone, "www." dropped, so a path or query never shows.
     static func startLine(_ link: URL) -> String {
-        guard let host = link.host(), !host.isEmpty else { return "Reading the recipe." }
-        return "Reading the recipe from \(host.hasPrefix("www.") ? String(host.dropFirst(4)) : host)."
+        guard let host = link.host(), !host.isEmpty else { return "Reading the recipe" }
+        return "Reading the recipe from \(host.hasPrefix("www") ? String(host.dropFirst(4)) : host)"
     }
 
     /// Core's words for the handoff to Claude.

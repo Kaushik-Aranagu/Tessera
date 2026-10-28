@@ -48,7 +48,7 @@ public struct AnswerCheck: Sendable {
     public static func retryNote(_ result: Result) -> String {
         let listed = result.unsupported.map { "\"\($0.text)\"" }.joined(separator: ", ")
         return "Your last answer said \(listed), which isn't in anything you were given. Get every number from the "
-            + "query or open tools, then answer again. Say you don't know if the data doesn't have it."
+            + "query or open tools, then answer again. Say you don't know if the data doesn't have it"
     }
 
     // MARK: Support
@@ -127,7 +127,7 @@ public struct AnswerCheck: Sendable {
     private static let units = unitWords.keys.sorted { $0.count > $1.count }
         .map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
     private static let words = numberWords.keys.joined(separator: "|")
-    // A digit number (not inside a word, a path or a date like 2026-10-23), or a number word; then maybe a unit.
+    /// A digit number (not inside a word, a path or a date like 2026-10-23), or a number word; then maybe a unit.
     private nonisolated(unsafe) static let pattern = try? NSRegularExpression(
         pattern: "([$€]\\s?)?(?:(?<![\\w.])(?<!\\d[-/])(\\d{1,3}(?:,\\d{3})+|\\d+)(\\.\\d+)?|\\b(\(words))\\b)"
             + "(?:\\s?(\(units))(?![A-Za-z]))?",
@@ -189,7 +189,7 @@ public struct AnswerCheck: Sendable {
             return true
         }
         let following = after.lowercased().trimmingCharacters(in: .whitespaces)
-        if unit == nil, ["am", "pm", "a.m.", "p.m."].contains(where: { following.hasPrefix($0) }) {
+        if unit == nil, ["am", "pm", "a.m", "p.m"].contains(where: { following.hasPrefix($0) }) {
             return true
         }
         if unit == nil, !hasFraction, !grouped, value >= 1900, value <= 2100 {
@@ -215,6 +215,7 @@ public struct AnswerCheck: Sendable {
         let recent = trimmed.lowercased().split(whereSeparator: { !$0.isLetter }).suffix(3).map(String.init)
         let next = after.lowercased().split(whereSeparator: { !$0.isLetter }).first.map(String.init)
         return recent.contains { changeWords.contains($0) } || next.map { ["more", "fewer", "less", "extra"]
-            .contains($0) } == true
+            .contains($0)
+        } == true
     }
 }

@@ -107,7 +107,7 @@ struct PasteRecipe: View {
                         .padding(.horizontal, -5)
                         .overlay(alignment: .topLeading) {
                             if text.isEmpty {
-                                Text("Ingredients, then the method. Any shape is fine.")
+                                Text("Ingredients, then the method. Any shape is fine")
                                     .textRole(.body)
                                     .foregroundStyle(Theme.Colors.inkSecondary)
                                     .padding(.top, Theme.Spacing.xl + 8)
@@ -597,7 +597,7 @@ enum PasteCopy {
     }
 
     /// The duplicate line's tail, one constant for building and reading it (QA on #865); Core's #854 says the same.
-    static let alreadyOnRecipes = " is already on Recipes."
+    static let alreadyOnRecipes = " is already on Recipes"
 
     /// "Weeknight dal is already on Recipes." / "Private recipe is already on Recipes."
     static func duplicate(_ name: String) -> String {
@@ -646,12 +646,12 @@ enum PasteCopy {
                          lines: [(line: String, kind: RecipeParser.LineKind)]) -> String
     {
         if link {
-            return "A link. Tap Read it and I'll read the page."
+            return "A link. Tap Read it and I'll read the page"
         }
-        return reading && read ? tess(lines) : "Paste a recipe and I'll read it."
+        return reading && read ? tess(lines) : "Paste a recipe and I'll read it"
     }
 
-    static let didntSave = "Didn't save that. Try again."
+    static let didntSave = "Didn't save that. Try again"
 
     /// Save is drawn only when the parser found something to keep: an ingredient or a step (G54).
     static func canSave(_ lines: [(line: String, kind: RecipeParser.LineKind)]) -> Bool {
@@ -694,7 +694,7 @@ enum PasteCopy {
             default: break
             }
         }
-        guard ingredients > 0 else { return "I couldn't find ingredients. Tap a line to mark one." }
+        guard ingredients > 0 else { return "I couldn't find ingredients. Tap a line to mark one" }
         func count(_ value: Int, _ one: String) -> String {
             "\(SpokenTime.number(value)) \(value == 1 ? one : one + "s")"
         }
@@ -703,7 +703,7 @@ enum PasteCopy {
             parts.append(count(timers, "timer"))
         }
         let sentence = parts.joined(separator: ", ")
-        return sentence.prefix(1).uppercased() + sentence.dropFirst() + "."
+        return sentence.prefix(1).uppercased() + sentence.dropFirst()
     }
 
     static func kindName(_ kind: RecipeParser.LineKind) -> String {

@@ -121,7 +121,7 @@ struct ReviewWeekData {
         guard finished.isEmpty else { return finished }
         return sessions[index].map { workout in
             let best = workout.records.first.map { ", \($0.exercise) best" } ?? ""
-            return DayLine(time: workout.startedAt, text: "\(title(of: workout)) done\(best).", objectIDs: [workout.id],
+            return DayLine(time: workout.startedAt, text: "\(title(of: workout)) done\(best)", objectIDs: [workout.id],
                            kind: .finished)
         }
     }
@@ -175,7 +175,7 @@ struct ReviewWeekData {
         let done = tasksDone[index] ?? 0
         let doneWords = done == 0 ? nil : "\(done) done"
         // The day's best fact: the first record line ("Bench 85 × 8, best."), else the first record the summary knows.
-        let best = logLines(index).first { $0.text.contains(", best.") }?.text.split(separator: " ").first
+        let best = logLines(index).first { $0.text.contains(", best") }?.text.split(separator: " ").first
             .map { "\($0) best" }
             ?? sessions[index].first?.records.first.map { "\(TesseraCore.ExerciseWords.short($0.exercise)) best" }
         let forms: [String] = if let workout = sessions[index].first {
@@ -210,7 +210,7 @@ struct ReviewWeekData {
             case .planned, .none: ""
             }
         }.filter { !$0.isEmpty }
-        return "Training, \(sessionLine). " + marks.joined(separator: ", ") + "."
+        return "Training, \(sessionLine). " + marks.joined(separator: ", ")
     }
 
     var tasksSpoken: String {
@@ -219,12 +219,12 @@ struct ReviewWeekData {
             guard let count = tasksDone[index], count > 0 else { return nil }
             return "\(dayName(index)) \(count)"
         }
-        return "Tasks done, \(total). " + parts.joined(separator: ", ") + "."
+        return "Tasks done, \(total). " + parts.joined(separator: ", ")
     }
 
     var cookedSpoken: String {
         let names = days.indices.filter { (cooked[$0] ?? 0) > 0 }.map(dayName)
-        return "Cooked, \(names.count). " + names.joined(separator: ", ") + "."
+        return "Cooked, \(names.count). " + names.joined(separator: ", ")
     }
 }
 
@@ -249,7 +249,7 @@ struct DayLetters: View {
                     .onTapGesture { read(index) }
                     .accessibilityLabel(week.dayName(index))
                     .accessibilityAddTraits(.isButton)
-                    .accessibilityHint("Reads \(week.dayName(index)).")
+                    .accessibilityHint("Reads \(week.dayName(index))")
             }
         }
     }
@@ -340,7 +340,7 @@ struct WeekLines: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .padding(.bottom, 2)
             if rows.isEmpty {
-                Text("Nothing written down yet.")
+                Text("Nothing written down yet")
                     .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
             }

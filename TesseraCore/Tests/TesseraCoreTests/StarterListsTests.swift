@@ -40,13 +40,13 @@ struct StarterListsTests {
         let engine = ActionEngine(store: store, classes: classes)
         let tess = TessCaptureEngine(engine: engine)
         let said = await tess.capture("copy packing for lisbon", context: TessContext())
-        #expect(said.line == "Packing, Lisbon, new list.", "\(said.line)")
+        #expect(said.line == "Packing, Lisbon, new list", "\(said.line)")
         let lists = ListContents(store: store, classes: classes)
         let lisbon = try #require(lists.lists().first { $0.title == "Packing, Lisbon" })
         #expect(lists.items(of: lisbon).count == 11 && lists.items(of: lisbon).allSatisfy { !$0.isDone })
         // The same phrase again opens that list: nothing new.
         let again = await tess.capture("copy packing for lisbon", context: TessContext())
-        #expect(again.line == "Packing, Lisbon, already a list." && lists.lists()
+        #expect(again.line == "Packing, Lisbon, already a list" && lists.lists()
             .filter { $0.title == "Packing, Lisbon" }.count == 1)
     }
 
@@ -58,7 +58,7 @@ struct StarterListsTests {
         let before = ListContents(store: store, classes: classes).lists().count
         let tess = TessCaptureEngine(engine: engine)
         let said = await tess.capture("copy trip for lisbon", context: TessContext())
-        #expect(said.line == "More than one list like trip." && said.records.isEmpty, "\(said.line)")
+        #expect(said.line == "More than one list like trip" && said.records.isEmpty, "\(said.line)")
         let none = await tess.capture("copy costco for lisbon", context: TessContext())
         // Not one of his lists: not a list phrase, so it is read as before (never "no list called ...").
         #expect(!none.line.contains("no list called"), "\(none.line)")
@@ -84,7 +84,7 @@ struct StarterListsTests {
         let secret = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
         let tess = TessCaptureEngine(engine: engine)
         let said = await tess.capture("copy lexapro for lisbon", context: TessContext())
-        #expect(said.line == "Private list, new list.", "\(said.line)")
+        #expect(said.line == "Private list, new list", "\(said.line)")
         #expect(!engine.history(limit: 20)
             .contains { $0.summary.lowercased().contains("lexapro") && $0.action == "copyList" })
         let copy = try #require(ListContents(store: store, classes: classes).lists()
@@ -118,7 +118,7 @@ struct StarterListsTests {
         try engine.perform(CreateList(name: "Gym bag"), by: .user)
         let tess = TessCaptureEngine(engine: engine)
         let said = await tess.capture("copy gym bag for away", context: TessContext())
-        #expect(said.line == "Gym bag, Away, new list.", "\(said.line)")
+        #expect(said.line == "Gym bag, Away, new list", "\(said.line)")
     }
 
     @Test func copyIsAListPhraseOnlyWhenItNamesAList() async throws {

@@ -12,7 +12,7 @@ extension ClaudeRouteTests {
 
     @Test func whatWasSentHoldsWordsAsSentWithHandles() async throws {
         let tess = tess()
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged"))]
         _ = await tess.capture(miss, context: context)
         let entries = sentLog().entries()
         // The phrase first, then what rode with it (his date, the workout and last set in focus).
@@ -31,7 +31,7 @@ extension ClaudeRouteTests {
 
     @Test func walledPhraseIsStoredAsPrivatePhrase() async {
         let tess = tess()
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged"))]
         // A walled miss goes whole (his "all but the key"), and the log keeps only "Private phrase".
         let walled = "could you log that I paid 40 for gas earlier?"
         _ = await tess.capture(walled, context: context)
@@ -44,13 +44,13 @@ extension ClaudeRouteTests {
 
     @Test func clearEmptiesPayloadsKeepsSpend() async {
         let tess = tess()
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged"))]
         _ = await tess.capture(miss, context: context)
         let ledger = TessUsageLedger(store: store, classes: classes)
         let spent = ledger.monthTotal(now: context.now, calendar: context.calendar)
         #expect(spent > 0 && sentLog().count == 1)
         let receipt = sentLog().clear()
-        #expect(receipt == "Cleared what was sent." && sentLog().count == 0)
+        #expect(receipt == "Cleared what was sent" && sentLog().count == 0)
         #expect(ledger.monthTotal(now: context.now, calendar: context.calendar) == spent)
         #expect(ledger.calls().count == 1)
         // No UNDO: clearing writes no op.
@@ -69,7 +69,7 @@ extension ClaudeRouteTests {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()
         let capture = await tess.capture(miss, context: context)
-        #expect(capture.line == "No connection. Saved it for Claude.")
+        #expect(capture.line == "No connection. Saved it for Claude")
         #expect(sentLog().count == 0 && ledger.calls().isEmpty, "an offline attempt wrote a row")
     }
 
@@ -79,7 +79,7 @@ extension ClaudeRouteTests {
         _ = await tess.capture(miss, context: context)
         #expect(sentLog().count == 0)
         RouteStub.failure = nil
-        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged."))]
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged"))]
         _ = await tess.readWaiting(context: context)
         #expect(sentLog().count == 1 && ledger.calls().count == 1)
         let first = sentLog().entries()[0]
@@ -93,7 +93,7 @@ extension ClaudeRouteTests {
         let tess = TessCaptureEngine(engine: engine)
         tess.claude = claude
         let capture = await tess.capture(miss, context: context)
-        #expect(capture.line == "Claude didn't answer in time.", "\(capture.line)")
+        #expect(capture.line == "Claude didn't answer in time", "\(capture.line)")
         #expect(sentLog().count == 1 && ledger.calls().count == 1)
     }
 
@@ -148,7 +148,7 @@ extension ClaudeRouteTests {
         #expect(sends >= 1)
         flags.cancelAsking()
         let line = await task.value
-        #expect(line == "Cancelled.", "\(line)")
+        #expect(line == "Cancelled", "\(line)")
     }
 
     @Test func theLogReChecksWhenShown() throws {

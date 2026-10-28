@@ -59,7 +59,7 @@ public struct QuietInterrupts {
         guard !titles.isEmpty else { return nil }
         let shown = titles.prefix(3).joined(separator: ", ")
         let more = titles.count > 3 ? ", and \(titles.count - 3) more" : ""
-        return "\(titles.count) \(titles.count == 1 ? "thing" : "things") waited: \(shown)\(more)."
+        return "\(titles.count) \(titles.count == 1 ? "thing" : "things") waited: \(shown)\(more)"
     }
 
     /// When the safety-net digest fires if the app never releases it.

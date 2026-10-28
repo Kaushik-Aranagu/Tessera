@@ -14,12 +14,24 @@ struct RootView: View {
     /// `-openCook "Paprika chicken"` (simulator only, read through LaunchFlags): starts that cook and opens its clock
     /// page, for recordings.
     @State private var demoCook: DemoCookCover?
+    @State private var demoShop = false
+    @State private var demoRoutine: DemoCookCover?
+    @State private var demoRoutinePage: DemoCookCover?
     /// Settings, opened from the entry at the top right of any page below Home.
     @State private var settingsOpen = false
     #if DEBUG
         /// `-openLayoutMode` (simulator only, LaunchFlags) opens Layout mode at launch, for its UI tests and stills.
         @State private var layoutModeOpen = false
     #endif
+
+    /// A full-screen cover or Tess's capture surface hides the stack: nothing under it draws live.
+    private var covered: Bool {
+        var covers = model.isWorkoutPresented || model.isCommandExpanded || demoCook != nil || settingsOpen
+        #if DEBUG
+            covers = covers || layoutModeOpen
+        #endif
+        return covers
+    }
 
     var body: some View {
         @Bindable var model = model
@@ -29,7 +41,12 @@ struct RootView: View {
                     Group {
                         // Home v2 (sheet 137) while its Review switch is On; else Home as it was.
                         if HomeMosaic.isOn {
-                            HomeMosaicPage()
+                            // Sheet 283 v5: Bridge and its rooms in the one standing shell.
+                            if ShellHome.isOn {
+                                RootShellHost()
+                            } else {
+                                HomeMosaicPage()
+                            }
                         } else if HomeV2.isOn {
                             HomeV2View()
                         } else {
@@ -37,10 +54,14 @@ struct RootView: View {
                         }
                     }
                     .environment(\.animateEntrance, model.consumeFirstVisit(nil))
+                    // Live only when seen: Home is the visible page only with nothing pushed over it and no cover up.
+                    .liveScope(model.path.isEmpty && !covered)
                     .toolbarVisibility(.hidden, for: .navigationBar)
                     .navigationDestination(for: Route.self) { route in
                         ObjectPage(route: route)
                             .environment(\.animateEntrance, model.consumeFirstVisit(route))
+                            // Only the top of the stack is seen; the pages under it and any cover hide it.
+                            .liveScope(model.path.last == route && !covered)
                             .modifier(ArrivalTransition(
                                 id: route,
                                 arrival: model.arrivals[route] ?? .crossFade,
@@ -68,6 +89,8 @@ struct RootView: View {
                 }
 
                 DoorwayOverlay(doorway: model.doorway)
+                // Sheet 299: on a look change the old page leaves on top, ground first, ink last.
+                LookInkOverlay()
                 PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }
@@ -87,19 +110,69 @@ struct RootView: View {
                 }
             }
         }
+        // Sheet 299: a change of look never replays the page's arrivals. While the old page leaves, the page under it
+        // changes its colours with no animation of its own.
+        .transaction { transaction in
+            if LookInk.shared.pass != nil {
+                transaction.disablesAnimations = true
+            }
+        }
         .fullScreenCover(isPresented: $model.isWorkoutPresented) {
             if model.workoutRisesFromLane {
                 // START on Training: live mode rises out of the first lane (training-mode.md).
-                WorkoutModeView()
+                WorkoutCover()
                     .environment(\.animateEntrance, true)
                     .navigationTransition(.zoom(sourceID: WorkoutRise.sourceID, in: zoom))
             } else {
-                WorkoutModeView()
+                WorkoutCover()
                     .environment(\.animateEntrance, true)
             }
         }
-        .fullScreenCover(item: $demoCook) { CookClockPage(cookID: $0.id) }
+        .fullScreenCover(item: $demoCook) { CookEntry(cookID: $0.id) }
+        .fullScreenCover(item: $model.cookLink) { CookEntry(cookID: $0.id, alert: $0.alert) }
         #if DEBUG
+            .fullScreenCover(isPresented: $demoShop) { GalleyShopModePage() }
+            .fullScreenCover(item: $demoRoutine) { RoutineModePage(routineID: $0.id) }
+            .fullScreenCover(item: $demoRoutinePage) { cover in
+                NavigationStack {
+                    if let routine = model.object(cover.id) {
+                        ObjectPage(
+                            route: .object(routine.id),
+                            from: PageSource(name: "Evening", color: GalleyPaper.olive)
+                        )
+                    }
+                }
+            }
+            .task {
+                // Simulator only (LaunchFlags): `-openRoutinePage` opens the sample Evening's steps page as if from
+                // a page named "Evening", for stills and the tap test.
+                guard LaunchFlags.has("-openRoutinePage") else { return }
+                let routine = (try? RoutineSample.evening(in: model.engine)) ?? nil
+                guard let routine else { return }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoRoutinePage = DemoCookCover(id: routine.id)
+            }
+            .task {
+                // Simulator only (LaunchFlags): `-openRoutine` opens the sample Evening in routine mode, for stills.
+                guard LaunchFlags.has("-openRoutine") else { return }
+                let routine = (try? RoutineSample.evening(in: model.engine)) ?? nil
+                guard let routine else { return }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoRoutine = DemoCookCover(id: routine.id)
+            }
+            .task {
+                // Simulator only (LaunchFlags): `-openShop` opens the Galley's shopping mode, for stills.
+                guard LaunchFlags.has("-openShop") else { return }
+                if LaunchFlags.has("-demoKitchen") {
+                    _ = try? model.engine.perform(
+                        AddGroceries(lines: ["milk", "2 lemons", "sourdough", "kitchen roll"]),
+                        by: .user
+                    )
+                    model.touch()
+                }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoShop = true
+            }
             .fullScreenCover(isPresented: $layoutModeOpen) {
                 NavigationStack { LayoutModeView() }
             }

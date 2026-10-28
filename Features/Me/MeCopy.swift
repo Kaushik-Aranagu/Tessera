@@ -19,14 +19,14 @@ enum MeCopy {
 
     /// What follows the weight word: ", from your last weigh-in." or a plain stop with none.
     static func weightTail(_ kilograms: Double?) -> String {
-        kilograms == nil ? "." : ", from your last weigh-in."
+        kilograms == nil ? "." : ", from your last weigh-in"
     }
 
     /// Height, age and sex have no place to be kept yet (a phone-only profile store is Core's to add).
     static let notSaid = "not said"
     static let unsaidFields = ["Height", "Age", "Sex"]
 
-    static let keptLine = "That stays on this phone."
+    static let keptLine = "That stays on this phone"
 
     static let weightShowHint = "Shows your last weigh-in"
     static let weightHideHint = "Hides it again"
@@ -35,25 +35,25 @@ enum MeCopy {
 
     /// "142 workouts since March 2025.", "1 workout, in March 2025.", "No workouts logged yet."
     static func workouts(_ count: Int, since first: Date?, calendar: Calendar = .current) -> String {
-        guard count > 0 else { return "No workouts logged yet." }
+        guard count > 0 else { return "No workouts logged yet" }
         let month = first.map { monthYear($0, calendar: calendar) }
         if count == 1 {
-            return month.map { "1 workout, in \($0)." } ?? "1 workout."
+            return month.map { "1 workout, in \($0)" } ?? "1 workout"
         }
         let number = count.formatted(.number)
-        return month.map { "\(number) workouts since \($0)." } ?? "\(number) workouts."
+        return month.map { "\(number) workouts since \($0)" } ?? "\(number) workouts"
     }
 
     /// "1,860 working sets." / "1 working set."; nothing at zero.
     static func sets(_ count: Int) -> String? {
         guard count > 0 else { return nil }
-        return count == 1 ? "1 working set." : "\(count.formatted(.number)) working sets."
+        return count == 1 ? "1 working set" : "\(count.formatted(.number)) working sets"
     }
 
     /// How he trains, from the plan's rhythm: "Trains 4 days a week." Nil without one.
     static func rhythm(_ perWeek: Int?) -> String? {
         guard let perWeek, perWeek > 0 else { return nil }
-        return perWeek == 1 ? "Trains 1 day a week." : "Trains \(perWeek) days a week."
+        return perWeek == 1 ? "Trains 1 day a week" : "Trains \(perWeek) days a week"
     }
 
     // MARK: Bests
@@ -98,7 +98,7 @@ enum MeCopy {
         return expanded ? "Fewer" : "All \(total)"
     }
 
-    static let noBests = "Your best lifts show here once you log a set."
+    static let noBests = "Your best lifts show here once you log a set"
 
     // MARK: Areas
 

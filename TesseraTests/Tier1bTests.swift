@@ -32,9 +32,9 @@ struct Tier1bTests {
     }
 
     @Test func undoSaysCoresLineAndReversedForMoney() {
-        #expect(UndoWords.said(.putBack(line: "Put back."), money: false) == "Put back.")
-        #expect(UndoWords.said(.putBack(line: "Put back."), money: true) == "Reversed.")
-        #expect(UndoWords.said(.blocked(line: "Can't put that back."), money: true) == "Can't put that back.")
+        #expect(UndoWords.said(.putBack(line: "Put back"), money: false) == "Put back")
+        #expect(UndoWords.said(.putBack(line: "Put back"), money: true) == "Reversed")
+        #expect(UndoWords.said(.blocked(line: "Can't put that back"), money: true) == "Can't put that back")
         #expect(UndoWords.said(.gone, money: false) == nil)
     }
 

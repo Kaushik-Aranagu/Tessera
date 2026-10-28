@@ -178,10 +178,10 @@ struct MosaicFace: Equatable {
     /// What VoiceOver says for the face: words only, no numbers it should not have.
     var spoken: String {
         switch kind {
-        case .now: "Now. The latest on the board, drawn."
-        case .gallery: "Gallery. A picture of the hour."
-        case .weather: weather.map { "Weather. \($0.temperature) degrees." } ?? "Weather."
-        case .workout: "Workout, going."
+        case .now: "Now. The latest on the board, drawn"
+        case .gallery: "Gallery. A picture of the hour"
+        case .weather: weather.map { "Weather. \($0.temperature) degrees" } ?? "Weather"
+        case .workout: "Workout, going"
         }
     }
 }

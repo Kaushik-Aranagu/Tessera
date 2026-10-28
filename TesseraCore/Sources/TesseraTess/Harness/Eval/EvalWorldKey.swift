@@ -231,12 +231,12 @@ public struct EvalWorldKey: Sendable {
         if let squat = best("Back Squat"), let hours = averageSleep(weekOf: squat.day) {
             out.append(.init(id: "acrossRooms/sleep-best-squat-week", kind: .acrossRooms,
                              turns: ["How many hours a night did I sleep, on average, the week of my best squat? "
-                                 + "One decimal."],
+                                 + "One decimal"],
                              expected: .number(hours, unit: "hours"), tools: ["query"]))
         }
         if let week = shortestSleepWeek() {
             out.append(.init(id: "acrossRooms/shortest-sleep-week", kind: .acrossRooms,
-                             turns: ["Which week did I sleep the least? Give the Monday."], expected: .day(week),
+                             turns: ["Which week did I sleep the least? Give the Monday"], expected: .day(week),
                              tools: ["query"]))
         }
         return out

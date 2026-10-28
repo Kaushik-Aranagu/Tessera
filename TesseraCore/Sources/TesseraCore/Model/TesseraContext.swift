@@ -250,6 +250,13 @@ public final class TesseraContext {
         }
     }
 
+    /// An object a write let go of (the old end of a link that moved) is looked at again too.
+    func noteLabelObject(_ object: ObjectRecord?) {
+        if let object {
+            labelDirty.insert(object.id)
+        }
+    }
+
     func markDirty(_ model: some TesseraModel) {
         guard !isLoading, model.context === self else { return }
         noteLabelChange(model)

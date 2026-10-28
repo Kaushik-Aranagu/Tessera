@@ -9,9 +9,9 @@ import TesseraTess
 /// The words for the key's state after a check: "works", "not allowed", "not checked", "account paused".
 enum ClaudeKeyWords {
     /// The status line with no key saved (Product 3:58 PM): "Paste one here" lives only in the field's own hint.
-    static let noKey = "No Claude key yet."
+    static let noKey = "No Claude key yet"
     /// Before any call: Tess thinks on the phone only.
-    static let onPhoneOnly = "Tess thinks on this phone only."
+    static let onPhoneOnly = "Tess thinks on this phone only"
 
     /// The no-key line as words: "Tess thinks on this phone only." before any call, else "No Claude key yet.".
     static func noKeyLine(hasCalls: Bool) -> String {
@@ -20,7 +20,7 @@ enum ClaudeKeyWords {
 
     /// The same line as drawn, "on this phone" in semibold.
     static func noKeyText(hasCalls: Bool) -> Text {
-        hasCalls ? Text(noKey) : Text("Tess thinks \(Text("on this phone").fontWeight(.semibold)) only.")
+        hasCalls ? Text(noKey) : Text("Tess thinks \(Text("on this phone").fontWeight(.semibold)) only")
     }
 
     static func status(_ outcome: String?) -> String {
@@ -208,8 +208,8 @@ struct ClaudeSection: View {
                     NavigationLink(ClaudeKeyWords.dollars(spent)) { ClaudeReceipts() }
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
-                        .accessibilityHint("Opens the receipts.")
-                    Text(" of $\(TessUsageLedger.capDollars).")
+                        .accessibilityHint("Opens the receipts")
+                    Text(" of $\(TessUsageLedger.capDollars)")
                 }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
@@ -217,7 +217,7 @@ struct ClaudeSection: View {
                     .accessibilityLabel(String(format: "%.2f of %d dollars this month", Double(spent) / 1e9,
                                                TessUsageLedger.capDollars))
                 if paused {
-                    Text("Paused until \(Text(ClaudeKeyWords.nextMonth(AppClock.now)).fontWeight(.semibold)).")
+                    Text("Paused until \(Text(ClaudeKeyWords.nextMonth(AppClock.now)).fontWeight(.semibold))")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                 } else if share >= 0.8 {
@@ -347,8 +347,8 @@ struct ClaudeSection: View {
             missesGoToClaude = model.asksClaude
         }
         switchLine = missesGoToClaude
-            ? "Tess asks Claude when she's unsure, and for Plan my day."
-            : "Tess stays on this phone."
+            ? "Tess asks Claude when she's unsure, and for Plan my day"
+            : "Tess stays on this phone"
     }
 
     private func load() {
@@ -389,7 +389,7 @@ struct ClaudeSection: View {
     private func check(_ key: String, previous: String?) {
         checking = true
         focused = false
-        line = "Checking it with Claude."
+        line = "Checking it with Claude"
         model.soul.handle(.askClaude)
         let checker = ClaudeKeyCheck(keys: keys, ledger: ledger)
         Task { @MainActor in
@@ -400,7 +400,7 @@ struct ClaudeSection: View {
             if let previous, result.outcome != .works, result.outcome != .capReached {
                 // A new key that failed: the old one goes back and keeps working (QA C3, C4).
                 if keys.save(previous) {
-                    line = "That key didn't pass. Your old key still works."
+                    line = "That key didn't pass. Your old key still works"
                 } else {
                     line = "That key failed, and the old one is gone. Add one?"
                     hasKey = false
@@ -537,7 +537,7 @@ struct ClaudeReceipts: View {
                     .wordFit("Receipts")
                     .foregroundStyle(Theme.Colors.ink)
                 Text(
-                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $\(TessUsageLedger.capDollars)."
+                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $\(TessUsageLedger.capDollars)"
                 )
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
@@ -547,7 +547,7 @@ struct ClaudeReceipts: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
                 if calls.isEmpty {
-                    Text("Nothing has gone to Claude yet.")
+                    Text("Nothing has gone to Claude yet")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 } else {
@@ -703,7 +703,7 @@ enum KeyRemove {
     static let question = "Remove the Claude key?"
     static let removeWord = "Remove"
     static let keepWord = "Keep it"
-    static let receipt = "Claude key removed. Everything stays on this phone."
+    static let receipt = "Claude key removed. Everything stays on this phone"
     static let failed = "I couldn't remove the key. Try again?"
 
     /// Deletes the key and returns the line to show: the receipt, or the failure if the Keychain still has one.

@@ -144,11 +144,11 @@ public enum MosaicMomentSource {
 
     public static func weatherLine(_ weather: MosaicWeather) -> String {
         switch weather {
-        case .snow: "It is snowing."
-        case .fog: "Fog outside."
-        case .wind: "It is windy."
-        case .storm: "A storm is passing."
-        case .heat: "It is hot out."
+        case .snow: "It is snowing"
+        case .fog: "Fog outside"
+        case .wind: "It is windy"
+        case .storm: "A storm is passing"
+        case .heat: "It is hot out"
         }
     }
 }
@@ -179,7 +179,7 @@ public extension MosaicMomentInputs {
         if let next = facts.nextTimed, let free = facts.freeMinutes, free <= MosaicMomentSource.announceMinutes,
            free > 0
         {
-            let text = "\(next.title) in \(HouseTime.minutes(free))."
+            let text = "\(next.title) in \(HouseTime.minutes(free))"
             let clause = next.app.map { MosaicMomentSource.accented(text, key: next.title, app: $0) }
                 ?? MosaicMomentSource.plain(text)
             found.append(Candidate(
@@ -203,14 +203,14 @@ public extension MosaicMomentInputs {
             let hidden = KitchenTimerAlerts.hidesLabel(name, cook: timer.cook, in: store)
                 || isWalled(name, store: store, weight: weight)
             let label = hidden ? "Timer" : name.prefix(1).uppercased() + name.dropFirst()
-            let text = "\(label) is done."
+            let text = "\(label) is done"
             found.append(Candidate(kind: .timer, clause: hidden ? MosaicMomentSource.plain(text)
                     : MosaicMomentSource.accented(text, key: String(label), app: .kitchen),
                 at: timer.endsAt, key: "timer-\(timer.id)", tone: .accent(.kitchen)))
         }
         // Something finished, from the op log (the app only; no title ever).
         for finish in facts.finishedToday where fresh(finish.time) {
-            found.append(Candidate(kind: .finished, clause: MosaicMomentSource.plain("Done."), at: finish.time,
+            found.append(Candidate(kind: .finished, clause: MosaicMomentSource.plain("Done"), at: finish.time,
                                    key: "finish-\(finish.time.timeIntervalSince1970)",
                                    tone: finish.app.map { .accent($0) } ?? .glaze))
         }
@@ -222,22 +222,22 @@ public extension MosaicMomentInputs {
             if record.action == MarkArrived.descriptor.name {
                 let groceries = record.summary == "Groceries arrived"
                 let clause = groceries ? MosaicMomentSource.accented(
-                    "Groceries are here.",
+                    "Groceries are here",
                     key: "Groceries",
                     app: .kitchen
                 )
-                    : MosaicMomentSource.plain("A delivery is here.")
+                    : MosaicMomentSource.plain("A delivery is here")
                 found.append(Candidate(kind: .delivery, clause: clause, at: record.createdAt,
                                        key: "arrived-\(record.id)", tone: groceries ? .accent(.kitchen) : .glaze))
             }
             if record.action == "finishWorkout", let isPrivate = newBest(in: record, engine: engine) {
                 // A best from a private workout is a plain finish: no Training accent, no hint of what it was.
                 if isPrivate {
-                    found.append(Candidate(kind: .finished, clause: MosaicMomentSource.plain("Done."),
+                    found.append(Candidate(kind: .finished, clause: MosaicMomentSource.plain("Done"),
                                            at: record.createdAt, key: "best-\(record.id)"))
                 } else {
                     found.append(Candidate(kind: .best, clause: MosaicMomentSource.accented(
-                        "A new best.", key: "A new best", app: .training
+                        "A new best", key: "A new best", app: .training
                     ), at: record.createdAt, key: "best-\(record.id)", tone: .accent(.training)))
                 }
             }
@@ -252,7 +252,7 @@ public extension MosaicMomentInputs {
                     fresh(start) else { continue }
                 let shown = ObjectPrivacy.shownLabel(of: task, in: store, classes: classes)
                     ?? (isWalled(task.title, store: store, weight: weight) ? ObjectPrivacy.taskLabel : nil)
-                let text = "\(shown ?? task.title), now."
+                let text = "\(shown ?? task.title), now"
                 // A task belongs to no app, so its line is plain whether it is masked or not.
                 let clause = MosaicMomentSource.plain(text)
                 found.append(Candidate(kind: .reminder, clause: clause, at: start, key: "reminder-\(task.id)"))
@@ -261,8 +261,8 @@ public extension MosaicMomentInputs {
         for event in events where event.app == .routines && fresh(event.start) {
             let hidden = event.isPrivate || isWalled(event.label, store: store, weight: weight)
             let label = hidden ? RoutinesLanding.privateRoutine : event.label
-            let clause = hidden ? MosaicMomentSource.plain("\(label), now.")
-                : MosaicMomentSource.accented("\(label), now.", key: label, app: .routines)
+            let clause = hidden ? MosaicMomentSource.plain("\(label), now")
+                : MosaicMomentSource.accented("\(label), now", key: label, app: .routines)
             found.append(Candidate(kind: .reminder,
                                    clause: clause,
                                    at: event.start,

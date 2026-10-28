@@ -44,6 +44,10 @@ struct LandingActionWord: View {
     var arrival: Double?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The verb's and the object's line heights grow with Dynamic Type, so the two never overlap (AX5 had "Start"
+    /// printed over its object).
+    @ScaledMetric(relativeTo: .title2) private var verbHeight: CGFloat = 32
+    @ScaledMetric(relativeTo: .caption) private var objectHeight: CGFloat = 18
     @State private var arrived = false
     @State private var current = 0
     @State private var direction = 1
@@ -61,7 +65,7 @@ struct LandingActionWord: View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .leading) {
                 letters(
-                    holdHint ? "Hold to \(step.verb.lowercased())." : step.verb,
+                    holdHint ? "Hold to \(step.verb.lowercased())" : step.verb,
                     color: accent.opacity(step.hold ? 0.35 : 1)
                 )
                 if step.hold {
@@ -71,18 +75,20 @@ struct LandingActionWord: View {
                         }
                 }
             }
-            .frame(height: 32, alignment: .leading)
-            if !step.object.isEmpty {
+            .frame(height: verbHeight, alignment: .leading)
+            // At sizes where verb and object outgrow the slot, the verb stands alone (VoiceOver still reads both), so
+            // the foot never rises into the doors above it.
+            if !step.object.isEmpty, verbHeight * 1.3 + objectHeight <= Self.slot {
                 Text(step.object)
                     .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.medium))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
-                    .frame(height: 18, alignment: .leading)
+                    .frame(height: objectHeight, alignment: .leading)
                     .id("object-\(current)")
                     .transition(.offset(y: reduceMotion ? 0 : 6))
             }
         }
-        .frame(width: 220, height: 64, alignment: .topLeading)
+        .frame(width: 220, height: Self.slot, alignment: Self.alignment(verb: verbHeight, object: objectHeight))
         .offset(x: max(-18, min(18, pull / 3)))
         .contentShape(Rectangle())
         .onTapGesture { tapped() }
@@ -114,6 +120,15 @@ struct LandingActionWord: View {
                 Button(alternate.verb, action: alternate.run)
             }
         }
+    }
+
+    /// The foot's slot height (220 x 64 on the 402 x 874 frame).
+    static let slot: CGFloat = 64
+
+    /// Verb over object fits the slot from its top at regular sizes; at large sizes the two stack upward from the
+    /// slot's bottom instead, so they keep their own lines and never run off the screen's foot.
+    static func alignment(verb: CGFloat, object: CGFloat) -> Alignment {
+        verb * 1.3 + object > slot ? .bottomLeading : .topLeading
     }
 
     /// The verb's letters; on a change they stream in from the swipe side, leaning, 22 ms apart.

@@ -12,9 +12,9 @@ enum ExportFile {
     static let ready = false
 
     /// "This file hides your private things."
-    static let line = "This file hides your private things."
+    static let line = "This file hides your private things"
     static let restoreWarning =
-        "This file hides your private things, so they will not come back. Restore from Backups to keep them."
+        "This file hides your private things, so they will not come back. Restore from Backups to keep them"
 
     /// Whether a file says it was masked: a top-level `masked` true. Anything unreadable isn't treated as masked here
     /// (the restore itself refuses what it can't read).

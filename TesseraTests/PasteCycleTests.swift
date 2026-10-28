@@ -22,7 +22,7 @@ struct PasteCycleTests {
     @Test func saveIsDrawnOnlyWhenSomethingWasRead() {
         #expect(!PasteCopy.canSave(CreateRecipe.lines(of: "https://example.com/shakshuka", corrections: [:])))
         #expect(PasteCopy.canSave(CreateRecipe.lines(of: "Dal\n1 cup lentils\nSimmer 20 minutes", corrections: [:])))
-        #expect(PasteCopy.didntSave == "Didn't save that. Try again.")
+        #expect(PasteCopy.didntSave == "Didn't save that. Try again")
     }
 
     /// G54: a bare link gets the link nudge and a Read it key; text with a link in it reads as a recipe.
@@ -31,10 +31,10 @@ struct PasteCycleTests {
         #expect(RecipePasteLink.bareLink(link) != nil)
         #expect(RecipePasteLink.bareLink("Dal\nfrom \(link)") == nil)
         #expect(PasteCopy.idleLine(link: true, reading: true, read: true, lines: []) ==
-            "A link. Tap Read it and I'll read the page.")
+            "A link. Tap Read it and I'll read the page")
         #expect(!PasteCopy.idleLine(link: true, reading: true, read: true, lines: []).contains("example.com"))
         #expect(PasteCopy.idleLine(link: false, reading: false, read: false, lines: []) ==
-            "Paste a recipe and I'll read it.")
+            "Paste a recipe and I'll read it")
     }
 
     /// #810: a link with a password is refused whole, and a longer paste holding one never reaches the miss log.
@@ -43,7 +43,7 @@ struct PasteCycleTests {
         #expect(RecipePasteLink.isSecretLink(link))
         #expect(PasteCopy.hasSecretLink("Dal\nfrom \(link)\n1 cup lentils"))
         #expect(!PasteCopy.hasSecretLink("Dal\nfrom https://example.com/dal\n1 cup lentils"))
-        #expect(RecipeLinkLine.secretLink == "That link has a password in it. Paste the text instead.")
+        #expect(RecipeLinkLine.secretLink == "That link has a password in it. Paste the text instead")
     }
 
     /// QA on #821: a credential link wrapped in punctuation inside a longer paste is still caught.
@@ -51,7 +51,7 @@ struct PasteCycleTests {
         let link = "https://name:" + "hunter" + "2@example.com/dal"
         #expect(PasteCopy.hasSecretLink("Dal (\(link)).\n1 cup lentils"))
         #expect(PasteCopy.hasSecretLink("from \"\(link)\","))
-        #expect(!PasteCopy.hasSecretLink("Dal (https://example.com/dal)."))
+        #expect(!PasteCopy.hasSecretLink("Dal (https://example.com/dal)"))
         // QA on #830: an email, an @handle or a bare "@" is ordinary recipe text.
         #expect(!PasteCopy.hasSecretLink("Questions to chef@bakery.com"))
         #expect(!PasteCopy.hasSecretLink("Recipe by @dalqueen"))
@@ -71,11 +71,11 @@ struct PasteCycleTests {
         #expect(PasteCopy.duplicateLine(dal, store: model.store, classes: model.classes) == nil)
         try model.engine.perform(CreateRecipe(text: dal), by: .user)
         let line = try #require(PasteCopy.duplicateLine(dal, store: model.store, classes: model.classes))
-        #expect(line == "Weeknight dal is already on Recipes." && PasteCopy.isRefusal(line))
+        #expect(line == "Weeknight dal is already on Recipes" && PasteCopy.isRefusal(line))
         let stew = "Rent 1200 stew\n2 carrots\n1 onion\n\nSimmer."
         try model.engine.perform(CreateRecipe(text: stew), by: .user)
         #expect(PasteCopy.duplicateLine(stew, store: model.store, classes: model.classes) ==
-            "Private recipe is already on Recipes.")
+            "Private recipe is already on Recipes")
     }
 
     /// #854 release condition: a private duplicate is refused by name ("Private recipe") and never reaches the miss
@@ -93,7 +93,7 @@ struct PasteCycleTests {
         }
         guard case .saved = save(stew) else { Issue.record("expected the first paste to save"); return }
         guard case let .duplicate(line) = save(stew) else { Issue.record("expected a duplicate"); return }
-        #expect(line == "Private recipe is already on Recipes." && !line.contains("stew"))
+        #expect(line == "Private recipe is already on Recipes" && !line.contains("stew"))
         #expect(log.all().isEmpty)
         guard case .failed = save("https://example.com/dal") else { Issue.record("a bare link writes nothing"); return }
         #expect(log.all().count == 1)

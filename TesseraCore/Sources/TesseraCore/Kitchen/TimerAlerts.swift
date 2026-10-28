@@ -17,7 +17,7 @@ public struct TimerAlert: Equatable, Sendable {
 
     /// "Rice is done." / "Timer is done."
     public var body: String {
-        "\(label) is done."
+        "\(label) is done"
     }
 
     public init(id: UUID, label: String, fireAt: Date) {
@@ -106,7 +106,7 @@ public struct KitchenTimerAlerts {
     /// package's tests (it needs an app bundle).
     @MainActor
     public final class SystemTimerAlertScheduler: TimerAlertScheduler {
-        static let prefix = "kitchen-timer."
+        static let prefix = "kitchen-timer"
         private let center: UNUserNotificationCenter
 
         public init(center: UNUserNotificationCenter = .current()) {

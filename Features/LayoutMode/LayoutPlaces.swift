@@ -48,16 +48,19 @@ struct LayoutPlace: Identifiable, Equatable {
     }
 
     /// The pane's rect: 2 pt in from the place's frame on every side, so every seam reads as a 4 pt gap, except where
-    /// the contract's frames sit 4 pt apart already (Switcher's right and Needs' left take 0 pt) or 2 pt apart (Dial's
-    /// right and Door summary's left take 1 pt). Design 283: frames stay as the contract has them, the insets differ.
+    /// the contract's frames sit 4 pt apart already (Switcher's right and Needs' left take 0 pt) or 2 pt apart (the
+    /// Door
+    /// summary's right and the Dial's left take 1 pt; the dial is on the right since Oct 26). Design 283: frames stay
+    /// as
+    /// the contract has them, the insets differ.
     var paneFrame: CGRect {
         let inset = LayoutPlaces.inset
         var left = inset, right = inset
         switch name {
         case "Switcher": right = 0
         case "Needs": left = 0
-        case "Dial": right = 1
-        case "Door summary": left = 1
+        case "Dial": left = 1
+        case "Door summary": right = 1
         default: break
         }
         return CGRect(x: frame.minX + left, y: frame.minY + inset,
@@ -103,7 +106,7 @@ enum LayoutPlaces {
         pane("Keystone", 24, 196, 354, 182), pane("Caption", 24, 378, 354, 34),
         pane("Widget", 24, 412, 354, 200), pane("Glyph", 298, 444, 80, 80),
         breath(612, 28),
-        pane("Dial", 24, 640, 160, 120), pane("Door summary", 186, 640, 192, 120),
+        pane("Dial", 218, 640, 160, 120), pane("Door summary", 24, 640, 192, 120),
         breath(760, 16),
         pane("Action word", 24, 786, 220, 62), pane("Tess", 306, 776, 96, 96),
     ]

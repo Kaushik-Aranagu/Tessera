@@ -29,7 +29,7 @@ struct MePageTests {
     @Test func weightIsHiddenUntilTapped() {
         #expect(MeCopy.weightWord(82.4, shown: false, format: kg) == "hidden")
         #expect(MeCopy.weightWord(82.4, shown: true, format: kg) == "82.4 kg")
-        #expect(MeCopy.weightTail(82.4) == ", from your last weigh-in.")
+        #expect(MeCopy.weightTail(82.4) == ", from your last weigh-in")
     }
 
     @Test func noWeighInSaysNotLogged() {
@@ -40,7 +40,7 @@ struct MePageTests {
     @Test func theOtherThreeAreNotSaidAndTheKeptLineNamesThePhone() {
         #expect(MeCopy.unsaidFields == ["Height", "Age", "Sex"])
         #expect(MeCopy.notSaid == "not said")
-        #expect(MeCopy.keptLine == "That stays on this phone.")
+        #expect(MeCopy.keptLine == "That stays on this phone")
         #expect(!MeCopy.keptLine.contains("never"))
     }
 
@@ -56,18 +56,18 @@ struct MePageTests {
 
     @Test func workoutTotalsReadAsASentence() throws {
         let march = try #require(calendar.date(from: DateComponents(year: 2025, month: 3, day: 9, hour: 18)))
-        #expect(MeCopy.workouts(0, since: nil) == "No workouts logged yet.")
-        #expect(MeCopy.workouts(1, since: march, calendar: calendar) == "1 workout, in March 2025.")
-        #expect(MeCopy.workouts(1142, since: march, calendar: calendar) == "1,142 workouts since March 2025.")
+        #expect(MeCopy.workouts(0, since: nil) == "No workouts logged yet")
+        #expect(MeCopy.workouts(1, since: march, calendar: calendar) == "1 workout, in March 2025")
+        #expect(MeCopy.workouts(1142, since: march, calendar: calendar) == "1,142 workouts since March 2025")
     }
 
     @Test func setsAndRhythmLines() {
         #expect(MeCopy.sets(0) == nil)
-        #expect(MeCopy.sets(1) == "1 working set.")
-        #expect(MeCopy.sets(1860) == "1,860 working sets.")
+        #expect(MeCopy.sets(1) == "1 working set")
+        #expect(MeCopy.sets(1860) == "1,860 working sets")
         #expect(MeCopy.rhythm(nil) == nil)
-        #expect(MeCopy.rhythm(1) == "Trains 1 day a week.")
-        #expect(MeCopy.rhythm(4) == "Trains 4 days a week.")
+        #expect(MeCopy.rhythm(1) == "Trains 1 day a week")
+        #expect(MeCopy.rhythm(4) == "Trains 4 days a week")
     }
 
     // MARK: Bests

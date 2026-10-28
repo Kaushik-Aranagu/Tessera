@@ -8,8 +8,9 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     public var lookDay: String?
     public var lookNight: String?
     public var lookPinned: String?
-    /// Read as `missesGoToClaude ?? false` (G687): nil means not asked yet, and nothing goes to Claude before an
-    /// answer. Typing a key in Settings writes yes when nothing is stored; a found key asks once.
+    /// Read as `missesGoToClaude ?? true` (Kaushik, Oct 26: "set them on by default. Tess needs to use AI"): nil
+    /// means never chosen, and misses go to Claude when a key is saved; a stored no is kept forever. Typing a key in
+    /// Settings writes yes when nothing is stored; a found key still asks once.
     public var missesGoToClaude: Bool?
     /// The folder's display name only ("iCloud Drive/Tessera"); never a path or URL.
     public var backupFolderName: String? {
@@ -64,7 +65,13 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
         min(max(dayStartHour ?? 4, 0), 8)
     }
 
-    /// Puts the settings in force for the few places with no store. Called at launch and after a change.
+    /// One line for the Settings page under "The day turns over at": changing it re-buckets past days, because every
+    /// day is cut from the clock by the same rule.
+    public static let dayTurnsAtWhy = "Changing it moves late-night things between days, past days included."
+
+    /// Puts the settings in force for the few places with no store. Call it on the main actor, at launch of the app,
+    /// the widgets and the Watch before anything reads a day, and after every change.
+    @MainActor
     public func applyProcessWide() {
         QuietHours.current = quietHours
         TesseraDay.configuredStartHour = dayTurnsAtHour
@@ -85,7 +92,7 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
 
     /// "Misses go to Claude", with its default.
     public var sendsMissesToClaude: Bool {
-        missesGoToClaude ?? false
+        missesGoToClaude ?? true
     }
 
     /// A display name, not a path: no leading "/", no "file:", no "/private/var" or container ids.

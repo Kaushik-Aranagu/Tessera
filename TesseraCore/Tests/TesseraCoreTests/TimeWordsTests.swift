@@ -82,12 +82,12 @@ struct TimeWordsTests {
         let tess = TessCaptureEngine(engine: engine)
         let late = await tess.capture("call mom today", context: TessContext(now: Self.at(15, 23, 10),
                                                                              calendar: Self.calendar))
-        #expect(late.line == "Call mom, tomorrow 7 am.", "\(late.line)")
+        #expect(late.line == "Call mom, tomorrow 7 am", "\(late.line)")
         let early = await tess.capture(
             "call mom thu",
             context: TessContext(now: Self.at(16, 1), calendar: Self.calendar)
         )
-        #expect(early.line == "Call mom, Friday 7 am.", "\(early.line)")
+        #expect(early.line == "Call mom, Friday 7 am", "\(early.line)")
     }
 
     @Test @MainActor func notNowOnUntimedTaskLateSnapsToSeven() throws {

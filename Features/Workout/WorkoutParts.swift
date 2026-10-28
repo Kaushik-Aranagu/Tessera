@@ -90,9 +90,9 @@ struct ExerciseLane: View {
         .simultaneousGesture(
             DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
                 .onChanged { drag in
+                    let lead = CGFloat(GestureTuning.pagerBias)
                     guard session.finishedAt == nil, drag.translation.height > 0,
-                          GestureTuning.axis(dx: Double(drag.translation.width), dy: Double(drag.translation.height),
-                                             bias: GestureTuning.pagerBias) == .vertical
+                          abs(drag.translation.height) >= abs(drag.translation.width) * lead
                     else { return }
                     namePull = drag.translation.height
                 }
@@ -238,7 +238,7 @@ enum WorkoutLines {
             return summary ?? ""
         }
         if session.isEditing {
-            return "Dial it in, then save."
+            return "Dial it in, then save"
         }
         if let note = session.editNote {
             return note
@@ -248,13 +248,13 @@ enum WorkoutLines {
             // receipt; the estimate lives on the exercise page, Product 2:29 PM PT Oct 16).
             let set = "\(Format.kilograms(seated.weight)) × \(Int(seated.reps))"
             if seated.records.isEmpty {
-                return "Set \(seated.number) logged. \(set)."
+                return "Set \(seated.number) logged. \(set)"
             }
-            return "New best: \(set)."
+            return "New best: \(set)"
         }
         switch phase {
-        case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done."
-        case .workoutDone: return "Last one. Hold to finish."
+        case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done"
+        case .workoutDone: return "Last one. Hold to finish"
         default:
             return setLine(session)
         }
@@ -262,13 +262,13 @@ enum WorkoutLines {
 
     /// The receipt after a set lands, thing first (receipts-thing-first.md RC10): "Set 3 logged.", else "Set, logged.".
     static func loggedLine(_ number: Int?) -> String {
-        number.map { "Set \($0) logged." } ?? "Set, logged."
+        number.map { "Set \($0) logged" } ?? "Set, logged"
     }
 
     /// While dialling a set.
     private static func setLine(_ session: WorkoutSession) -> String {
         if let from = session.swappedFrom, let entry = session.currentEntry, session.setRows(of: entry).isEmpty {
-            return "\(SwapPanel.short(from)) stays in the plan."
+            return "\(SwapPanel.short(from)) stays in the plan"
         }
         // Nothing is said about a best before the set; it's said once logged ("New best: …", 56 addendum).
         if let note = session.restNote, note.hasPrefix("Rest skipped") {
@@ -278,7 +278,7 @@ enum WorkoutLines {
             return loggedLine(session.lastSeated?.number)
         }
         if let reason = session.targetReason, session.currentSetNumber == 1 {
-            return reason + "."
+            return reason
         }
         // Before a set the page already says it all (the key, the detail line): Tess stays quiet (56 addendum).
         return ""

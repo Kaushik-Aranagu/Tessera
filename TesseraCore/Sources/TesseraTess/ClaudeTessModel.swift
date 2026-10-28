@@ -10,14 +10,14 @@ public struct ClaudeTessModel: TessModel {
     public static let model = "claude-haiku-5-5"
     static let maxTokens = 512
     /// An offline miss that hit a wall: kept nowhere, so it can only be said again online.
-    public static let walledOfflineLine = "Couldn't read that offline. Try again online."
+    public static let walledOfflineLine = "Couldn't read that offline. Try again online"
     /// Claude was on and the call failed (offline and not saved for later, a cut-off or refused reply, an unreadable
     /// answer): his words stay in the Ask for the retry (Product ruling, 6:10 PM PT Oct 19).
-    public nonisolated static let unreachedLine = "Couldn't reach Claude. Try again."
+    public nonisolated static let unreachedLine = "Couldn't reach Claude. Try again"
 
     /// The longest phrase sent to Claude, in characters.
     static let maxPhraseCharacters = 600
-    static let tooLongLine = "That's too long to send. Say it shorter."
+    static let tooLongLine = "That's too long to send. Say it shorter"
     /// Tool rounds before Tess gives up on a phrase.
     static let maxRounds = 3
 
@@ -89,7 +89,7 @@ public struct ClaudeTessModel: TessModel {
             // Idle, the router keeps the phrase to sort later instead (Product ruling, Oct 19); this line is for a
             // live set or a shop, which keep their own lines.
             flags.lastFailure = .capReached
-            var paused = TessCapture(records: [], line: "Claude paused until \(reset).", source: .none)
+            var paused = TessCapture(records: [], line: "Claude paused until \(reset)", source: .none)
             paused.claudeAtCap = true
             return .asked(paused)
         }
@@ -137,8 +137,8 @@ public struct ClaudeTessModel: TessModel {
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": answer.line])
                     } catch {
                         // A fixed line per case, never an internal error's text (QA on #283).
-                        let said = error is TessToolError ? "Error: that name or value didn't fit. Try another."
-                            : "Error: that didn't work."
+                        let said = error is TessToolError ? "Error: that name or value didn't fit. Try another"
+                            : "Error: that didn't work"
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": said,
                                         "is_error": true])
                     }
@@ -161,7 +161,7 @@ public struct ClaudeTessModel: TessModel {
             if failure.outcome == "offline", !retrying,
                TessInbox(store: engine.store, classes: engine.classes).add(request.text, at: now()) != nil
             {
-                return .asked(TessCapture(records: [], line: "No connection. Saved it for Claude.", source: .none))
+                return .asked(TessCapture(records: [], line: "No connection. Saved it for Claude", source: .none))
             }
             // A walled phrase (money, body, secret) is never queued, so offline it is neither kept nor sent: the line
             // says
@@ -198,15 +198,15 @@ public struct ClaudeTessModel: TessModel {
             // Thing first when the action has a spoken form (RC23); the log summary is never read aloud raw.
             line = records.count == 1 ? (records[0].receipt ?? records[
                 0
-            ].summary) + "." : "\(records.count) things done."
+            ].summary) : "\(records.count) things done"
         }
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
         var isNotice = false
         if !flags.noticeShown {
             flags.noticeShown = true
             isNotice = true
-            line = phraseWalled ? "Sent that to Claude. Turn this off in Settings: Claude."
-                : "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
+            line = phraseWalled ? "Sent that to Claude. Turn this off in Settings: Claude"
+                : "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude"
         }
         var capture = TessCapture(records: records, line: line, source: .claude)
         capture.isNotice = isNotice
@@ -312,12 +312,12 @@ public struct ClaudeTessModel: TessModel {
         var used = Usage()
 
         static let offline = Failure(outcome: "offline", line: ClaudeTessModel.unreachedLine)
-        static let timeout = Failure(outcome: "timeout", line: "Claude didn't answer in time.")
-        static let busy = Failure(outcome: "busy", line: "Claude is busy right now.")
-        static let cancelled = Failure(outcome: "cancelled", line: "Cancelled.")
+        static let timeout = Failure(outcome: "timeout", line: "Claude didn't answer in time")
+        static let busy = Failure(outcome: "busy", line: "Claude is busy right now")
+        static let cancelled = Failure(outcome: "cancelled", line: "Cancelled")
         static let badKey = Failure(
             outcome: "badKey",
-            line: "Claude didn't take the key. Check it in Settings: Claude."
+            line: "Claude didn't take the key. Check it in Settings: Claude"
         )
         static let other = Failure(outcome: "other", line: ClaudeTessModel.unreachedLine)
     }
@@ -475,7 +475,7 @@ public final class ClaudeMissFlags {
         willSend?()
     }
 
-    /// Cancel: stops the call on the network, if there is one. The capture then ends with "Cancelled.".
+    /// Cancel: stops the call on the network, if there is one. The capture then ends with "Cancelled".
     public func cancelAsking() {
         inFlight?.cancel()
     }

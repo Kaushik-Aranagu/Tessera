@@ -432,13 +432,13 @@ public enum QueryEngine {
         }
         switch query.agg.kind {
         case "count":
-            return QueryResult(line: "\(objects.count) \(noun)\(whenWords).", matched: matched,
+            return QueryResult(line: "\(objects.count) \(noun)\(whenWords)", matched: matched,
                                value: Double(objects.count))
         case "list":
             let limit = query.limit ?? defaultListRows
             let shown = Array(objects.prefix(limit))
             guard !shown.isEmpty else { return QueryResult(
-                line: "No \(pluralNoun(query))\(whenWords).",
+                line: "No \(pluralNoun(query))\(whenWords)",
                 matched: [],
                 value: 0
             ) }
@@ -457,7 +457,7 @@ public enum QueryEngine {
                 }
             }
             guard let best else { return QueryResult(
-                line: "Nothing \(pluralNoun(query)) with a date.",
+                line: "Nothing \(pluralNoun(query)) with a date",
                 matched: [],
                 value: nil
             ) }
@@ -482,7 +482,7 @@ public enum QueryEngine {
             }
         }
         guard !pairs.isEmpty else {
-            return QueryResult(line: "No \(pluralNoun(query)) with a \(field)\(whenWords).", matched: [], value: nil)
+            return QueryResult(line: "No \(pluralNoun(query)) with a \(field)\(whenWords)", matched: [], value: nil)
         }
         let unit = unitFor(field)
         let total = pairs.reduce(0) { $0 + $1.1 }
@@ -551,7 +551,7 @@ public enum QueryEngine {
             left.value == right.value ? left.name < right.name : left.value > right.value
         }
         let limited = Array(ranked.prefix(query.limit ?? shownRows))
-        guard !limited.isEmpty else { return QueryResult(line: "Nothing\(whenWords).", matched: [], value: 0) }
+        guard !limited.isEmpty else { return QueryResult(line: "Nothing\(whenWords)", matched: [], value: 0) }
         let unit = useTotals ? unitFor(query.agg.field ?? "") : ""
         let parts = limited.map { "\($0.name) \(MeasureFormat.number($0.value, unit: unit))" }
         let more = ranked.count > limited.count ? ", and \(ranked.count - limited.count) more" : ""

@@ -97,12 +97,12 @@ struct ProcessTests {
         }
 
         // 6 hours later only the workout is wrapped up.
-        #expect(table.tidy(now: start.addingTimeInterval(6 * 3600)) == ["Push Day A saved. 1 of 2 exercises."])
+        #expect(table.tidy(now: start.addingTimeInterval(6 * 3600)) == ["Push Day A saved. 1 of 2 exercises"])
         #expect(store.value("endedAt", of: workout) == .date(start))
         #expect(table.process(for: workout) == nil)
 
         // A week later the notes go to Later, with one quiet line.
-        #expect(table.tidy(now: start.addingTimeInterval(7 * 86400)) == ["Two things moved to Later."])
+        #expect(table.tidy(now: start.addingTimeInterval(7 * 86400)) == ["Two things moved to Later"])
         let laterSubjects: Set<UUID> = Set(table.later().compactMap { $0.subject?.id })
         #expect(laterSubjects == Set(notes.map(\.id)))
 

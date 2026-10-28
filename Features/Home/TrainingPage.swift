@@ -490,10 +490,10 @@ private struct TrainingAtRest: View {
         let title = titleAndRoute.0
         switch plan {
         case .running:
-            return SentenceParts(text: "\(title) is running.", key: title)
+            return SentenceParts(text: "\(title) is running", key: title)
         case let .done(summary):
             let when = summary.endedAt.map { TrainingPage.doneWhen($0) } ?? "done today"
-            return SentenceParts(text: "\(shown(summary.title)) \(when).", key: shown(summary.title))
+            return SentenceParts(text: "\(shown(summary.title)) \(when)", key: shown(summary.title))
         case .routine, .scheduled:
             let sets = lanes.map(\.sets).reduce(0, +)
             // A private workout names no lift and no weight.
@@ -547,7 +547,7 @@ private struct TrainingAtRest: View {
             return finished.trainingLine
         }
         if landed, let first = lanes.first {
-            return "\(titleAndRoute.0) running. \(first.name) first."
+            return "\(titleAndRoute.0) running. \(first.name) first"
         }
         switch plan {
         case let .routine(routine):
@@ -568,7 +568,7 @@ private struct TrainingAtRest: View {
             // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
             // time's weight is silence.
             guard prefill.source == .target, let weight = prefill.weight, weight > 0 else { return nil }
-            return "\(exercise.name) is ready for \(Format.mass(weight)) today."
+            return "\(exercise.name) is ready for \(Format.mass(weight)) today"
         case .running:
             return nil
         case let .done(summary):
@@ -934,9 +934,9 @@ extension TrainingPage {
     /// Tess's first-time line for an exercise he has not logged: a bodyweight move starts easy, anything else light.
     static func firstTimeLine(_ exercise: ClassDef, store: ObjectStore) -> String {
         if store.equipmentKind(of: exercise) == .bodyweight {
-            return "First time on \(plural(exercise.name.lowercased())). Keep the first set easy."
+            return "First time on \(plural(exercise.name.lowercased())). Keep the first set easy"
         }
-        return "First time on \(exercise.name.lowercased()). Start light."
+        return "First time on \(exercise.name.lowercased()). Start light"
     }
 
     /// "push-up" is "push-ups": the bodyweight moves that count in reps take an s.
@@ -981,9 +981,9 @@ private struct EmptyTraining: View {
             Text("nothing on the plan today")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
-            Text("A rest day. It counts too.")
+            Text("A rest day. It counts too")
                 .textRole(.title)
-                .wordFit("A rest day. It counts too.")
+                .wordFit("A rest day. It counts too")
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .siblingParallax()

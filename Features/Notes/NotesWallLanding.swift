@@ -42,14 +42,18 @@ struct NotesLandingPage: View {
                         keystone: {
                             LandingKeystone(label: "Your notes") {
                                 WordWallView(words: shown.words) { id in
-                                    if let uuid = UUID(uuidString: id) { openNote(uuid) }
+                                    if let uuid = UUID(uuidString: id) {
+                                        openNote(uuid)
+                                    }
                                 }
                             }
                         },
-                        caption: ["Tap a word to open its note."],
+                        caption: ["Tap a word to open its note"],
                         widget: shown.widget, widgetIndex: $widgetIndex,
                         openWidget: { item in
-                            if let uuid = UUID(uuidString: item.id) { openNote(uuid) }
+                            if let uuid = UUID(uuidString: item.id) {
+                                openNote(uuid)
+                            }
                         },
                         glyph: { item in LandingGlyph(item: item, color: Self.plum(scheme), room: .log) },
                         doors: shown.doors, focus: $focus,
@@ -62,18 +66,22 @@ struct NotesLandingPage: View {
                         },
                         action: LandingFootAction(word: "Write", object: "A note", hint: "Writes a note",
                                                   alternates: [
-                                                      .init(verb: "Speak", object: "To Tess") { TessVoice.shared.say("Say \"note: ...\" and I'll keep it.") },
-                                                      .init(verb: "List", object: "A checklist") { draft = ""; writing = true },
+                                                      .init(verb: "Speak", object: "To Tess") {
+                                                          TessVoice.shared.say("Say \"note: ...\" and I'll keep it")
+                                                      },
+                                                      .init(verb: "List", object: "A checklist") {
+                                                          draft = ""; writing = true
+                                                      },
                                                   ]) {
                             draft = ""
                             writing = true
                         })
-            .toolbar(.hidden, for: .navigationBar)
-            .alert("New note", isPresented: $writing) {
-                TextField("", text: $draft)
-                Button("Keep") { write() }
-                Button("Cancel", role: .cancel) {}
-            }
+                        .toolbar(.hidden, for: .navigationBar)
+                        .alert("New note", isPresented: $writing) {
+                            TextField("", text: $draft)
+                            Button("Keep") { write() }
+                            Button("Cancel", role: .cancel) {}
+                        }
     }
 
     // MARK: Facts
@@ -109,9 +117,9 @@ struct NotesLandingPage: View {
         }
         let top = Array(facts.things.prefix(2).map(\.name))
         let sentence = NotesLandingWords.subtitle(hasNotes: facts.hasNotes, topThings: top).text
-        let line = notes.isEmpty ? ["Write the first thing down."] : [sentence, "\(notes.count) notes."]
+        let line = notes.isEmpty ? ["Write the first thing down"] : [sentence, "\(notes.count) notes"]
         let latest = notes.first
-        let needs = notes.isEmpty ? ["Write the first thing down."] : [line[0], "\(open.count) notes here."]
+        let needs = notes.isEmpty ? ["Write the first thing down"] : [line[0], "\(open.count) notes here"]
         let widget = open.prefix(4).map { note in
             WidgetItem(id: note.id.uuidString, header: "Newest", big: Self.short(note.title).uppercased(),
                        middle: "Written \(NotesCopy.when(note.updatedAt, now: now))",
@@ -140,9 +148,9 @@ struct NotesLandingPage: View {
 
     /// A wall word: the title cut on a whole word at 14 characters, then stepped back past trailing small words
     /// and punctuation (228). Never "...", never an empty word.
-    /// The Log's own colour (sheet 241 and 283: plum 8A4570 / E3A3CB), not the app-wide Notes violet.
+    /// The Log's own colour, violet, his pick Oct 27 (5B2277 / BB70E1).
     static func plum(_ scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color(hex: 0xE3A3CB) : Color(hex: 0x8A4570)
+        scheme == .dark ? Color(hex: 0xBB70E1) : Color(hex: 0x5B2277)
     }
 
     static func short(_ title: String) -> String {
@@ -169,13 +177,13 @@ struct NotesLandingPage: View {
         if let latest = shown.latest {
             let when = NotesCopy.when(latest.updatedAt, now: AppClock.now)
             if shown.latestIsPrivate {
-                Text("You last wrote a private note, \(when).")
+                Text("You last wrote a private note, \(when)")
                     .font(.custom("Figtree", size: 15, relativeTo: .callout))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
             } else {
                 (Text("You last wrote in ") + Text(Self.short(latest.title)).fontWeight(.semibold)
-                    .foregroundStyle(Theme.Colors.ink) + Text(", \(when)."))
+                    .foregroundStyle(Theme.Colors.ink) + Text(", \(when)"))
                     .font(.custom("Figtree", size: 15, relativeTo: .callout))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
@@ -195,7 +203,7 @@ struct NotesLandingPage: View {
             return
         }
         guard let result = try? model.engine.perform(CreateNote(body: text), by: .user) else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         let isPrivate = model.store.value("isPrivate", of: result.output) == .bool(true)
@@ -203,6 +211,6 @@ struct NotesLandingPage: View {
             draft = ""
             model.touch()
         }
-        TessVoice.shared.say(isPrivate ? "Private note, kept." : "Note kept.", undo: result.record)
+        TessVoice.shared.say(isPrivate ? "Private note, kept" : "Note kept", undo: result.record)
     }
 }

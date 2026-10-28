@@ -24,7 +24,7 @@ struct GroceriesFinishTests {
     @Test func finishSaysShoppingFinishedWithUndo() throws {
         let milk = try basket()
         let outcome = GroceriesCopy.finish(engine: model.engine)
-        #expect(outcome.line == "Shopping, finished.")
+        #expect(outcome.line == "Shopping, finished")
         let record = try #require(outcome.undo)
         #expect(model.store.object(id: milk.id)?.isDeleted == true)
         _ = model.engine.undo(record)
@@ -34,7 +34,7 @@ struct GroceriesFinishTests {
     /// A refused write: the failure line, nothing to undo (so the View keeps the basket and plays no haptic).
     @Test func finishFailureSaysDidntSave() {
         let outcome = GroceriesCopy.finish { nil }
-        #expect(outcome.line == "Didn't save that. Try again." && outcome.undo == nil)
+        #expect(outcome.line == "Didn't save that. Try again" && outcome.undo == nil)
     }
 
     @Test func aShopStartDuringAWorkoutSaysWorkoutRunning() throws {
@@ -42,7 +42,7 @@ struct GroceriesFinishTests {
         let workout = try model.store.create(#require(model.classes[.workout]), title: "Push day")
         try model.engine.perform(StartWorkout(workout: workout.id), by: .user)
         let groceries = Groceries(store: model.store, classes: model.classes)
-        #expect(GroceriesCopy.toggleShop(groceries, engine: model.engine) == "Workout running.")
+        #expect(GroceriesCopy.toggleShop(groceries, engine: model.engine) == "Workout running")
         #expect(groceries.shop(in: model.engine)?.state != .running)
     }
 
@@ -74,14 +74,14 @@ struct GroceriesFinishTests {
             try model.engine.perform(CheckListItem(item: item.id), by: .user)
         }
         let outcome = GroceriesCopy.finish(engine: model.engine)
-        #expect(outcome.line == "Shopping, finished." && !outcome.line.lowercased().contains("condom"))
+        #expect(outcome.line == "Shopping, finished" && !outcome.line.lowercased().contains("condom"))
     }
 
     /// ER11: a refused clear says so, gives no UNDO, and the View keeps the basket open.
     @Test func aRefusedClearSaysSoWithNoUndo() {
         let outcome = GroceriesCopy.clear(count: 3) { nil }
-        #expect(outcome.line == "Didn't save that. Try again." && outcome.undo == nil)
-        #expect(GroceriesCopy.didntSave == "Didn't save that. Try again.")
+        #expect(outcome.line == "Didn't save that. Try again" && outcome.undo == nil)
+        #expect(GroceriesCopy.didntSave == "Didn't save that. Try again")
     }
 
     @Test func aClearSaysHowManyWithUndo() throws {
@@ -89,6 +89,6 @@ struct GroceriesFinishTests {
         let outcome = GroceriesCopy.clear(count: 1) {
             try? model.engine.perform(ClearDoneItems(list: Groceries.listID), by: .user).record
         }
-        #expect(outcome.line == "Cleared 1 from the basket." && outcome.undo != nil)
+        #expect(outcome.line == "Cleared 1 from the basket" && outcome.undo != nil)
     }
 }

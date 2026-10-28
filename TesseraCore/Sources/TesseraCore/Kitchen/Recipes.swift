@@ -192,7 +192,7 @@ public struct CreateRecipe: EngineAction {
     public static func duplicateLine(of existing: ObjectRecord, in store: ObjectStore) -> String {
         let walled = store.value("isPrivate", of: existing) == .bool(true)
             || ObjectPrivacy.isPrivateRecipeTitle(existing.title, lastWeightKg: BodyWeight.lastKg(in: store))
-        return "\(walled ? ObjectPrivacy.recipeLabel : existing.title) is already on Recipes."
+        return "\(walled ? ObjectPrivacy.recipeLabel : existing.title) is already on Recipes"
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {

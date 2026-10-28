@@ -53,6 +53,12 @@ if [[ $RUN_APP == 1 ]]; then
     -derivedDataPath "$DERIVED" test >"$log" 2>&1)
   app=$?
   grep -E "error:|✘|Test run with|TEST (SUCCEEDED|FAILED)|BUILD FAILED" "$log" | grep -v "^ " | sort -u | head -40
+  # Sheet 288: the element conformance suite fails the run only on BLOCK; FIXED and WARN are listed here.
+  elements="$(grep -hE "ELEMENT (FIXED|WARN|BLOCK) " "$log" | sed -E 's/^.*ELEMENT //' | sort -u)"
+  if [[ -n "$elements" ]]; then
+    echo "==> Element conformance (fixed and warned; only BLOCK fails the run)"
+    echo "$elements" | head -40
+  fi
   if [[ $app != 0 ]]; then
     echo "!! App build or tests failed (full log: $log)"
     status=1

@@ -578,7 +578,7 @@ public final class TessRun {
             // All tool results go back together in one user message.
             state.messages.append(BrainMessage(.assistant, assistantContent))
             state.messages.append(BrainMessage(.user, uses.map { use in
-                let result = results[use.id] ?? ("Nothing ran.", true)
+                let result = results[use.id] ?? ("Nothing ran", true)
                 return .toolResult(id: use.id, content: result.text, isError: result.isError)
             }))
             state.round += 1
@@ -601,7 +601,7 @@ public final class TessRun {
             return cannotThink
         }
         switch outcome {
-        case .refused: return "I can't help with that one."
+        case .refused: return "I can't help with that one"
         case .notAllowed: return cannotThink
         default: return noAnswer
         }
@@ -628,7 +628,7 @@ public final class TessRun {
         let misfit = schemas[name].flatMap { ToolInputCheck.problem(input, schema: $0) }
         switch name {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
-            result = ("That isn't a call I can make here.", true)
+            result = ("That isn't a call I can make here", true)
         case _ where misfit != nil:
             result = (misfit ?? "", true)
         case TessOpenTool.name:
@@ -657,7 +657,7 @@ public final class TessRun {
                 .run(arguments: input)
         case _ where TessRecallTools.names.contains(name):
             if name == TessRecallTools.remember, budget <= 0 || (remembersLeft.map { $0 <= 0 } ?? false) {
-                result = (budget <= 0 ? TessTools.capLine : "That's enough for tonight.", true)
+                result = (budget <= 0 ? TessTools.capLine : "That's enough for tonight", true)
                 break
             }
             let answer = TessRecallTools.run(name, arguments: input, index: memoryIndex(for: runID), engine: engine,
@@ -693,7 +693,7 @@ public final class TessRun {
                 break
             }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
-            result = ("Shown.", false)
+            result = ("Shown", false)
         case _ where rehearsal?.runID == runID && rehearsal?.slow == true && !ToolPicker.runAtOnce.contains(name):
             // A rehearsal that ran out of time proved nothing: she asks him instead of writing unrehearsed.
             result = (Self.slowRehearsal, true)
@@ -705,13 +705,13 @@ public final class TessRun {
                 for record in records {
                     sink(.ghost(record.id))
                 }
-                result = ("Done: \(records.count) waiting for approval.", false)
+                result = ("Done: \(records.count) waiting for approval", false)
             } catch let answer as TessToolAnswer {
                 result = (answer.line, false)
             } catch let error as TessToolError {
                 result = (error.description, true)
             } catch {
-                result = ("That didn't work.", true)
+                result = ("That didn't work", true)
             }
         }
         await trace.record(TraceSpan(kind: .tool, name: name, at: now(), totalMs: LatencyBench.ms(.now - started),
@@ -726,7 +726,7 @@ public final class TessRun {
         guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
               let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
         else {
-            return ("That place has no such look. Use one from its look line.", true)
+            return ("That place has no such look. Use one from its look line", true)
         }
         if tries?.runID == runID, tries?.passed.contains(Self.tryKey(key, change)) == true {
             return nil
@@ -849,25 +849,25 @@ public final class TessRun {
             for record in records {
                 emit(.ghost(record.id), active)
             }
-            let line = records.compactMap(\.receipt).first ?? records.first?.summary ?? "Done."
+            let line = records.compactMap(\.receipt).first ?? records.first?.summary ?? "Done"
             return (line, false)
         } catch let answer as TessToolAnswer {
             return (answer.line, false)
         } catch let error as TessToolError {
             return (Self.boundFailure(error.description), true)
         } catch {
-            return ("That didn't work.", true)
+            return ("That didn't work", true)
         }
     }
 
     static func shellLine(_ bound: ToolPicker.Bound) -> String {
         switch bound.call {
-        case "goBack": "Back."
-        case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
-        case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
+        case "goBack": "Back"
+        case "openDoor": bound.arguments["door"].map { "Opening \($0)" } ?? "Opening it"
+        case "showWindow": bound.arguments["window"].map { "\($0)" } ?? "Done"
         case "setLook": lookLine(bound.arguments)
         case "showLooks": "Here are its looks"
-        default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
+        default: bound.arguments["item"].map { "Opening \($0)" } ?? "Opening it"
         }
     }
 
@@ -883,7 +883,7 @@ public final class TessRun {
     }
 
     static func boundFailure(_ text: String) -> String {
-        text.isEmpty ? "That didn't work." : "I couldn't do that: \(text)."
+        text.isEmpty ? "That didn't work" : "I couldn't do that: \(text)"
     }
 
     // MARK: Resume
@@ -951,11 +951,11 @@ public final class TessRun {
                         return .toolResult(id: id, content: page.text, isError: page.isError)
                     }
                     if name == TessOpenTool.name || name == "query" || name == TessZoomTool.name {
-                        return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
+                        return .toolResult(id: id, content: "The phone was interrupted before this ran", isError: true)
                     }
                     return .toolResult(
                         id: id,
-                        content: "The phone was interrupted before this ran. Nothing was changed.",
+                        content: "The phone was interrupted before this ran. Nothing was changed",
                         isError: true
                     )
                 }))

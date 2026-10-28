@@ -132,6 +132,15 @@ struct PantryLedger {
                 maskedByCook.insert(ingredient.id)
             }
         }
+        // What he set by hand counts as an event at the time he set it (Core's PantryStock): the later fact wins, and
+        // a hand-set level has already ended any snooze.
+        let stock = PantryStock(store: store, classes: classes)
+        if let ingredientClass = classes[.ingredient] {
+            for ingredient in store.objects(of: ingredientClass) where !ingredient.isDeleted {
+                guard let set = stock.level(of: ingredient) else { continue }
+                note(ingredient, set.level == .in ? .have : set.level == .low ? .low : .out, at: set.at)
+            }
+        }
         return ingredients.mapValues { ingredient in
             let last = (events[ingredient.id] ?? []).max { lhs, rhs in
                 lhs.when != rhs.when ? lhs.when < rhs.when : lhs.state > rhs.state

@@ -55,7 +55,7 @@ public struct QueueBook: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output book: ObjectRecord) -> String? {
-        "\(book.title), in the queue."
+        "\(book.title), in the queue"
     }
 }
 
@@ -147,7 +147,7 @@ public struct StartReading: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output book: ObjectRecord) -> String? {
-        "\(book.title), started."
+        "\(book.title), started"
     }
 }
 
@@ -215,9 +215,9 @@ public struct SetBookPage: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output moved: Moved) -> String? {
-        var line = moved.pages.map { "\(moved.title), p \(moved.to) of \($0)." } ?? "\(moved.title), p \(moved.to)."
+        var line = moved.pages.map { "\(moved.title), p \(moved.to) of \($0)" } ?? "\(moved.title), p \(moved.to)"
         if let total = moved.pages, moved.to > total {
-            line += " Last page. Finished?"
+            line += ". Last page. Finished?"
         }
         return line
     }
@@ -266,7 +266,7 @@ public struct FinishBook: EngineAction {
 
     public func receipt(in store: ObjectStore, output book: ObjectRecord) -> String? {
         let line = store.value("review", of: book)?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
-        return line.map { "\(book.title), finished: \($0)." } ?? "\(book.title), finished. One line on it?"
+        return line.map { "\(book.title), finished: \($0)" } ?? "\(book.title), finished. One line on it?"
     }
 }
 
@@ -300,7 +300,7 @@ public struct SetBookAside: EngineAction {
     }
 
     public func receipt(in _: ObjectStore, output book: ObjectRecord) -> String? {
-        "\(book.title), set aside."
+        "\(book.title), set aside"
     }
 }
 

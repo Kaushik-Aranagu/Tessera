@@ -38,6 +38,8 @@ public enum FeatureFlags {
         .init("homeV2", "Home v2", .home), .init("homeMosaic", "Mosaic", .home),
         .init("homeMosaicMoods", "Mosaic moods", .home), .init("homeMosaicMoments", "Mosaic moments", .home),
         .init("homeAppsList", "Apps list", .home), .init("daySentence", "Day sentence", .home),
+        .init("quietHoursV2", "Quiet hours", .home),
+        .init("routineMode", "Routine mode", .home),
         .init("awayV2", "Away", .home), .init("finishMoments", "Finish moments", .home),
         .init("finishV2", "Finishing marks", .home), .init("surfacesV2", "Surfaces v2", .home),
         // Training
@@ -55,6 +57,9 @@ public enum FeatureFlags {
         .init("aisleOrder", "Learned aisle order", .kitchen),
         .init("pantryLevelsV2", "Pantry levels", .kitchen), .init("shopV2", "Shop run", .kitchen),
         .init("linkFetch", "Link reader v2", .kitchen, claude: true),
+        .init("kitchenRoomsV2", "Kitchen rooms", .kitchen),
+        .init("galleyCookMode", "Cooking mode", .kitchen),
+        .init("galleyShopMode", "Shopping mode", .kitchen),
         // Notes and lists
         .init("notesMargin", "Notes margin", .notesAndLists), .init(
             "notesLinkSuggest",
@@ -89,9 +94,12 @@ public enum FeatureFlags {
         .init("pagesV2", "Pages v2", .everywhere), .init("settingsV2", "Settings v2", .everywhere),
         .init("walledPageV2", "Privacy page", .everywhere), .init("backupsV2", "Backups in words", .everywhere),
         .init("undoLogV2", "Undo log", .everywhere),
+        .init("depthOnWheels", "Depth on wheels", .everywhere),
         .init("tessLabPolicy", "Lab mode for Claude", .everywhere, claude: true),
         .init("tessDirectorPlaybook", "Tess picks her looks", .everywhere, claude: true),
         .init("tessAsks", "Ask Tess anything", .everywhere, claude: true),
+        // The Chart room: the experimental room Tess builds by talking (R1).
+        .init("chartRoom", "Chart room", .everywhere),
     ]
 
     /// Not flags: switches with more than two values, connections he makes by hand, and tools. A test keeps this list

@@ -12,14 +12,14 @@ enum CookNotes {
 
     /// "Paprika chicken, cooked." keeps the full title; a private recipe reads "Private recipe, cooked."
     static func cookedLine(_ name: String) -> String {
-        "\(name), cooked."
+        "\(name), cooked"
     }
 
     /// "Last time: less salt." The trailing full stop is not doubled.
     static func lastTimeLine(_ note: String) -> String {
         let text = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let body = text.hasSuffix(".") ? String(text.dropLast()) : text
-        return "Last time: \(body)."
+        return "Last time: \(body)"
     }
 
     /// The newest note on this recipe's finished cooks, newest first (CN-E1, the cook half; a note linked with

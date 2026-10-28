@@ -487,7 +487,7 @@ struct MosaicHomeLayer: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: lowPower ? 1.0 / 30 : nil, paused: !visible)) { timeline in
+        LiveClock(LiveFeatures.mosaicHome, minimumInterval: lowPower ? 1.0 / 30 : nil, paused: !visible) { timeline in
             Canvas(rendersAsynchronously: false) { context, size in
                 draw(&context, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
             }

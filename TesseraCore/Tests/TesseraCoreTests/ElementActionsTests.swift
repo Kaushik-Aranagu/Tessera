@@ -38,9 +38,9 @@ struct ElementActionsTests {
         let note = try engine.perform(CreateNote(body: "Trip packing"), by: .user).output
         let pin = try engine.perform(SetPinned(object: note.id), by: .tess)
         #expect(store.value("pinned", of: note) == .bool(true) && store.value("pinnedAt", of: note) != nil)
-        #expect(pin.record.receipt == "Trip packing, pinned.")
+        #expect(pin.record.receipt == "Trip packing, pinned")
         let unpin = try engine.perform(SetPinned(object: note.id), by: .tess)
-        #expect(unpin.record.receipt == "Trip packing, unpinned." && store.value("pinnedAt", of: note) == nil)
+        #expect(unpin.record.receipt == "Trip packing, unpinned" && store.value("pinnedAt", of: note) == nil)
         engine.undo(unpin.record)
         #expect(store.value("pinned", of: note) == .bool(true))
         // A list can be pinned; a task cannot.
@@ -59,14 +59,14 @@ struct ElementActionsTests {
 
     @Test func theRainAlertIsOnOffAndHasALead() throws {
         let on = try engine.perform(SetRainAlert(), by: .tess)
-        #expect(on.record.receipt == "You'll hear 30 minutes before rain.")
+        #expect(on.record.receipt == "You'll hear 30 minutes before rain")
         let settings = SettingsStore(engine: engine).read()
         #expect(settings.rainAlert == true && settings.rainAlertMinutes == 30)
         let hour = try engine.perform(SetRainAlert(on: true, leadMinutes: 60), by: .tess)
-        #expect(hour.record.receipt == "You'll hear an hour before rain.")
+        #expect(hour.record.receipt == "You'll hear an hour before rain")
         #expect(SettingsStore(engine: engine).read().rainAlertMinutes == 60)
         let off = try engine.perform(SetRainAlert(on: false), by: .tess)
-        #expect(off.record.receipt == "Rain alert off." && SettingsStore(engine: engine).read().rainAlert == false)
+        #expect(off.record.receipt == "Rain alert off" && SettingsStore(engine: engine).read().rainAlert == false)
         engine.undo(off.record)
         #expect(SettingsStore(engine: engine).read().rainAlert == true)
         // The lead stays inside 5 minutes to a day.
@@ -82,7 +82,7 @@ struct ElementActionsTests {
     @Test func restTodayRefusesAGoingWorkoutAndMarksTheRest() throws {
         let book = RestBook(store: store, classes: classes)
         let rest = try engine.perform(TakeRest(scope: .training, from: at(20), until: at(20)), by: .tess)
-        #expect(rest.record.receipt?.hasPrefix("Rest today.") == true)
+        #expect(rest.record.receipt?.hasPrefix("Rest today") == true)
         #expect(book.isTrainingRest(on: at(20, 18), calendar: calendar))
         #expect(!book.isTrainingRest(on: at(21), calendar: calendar))
         // Again the same day changes nothing: the same row.
@@ -95,7 +95,7 @@ struct ElementActionsTests {
         let error = #expect(throws: ActionError.self) {
             try engine.perform(TakeRest(scope: .training, from: at(22), until: at(22)), by: .tess)
         }
-        #expect(error.flatMap(TakeRest.refusalLine) == "A workout is already going.")
+        #expect(error.flatMap(TakeRest.refusalLine) == "A workout is already going")
     }
 
     @Test func aRestTodayMakesTheLedgerReadARestDay() throws {
@@ -116,15 +116,15 @@ struct ElementActionsTests {
         let journal = try routine("Journal")
         let book = RestBook(store: store, classes: classes)
         let pause = try engine.perform(TakeRest(scope: .routine, routine: journal.id, from: at(20)), by: .tess)
-        #expect(pause.record.receipt == "Journal, resting.")
+        #expect(pause.record.receipt == "Journal, resting")
         #expect(book.pause(of: journal.id, on: at(23), calendar: calendar) != nil)
         let tend = try engine.perform(TendRoutine(routine: journal.id, at: at(23)), by: .tess)
-        #expect(tend.output && tend.record.receipt == "Journal, done for today.")
+        #expect(tend.output && tend.record.receipt == "Journal, done for today")
         #expect(book.tendedDays(of: journal.id, calendar: calendar).count == 1)
         #expect(book.pause(of: journal.id, on: at(23), calendar: calendar) == nil)
         // The second tend the same day writes nothing.
         let second = try engine.perform(TendRoutine(routine: journal.id, at: at(23, 20)), by: .tess)
-        #expect(!second.output && second.record.receipt == "Journal is done for today.")
+        #expect(!second.output && second.record.receipt == "Journal is done for today")
         #expect(book.tendedDays(of: journal.id, calendar: calendar).count == 1)
         // A run is not a workout.
         let ledger = TrainingLedger(store: store, classes: classes)
@@ -138,7 +138,7 @@ struct ElementActionsTests {
             let made = try engine.perform(PlantRoutine(name: name), by: .tess)
             #expect(store.value("grove", of: made.output) == .choice(grove), "\(name)")
             #expect(store.value("cadence", of: made.output) == .choice("day"))
-            #expect(made.record.receipt == "\(name), planted.")
+            #expect(made.record.receipt == "\(name), planted")
         }
         let twice = try engine.perform(PlantRoutine(name: "Swim", cadence: "day", weekdays: "5, 2, 2"), by: .tess)
         #expect(store.value("fixedWeekdays", of: twice.output) == .text("2,5"))
@@ -149,7 +149,7 @@ struct ElementActionsTests {
     @Test func aPrivateRoutineNameIsPlantedAsPrivateRoutine() throws {
         let made = try engine.perform(PlantRoutine(name: "weigh in at 82 kg"), by: .tess)
         // The real name stays on the device; the shown label and the receipt say "Private routine".
-        #expect(made.output.title == "weigh in at 82 kg" && made.record.receipt == "Private routine, planted.")
+        #expect(made.output.title == "weigh in at 82 kg" && made.record.receipt == "Private routine, planted")
     }
 
     @Test func aSessionPlannedForTodayRefusesTheRestInHisWords() throws {
@@ -158,12 +158,12 @@ struct ElementActionsTests {
         let error = #expect(throws: ActionError.self) {
             try engine.perform(TakeRest(scope: .training, from: at(24, 9), until: at(24, 9)), by: .tess)
         }
-        #expect(error.flatMap(TakeRest.refusalLine) == "There's a session planned today.")
+        #expect(error.flatMap(TakeRest.refusalLine) == "There's a session planned today")
         // Through the tool, that line is what he hears.
         let spoken = #expect(throws: TessToolError.self) {
             try TessTools.run("restDay", arguments: Data("{}".utf8), engine: engine, now: at(24, 9), calendar: calendar)
         }
-        #expect(spoken?.description == "There's a session planned today.")
+        #expect(spoken?.description == "There's a session planned today")
     }
 
     @Test func anErrorWithNoSpokenLineIsNeverSpokenRaw() throws {
@@ -173,7 +173,7 @@ struct ElementActionsTests {
         let spoken = #expect(throws: TessToolError.self) {
             try TessTools.run("rainAlert", arguments: Data(#"{"on":true,"leadMinutes":null}"#.utf8), engine: engine)
         }
-        #expect(spoken?.description == "That didn't work.")
+        #expect(spoken?.description == "That didn't work")
     }
 
     @Test func anIdOfTheWrongClassIsNoNoteOrList() throws {
@@ -191,7 +191,7 @@ struct ElementActionsTests {
         let book = RestBook(store: store, classes: classes)
         let week = try engine.perform(TakeRest(scope: .routine, routine: journal.id, from: at(20), until: at(26)),
                                       by: .tess)
-        #expect(week.record.receipt == "Journal, resting until Monday.")
+        #expect(week.record.receipt == "Journal, resting until Monday")
         #expect(book.pause(of: journal.id, on: at(26, 23), calendar: calendar) != nil)
         #expect(book.pause(of: journal.id, on: at(27), calendar: calendar) == nil)
         let resumed = try engine.perform(ResumeRoutine(routine: journal.id, at: at(22)), by: .tess)

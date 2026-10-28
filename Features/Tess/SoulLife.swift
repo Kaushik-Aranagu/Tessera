@@ -116,11 +116,15 @@ enum SoulLife {
         case line
         /// After she does something for him: smile arcs for 1.1 s.
         case did
+        /// Sheet 387, "everyone's had a drink": her eyes close into two small arcs for 1.6 s, once.
+        case drink
     }
 
     static let widenSeconds = 0.32
     static let inhaleSeconds = 0.3
     static let smileSeconds = 1.1
+    /// The long smile of sheet 387.
+    static let drinkSmileSeconds = 1.6
 
     /// Eye scale: 1 to 1.25 and back over 320 ms after a touch.
     static func widen(since: Double) -> CGFloat {
@@ -131,14 +135,14 @@ enum SoulLife {
     /// Body scale: a small breath (1 to 1.04) after a touch, an inhale before a line.
     static func breath(_ reaction: Reaction, since: Double) -> CGFloat {
         let length = reaction == .touch ? 0.5 : inhaleSeconds
-        guard reaction != .did, since >= 0, since < length else { return 1 }
+        guard reaction != .did, reaction != .drink, since >= 0, since < length else { return 1 }
         return 1 + 0.04 * CGFloat(sin(Double.pi * since / length))
     }
 
     /// 0 open eyes, 1 smile arcs: rises in 120 ms, holds, falls over the last 200 ms of 1.1 s.
-    static func smile(since: Double) -> Double {
-        guard since >= 0, since < smileSeconds else { return 0 }
-        return min(since / 0.12, 1, (smileSeconds - since) / 0.2)
+    static func smile(since: Double, seconds: Double = smileSeconds) -> Double {
+        guard since >= 0, since < seconds else { return 0 }
+        return min(since / 0.12, 1, (seconds - since) / 0.2)
     }
 
     // MARK: Seeds

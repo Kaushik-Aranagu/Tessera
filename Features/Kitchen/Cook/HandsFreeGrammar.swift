@@ -29,8 +29,8 @@ enum HandsFreeGrammar {
 
         var line: String {
             switch self {
-            case .tooLong: "That's too long to send. Say it shorter."
-            case .keyShaped: "Didn't catch that."
+            case .tooLong: "That's too long to send. Say it shorter"
+            case .keyShaped: "Didn't catch that"
             }
         }
     }

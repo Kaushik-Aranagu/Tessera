@@ -41,6 +41,11 @@ struct RestActivityAttributes: ActivityAttributes {
         var isPrivate: Bool?
         /// Surfaces v2 (Design 142): sets done and planned for the exercise, drawn as set marks beside the rest
         /// countdown. Set only while the Review switch "Surfaces v2" is On; nil draws the face as before.
+        /// Live modes (sheets 326 and 327): the room's word, its three lines and its countdown. Set only while the
+        /// chalk workout mode is open; nil draws the rest face as before. A private workout's carries only "Rest", the
+        /// time
+        /// and "Private workout".
+        var mode: ModeLiveContent?
         var setsDone: Int?
         var setsTotal: Int?
 

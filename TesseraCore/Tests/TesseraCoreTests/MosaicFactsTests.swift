@@ -78,14 +78,14 @@ struct MosaicFactsTests {
         _ = try engine.perform(CreateTask(title: "Tacos", startsAt: at(18, 5)), by: .user)
         let mosaic = facts(at(17, 42))
         #expect(mosaic.freeMinutes == 23)
-        #expect(mosaic.caption(for: .day) == "Free 23 min, then Tacos.")
-        #expect(mosaic.caption(for: .next) == "23 min until Tacos.")
-        #expect(mosaic.caption(for: .time) == "5:42 pm. Thursday.")
+        #expect(mosaic.caption(for: .day) == "Free 23 min, then Tacos")
+        #expect(mosaic.caption(for: .next) == "23 min until Tacos")
+        #expect(mosaic.caption(for: .time) == "5:42 pm. Thursday")
         #expect(mosaic.caption(for: .sky).hasPrefix("Sunset at 6:"))
         #expect(facts(at(20)).caption(for: .sky).hasPrefix("Sunset was at "))
         #expect(facts(at(5)).caption(for: .sky).hasPrefix("Sunrise at "))
-        #expect(mosaic.caption(for: .done) == "Nothing done yet today.")
-        #expect(facts(at(19)).caption(for: .day) == "Nothing else is timed today.")
+        #expect(mosaic.caption(for: .done) == "Nothing done yet today")
+        #expect(facts(at(19)).caption(for: .day) == "Nothing else is timed today")
     }
 
     @Test func aPrivateOrWalledTitleIsMaskedInEveryCaption() throws {
@@ -145,7 +145,7 @@ struct MosaicFactsTests {
         try engine.perform(SetTaskDone(task: other.id, done: false), by: .user)
         let mosaic = facts(.now)
         #expect(mosaic.finishedToday.count == 1)
-        #expect(mosaic.caption(for: .done) == "Done today: 1 thing.")
+        #expect(mosaic.caption(for: .done) == "Done today: 1 thing")
         #expect(!mosaic.caption(for: .done).contains("Lexapro"))
     }
 

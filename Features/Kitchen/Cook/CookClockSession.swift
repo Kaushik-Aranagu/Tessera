@@ -227,7 +227,7 @@ final class CookClockSession {
     @discardableResult
     func back() -> Bool {
         guard let target = preceding(of: current) else {
-            say(CookModeCopy.step(current, of: steps.count) + ".", undo: nil)
+            say(CookModeCopy.step(current, of: steps.count), undo: nil)
             return false
         }
         move(to: target, announceLine: true, starting: false)
@@ -313,14 +313,14 @@ final class CookClockSession {
         let name = label ?? "Timer"
         let run = StartKitchenTimer(label: name, minutes: minutes, cook: cookID, time: AppClock.now)
         guard let result = try? model.engine.perform(run, by: .user) else {
-            say("Didn't catch that.", undo: nil)
+            say("Didn't catch that", undo: nil)
             return
         }
         model.touch()
         armEnd()
         let shown = KitchenTimerAlerts.hidesLabel(name, cook: model.store.object(id: cookID), in: model.store)
             ? "Timer" : name
-        say("\(shown), \(minutes.formatted(.number.precision(.fractionLength(0 ... 1)))) min.",
+        say("\(shown), \(minutes.formatted(.number.precision(.fractionLength(0 ... 1)))) min",
             undo: result.record, held: .seconds(4))
     }
 
@@ -391,7 +391,7 @@ final class CookClockSession {
     /// "Roast is done." for one; "Roast and chicken, done." for two in one moment.
     static func joinedDone(_ names: [String]) -> String {
         guard names.count > 1 else { return CookModeCopy.timerDone(names.first ?? "Timer") }
-        return "\(names.joined(separator: " and ")), done."
+        return "\(names.joined(separator: " and ")), done"
     }
 
     /// "5 more minutes" on a held timer: its own timer restarts, never a second one.
@@ -414,7 +414,7 @@ final class CookClockSession {
     /// Done: stops this cook's timers without a confirm, writes the Cook, and Tess says "Paprika chicken, cooked."
     /// with UNDO for 10 s. A note, when he wrote one, rides on the same write (`FinishCooking(note:)`).
     @discardableResult
-    func finish(note: String?) -> Bool {
+    func finish(note: String?, takeBack: (() -> Void)? = nil) -> Bool {
         let trimmed = note?.trimmingCharacters(in: .whitespacesAndNewlines)
         let clean = trimmed.flatMap { $0.isEmpty ? nil : String($0.prefix(280)) }
         guard let result = try? model.engine.perform(FinishCooking(cook: cookID, note: clean), by: .user) else {
@@ -423,7 +423,7 @@ final class CookClockSession {
         model.touch()
         armed?.cancel()
         let line = CookNotes.cookedLine(recipeName)
-        TessVoice.shared.say(line, undo: result.record, holds: .seconds(10))
+        TessVoice.shared.say(line, undo: result.record, holds: .seconds(10), takeBack: takeBack)
         announce(line)
         return true
     }
@@ -437,8 +437,8 @@ final class CookClockSession {
         case .silent:
             return nil
         case .didntCatch:
-            say("Didn't catch that.", undo: nil)
-            return "Didn't catch that."
+            say("Didn't catch that", undo: nil)
+            return "Didn't catch that"
         case let .refused(reason):
             say(reason.line, undo: nil)
             return reason.line
@@ -446,18 +446,18 @@ final class CookClockSession {
             switch command {
             case .next:
                 if !next() {
-                    say("That's the last step.", undo: nil)
+                    say("That's the last step", undo: nil)
                 }
                 return CookModeCopy.step(current, of: steps.count)
             case .back:
                 _ = back()
-                return CookModeCopy.step(current, of: steps.count) + "."
+                return CookModeCopy.step(current, of: steps.count)
             case let .timer(minutes, label):
                 startSpoken(label: label, minutes: minutes)
                 return "Timer"
             case let .note(text):
                 pendingNote = text
-                say("Note kept for next time.", undo: nil)
+                say("Note kept for next time", undo: nil)
                 return text
             }
         }

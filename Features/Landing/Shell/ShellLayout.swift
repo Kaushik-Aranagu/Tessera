@@ -1,4 +1,5 @@
 import CoreGraphics
+import SwiftUI
 
 /// Where each place sits in each layout (sheet 283 v4 frames, `LandingPlace`), the merge table of v5, and the pure
 /// rules the shell plays a change by. No views here, so the tests read it directly.
@@ -20,7 +21,115 @@ enum ShellLayout {
              .actionWord, .tess]
         case .door:
             [.title, .navWord, .doorTitle, .keystone, .caption, .page, .actionWord, .tess]
+        case .bridge:
+            // Bridge (sheet 283 v4): the Settings word holds the Title's place, the Departure board the Switcher's;
+            // the apps dial takes the whole doors band; the foot holds the undo line. The Nav word, Caption and
+            // Glyph are kept and empty there.
+            [.title, .navWord, .switcher, .keystone, .caption, .widget, .glyph, .dial, .actionWord, .tess]
         }
+    }
+
+    /// Where a place that is not in a layout waits there: the place it merged into, or (on Bridge) the place that
+    /// folds it in. A change spreads it out of that place's rect, or flows it into it.
+    static func partner(_ place: Place, in layout: LayoutKind) -> Place? {
+        switch layout {
+        case .landing:
+            nil
+        case .door:
+            target(of: place)
+        case .bridge:
+            switch place {
+            case .needs, .doorTitle: .switcher
+            case .doorSummary: .dial
+            case .page: .widget
+            default: nil
+            }
+        }
+    }
+
+    /// A place's frame in a layout where it exists.
+    static func layoutFrame(_ place: Place, in layout: LayoutKind) -> CGRect {
+        guard layout == .bridge else { return ownFrame(place) }
+        switch place {
+        case .title: return LandingPlace.Masthead.settingsWord
+        case .switcher: return LandingPlace.Masthead.departureBoard
+        case .dial: return LandingPlace.doors.frame
+        default: return ownFrame(place)
+        }
+    }
+
+    /// Gap kept between the last row's room and the action word (Design sheets 288 and 291: no text crosses another
+    /// element's frame, in any look or Dynamic Type size).
+    static let pageFootGap: CGFloat = 10
+
+    /// The action word's slot height at a Dynamic Type size. The word keeps its 64 pt slot (verb and object when they
+    /// fit, the verb alone when they do not, see `LandingActionWord`), so only a verb taller than the slot adds to it.
+    /// The word grows upward from its bottom edge and the Page stops above whatever it needs.
+    static func actionSlotHeight(typeSize: DynamicTypeSize) -> CGFloat {
+        let size = min(typeSize, .accessibility2)
+        return max(Foot.designHeight, (32 * titleScale(size)).rounded(.up))
+    }
+
+    private typealias Foot = LandingPlace.Foot
+
+    /// Title 2 and Caption 1 scale factors by size, close to UIFontMetrics' curve.
+    private static func titleScale(_ size: DynamicTypeSize) -> CGFloat {
+        switch size {
+        case .xSmall: 0.86
+        case .small: 0.93
+        case .medium: 0.96
+        case .large: 1
+        case .xLarge: 1.07
+        case .xxLarge: 1.14
+        case .xxxLarge: 1.21
+        case .accessibility1: 1.32
+        default: 1.5
+        }
+    }
+
+    /// From this size the caption wraps to two lines (the 15 pt line at Dynamic Type); below it, it fits one line or
+    /// takes a shorter cut.
+    static let captionWrapsFrom = DynamicTypeSize.xxxLarge
+
+    /// The extra height the caption's slot reserves for its second line (0 below `captionWrapsFrom`). Everything
+    /// under the caption sits this much lower, so nothing shifts later and nothing overlaps.
+    static func captionExtra(typeSize: DynamicTypeSize) -> CGFloat {
+        guard typeSize >= captionWrapsFrom else { return 0 }
+        let line = (15 * bodyScale(min(typeSize, .accessibility1)) * 1.3).rounded(.up)
+        return max(0, 2 * line - LandingPlace.caption.frame.height)
+    }
+
+    private static func bodyScale(_ size: DynamicTypeSize) -> CGFloat {
+        size == .xxxLarge ? 1.25 : (size >= .accessibility1 ? 1.4 : 1)
+    }
+
+    /// A place's rect on screen (x not centred): its layout frame, y scaled to the screen's height. The action word
+    /// grows up from its bottom edge with Dynamic Type, and the Page's viewport stops above whatever the word needs,
+    /// so rows always end above it.
+    static func screenRect(_ place: Place, in layout: LayoutKind, scale: CGFloat,
+                           typeSize: DynamicTypeSize) -> CGRect
+    {
+        var rect = frame(place, in: layout)
+        rect.origin.y *= scale
+        let extra = captionExtra(typeSize: typeSize)
+        let below = place != .actionWord && place != .tess && ownFrame(place).minY >= LandingPlace.widget.frame.minY
+        if place == .caption {
+            rect.size.height += extra
+        } else if below {
+            rect.origin.y += extra
+        }
+        switch place {
+        case .actionWord:
+            let slot = actionSlotHeight(typeSize: typeSize)
+            rect.origin.y += rect.height - slot
+            rect.size.height = slot
+        case .page:
+            let word = screenRect(.actionWord, in: layout, scale: scale, typeSize: typeSize)
+            rect.size.height = max(0, min(rect.height, word.minY - pageFootGap - rect.minY))
+        default:
+            break
+        }
+        return rect
     }
 
     static func exists(_ place: Place, in layout: LayoutKind) -> Bool {
@@ -70,7 +179,10 @@ enum ShellLayout {
     /// target's rect (so a split spreads out from it).
     static func frame(_ place: Place, in layout: LayoutKind) -> CGRect {
         if exists(place, in: layout) {
-            return ownFrame(place)
+            return layoutFrame(place, in: layout)
+        }
+        if let partner = partner(place, in: layout), exists(partner, in: layout) {
+            return layoutFrame(partner, in: layout)
         }
         if let target = target(of: place) {
             return mergedFrame(target)
@@ -100,13 +212,13 @@ enum ShellLayout {
         case (true, true): return .glide
         case (false, false): return .absent
         case (true, false):
-            if let target = target(of: place), exists(target, in: new) {
-                return .merge(into: target)
+            if let partner = partner(place, in: new), exists(partner, in: new) {
+                return .merge(into: partner)
             }
             return merges[place] != nil ? .form : .dissolve
         case (false, true):
-            if let target = target(of: place), exists(target, in: old) {
-                return .split(from: target)
+            if let partner = partner(place, in: old), exists(partner, in: old) {
+                return .split(from: partner)
             }
             return merges[place] != nil ? .form : .dissolve
         }

@@ -203,7 +203,7 @@ struct SavedCopyGateTests {
         try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user)
         let gate = TesseraBackup.savedCopyGate(for: store.context)
         #expect(gate.requiresAuth)
-        #expect(gate.line == "This copy has your private words.")
+        #expect(gate.line == "This copy has your private words")
     }
 
     @Test func aWordPrivateOnlyInHistoryStillAsks() throws {

@@ -66,6 +66,8 @@ struct TessSoul: View {
     /// A stroke's ripple and the blink after it (idea 3, `SoulRouter.stroke` / `strokeBlink`).
     var stroke: Date?
     var strokeBlink: Date?
+    /// Sheet 387: when her eyes began their one long smile (`SoulRouter.smileOnce`).
+    var smileStart: Date?
     /// Her beat (§6, `SoulRouter.beat`) and the colour she wears for his day (idea 4, `SoulRouter.wear(at:)`).
     var beat: Date?
     var wear: (Date) -> CGFloat = { _ in 0 }
@@ -95,10 +97,7 @@ struct TessSoul: View {
         let palette = onWorkoutGround
             ? SoulPalette.look(store.workoutLook)
             : SoulPalette.look(colorScheme == .dark ? store.pair.night : store.pair.day)
-        TimelineView(.animation(
-            minimumInterval: slow ? 1 / 30 : 1 / 60,
-            paused: reduceMotion && work == nil
-        )) { context in
+        LiveClock(minimumInterval: slow ? 1 / 30 : 1 / 60, paused: reduceMotion && work == nil) { context in
             let drawn = frame(at: context.date)
             let cloud = SoulCloud.image(cloudInput(drawn.frame, at: context.date, dark: palette.layered == false))
             Canvas(rendersAsynchronously: true) { context, canvasSize in
@@ -122,6 +121,7 @@ struct TessSoul: View {
             }
         }
         .frame(width: 96, height: 96)
+        .liveRegion(LiveFeatures.tessSoul)
         .onGeometryChange(for: CGPoint.self) { proxy in
             let frame = proxy.frame(in: .global)
             return CGPoint(x: frame.midX, y: frame.midY)
@@ -211,7 +211,7 @@ struct TessSoul: View {
         let time = date.timeIntervalSinceReferenceDate
         let lean = SoulLife.lean(at: time)
         var scale: CGFloat = 1
-        if let reaction, reaction.kind != .did {
+        if let reaction, reaction.kind != .did, reaction.kind != .drink {
             scale = SoulLife.breath(reaction.kind, since: time - reaction.start.timeIntervalSinceReferenceDate)
         }
         // While he talks she leans 1.6 pt toward him (his finger, else straight down).
@@ -277,7 +277,7 @@ struct TessSoul: View {
             toward: look.ground,
             by: 0.14
         ))
-        return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
+        return LiveClock(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60) { context in
             let frame = baseFrame(at: context.date)
             // Waking: shut, then open, then one blink (a 200 ms crossfade under Reduce Motion or Low Power).
             // A moment's own blink (the beat's landing, a stroke's leaving), else the wake's lids, else the schedule.
@@ -286,7 +286,8 @@ struct TessSoul: View {
                 ?? wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
                      still: reduceMotion, lid: lid, attention: attention,
-                     reaction: reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
+                     reaction: smileStart.map { (SoulLife.Reaction.drink, $0.timeIntervalSinceReferenceDate) }
+                         ?? reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
                      solid: !look.isDark, closed: quiet,
                      mouth: mouth.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) })
         }

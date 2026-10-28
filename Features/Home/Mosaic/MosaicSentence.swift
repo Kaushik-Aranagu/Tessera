@@ -29,8 +29,9 @@ struct MosaicSentence: View {
     /// Home 236: the notice the board shows on its second line now, for the Now face to play as its flap turns.
     var onAnnouncement: ((HomeNotice?) -> Void)?
     @State private var rotation = 0
-    /// The row's measured width; lines and the date are chosen to fit it.
-    @State private var rowWidth = HomeBoard.defaultWidth
+    /// The row's measured width; lines and the date are chosen to fit it. Starts at the narrowest board (the Bridge
+    /// row) so the first draw cuts whole words instead of clipping the line's start before the row is measured.
+    @State private var rowWidth = HomeBoard.firstDrawWidth
 
     private struct AnnounceKey: Hashable {
         let rotation: Int
@@ -170,7 +171,7 @@ private struct MosaicSentenceLine: View {
     }
 }
 
-/// An app word: its accent at rest, no underline; a 1 pt underline in the accent while pressed.
+/// An app word: its accent at rest, with a 1 pt underline in the accent at offset 5 (shown at rest, not only pressed).
 struct MosaicWordStyle: ButtonStyle {
     let accent: Color
 

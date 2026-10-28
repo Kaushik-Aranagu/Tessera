@@ -119,8 +119,8 @@ struct ListReuseTests {
         let (engine, _, bag, items) = try setUp()
         let reset = try engine.perform(ResetList(list: bag.id), by: .user)
         #expect(reset.output == 0 && reset.record.ops.isEmpty)
-        #expect(reset.record.receipt == "Gym bag, nothing to reset." && reset.record
-            .summary == "Gym bag, nothing to reset.")
+        #expect(reset.record.receipt == "Gym bag, nothing to reset" && reset.record
+            .summary == "Gym bag, nothing to reset")
         // The next real reset still says reset.
         try check(items, 2, engine: engine)
         #expect(try engine.perform(ResetList(list: bag.id), by: .user).record.receipt == "Gym bag, reset")
@@ -243,12 +243,12 @@ struct ListReuseTests {
         // QA on #826: the count is carried per op, so a no-op never colours the next line.
         let (engine, _, bag, items) = try setUp()
         try engine.perform(SetListReusable(list: bag.id), by: .user)
-        #expect(try engine.perform(ResetList(list: bag.id), by: .user).record.receipt == "Gym bag, nothing to reset.")
+        #expect(try engine.perform(ResetList(list: bag.id), by: .user).record.receipt == "Gym bag, nothing to reset")
         try check(items, 2, engine: engine)
         let clear = try engine.perform(ClearDoneItems(list: bag.id), by: .user)
         #expect(clear.output == 2 && clear.record.receipt == "Gym bag, reset")
         let none = try engine.perform(ClearDoneItems(list: bag.id), by: .user)
-        #expect(none.record.receipt == "Gym bag, nothing to reset." && none.record.ops.isEmpty)
+        #expect(none.record.receipt == "Gym bag, nothing to reset" && none.record.ops.isEmpty)
     }
 
     @Test func aRefusalNeverNamesAPrivateList() throws {

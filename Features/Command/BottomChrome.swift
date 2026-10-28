@@ -60,7 +60,7 @@ struct BottomChrome: View {
     static let soulLift: CGFloat = 54
 
     private var holdHintWords: String {
-        model.session != nil ? "Hold me to tell me a set." : "Hold me to talk."
+        model.session != nil ? "Hold me to tell me a set" : "Hold me to talk"
     }
 
     var body: some View {
@@ -228,6 +228,7 @@ struct BottomChrome: View {
                     if canUndo {
                         Button("Undo") { undo() }
                             .buttonStyle(InkLabelWordStyle.undo)
+                            .undoDries(id: slot?.text ?? "")
                     }
                 }
                 .padding(.vertical, Theme.Spacing.xs)
@@ -249,10 +250,10 @@ struct BottomChrome: View {
                  pageAccents: room.map { [$0] } ?? [],
                  director: room.map { SoulRoomTint.director($0) } ?? CoreSoulDirector(),
                  wake: model.soul.wake, stroke: model.soul.stroke, strokeBlink: model.soul.strokeBlink,
+                 smileStart: model.soul.smileStart,
                  beat: model.soul.beat, wear: model.soul.wear(at:)) { model.soul.placeDock($0) }
             .scaleEffect(0.72)
-            .scaleEffect(breathe ? 1.08 : 1)
-            .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
+            .liveBreath(on: breathe)
             .scaleEffect(swell ? 1.06 : 1)
             // The brighten after a local capture is the router's (900 ms), drawn here.
             .saturation(model.soul.isBright ? 1.35 : 1)
@@ -298,7 +299,7 @@ struct BottomChrome: View {
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityHint(holdHint == 1 && typeSize
-                .isAccessibilitySize ? "Opens Tess. \(holdHintWords)" : "Opens Tess.")
+                .isAccessibilitySize ? "Opens Tess. \(holdHintWords)" : "Opens Tess")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { toggle() }
             .accessibilityAction(named: "Go home") { onSoulDoubleTap() }
@@ -315,7 +316,7 @@ struct BottomChrome: View {
 
     /// One question, on the mode layer only (calm-capture.md): never a command list.
     private var question: String {
-        model.session != nil ? "Tell me a set." : "What’s on your mind?"
+        model.session != nil ? "Tell me a set" : "What’s on your mind?"
     }
 
     /// At most one fast path, the likeliest for right now. "Today" is gone: a double tap on the soul goes home.
@@ -379,7 +380,7 @@ struct BottomChrome: View {
                     } else {
                         // Speak and Show are words until their layers ship.
                         close()
-                        say("\(mode.word) comes next.")
+                        say("\(mode.word) comes next")
                     }
                 }
             }
@@ -687,7 +688,7 @@ extension BottomChrome {
                     // From a hold the line shows beside the soul; the layer doesn't open. She goes back to rest
                     // first: the line's 4 s never settles her while she's listening.
                     model.soul.handle(.heardNothing)
-                    say("\(refused.line) \(refused.action) still works.")
+                    say("\(refused.line) \(refused.action) still works")
                 } else {
                     withTesseraAnimation(reduceMotion: reduceMotion) { refusal = refused }
                 }
@@ -710,7 +711,7 @@ extension BottomChrome {
             // Nothing came in the first 5 s (a cancel says nothing at all).
             if listener.endedInSilence {
                 close()
-                say("Didn't hear anything.")
+                say("Didn't hear anything")
             } else if !hold {
                 close()
             }
@@ -722,7 +723,7 @@ extension BottomChrome {
             if canUndo {
                 undo()
             } else {
-                say("Nothing to undo.")
+                say("Nothing to undo")
             }
             return
         }
@@ -854,9 +855,9 @@ enum UndoCopy {
     /// The receipt's thing, then "taken back": "Tacos, 7 added." → "Tacos, taken back."; "Private item, on
     /// Groceries." → "Private item, taken back.". A line with no thing first reads "Taken back."
     static func takenBack(after receipt: String) -> String {
-        guard let comma = receipt.range(of: ", ") else { return "Taken back." }
+        guard let comma = receipt.range(of: ", ") else { return "Taken back" }
         let thing = receipt[..<comma.lowerBound].trimmingCharacters(in: .whitespaces)
-        return thing.isEmpty ? "Taken back." : "\(thing), taken back."
+        return thing.isEmpty ? "Taken back" : "\(thing), taken back"
     }
 }
 

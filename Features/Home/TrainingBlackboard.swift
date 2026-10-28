@@ -278,7 +278,7 @@ struct TrainingBlackboard: View {
 
 /// The precomputed slate: uneven darkness from three octaves of value noise, fine grain, a soft light from the
 /// top-left, seven faint ghosts of wiped chalk, and an edge that dissolves into the page as chalk dust.
-private struct BlackboardSlate: View {
+struct BlackboardSlate: View {
     let dark: Bool
 
     var body: some View {
@@ -355,7 +355,7 @@ private struct BlackboardDust: View {
     let chalk: Color
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 15)) { timeline in
+        LiveTimeline(minimumInterval: 1.0 / 15) { timeline in
             Canvas { context, size in
                 let time = timeline.date.timeIntervalSinceReferenceDate
                 var rng = ChalkRandom(seed: 5)
@@ -371,6 +371,7 @@ private struct BlackboardDust: View {
                 }
             }
         }
+        .liveRegion(LiveFeatures.deckChalk)
         .accessibilityHidden(true)
     }
 }

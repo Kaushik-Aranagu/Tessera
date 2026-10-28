@@ -31,7 +31,7 @@ struct SimilarSheet: View {
                     .foregroundStyle(Theme.Colors.context)
                     .padding(.bottom, Theme.Spacing.l)
                 if options.isEmpty {
-                    Text("Nothing close to this one yet.")
+                    Text("Nothing close to this one yet")
                         .font(Theme.voice(size: 21))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
@@ -136,10 +136,10 @@ struct SimilarSheet: View {
 
     /// Where the swapped exercise starts: its own last weight, or a light guess marked "about".
     private func startLine(_ option: ExerciseSwaps.Option) -> String {
-        guard let load = option.load else { return "\(option.exercise.name) starts where you set it." }
+        guard let load = option.load else { return "\(option.exercise.name) starts where you set it" }
         return option.isEstimate
-            ? "Starts at about \(Format.mass(load))."
-            : "Starts at \(Format.mass(load)), where you left it."
+            ? "Starts at about \(Format.mass(load))"
+            : "Starts at \(Format.mass(load)), where you left it"
     }
 
     /// "Swap in" changes the routine's slot as well as today (one Undo takes back both); "Just today" is this
@@ -158,8 +158,8 @@ struct SimilarSheet: View {
             records.append(record)
         }
         let words = forRoutine && records.count > 1
-            ? "\(option.exercise.name) is in for \(from.name)."
-            : "\(option.exercise.name) today, instead of \(from.name)."
+            ? "\(option.exercise.name) is in for \(from.name)"
+            : "\(option.exercise.name) today, instead of \(from.name)"
         model.touch()
         onReceipt(words) { [model] in
             for record in records.reversed() {

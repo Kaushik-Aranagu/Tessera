@@ -190,7 +190,7 @@ struct HouseNumber: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Unit, \(unit). Turns it.")
+            .accessibilityLabel("Unit, \(unit). Turns it")
         } else {
             Text(unit)
                 .textRole(.label)

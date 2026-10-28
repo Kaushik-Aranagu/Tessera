@@ -94,8 +94,8 @@ struct GroceriesWallTests {
     @Test func aSecondMedicineIsStillAPrivateItem() async {
         let first = await TessCaptureEngine(engine: engine).capture("buy lexapro", context: TessContext())
         let second = await TessCaptureEngine(engine: engine).capture("buy lexapro", context: TessContext())
-        #expect(first.line == "Private item, on Groceries.")
-        #expect(second.line == "Private item, already on Groceries.", "\(second.line)")
+        #expect(first.line == "Private item, on Groceries")
+        #expect(second.line == "Private item, already on Groceries", "\(second.line)")
     }
 
     @Test func aWalledIngredientHeAlreadyHasGoesBackOn() throws {
@@ -109,7 +109,7 @@ struct GroceriesWallTests {
     }
 
     @Test(arguments: [
-        ("milk 4.99.", "milk"),
+        ("milk 4.99", "milk"),
         ("1.50 lb apples", "1.50 lb apples"),
         ("2 kg rice", "2 kg rice"),
         ("1.25 lb chicken", "1.25 lb chicken"),
@@ -157,7 +157,7 @@ struct GroceriesWallTests {
         let made = await TessCaptureEngine(engine: engine).capture("new list: lexapro", context: TessContext())
         #expect(!made.line.lowercased().contains("lexapro"), "\(made.line)")
         let again = await TessCaptureEngine(engine: engine).capture("new list: lexapro", context: TessContext())
-        #expect(again.line == "Private list, already a list.", "\(again.line)")
+        #expect(again.line == "Private list, already a list", "\(again.line)")
     }
 
     @Test func aPriceBeforeAListUnitIsStillAPrice() {

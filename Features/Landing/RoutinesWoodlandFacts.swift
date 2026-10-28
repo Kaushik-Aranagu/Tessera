@@ -4,7 +4,7 @@ import TesseraCore
 /// What the Routines landing says (248 v2, landing contract): the woodland's plants, the state line forms (longest
 /// first, for `FitLine`), the caption under the scene, the two update rows and the doors' facts. Read from
 /// `RoutinesFront`, which already masks private routines as "Private routine".
-struct RoutinesWoodlandFacts {
+struct RoutinesWoodlandFacts: Equatable {
     /// One update row in the brief: the routine and its sentence, with the name set apart (600).
     struct Update: Equatable, Identifiable {
         enum Kind: Equatable { case next, care }
@@ -103,7 +103,7 @@ struct RoutinesWoodlandFacts {
 
     /// "3 done today, 8 to tend, 2 need a little care." then shorter; never "N of M".
     static func stateLine(_ all: [WoodlandTree]) -> [String] {
-        guard !all.isEmpty else { return ["Quiet day. Plant the first one."] + ["Quiet day."] }
+        guard !all.isEmpty else { return ["Quiet day. Plant the first one"] + ["Quiet day"] }
         let done = all.filter(\.doneToday).count
         let care = all.filter { $0.health.isWithering || $0.health.isBare }.count
         let tend = all.filter { !$0.doneToday && !$0.health.isWithering && !$0.health.isBare }.count
@@ -122,10 +122,10 @@ struct RoutinesWoodlandFacts {
             short.append("\(care) need care")
         }
         if long.isEmpty {
-            return ["Quiet day."]
+            return ["Quiet day"]
         }
         let first = short.first ?? "Quiet day"
-        return [long.joined(separator: ", ") + ".", short.joined(separator: ", ") + ".", first + "."]
+        return [long.joined(separator: ", "), short.joined(separator: ", "), first]
     }
 
     /// The door's up to three state lines ("3 to tend", "1 needs a little care", "1 to begin again").
@@ -158,16 +158,16 @@ struct RoutinesWoodlandFacts {
 
     /// The caption under the scene: the tapped plant, or the oldest one; longest form first.
     static func caption(for tree: WoodlandTree?, selected: Bool) -> [String] {
-        guard let tree else { return ["Plant a routine and it grows here."] + ["Nothing planted yet."] }
+        guard let tree else { return ["Plant a routine and it grows here"] + ["Nothing planted yet"] }
         let days = "\(tree.days) \(tree.days == 1 ? "day" : "days")"
         let state = tree.stateWords.map { ", \($0)" } ?? ""
         if selected {
-            return ["\(tree.name), \(tree.stageWords), \(days)\(state). Tap again to open.",
-                    "\(tree.name), \(tree.stageWords)\(state).", "\(tree.name), \(tree.stageWords).", tree.name]
+            return ["\(tree.name), \(tree.stageWords), \(days)\(state). Tap again to open",
+                    "\(tree.name), \(tree.stageWords)\(state)", "\(tree.name), \(tree.stageWords)", tree.name]
         }
         return [
-            "\(tree.name) is the oldest, a \(tree.stageWords) at \(days).",
-            "\(tree.name), \(tree.stageWords), \(days).",
+            "\(tree.name) is the oldest, a \(tree.stageWords) at \(days)",
+            "\(tree.name), \(tree.stageWords), \(days)",
             tree.name,
         ]
     }

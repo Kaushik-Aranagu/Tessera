@@ -60,7 +60,7 @@ struct SiriParityTests {
         let tell = await say(phrase, tell: true)
         let siri = try add(phrase)
         for line in [ask.line, tell.line, siri] {
-            #expect(line == "Private note, kept.", "\(phrase): \(line)")
+            #expect(line == "Private note, kept", "\(phrase): \(line)")
         }
         #expect(ask.records.map(\.action) == ["createNote"] && tell.records.map(\.action) == ["createNote"])
         #expect(claude.heard.isEmpty)
@@ -73,18 +73,18 @@ struct SiriParityTests {
             let ask = await say(phrase)
             // "paid 40 for gas" is a spend now: said back on the phone, thing first.
             if phrase.hasPrefix("paid") {
-                #expect(ask.line == "Gas, 40.00." && ask.records.map(\.action) == ["logSpend"], "\(ask.line)")
+                #expect(ask.line == "Gas, 40.00" && ask.records.map(\.action) == ["logSpend"], "\(ask.line)")
             } else {
                 #expect(!ask.line.contains("1,800") && !ask.line.contains("40"), "\(phrase): \(ask.line)")
             }
-            #expect(try add(phrase) == "Private note, kept.", "\(phrase)")
+            #expect(try add(phrase) == "Private note, kept", "\(phrase)")
         }
         let ask = await say("pay rent 1800 friday")
         // Product 8:09 PM PT: named as stored, its amount gone ("Pay rent, Fri.").
-        #expect(ask.records.map(\.action) == ["createTask"] && ask.line == "Pay rent, tomorrow 9 am.",
+        #expect(ask.records.map(\.action) == ["createTask"] && ask.line == "Pay rent, tomorrow 9 am",
                 "\(ask.records.map(\.action)) \(ask.line) \(ask.source)")
         let tell = await say("pay rent 1800 friday", tell: true)
-        #expect(tell.line == "Pay rent, tomorrow 9 am.")
+        #expect(tell.line == "Pay rent, tomorrow 9 am")
         let siri = try add("pay rent 1800 friday")
         #expect(siri.contains("Pay rent") && !siri.contains("1800"), "\(siri)")
         // A stored title that is still private keeps the private line (S18).
@@ -101,9 +101,9 @@ struct SiriParityTests {
         // Said on Thursday Oct 15 in the past tense, "fri" is last Friday, Oct 9.
         let friday = try #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 9, hour: 12)))
         for capture in await [say("paid rent 2100 fri"), say("paid rent 2100 fri", tell: true)] {
-            #expect(capture.line == "Rent, 2,100.00." && capture.records.map(\.action) == ["logSpend"])
+            #expect(capture.line == "Rent, 2,100.00" && capture.records.map(\.action) == ["logSpend"])
         }
-        #expect(try add("paid rent 2100 fri") == "Private note, kept.")
+        #expect(try add("paid rent 2100 fri") == "Private note, kept")
         let notes = store.context.objects.values.filter { $0.title == SecretWords.title }
         #expect(notes.count == 1 && notes.allSatisfy { store.value("isPrivate", of: $0) == .bool(true) })
         // Dated on that day, on the Bar and for Siri alike.
@@ -133,7 +133,7 @@ struct SiriParityTests {
         #expect(await say("buy milk").records.map(\.action) == ["addGroceries"])
         #expect(try add("buy milk").lowercased().contains("buy milk"))
         let pin = await say("PIN reset friday 3 pm", tell: true)
-        #expect(pin.records.map(\.action) == ["createTask"] && pin.line == "Task added for tomorrow.",
+        #expect(pin.records.map(\.action) == ["createTask"] && pin.line == "Task added for tomorrow",
                 "\(pin.records.map(\.action)) \(pin.line) \(pin.source)")
         #expect(try add("PIN reset friday 3 pm").hasPrefix("Task added"))
         #expect(await say("dentist thu 3 pm").records.map(\.action) == ["createTask"])

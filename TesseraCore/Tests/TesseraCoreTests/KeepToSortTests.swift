@@ -17,7 +17,7 @@ struct KeepToSortTests {
     @Test func anUnreadablePhraseIsKeptWithItsOwnWordsAndOneUndo() async throws {
         let (tess, engine) = try tess()
         let capture = await tess.capture("the thing about the garage door", context: TessContext())
-        #expect(capture.line == "the thing about the garage door, kept to sort later." && capture.keptToSort)
+        #expect(capture.line == "the thing about the garage door, kept to sort later" && capture.keptToSort)
         #expect(capture.records.count == 1 && capture.records[0].state == .pending)
         try engine.commit(capture.records[0])
         let notes = try store.objects(of: #require(engine.classes[.note]))
@@ -29,12 +29,12 @@ struct KeepToSortTests {
     @Test func aWalledPhraseIsKeptOnThePhoneWithNoEcho() async throws {
         let (tess, _) = try tess()
         let capture = await tess.capture("blorp I paid 40 for gas blorp", context: TessContext())
-        #expect(capture.keptToSort && capture.line == "Kept to sort later.")
+        #expect(capture.keptToSort && capture.line == "Kept to sort later")
         #expect(!capture.line.contains("gas") && !capture.line.contains("40") && !capture.line.lowercased()
             .contains("private note"))
         // A bare medicine reads the same way: kept, never echoed.
         let health = await tess.capture("blorp lexapro blorp", context: TessContext())
-        #expect(health.keptToSort && health.line == "Kept to sort later.")
+        #expect(health.keptToSort && health.line == "Kept to sort later")
     }
 
     @Test func aClaudeKeyIsNeverKeptOrEchoed() async throws {

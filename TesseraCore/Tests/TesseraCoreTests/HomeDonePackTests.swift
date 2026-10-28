@@ -88,7 +88,7 @@ struct HomeDonePackTests {
         // The rules line still shows whatever the wall says.
         let line = HomeLines.workoutText(for: Self.done(row.title, bests: row.bests), now: Self.ended,
                                          calendar: Self.calendar)
-        #expect(line.hasPrefix("\(row.title) done."), "\(row.id)")
+        #expect(line.hasPrefix("\(row.title) done"), "\(row.id)")
     }
 
     @Test func homeDonePackWalledRowsAssertNoJsonAtAll() {
@@ -127,7 +127,7 @@ struct HomeDonePackTests {
         // W10: the wall must not be over-eager; the pack is the title, the bests and counts only.
         let pack = try Self.pack(Self.done("Push B", bests: ["Press"], sinceLastDays: 3)).get()
         #expect(pack.json == #"{"bests":["Press"],"dayLabel":"Thursday night","finish":"7:40 pm","item":"h1","#
-            + #""names":["Push B","Press"],"numbers":[1,3,4,5,7,12,40],"rules":"Push B done. Press best.","#
+            + #""names":["Push B","Press"],"numbers":[1,3,4,5,7,12,40],"rules":"Push B done. Press best","#
             + #""sinceLastDays":3,"title":"Push B"}"#, "\(pack.json)")
     }
 

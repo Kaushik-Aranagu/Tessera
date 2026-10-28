@@ -200,7 +200,7 @@ struct HomeDoneWordingTests {
     @Test func aDetailWithItsNewBestCountPasses() async {
         // HD1 through words(): "1 new best" is a count the pack licenses.
         let line = Self.line()
-        let detail = "3 exercises, 12 sets, 1 new bench best."
+        let detail = "3 exercises, 12 sets, 1 new bench best"
         HomeStub.reply = (200, Self.reply(context: nil, detail: detail))
         #expect(await job().words(for: line, dayLabel: "Thursday evening", store: store)
             == HomeDoneWords(detail: "3 exercises, 12 sets, 1 new bench best"), "\(line.detail ?? "-")")

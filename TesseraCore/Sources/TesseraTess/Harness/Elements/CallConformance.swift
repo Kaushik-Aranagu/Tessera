@@ -60,13 +60,16 @@ public enum CallConformance {
     public static var unregistered: [String] {
         let placed = Set(ElementCatalog.everyCall.map(\.name))
         // The rehearsal is the harness's own, never a place's call: it writes nothing and is offered by the picker.
-        return TessTools.all.map(\.name).filter { !placed.contains($0) && $0 != RehearseFlags.tool }
+        // patchRoom is the Chart room job's own tool: `RoomJob` sends it in its own request, so no screen place offers
+        // it.
+        let own: Set<String> = [RehearseFlags.tool, RoomJob.toolName]
+        return TessTools.all.map(\.name).filter { !placed.contains($0) && !own.contains($0) }
     }
 
     /// The argument names a call's tool or shell call takes; nil when it has no schema here (`open`, a proposed tool).
     static func argumentNames(_ call: ElementCall) -> Set<String>? {
         if let tool = TessTools.tool(named: call.name), case let .object(properties) = tool.input {
-            return Set(properties.map { $0.0 })
+            return Set(properties.map(\.0))
         }
         guard call.kind == .shell, let spec = TessRun.shellSpecs().first(where: { $0.name == call.name }),
               let json = (try? JSONSerialization.jsonObject(with: spec.schema)) as? [String: Any],

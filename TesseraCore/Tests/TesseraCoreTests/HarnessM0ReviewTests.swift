@@ -19,7 +19,7 @@ struct HarnessM0ReviewTests {
         let lines = [
             #"{"type":"message_start","message":{"usage":{"input_tokens":10,"output_tokens":1,"cache_creation_input_tokens":2000,"cache_creation":{"ephemeral_5m_input_tokens":500,"ephemeral_1h_input_tokens":1500}}}}"#,
             #"{"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}"#,
-            #"{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Cited."}}"#,
+            #"{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Cited"}}"#,
             #"{"type":"content_block_delta","index":0,"delta":{"type":"citations_delta","citation":{"type":"char_location","cited_text":"x","document_index":0}}}"#,
             #"{"type":"content_block_stop","index":0}"#,
             #"{"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":5}}"#,
@@ -46,7 +46,9 @@ struct HarnessM0ReviewTests {
         // "kg" spelled with a unicode escape inside a replayed tool_use input: the raw text hides it, the decoded value
         // does not.
         let escape = "\\" + "u0067" // a backslash and u0067, written out so a formatter cannot fold it
-        let block = Data(("{\"type\":\"tool_use\",\"id\":\"t\",\"name\":\"x\",\"input\":{\"note\":\"I weigh 82.4 k" + escape + "\"}}").utf8)
+        let block =
+            Data(("{\"type\":\"tool_use\",\"id\":\"t\",\"name\":\"x\",\"input\":{\"note\":\"I weigh 82.4 k" + escape +
+                    "\"}}").utf8)
         #expect(!String(decoding: block, as: UTF8.self).contains("82.4 kg"))
         #expect(Door.jsonStrings(block).contains("I weigh 82.4 kg"))
         #expect(Door.jsonStrings(Data("not json".utf8)) == ["not json"])
@@ -69,7 +71,7 @@ extension ClaudeBrainTests {
     @Test(.oldWalls) func countTokensGoesThroughTheDoorsGate() async throws {
         let key = "sk-" + "ant-" + "CT-" + UUID().uuidString
         let brain = ClaudeBrain(model: .haiku, keys: InMemoryKeychain(key), session: BrainStub.session())
-        let plain = BrainRequest(system: [TextBlock("Be brief.")], messages: [BrainMessage(.user, text: "Hello")])
+        let plain = BrainRequest(system: [TextBlock("Be brief")], messages: [BrainMessage(.user, text: "Hello")])
         let walled = BrainRequest(messages: [BrainMessage(.user, text: "I weigh 82.4 kg")])
         // Lab: it is sent, and the exact words are in What was sent.
         BrainStub.script([.init(body: #"{"input_tokens":77}"#)])

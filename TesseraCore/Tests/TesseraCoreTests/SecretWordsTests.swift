@@ -76,7 +76,7 @@ struct SecretWordsTests {
     func secretLinesBecomePrivateNotesAndNeverLeave(_ phrase: String) async throws {
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
         let result = await run(phrase, spies: [device, claude])
-        #expect(result.line == "Private note, kept.")
+        #expect(result.line == "Private note, kept")
         let note = try #require(notes().first)
         #expect(note.title == SecretWords.title && store.value("isPrivate", of: note) == .bool(true))
         // The words stay only in the body; no op summary, title or Day log line carries them.
@@ -87,10 +87,10 @@ struct SecretWordsTests {
 
     @Test func rememberAPasswordIsAPrivateNoteNotAMemory() async throws {
         let result = await run("remember the wifi password is tacocat", spies: [Spy(route: .claude)])
-        #expect(result.line == "Private note, kept. I don't keep passwords.")
+        #expect(result.line == "Private note, kept. I don't keep passwords")
         #expect(TessMemoryStore(engine: engine, calendar: Self.calendar, forgetLogURL: nil).all().isEmpty)
         #expect(TessMemoryScreen.refusal(for: "the wifi password is tacocat") == .secret)
-        #expect(TessMemoryScreen.Refusal.secret.line == "I don't keep passwords.")
+        #expect(TessMemoryScreen.Refusal.secret.line == "I don't keep passwords")
         #expect(throws: ActionError.self) {
             try engine.perform(RememberFact(text: "my PIN is 0420"), by: .user)
         }
@@ -101,15 +101,15 @@ struct SecretWordsTests {
         let reset = await run("password reset email friday", spies: [claude])
         // A task with a secret word is said back without its title (Product P14, 12:30 PM PT).
         #expect(
-            reset.records.map(\.action) == ["createTask"] && reset.line == "Task added for tomorrow.",
+            reset.records.map(\.action) == ["createTask"] && reset.line == "Task added for tomorrow",
             "\(reset.line)"
         )
         let review = await run("code review friday 3pm", spies: [claude])
-        #expect(review.records.map(\.action) == ["createTask"] && review.line == "Task added for tomorrow.")
+        #expect(review.records.map(\.action) == ["createTask"] && review.line == "Task added for tomorrow")
         let todo = await run("todo: reset my PIN", spies: [claude])
-        #expect(todo.records.map(\.action) == ["createTask"] && todo.line == "Task added.", "\(todo.line)")
+        #expect(todo.records.map(\.action) == ["createTask"] && todo.line == "Task added", "\(todo.line)")
         let ask = await run("what's the wifi password?", spies: [claude])
-        #expect(ask.line == "It's in your private notes." && ask.records.isEmpty)
+        #expect(ask.line == "It's in your private notes" && ask.records.isEmpty)
         #expect(claude.heard.isEmpty && notes().isEmpty)
         // Whole words only: a pinch of salt is not a PIN.
         #expect(!SecretWords.mentions("pinch of salt") && !SecretWords.mentions("spinach and feta"))

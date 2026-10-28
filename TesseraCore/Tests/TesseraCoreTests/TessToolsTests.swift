@@ -21,7 +21,7 @@ struct TessToolsTests {
                                               "setServeTime", "checkListItem", "startWorkout", "startCooking",
                                               "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine",
                                               "plantRoutine",
-                                              "pauseRoutine", "rehearse"])
+                                              "pauseRoutine", "rehearse", "patchRoom"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
@@ -29,7 +29,7 @@ struct TessToolsTests {
         let recipe = try call("createRecipe", #"""
         {"title":"Carbonara","serves":2,"totalMinutes":25,
          "ingredients":[{"amount":"200","unit":"g","name":"spaghetti"},{"amount":"3","unit":null,"name":"eggs"}],
-         "steps":["Boil the spaghetti for 10 minutes.","Toss with the eggs."]}
+         "steps":["Boil the spaghetti for 10 minutes","Toss with the eggs"]}
         """#, engine)
         let recipeObject = try #require(RecipeBook(store: store, classes: classes).recipes().first)
         #expect(recipe.count == 1 && recipeObject.title == "Carbonara")
@@ -82,7 +82,7 @@ struct TessToolsTests {
             )
             Issue.record("query should answer, not log")
         } catch let answer as TessToolAnswer {
-            #expect(answer.line == "1 note this week.")
+            #expect(answer.line == "1 note this week")
         }
         // CA6 (Research 145): only allow-listed classes count; his own classes (a spend, his weight) and Tess's never.
         store.createClass(name: "Spend", parent: nil)
@@ -110,7 +110,7 @@ struct TessToolsTests {
         try engine.perform(CreateTask(title: "Weigh in 82.4 kg"), by: .user)
         try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\n1. Fry."), by: .user)
         try engine.perform(CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake."), by: .user)
-        for (from, line) in [("notes", "1 note."), ("tasks", "1 task."), ("recipes", "1 recipe.")] {
+        for (from, line) in [("notes", "1 note"), ("tasks", "1 task"), ("recipes", "1 recipe")] {
             do {
                 _ = try call(
                     "query",
@@ -196,7 +196,7 @@ struct TessToolsTests {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
         // Claude's list: every tool but the device-only ones (logSpend is money).
-        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" }
+        #expect(tools.count == 23 && !tools.contains { $0["name"] as? String == "logSpend" }
             && !tools.contains { $0["name"] as? String == "rehearse" })
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {

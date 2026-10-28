@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import TesseraCore
+import UIKit
 
 /// What happened, from the views' side (docs/design/motion/tess-motion.md §14). Views emit events; they never set
 /// her mode.
@@ -100,6 +101,8 @@ final class SoulRouter {
     private(set) var stroke: Date?
     private(set) var isStrokeCrossing = false
     private(set) var strokeBlink: Date?
+    /// Sheet 387: the start of her one long eyes-smile, while it lasts.
+    private(set) var smileStart: Date?
     /// Bumped once per stroke for its one soft tick (a second within the ripple restarts it with no tick).
     private(set) var strokeTicks = 0
     @ObservationIgnored private var strokeTimer: Task<Void, Never>?
@@ -217,7 +220,7 @@ final class SoulRouter {
         case .claudeDone:
             // The lights gather first; Done begins as they land (§5).
             guard !isWorking else { return gather(thenDone: true) }
-            playDone()
+            playDone(blinks: true)
         case .liveAnswered, .setLogged, .swapped, .topSetAccepted, .workoutGathered:
             playDone()
         case .newBest:
@@ -359,7 +362,7 @@ final class SoulRouter {
             let next = queued
             if thenDone {
                 // Done plays as built; an ask that arrived during the gather starts when it ends.
-                playDone()
+                playDone(blinks: true)
                 queued = next
             } else {
                 queued = nil
@@ -440,9 +443,51 @@ final class SoulRouter {
         setWear(0)
     }
 
+    /// Sheet 387: her eyes close into two small arcs for 1.6 s, once ("Everyone's had a drink"). Under Reduce Motion
+    /// her
+    /// eyes change shape at once (there is no tween to drop: the arcs simply show and go).
+    func smileOnce() {
+        let start = Date.now
+        smileStart = start
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(SoulLife.drinkSmileSeconds))
+            if self?.smileStart == start {
+                self?.smileStart = nil
+            }
+        }
+    }
+
+    /// Undo takes the line back, and the smile ends with it.
+    func smileEnds() {
+        smileStart = nil
+    }
+
+    /// Sheet 383: a new line of hers starts, and her face blinks once as it does (the shared `TessLine` calls this).
+    /// One blink, no haptic; Reduce Motion drops it.
+    func lineStarted() {
+        blinkOnce()
+    }
+
+    /// Sheet 290: Tess blinks once as her change lands, the way you blink after doing something. One blink, no loop,
+    /// no haptic of its own; Reduce Motion drops it.
+    private func blinkOnce() {
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
+        let blink = Date.now.addingTimeInterval(0.05)
+        strokeBlink = blink
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(0.6))
+            if self?.strokeBlink == blink {
+                self?.strokeBlink = nil
+            }
+        }
+    }
+
     /// Done's one-shot (1.8 s), then whatever was queued behind it, else rest.
-    private func playDone(then seconds: Double = 1.8) {
+    private func playDone(then seconds: Double = 1.8, blinks: Bool = false) {
         timer?.cancel()
+        if blinks {
+            blinkOnce()
+        }
         // A Done answers whatever thinking was queued behind the last one (F4).
         queued = nil
         mode = .done

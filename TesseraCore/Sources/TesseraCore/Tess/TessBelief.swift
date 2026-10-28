@@ -84,9 +84,9 @@ public enum BeliefRefusal {
     public static func line(_ error: any Error) -> String? {
         guard case let ActionError.invalidArguments(_, reason) = error else { return nil }
         switch reason {
-        case noEvidence: return "I need something to go on for that."
-        case alreadyClosed: return "That one is already closed."
-        case hisOwn: return "You told me that one, so it stays until you change it."
+        case noEvidence: return "I need something to go on for that"
+        case alreadyClosed: return "That one is already closed"
+        case hisOwn: return "You told me that one, so it stays until you change it"
         default: return RememberFact.refusalLine(error)
         }
     }
@@ -460,6 +460,6 @@ public struct ForgetBelief: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "\(store.object(id: belief).map { TessMemoryStore.receiptThing(of: $0.title) } ?? "That"), forgotten."
+        "\(store.object(id: belief).map { TessMemoryStore.receiptThing(of: $0.title) } ?? "That"), forgotten"
     }
 }

@@ -142,10 +142,10 @@ struct TessKnowsPage: View {
 
 /// What Tess knows' words (what-tess-knows.md section 4).
 enum TessKnowsCopy {
-    static let empty = "Say \u{201C}remember that\u{201D} and I'll keep it here."
+    static let empty = "Say \u{201C}remember that\u{201D} and I'll keep it here"
     static let forget = "Forget"
     static let forgetAll = "Forget everything"
-    static let forgetAllHint = "Hold to forget every line. You can undo it."
+    static let forgetAllHint = "Hold to forget every line. You can undo it"
 
     /// The source line; Core ends a private one ", stays on this phone" (words only: no lock, no dot, no colour).
     static func source(_ line: TessMemory, now: Date) -> String {
@@ -154,7 +154,7 @@ enum TessKnowsCopy {
 
     /// Settings' door, third person, in ink: "Tess remembers 12 things." or "Tess remembers nothing yet."
     static func door(_ countWord: String) -> String {
-        "\(doorLead(countWord))\(doorCount(countWord))."
+        "\(doorLead(countWord))\(doorCount(countWord))"
     }
 
     /// "Tess remembers " before the count word.

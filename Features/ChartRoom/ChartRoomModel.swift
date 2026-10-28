@@ -1,0 +1,1096 @@
+import Foundation
+import SwiftUI
+import TesseraCore
+
+/// What the room's binds read and what its one action word may write (spec: binds are `ObjectPath` queries resolved at
+/// render time, the document never holds a copy of his data). The live store has no `Plant` class, so the room reads
+/// the board's plants until a bind resolver for user classes lands in Core.
+@MainActor
+protocol RoomData: AnyObject {
+    func items(_ bind: String) -> [BoundItem]
+    /// Runs the single field write an action word does on the named item, returning what takes it back.
+    func write(_ does: String, to item: String) -> (() -> Void)?
+}
+
+/// The board's four plants: days since water 6, 4, 2 and 1, watered every 7, 5, 3 and 2 days. In memory only.
+@MainActor
+final class DemoRoomData: RoomData {
+    private var plants: [BoundItem] = [("Orchid", 6, 7), ("Monstera", 4, 5), ("Fern", 2, 3), ("Basil", 1, 2)].map {
+        BoundItem(name: $0.0, fields: ["daysSince(lastWatered)": Double($0.1), "waterEvery": Double($0.2)])
+    }
+
+    func items(_ bind: String) -> [BoundItem] {
+        RoomWalls.className(of: bind) == "Plant" ? plants : []
+    }
+
+    func write(_ does: String, to item: String) -> (() -> Void)? {
+        let key = "daysSince(lastWatered)"
+        guard does == "write Plant.lastWatered", let index = plants.firstIndex(where: { $0.name == item }) else {
+            return nil
+        }
+        let was = plants[index].fields[key] ?? 0
+        plants[index].fields[key] = 0
+        return { [weak self] in
+            if let at = self?.plants.firstIndex(where: { $0.name == item }) {
+                self?.plants[at].fields[key] = was
+            }
+        }
+    }
+}
+
+/// Tess's line when a rule says no, with at most one button: her offer.
+struct RoomNote: Equatable {
+    var line: String
+    var button: String?
+    var patch: RoomPatch?
+}
+
+/// A patch shown before it is set.
+struct PendingPatch: Equatable, Identifiable {
+    let id = UUID()
+    var patch: ChartPatch
+    var before: ChartDoc
+    var after: ChartDoc
+    /// The drying line has run its 2 s.
+    var dried = false
+
+    /// A patch that widens reach waits on Allow; the others set when the line ends or on a tap.
+    var needsAllow: Bool {
+        patch.widensReach
+    }
+}
+
+/// The Chart room's state: the committed document, at most one pending patch (the ghost), and what Undo takes back.
+/// With an engine attached the room is Core's objects: a patch is `PatchRoom` performed as Tess, pending; it commits
+/// with `engine.commit` (or `RoomReach.allow` when it widens reach); Undo is `engine.undo`. Without one (tests, and the
+/// canned demo before a store has the classes) the same flow runs on the document in memory.
+@MainActor
+@Observable
+final class ChartRoomModel {
+    static let defaultsKey = "chartRoom.document"
+    static let cursorKey = "chartRoom.cursor"
+
+    private(set) var document: ChartDoc
+    private(set) var pending: PendingPatch?
+    /// Where the change in flight is in the lifecycle (r1-spec section 9). Every flow moves it through `fire`.
+    private(set) var change: ChangeState = .idle
+    /// Where the room is: blank, live, archiving, archived or restored.
+    private(set) var phase: RoomPhase = .blank
+    /// A new sentence arrived while one was drying: its line runs to the end in 160 ms.
+    private(set) var completing = false
+    /// Sheet 364: who wears the wine. Its own state: it follows the ranking after the move has settled.
+    private(set) var glow: String?
+    private var glowReady = false
+    /// Sheet 385: the plant that just drank (true) or whose drink was undone (false). Only that plant.
+    private(set) var drinking: (name: String, up: Bool)?
+    /// Sheet 372: a replay of how the room was made is playing; `replay` is the room as it stood at the beat.
+    private(set) var replay: (doc: ChartDoc, ghost: Set<Place>)?
+    var isReplaying: Bool {
+        replay != nil
+    }
+
+    @ObservationIgnored private var glowTask: Task<Void, Never>?
+    @ObservationIgnored private var replayTask: Task<Void, Never>?
+    @ObservationIgnored private var drinkTask: Task<Void, Never>?
+    /// A stop running its line back (sheet 373): the places whose line was drying and how far it had got (0 to 1).
+    private(set) var stopping: (places: Set<Place>, progress: Double)?
+    @ObservationIgnored private var stagedAt = Date.now
+    /// How long a drying line takes to finish when a new sentence arrives.
+    static let completeSeconds = 0.16
+    /// Reduce Motion shows every end state at once (the 2 s drying wait still applies; nothing else waits).
+    @ObservationIgnored var reduceMotion: Bool {
+        UIAccessibility.isReduceMotionEnabled || ShellProbe.reduceMotion
+    }
+
+    /// What he said, in the widget place in quotes, while Tess works.
+    private(set) var heard = ""
+    /// One light tick as a ghost sets.
+    private(set) var cue = HapticCue()
+    /// How many of the canned sentences have set (the next one is `canned[cursor]`).
+    private(set) var cursor: Int
+    /// The place he pointed at (sheet 360): a tap on a filled place picks it for 30 s. Writes nothing.
+    private(set) var picked: Place?
+    /// Sheet 362: the room's history, open, and the version he is previewing (nothing is written by looking).
+    private(set) var historyOpen = false
+    private(set) var previewing: HistoryRow?
+    private(set) var historyRows: [HistoryRow] = []
+    @ObservationIgnored var now: () -> Date = { AppClock.now }
+    @ObservationIgnored private var memory: [HistoryRow] = []
+    /// Tess's line with one receipt button (sheet 361): a refusal and her offer, run as a normal ghost change.
+    private(set) var note: RoomNote?
+    @ObservationIgnored private(set) var data: RoomData
+    @ObservationIgnored private var pickTask: Task<Void, Never>?
+    @ObservationIgnored var pickFor: Duration = .seconds(30)
+    @ObservationIgnored private let defaults: UserDefaults?
+    @ObservationIgnored private let drying: Duration
+    @ObservationIgnored private var dryTask: Task<Void, Never>?
+    @ObservationIgnored private var say: (String, @escaping () -> Void) -> Void
+    @ObservationIgnored private(set) var engine: ActionEngine?
+    @ObservationIgnored private var record: OpRecord?
+
+    /// Moves the change through its lifecycle; an event with no arrow from here is ignored (no unlisted exit).
+    @discardableResult
+    func fire(_ event: ChangeEvent) -> Bool {
+        guard let next = Lifecycle.next(change, event) else { return false }
+        change = next
+        return true
+    }
+
+    /// Moves the room through its lifecycle.
+    @discardableResult
+    func fire(_ event: RoomEvent) -> Bool {
+        guard let next = RoomLifecycle.next(phase, event) else { return false }
+        phase = next
+        return true
+    }
+
+    /// The room's own name and the blank document every room starts from.
+    static let blank = ChartDoc(name: "Chart room")
+
+    init(data: RoomData = DemoRoomData(), defaults: UserDefaults? = nil, drying: Duration = .seconds(PartGhost.drying),
+         say: ((String, @escaping () -> Void) -> Void)? = nil)
+    {
+        self.data = data
+        self.defaults = defaults
+        self.drying = drying
+        self.say = say ?? { _, _ in }
+        if let defaults, let json = defaults.string(forKey: Self.defaultsKey),
+           let saved = try? ChartDoc.decode(json)
+        {
+            document = saved
+            cursor = defaults.integer(forKey: Self.cursorKey)
+        } else {
+            document = Self.blank
+            cursor = 0
+        }
+        if say == nil {
+            self.say = { [weak self] text, undo in self?.showReceipt(text, undo: undo) }
+        }
+    }
+
+    // MARK: The receipt (sheet 382: the shared UndoLine draws it)
+
+    struct Receipt: Identifiable {
+        let id = UUID()
+        let text: String
+        let undo: () -> Void
+    }
+
+    private(set) var receipt: Receipt?
+
+    /// Tess's receipt line with Undo for 10 s. Drawn by the shared `UndoLine`, never by the room.
+    func showReceipt(_ text: String, undo: @escaping () -> Void) {
+        let next = Receipt(text: text, undo: undo)
+        receipt = next
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(10))
+            if self?.receipt?.id == next.id {
+                self?.receipt = nil
+            }
+        }
+    }
+
+    /// Undo was tapped: the change is taken back at once and the line goes.
+    func undoReceipt() {
+        guard let current = receipt else { return }
+        receipt = nil
+        current.undo()
+    }
+
+    /// Attaches Core's engine: the room is read from, and written to, its objects from here on.
+    func attach(_ engine: ActionEngine) {
+        guard self.engine == nil else { return }
+        self.engine = engine
+        // The real store: Core's sample Plant class (until he says production-ready) and the binds read through it.
+        do {
+            try RoomSample.seedPlants(store: engine.store, classes: engine.classes, now: AppClock.now)
+            UserDefaults.standard.removeObject(forKey: "chartRoom.seedError")
+        } catch {
+            // Core's sample seeding stopped part way: kept for the simulator's diagnostics line.
+            UserDefaults.standard.set("\(error)", forKey: "chartRoom.seedError")
+        }
+        engine.store.invalidateCaches()
+        data = EngineRoomData(engine: engine)
+        // Simulator only: the orchid's own "Last misted" part, so a UI test can open its page (sheets 378, 379).
+        if LaunchFlags.has("-chartMistedPart"),
+           let orchid = RoomBind(store: engine.store, classes: engine.classes).classDef(for: "Plant")
+           .flatMap({ plants in
+               engine.store.objects(of: plants).first { $0.title == "Orchid" }
+           }),
+           !PageBook(store: engine.store, classes: engine.classes).page(for: orchid)
+           .contains(where: { $0.id == "misted" })
+        {
+            _ = try? engine.perform(PatchPage(object: orchid.id, patch: ChartPageModel.mistedPart(), only: true),
+                                    by: .user)
+        }
+        // Another room's colour is never taken: the whole dial's table, from the rooms' own colours.
+        RoomColor.otherRooms = Dictionary(uniqueKeysWithValues: LayoutRoom.allCases.compactMap { room in
+            room.hex.map { (room.name, RoomColor.Pair($0.light, $0.dark)) }
+        })
+        // `-resetChart` (simulator only) starts a blank room: a room already in the store is taken down, not deleted.
+        if LaunchFlags.has("-resetChart"), let room = RoomBook(store: engine.store, classes: engine.classes)
+            .room(named: document.name)
+        {
+            _ = try? engine.perform(TakeDownRoom(room: room.id), by: .user)
+        }
+        if let stored = storedDocument() {
+            document = stored
+            syncPhase()
+            // The sentences already in the room are the first ones he said: the next is the one after them.
+            cursor = Self.canned.prefix { step in
+                step.patch.ops.filter { $0.op == "add" }.allSatisfy { stored.part($0.id ?? "") != nil }
+            }.count
+        }
+    }
+
+    // MARK: Taking a room down (sheet 371)
+
+    /// True while the fold plays (the room's outlines fold into their corners before the room is gone).
+    private(set) var takingDown = false
+
+    /// Take the room down: it is archived in ONE op group and nothing it binds to is touched (the plants stay). The
+    /// receipt "Room taken down, not the plants" has a 10 s Undo that brings the room back. A room waiting for his
+    /// Allow
+    /// stays up, and Core's line is the refusal.
+    func takeDown() {
+        guard pending == nil, !takingDown, phase != .archiving else { return }
+        if phase == .blank, !document.parts.isEmpty {
+            phase = .live
+        }
+        guard fire(RoomEvent.takeDown) else { return }
+        let was = document
+        var held: OpRecord?
+        if let engine {
+            let book = RoomBook(store: engine.store, classes: engine.classes)
+            if let room = book.room(named: document.name) {
+                do {
+                    // Staged like a change: stopped inside its 2 s it leaves nothing; it sets when the fold ends.
+                    held = try engine.perform(TakeDownRoom(room: room.id), by: .user, pending: true).record
+                } catch let ActionError.invalidArguments(_, reason) {
+                    // The room stays up: the fold never plays, and he is back where he was.
+                    fire(RoomEvent.touchWords)
+                    refuse(reason)
+                    return
+                } catch {
+                    fire(RoomEvent.touchWords)
+                    refuse("That room could not be taken down")
+                    return
+                }
+            }
+        }
+        takeDownRecord = held
+        // The fold: outlines come back up (doors first), then fold into their corners, the title last. Reduce Motion:
+        // the end state at once.
+        let wait = reduceMotion ? 0 : OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count)
+        foldTask?.cancel()
+        foldTask = Task { [weak self] in
+            if wait > 0 {
+                try? await Task.sleep(for: .seconds(wait))
+            }
+            guard let self, !Task.isCancelled else { return }
+            finishArchive(was: was)
+        }
+    }
+
+    /// The fold ended: the room is archived (a row less in the dial), the foot says so with Undo for 10 s.
+    private func finishArchive(was: ChartDoc) {
+        guard fire(RoomEvent.foldEnded) else { return }
+        let held = takeDownRecord
+        takeDownRecord = nil
+        if let engine, let held {
+            try? engine.commit(held)
+        }
+        document = Self.blank
+        persist()
+        defaults?.set(true, forKey: Self.archivedKey)
+        say("Room taken down, not the plants") { [weak self] in
+            guard let self else { return }
+            fire(RoomEvent.restore)
+            defaults?.set(false, forKey: Self.archivedKey)
+            if let engine {
+                // Bring back: the room, its history and its grants, from the room Core finds taken down.
+                if let down = RoomBook(store: engine.store, classes: engine.classes).takenDownRoom(named: was.name) {
+                    _ = try? engine.perform(BringBackRoom(room: down.id), by: .user)
+                } else if let held {
+                    engine.undo(held)
+                }
+                document = storedDocument() ?? was
+            } else {
+                document = was
+            }
+            persist()
+        }
+        onArchived?()
+    }
+
+    /// Touching his words half way through the fold keeps the room: the take-down is thrown away and the room is live.
+    func stopTakeDown() {
+        guard phase == .archiving else { return }
+        if let engine, let held = takeDownRecord, !RoomPatcher.stop([held], in: engine) {
+            return
+        }
+        foldTask?.cancel()
+        takeDownRecord = nil
+        fire(RoomEvent.touchWords)
+        cue.play(.selection)
+        say("Stopped, nothing changed") {}
+    }
+
+    // MARK: A room comes back the way it was made (sheet 372)
+
+    /// The first open of a restored room replays his sentences (with Core's store the steps are `RoomReplay.steps`;
+    /// without one, this run's). Reduce Motion: the room is there whole. It plays once.
+    func openIfOwed() {
+        guard phase == .restored, replay == nil else { return }
+        var steps: [(note: String, doc: ChartDoc)] = memory.compactMap { row in row.doc.map { (row.note, $0) } }
+        if let engine, let book = Optional(RoomBook(store: engine.store, classes: engine.classes)),
+           let room = book.room(named: document.name), RoomReplay.isOwed(room, in: engine.store),
+           let real = try? RoomReplay.steps(of: document.name, engine: engine)
+        {
+            steps = real.map { ($0.note, ChartDoc($0.document)) }
+        }
+        let keep = ReplayPlan.changed(steps.map(\.doc))
+        let beats = ReplayPlan.timeline(count: keep.count, reduceMotion: reduceMotion)
+        guard !beats.isEmpty else {
+            finishReplay()
+            return
+        }
+        let final = document
+        replayTask?.cancel()
+        replayTask = Task { [weak self] in
+            var elapsed = 0.0
+            var previous = Self.blank
+            for beat in beats {
+                try? await Task.sleep(for: .seconds(max(0, beat.start - elapsed)))
+                guard let self, !Task.isCancelled else { return }
+                let step = steps[keep[beat.index]]
+                let ghost = Set(Place.allCases.filter {
+                    previous.parts(in: $0) != step.doc.parts(in: $0)
+                })
+                heard = step.note
+                replay = (step.doc, ghost)
+                previous = step.doc
+                elapsed = beat.start
+                try? await Task.sleep(for: .seconds(beat.dry))
+                guard !Task.isCancelled else { return }
+                replay = (step.doc, [])
+                elapsed += beat.dry
+            }
+            guard let self, !Task.isCancelled else { return }
+            document = final
+            finishReplay()
+        }
+    }
+
+    /// A tap anywhere while it plays: the room is there whole at once, and the tap does nothing else.
+    func skipReplay() {
+        guard phase == .restored else { return }
+        replayTask?.cancel()
+        finishReplay()
+    }
+
+    private func finishReplay() {
+        replay = nil
+        heard = ""
+        guard fire(RoomEvent.replayEnded) else { return }
+        if let engine, let room = RoomBook(store: engine.store, classes: engine.classes).room(named: document.name) {
+            _ = try? engine.perform(MarkRoomOpened(room: room.id), by: .system)
+        }
+        cue.play(.selection)
+        note = RoomNote(line: "Back the way you made it", button: nil, patch: nil)
+    }
+
+    /// While the replay plays the action word reads Skip, "to the room as you left it".
+    var replayFoot: [ShellStep]? {
+        isReplaying ? [ShellStep(id: "skip", verb: "Skip", object: "to the room as you left it")] : nil
+    }
+
+    /// Called when the room has been taken down (the driver goes back to Bridge: the empty room dissolves over it).
+    @ObservationIgnored var onArchived: (() -> Void)?
+    @ObservationIgnored private var foldTask: Task<Void, Never>?
+    @ObservationIgnored private var takeDownRecord: OpRecord?
+    nonisolated static let archivedKey = "chartRoom.archived"
+
+    private func storedDocument() -> ChartDoc? {
+        guard let engine else { return nil }
+        let book = RoomBook(store: engine.store, classes: engine.classes)
+        return book.room(named: "Chart room").map { ChartDoc(book.document(of: $0)) }
+    }
+
+    /// The document as it should draw now: the pending patch applied (as a ghost) over the committed room.
+    var shown: ChartDoc {
+        if let replay {
+            return replay.doc
+        }
+        if let previewing {
+            return previewing.doc ?? document
+        }
+        guard let pending else { return document }
+        // A patch that widens reach does not hold its grant until Allow, so what needs the grant stays away.
+        var after = pending.after
+        if pending.needsAllow {
+            after.reach = pending.before.reach
+        }
+        return after
+    }
+
+    /// The nodes of every place, resolved against what the binds read now.
+    var nodes: [Place: [PartNode]] {
+        var resolved = PartResolver.resolve(shown) { [data] in data.items($0) }
+        resolved = followGlow(resolved)
+        // A doors part bound to a class has one door per object, ranked like its sort (sheet 375).
+        if let part = shown.parts(in: .dial).first(where: { $0.kind == .doors && $0.bind != nil }),
+           let doors = realDoors(part)
+        {
+            let top = PartResolver.topItem(in: shown, bind: part.bind ?? "") { [data] in data.items($0) }?.name
+            let records = doors.map { door in
+                [door.title, door.summary, door.title == top ? "wine" : ""].joined(separator: "|")
+            }
+            resolved[.dial] = [.doors(id: part.id, names: records)]
+        }
+        return resolved
+    }
+
+    /// The wine glow and the drink laid over a ranking: the glow is the state that follows after the move settled, the
+    /// drink belongs to the one plant that was watered.
+    private func followGlow(_ nodes: [Place: [PartNode]]) -> [Place: [PartNode]] {
+        guard glowReady || drinking != nil else { return nodes }
+        func lay(_ item: RankedItem) -> RankedItem {
+            var next = item
+            if glowReady {
+                next.isTop = item.small == glow
+            }
+            if let drinking, drinking.name == item.small {
+                next.drinks = drinking.up
+            }
+            return next
+        }
+        return nodes.mapValues { list in
+            list.map { node in
+                switch node {
+                case let .row(id, items): .row(id: id, items: items.map(lay))
+                case let .list(id, items): .list(id: id, items: items.map(lay))
+                default: node
+                }
+            }
+        }
+    }
+
+    /// The plant the ranking puts first (the thirstiest), by name; nil when nothing glows.
+    private var leader: String? {
+        for list in PartResolver.resolve(shown, data: { [data] in data.items($0) }).values {
+            for case let .row(_, items) in list {
+                if let top = items.first(where: \.isTop) {
+                    return top.small
+                }
+            }
+        }
+        return nil
+    }
+
+    /// After a change to the ranking: the glow follows once the move has settled, with one light tick (Reduce Motion:
+    /// at once, the tick stays). The first call only latches who has it now.
+    func refreshGlow() {
+        let next = leader
+        guard glowReady else {
+            glow = next
+            glowReady = true
+            return
+        }
+        guard next != glow else { return }
+        glowTask?.cancel()
+        let wait = GlowFollow.owner(current: glow, leader: next, elapsed: 0, reduceMotion: reduceMotion) == next
+            ? 0 : GlowFollow.settle
+        glowTask = Task { [weak self] in
+            if wait > 0 {
+                try? await Task.sleep(for: .seconds(wait))
+            }
+            guard let self, !Task.isCancelled else { return }
+            glow = leader
+            cue.play(.selection)
+        }
+    }
+
+    /// The real doors of a doors part: one per object of its class, from Core's `PageBook`. Nil without a store.
+    func realDoors(_ part: ChartPart) -> [PageBook.Door]? {
+        guard let engine else { return nil }
+        let doors = PageBook(store: engine.store, classes: engine.classes)
+            .doors(for: part.core, rows: RoomBind(store: engine.store, classes: engine.classes))
+        return doors.isEmpty ? nil : doors
+    }
+
+    /// The object a door opens: the page of the object, by the door's place in the dial.
+    func doorObject(at index: Int) -> UUID? {
+        guard let part = shown.parts(in: .dial).first(where: { $0.kind == .doors && $0.bind != nil }),
+              let doors = realDoors(part), doors.indices.contains(index)
+        else { return nil }
+        return doors[index].object
+    }
+
+    /// The places a ghost fills, whose outline lets go and whose drying line runs.
+    var ghostPlaces: Set<Place> {
+        // A preview of the room as it was: every filled place is a ghost, and nothing is written.
+        if let replay {
+            return replay.ghost
+        }
+        if previewing != nil || phase == .archiving {
+            return Set(nodes.keys)
+        }
+        guard let pending else { return [] }
+        let now = PartResolver.resolve(pending.before) { [data] in data.items($0) }
+        let next = nodes
+        var places = Set(Place.allCases.filter { now[$0] != next[$0] })
+        // The reach line sits in the Widget's place, so the Widget's outline lets go for it.
+        if pending.needsAllow {
+            places.insert(.widget)
+        }
+        return places
+    }
+
+    var isBlank: Bool {
+        document.parts.isEmpty && pending == nil
+    }
+
+    /// The reach line a widening patch shows in wine, with Allow.
+    var reachLine: String? {
+        // The wine line comes when the drying line has ended: a change waiting for Allow (r1-spec section 9).
+        guard change == .waiting, let pending, pending.needsAllow,
+              let grant = pending.patch.grantLine else { return nil }
+        return "This room can now " + Self.words(for: grant)
+    }
+
+    /// "write Plant.lastWatered" in words. Unknown writes read as the field they change.
+    static func words(for grant: String) -> String {
+        let table = ["write Plant.lastWatered": "mark plants watered"]
+        return table[grant] ?? RoomDocument.words(for: grant)
+    }
+
+    // MARK: Proposing
+
+    /// Tess proposes a patch: it shows as a ghost, dries for 2 s, then sets (or waits on Allow when it widens reach).
+    func propose(_ core: RoomPatch, heard said: String = "") {
+        guard pending == nil else { return }
+        let patch = ChartPatch(core, heard: said)
+        // Money can never be written by a room: such a grant is refused, nothing shows.
+        if patch.ops
+            .contains(where: {
+                if case let .grant(reach) = $0 {
+                    RoomWalls.refusesWrite(reach)
+                } else {
+                    false
+                }
+            })
+        {
+            say("Rooms can't change money") {}
+            return
+        }
+        let before = document
+        var after = document.applying(patch)
+        record = nil
+        if let engine {
+            // Core's house rules and validator speak for the store: a refusal is Tess's line (sheet 361), never a
+            // ghost.
+            do {
+                switch try RoomPatcher.apply(core, sentence: said, picked: picked?.rawValue, engine: engine) {
+                case let .applied(applied, _):
+                    record = applied
+                    after = storedDocument() ?? after
+                case let .refused(refusal, queued):
+                    var offer: (label: String, patch: RoomPatch)?
+                    if let label = refusal.offerLabel, let patch = refusal.offer {
+                        offer = (label, patch)
+                    }
+                    refuse(refusal.line, offer: offer)
+                    if let queued {
+                        say(refusal.receipt) { [weak engine] in engine?.undo(queued) }
+                    }
+                    return
+                }
+            } catch {
+                refuse("That did not change the room")
+                return
+            }
+        }
+        picked = nil
+        heard = said
+        fire(.sentence)
+        receipt = nil
+        defaults?.set(false, forKey: Self.archivedKey)
+        stagedAt = .now
+        let next = PendingPatch(patch: patch, before: before, after: after)
+        pending = next
+        dryTask?.cancel()
+        let id = next.id
+        dryTask = Task { [weak self, drying] in
+            try? await Task.sleep(for: drying)
+            guard !Task.isCancelled else { return }
+            self?.dried(id)
+        }
+    }
+
+    private func dried(_ id: UUID) {
+        guard var current = pending, current.id == id else { return }
+        current.dried = true
+        pending = current
+        fire(.lineEnded(needsAllow: current.needsAllow))
+        if current.needsAllow {
+            heard = ""
+        } else {
+            commit()
+        }
+    }
+
+    /// Sheet 373: while a change is drying, touching his own words or saying "wait" or "stop" calls this. Nothing is
+    /// written: the staged group is thrown away (`RoomPatcher.stop`), the ghost lets go, and Tess says "Stopped,
+    /// nothing changed" with no Undo, and the same sentence is offered again. Past the 2 s the change has set and can
+    /// only be undone, so then the normal Undo receipt stands. Returns whether anything was stopped.
+    @discardableResult
+    func cancelPending() -> Bool {
+        guard let current = pending, !unDrying, !current.dried || current.needsAllow else { return false }
+        if let engine, let record {
+            guard RoomPatcher.stop([record], in: engine) else { return false }
+        }
+        guard fire(ChangeEvent.touchWords) else { return false }
+        // The line holds 120 ms and runs back from where it got to (Reduce Motion: it stops at once).
+        let progress = min(1, max(0, Date.now.timeIntervalSince(stagedAt) / PartGhost.drying))
+        if !reduceMotion {
+            let places = ghostPlaces.subtracting([.actionWord])
+            stopping = (places, progress)
+            let total = StopRun.total(from: progress, reduceMotion: false)
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(total))
+                self?.stopping = nil
+            }
+        }
+        dryTask?.cancel()
+        let again = current.patch.heard
+        record = nil
+        pending = nil
+        fire(.stopEnded)
+        heard = ""
+        cue.play(.selection)
+        retry = again.isEmpty ? nil : again
+        say("Stopped, nothing changed") {}
+        return true
+    }
+
+    /// His words reach the room through the existing say path: "wait" or "stop" while a change dries stops it.
+    @discardableResult
+    func hear(_ words: String) -> Bool {
+        let word = words.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased()
+        guard ["wait", "stop"].contains(word) else { return false }
+        // Half way through a take-down, his words keep the room (sheet 373).
+        if phase == .archiving {
+            stopTakeDown()
+            return true
+        }
+        return cancelPending()
+    }
+
+    /// The sentence the action word offers again after a stop.
+    private(set) var retry: String?
+
+    /// A tap on the ghost sets it now (a patch that widens reach never sets this way).
+    func tapGhost() {
+        guard let pending, !pending.needsAllow, !unDrying, change == .staged else { return }
+        fire(.lineEnded(needsAllow: false))
+        commit()
+    }
+
+    /// Allow: the widening patch sets, and its grant with it (`RoomReach.allow` when the engine holds it). Undo takes
+    /// both back in one step.
+    func allow() {
+        guard let pending, pending.needsAllow, !unDrying else { return }
+        if let engine, let record {
+            guard RoomReach.allow(record, in: engine) else { return }
+        }
+        guard fire(.allow) else { return }
+        commit(allowed: true)
+    }
+
+    /// Dismissing a pending patch marks it undone: the room is as it was.
+    func dismiss() {
+        dryTask?.cancel()
+        if let engine, let record {
+            _ = try? engine.discard(record)
+        }
+        record = nil
+        pending = nil
+        heard = ""
+    }
+
+    private func commit(allowed: Bool = false) {
+        guard let current = pending else { return }
+        dryTask?.cancel()
+        let before = current.before
+        let patch = current.patch
+        let cursorBefore = cursor
+        let kept = record
+        if let engine, let kept, !allowed {
+            try? engine.commit(kept)
+        }
+        document = current.after
+        pending = nil
+        record = nil
+        heard = ""
+        if phase == .blank {
+            fire(.firstSet)
+        }
+        cursor = min(Self.canned.count, cursor + 1)
+        cue.play(.selection)
+        persist()
+        remember(patch, after: current.after)
+        say(patch.say) { [weak self] in self?.restore(before, cursor: cursorBefore, record: kept, patch: patch) }
+    }
+
+    /// Undo: the document before the patch (and so its grant, which lives in the same document), as it was.
+    func restore(_ before: ChartDoc, cursor: Int, record: OpRecord? = nil, patch: ChartPatch? = nil) {
+        guard !unDrying else { return }
+        func finish() {
+            if let engine, let record {
+                engine.undo(record)
+            }
+            document = before
+            self.cursor = cursor
+            pending = nil
+            unDrying = false
+            fire(.unDryEnded)
+            cue.play(.undo)
+            persist()
+        }
+        guard let patch, pending == nil, fire(.undo) else {
+            finish()
+            return
+        }
+        // Reduce Motion: the change is undone at once, no line to run back.
+        if reduceMotion {
+            finish()
+            return
+        }
+        // Sheet 368: Undo un-dries. The change goes back to a ghost, its drying line runs right to left in 600 ms
+        // (ease in), and the op group is marked undone only when the line reaches 0.
+        dryTask?.cancel()
+        pending = PendingPatch(patch: patch, before: before, after: document, dried: true)
+        unDrying = true
+        dryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Self.unDrySeconds))
+            guard !Task.isCancelled else { return }
+            finish()
+        }
+    }
+
+    /// How long Undo's drying line takes to run back to 0.
+    static let unDrySeconds = 0.6
+
+    /// An undo is running its drying line backwards; nothing else may change the room meanwhile.
+    private(set) var unDrying = false
+
+    // MARK: Saying (canned sentences until Core's `patchRoom` job lands)
+
+    /// The next of the board's four sentences.
+    var nextCanned: (heard: String, patch: RoomPatch)? {
+        Self.canned.indices.contains(cursor) ? Self.canned[cursor] : nil
+    }
+
+    /// The Say word: plays the next canned sentence.
+    func saySomething() {
+        guard let next = nextCanned, !unDrying else { return }
+        if let current = pending {
+            // A new sentence while one dries: he has moved on, so it stands. Its line runs to the end in 160 ms, it
+            // sets (the last receipt goes as the new one starts), then the new change stages.
+            guard change == .staged, !current.needsAllow, !completing, fire(.newSentence) else { return }
+            completing = true
+            dryTask?.cancel()
+            let wait = reduceMotion ? 0 : Self.completeSeconds
+            dryTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(wait))
+                guard let self, !Task.isCancelled else { return }
+                commit()
+                completing = false
+                if let after = nextCanned {
+                    propose(after.patch, heard: after.heard)
+                }
+            }
+            return
+        }
+        propose(next.patch, heard: next.heard)
+    }
+
+    /// "Not now" on a change waiting for Allow: the change un-dries (the group is undone when its line reaches 0).
+    func notNow() {
+        guard let current = pending, current.needsAllow, fire(.notNow) else { return }
+        if let engine, let record {
+            RoomReach.notNow(record, in: engine)
+        }
+        dryTask?.cancel()
+        unDrying = true
+        heard = ""
+        dryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(self?.reduceMotion == true ? 0 : Self.unDrySeconds))
+            guard let self, !Task.isCancelled else { return }
+            record = nil
+            pending = nil
+            unDrying = false
+            fire(.unDryEnded)
+        }
+    }
+
+    /// The action word the room built: its single field write, on the top item.
+    func does(_ partID: String) {
+        refreshGlow() // latch who has the glow before the data moves
+        guard let node = nodes[.actionWord]?.first(where: { $0.id == partID }),
+              case let .actionWord(_, _, _, does?) = node,
+              let bind = shown.part(partID)?.bind ?? PartResolver.bind(of: does),
+              let top = PartResolver.topItem(in: shown, bind: bind, data: { [data] in data.items($0) })
+        else { return }
+        let before = data.items(bind)
+        guard let undo = data.write(does, to: top.name) else { return }
+        let after = data.items(bind)
+        let last = Everyone.isLast(before: before, after: after)
+        say("\(top.name), watered") { [weak self] in
+            undo()
+            self?.drink(top.name, up: false)
+            self?.refreshGlow()
+            if self?.note?.line == Everyone.line {
+                // Undo takes the line back, and the smile ends with it.
+                self?.note = nil
+                self?.onSmileEnd?()
+            }
+        }
+        drink(top.name, up: true)
+        refreshGlow()
+        if last {
+            // The last thirsty plant: Tess says so word by word, once, and her eyes smile (sheet 387).
+            note = RoomNote(line: Everyone.line, button: nil, patch: nil)
+            onSmile?()
+        }
+    }
+
+    /// Her eyes smile once ("Everyone's had a drink") and stop with Undo; the driver wires these to the Tess layer.
+    @ObservationIgnored var onSmile: (() -> Void)?
+    @ObservationIgnored var onSmileEnd: (() -> Void)?
+
+    /// The drink: `up` the colour climbs out of the watered plant; not up, the thirst sinks back in. Only that plant,
+    /// for 0.76 s (Reduce Motion: it changes in place, nothing to wait for).
+    func drink(_ name: String, up: Bool) {
+        drinkTask?.cancel()
+        guard !reduceMotion else {
+            drinking = nil
+            return
+        }
+        drinking = (name, up)
+        drinkTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(DrinkRun.seconds))
+            guard !Task.isCancelled else { return }
+            self?.drinking = nil
+        }
+    }
+
+    /// Simulator stills: the room as it is after the first `count` canned sentences, with every grant allowed.
+    /// A loaded room is live, an empty one blank (only before it is taken down or restored).
+    func syncPhase() {
+        guard phase == .blank || phase == .live else { return }
+        phase = document.parts.isEmpty ? .blank : .live
+    }
+
+    func setSentences(_ count: Int) {
+        var doc = Self.blank
+        for step in Self.canned.prefix(count) {
+            doc = doc.applying(ChartPatch(step.patch))
+        }
+        document = doc
+        syncPhase()
+        cursor = min(count, Self.canned.count)
+    }
+
+    func load(_ doc: ChartDoc) {
+        document = doc
+        defaults?.set(false, forKey: Self.archivedKey)
+        syncPhase()
+        cursor = Self.canned.count
+        persist()
+    }
+
+    // MARK: History (sheet 362)
+
+    /// One sentence he said to the room, with when, and the room as it stood right after it.
+    struct HistoryRow: Identifiable, Equatable {
+        let id: UUID
+        let note: String
+        let at: Date
+        var doc: ChartDoc?
+        var entry: RoomHistory.Entry?
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.id == rhs.id
+        }
+    }
+
+    /// "1:18 pm".
+    static func clock(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.amSymbol = "am"
+        formatter.pmSymbol = "pm"
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
+    }
+
+    private func remember(_ patch: ChartPatch, after doc: ChartDoc) {
+        memory.append(HistoryRow(id: UUID(), note: patch.heard.isEmpty ? patch.say : patch.heard, at: now(), doc: doc))
+    }
+
+    /// Every sentence he said, newest first: Core's op log filtered to the room's patch groups when the store is
+    /// attached; else the sentences of this run.
+    func openHistory() {
+        guard pending == nil else { return }
+        if let engine {
+            historyRows = RoomHistory.entries(of: document.name, engine: engine).map {
+                HistoryRow(id: $0.record, note: $0.note, at: $0.at, doc: nil, entry: $0)
+            }
+        } else {
+            historyRows = memory.reversed()
+        }
+        previewing = nil
+        historyOpen = true
+    }
+
+    func closeHistory() {
+        historyOpen = false
+        previewing = nil
+    }
+
+    /// A tap on a row: the room as it was then, every place a ghost. Writes nothing.
+    func preview(_ row: HistoryRow) {
+        var shown = row
+        if let engine, let entry = row.entry,
+           let version = try? RoomHistory.version(of: document.name, after: entry, engine: engine)
+        {
+            shown.doc = ChartDoc(version)
+        }
+        previewing = shown
+    }
+
+    /// What the action word reads while previewing: "Go back to how it was at 1:18 pm".
+    var goBackObject: String? {
+        previewing.map { "to how it was at \(Self.clock($0.at))" }
+    }
+
+    /// Go back: ONE inverse op group through the same write a Tess patch uses, receipt "Back to 1:18 pm" with a 10 s
+    /// Undo that returns to the latest version.
+    func goBack() {
+        guard let row = previewing else { return }
+        let label = "Back to \(Self.clock(row.at))"
+        let latest = document
+        if let engine, let entry = row.entry,
+           let record = try? RoomHistory.goBack(room: document.name, to: entry, label: label, engine: engine)
+        {
+            document = storedDocument() ?? document
+            say(label) { [weak self] in
+                engine.undo(record)
+                self?.document = self?.storedDocument() ?? latest
+            }
+        } else if let doc = row.doc {
+            document = doc
+            memory.append(HistoryRow(id: UUID(), note: label, at: now(), doc: doc))
+            say(label) { [weak self] in self?.document = latest }
+            persist()
+        }
+        closeHistory()
+    }
+
+    // MARK: Point, then say (sheet 360)
+
+    /// What the pointed-at place is called in the foot's small line.
+    static func name(of place: Place) -> String {
+        switch place {
+        case .switcher: "line"
+        case .needs: "needs"
+        default: place.rawValue
+        }
+    }
+
+    /// A tap on a filled place picks it (a tap on the picked one lets it go). One light tick; nothing is written.
+    func pick(_ place: Place) {
+        guard nodes[place] != nil, pending == nil else { return }
+        pickTask?.cancel()
+        if picked == place {
+            picked = nil
+            return
+        }
+        picked = place
+        cue.play(.selection)
+        pickTask = Task { [weak self, pickFor] in
+            try? await Task.sleep(for: pickFor)
+            guard !Task.isCancelled else { return }
+            self?.picked = nil
+        }
+    }
+
+    /// What the Say word's small line reads: "what to change about the keystone", or "what to build".
+    var sayObject: String {
+        picked.map { "what to change about the \(Self.name(of: $0))" } ?? DocumentRoom.sayObject
+    }
+
+    // MARK: How the room says no (sheet 361)
+
+    /// A rule refusal: Tess's one line, and her offer as a receipt button that runs it as a normal ghost change.
+    func refuse(_ reason: String, offer: (label: String, patch: RoomPatch)? = nil) {
+        fire(.refuse)
+        note = RoomNote(line: PartText.shown(reason), button: offer?.label, patch: offer?.patch)
+    }
+
+    /// The offer was taken: it plays as a ghost change like any other.
+    func takeOffer() {
+        guard let patch = note?.patch else { return }
+        note = nil
+        fire(.settled)
+        propose(patch)
+    }
+
+    func dismissNote() {
+        note = nil
+        fire(.settled)
+    }
+
+    /// A kit miss (a part the kit does not have): queued for the next install, with Undo to take the request back.
+    func kitMiss(_ part: String) {
+        fire(.queue)
+        queued.append(part)
+        say("\(part), queued for your next install") { [weak self] in self?.queued.removeAll { $0 == part } }
+    }
+
+    /// Parts asked for that the kit lacks, waiting for the next install.
+    private(set) var queued: [String] = []
+
+    func reset() {
+        dryTask?.cancel()
+        pending = nil
+        heard = ""
+        document = Self.blank
+        cursor = 0
+        persist()
+    }
+
+    private func persist() {
+        defaults?.set(document.encoded(), forKey: Self.defaultsKey)
+        defaults?.set(cursor, forKey: Self.cursorKey)
+    }
+}
+
+extension PartResolver {
+    /// The class an action's write names: "write Plant.lastWatered" is "Plant".
+    static func bind(of does: String) -> String? {
+        let words = does.split(separator: " ")
+        guard words.count > 1 else { return nil }
+        return String(words[1].split(separator: ".").first ?? "")
+    }
+
+    /// The item an action word or `{top}` names: the highest of the `top` modifier's field in its bind, else the first.
+    static func topItem(in doc: ChartDoc, bind: String, data: (String) -> [BoundItem]) -> BoundItem? {
+        guard !RoomWalls.isWalled(bind) else { return nil }
+        let all = data(bind)
+        guard let field = doc.parts.first(where: { $0.kind == .top })?.props.text("field") else { return all.first }
+        return all.max { value($0, field) < value($1, field) }
+    }
+}

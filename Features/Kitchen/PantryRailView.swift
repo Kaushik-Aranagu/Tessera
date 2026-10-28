@@ -63,7 +63,7 @@ struct PantryRailPage: View {
             return
         }
         model.touch()
-        TessVoice.shared.say("Groceries are here.", undo: record, holds: .seconds(4))
+        TessVoice.shared.say("Groceries are here", undo: record, holds: .seconds(4))
     }
 
     /// Her band, as on the old page: what the last cook used up; never over an open UNDO (QA L2 on #727).
@@ -88,7 +88,7 @@ struct PantryRailPage: View {
         }
         let name = model.store.displayTitle(of: entry.ingredient)
         guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return false
         }
         withTesseraAnimation(RailMetrics.crossfade, reduceMotion: reduceMotion) { model.touch() }

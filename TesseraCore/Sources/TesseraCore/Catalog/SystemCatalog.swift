@@ -18,7 +18,7 @@ public enum SystemCatalog {
         case ingredient, recipe, recipeLine, recipeStep, cook, kitchenTimer
         case cookSession, cookDish
         case process
-        case slot, plan
+        case slot, plan, routineStep
         case tessCall
         case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case pool, inflow, poolMove, rateNote
@@ -34,6 +34,7 @@ public enum SystemCatalog {
         case belief
         case routineRun, rest
         case tessAgent, notebookPage, agentEpisode
+        case room, roomPart, pageLayer
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -192,6 +193,11 @@ public enum SystemCatalog {
                       // Which kind of day it is, so its colour and muscles do not depend on the title ("Bench day").
                       // Optional: a routine of his own may have none.
                       FieldSpec(key: "kind", name: "Kind", kind: .choice, options: ["push", "pull", "legs"]),
+                      // The warm-up before the first lift (sheet 230): "Rower", 8 minutes, "Keep it easy, about 22
+                      // strokes a minute." Empty is no warm-up.
+                      FieldSpec(key: "warmupName", name: "Warm-up", kind: .text),
+                      FieldSpec(key: "warmupMinutes", name: "Warm-up minutes", kind: .number, unit: "min"),
+                      FieldSpec(key: "warmupNote", name: "Warm-up note", kind: .text),
                       // The name Tess gave the day, and the exercises it was given for: while the title is still this,
                       // Tess may rename it as the exercises change; once he types another, it never does.
                       FieldSpec(key: "autoName", name: "Name from Tess", kind: .text),
@@ -224,6 +230,22 @@ public enum SystemCatalog {
             FieldSpec(key: "until", name: "Until", kind: .date),
             FieldSpec(key: "endedAt", name: "Ended", kind: .date),
         ]),
+        // A step of a routine mode (sheets 323 and 329): "Stretch", 6 minutes, and under it the moves ("Hips", 2 minutes,
+        // "Knee over ankle, breathe out"). A step is a child of its routine; a move is a child of its step.
+        ClassSpec(key: .routineStep, name: "Routine Step", parent: .thing, symbol: "figure.cooldown",
+                  colorRole: "planning", fields: [
+                      // A step's minutes, or a move's (in `seconds`).
+                      FieldSpec(key: "minutes", name: "Minutes", kind: .number, unit: "min"),
+                      FieldSpec(key: "seconds", name: "Seconds", kind: .number, unit: "s"),
+                      // What is done, big on screen; the title when empty.
+                      FieldSpec(key: "move", name: "Move", kind: .text),
+                      // One line in Tess's voice.
+                      FieldSpec(key: "cue", name: "Cue", kind: .text),
+                      // Words only, never a pace: "in", "out" or "in/out".
+                      FieldSpec(key: "breath", name: "Breath", kind: .choice, options: ["in", "out", "in/out"]),
+                      // When it was last checked off; today's checks are the ones on today's Tessera day.
+                      FieldSpec(key: "doneAt", name: "Done at", kind: .date),
+                  ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
                       FieldSpec(key: "exercise", name: "Exercise", kind: .classRef, target: .exercise),
@@ -336,13 +358,19 @@ public enum SystemCatalog {
         ]),
         // An occasion: a trip, a move, a wedding week. Dates and links to things of any app; what it says about each
         // linked app is derived on read (OccasionFacts), never stored.
-        ClassSpec(key: .occasion, name: "Occasion", parent: .thing, symbol: "calendar.badge.clock", colorRole: "neutral",
-                  fields: [
-                      FieldSpec(key: "start", name: "Start", kind: .date),
-                      FieldSpec(key: "end", name: "End", kind: .date),
-                      FieldSpec(key: "links", name: "Links", kind: .refList, target: .thing),
-                      FieldSpec(key: "away", name: "Away", kind: .bool, defaultValue: .bool(false)),
-                  ]),
+        ClassSpec(
+            key: .occasion,
+            name: "Occasion",
+            parent: .thing,
+            symbol: "calendar.badge.clock",
+            colorRole: "neutral",
+            fields: [
+                FieldSpec(key: "start", name: "Start", kind: .date),
+                FieldSpec(key: "end", name: "End", kind: .date),
+                FieldSpec(key: "links", name: "Links", kind: .refList, target: .thing),
+                FieldSpec(key: "away", name: "Away", kind: .bool, defaultValue: .bool(false)),
+            ]
+        ),
         // Money in: a paycheck, a gift, a refund. Typed digits in the pool's currency.
         ClassSpec(key: .inflow, name: "Inflow", parent: .thing, symbol: "arrow.down.circle", colorRole: "neutral",
                   fields: [
@@ -422,22 +450,38 @@ public enum SystemCatalog {
         // The words of one request to Claude, exactly as sent ("Private phrase" for a walled one), beside its Tess Call
         // row and linked by requestID. On the phone only: never in a backup copy, the iCloud copy or an export, and
         // never the key. "Clear what was sent" deletes the rows; the spend stays in Tess Call (G653).
-        // One turn of her conversation, on the phone only (sheet 215 rev 5): written without ops, kept seven days, never in
+        // One turn of her conversation, on the phone only (sheet 215 rev 5): written without ops, kept seven days,
+        // never in
         // any backup copy (the local one included), the iCloud copy, an export, a log or a widget. Money, health, body,
         // calorie and calendar text is never stored here, only a shown label or a placeholder.
-        ClassSpec(key: .tessTurn, name: "Tess Turn", parent: .thing, symbol: "bubble.left", colorRole: "neutral", fields: [
-            FieldSpec(key: "role", name: "Role", kind: .text),
-            FieldSpec(key: "text", name: "Text", kind: .text),
-            FieldSpec(key: "at", name: "At", kind: .date),
-            FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
-            FieldSpec(key: "held", name: "Held back", kind: .bool),
-        ]),
-        ClassSpec(key: .tessSent, name: "Tess Sent", parent: .thing, symbol: "paperplane", colorRole: "neutral", fields: [
-            FieldSpec(key: "use", name: "Use", kind: .text),
-            FieldSpec(key: "words", name: "Words", kind: .text),
-            FieldSpec(key: "requestID", name: "Request", kind: .text),
-        ]),
-        // A Tess Sent row written in lab mode (harness H1b): the words exactly as sent, health and money included. It is
+        ClassSpec(
+            key: .tessTurn,
+            name: "Tess Turn",
+            parent: .thing,
+            symbol: "bubble.left",
+            colorRole: "neutral",
+            fields: [
+                FieldSpec(key: "role", name: "Role", kind: .text),
+                FieldSpec(key: "text", name: "Text", kind: .text),
+                FieldSpec(key: "at", name: "At", kind: .date),
+                FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                FieldSpec(key: "held", name: "Held back", kind: .bool),
+            ]
+        ),
+        ClassSpec(
+            key: .tessSent,
+            name: "Tess Sent",
+            parent: .thing,
+            symbol: "paperplane",
+            colorRole: "neutral",
+            fields: [
+                FieldSpec(key: "use", name: "Use", kind: .text),
+                FieldSpec(key: "words", name: "Words", kind: .text),
+                FieldSpec(key: "requestID", name: "Request", kind: .text),
+            ]
+        ),
+        // A Tess Sent row written in lab mode (harness H1b): the words exactly as sent, health and money included. It
+        // is
         // a mirror: in no backup copy (the local one too), no export, no op.
         ClassSpec(key: .tessSentExact, name: "Tess Sent (exact)", parent: .tessSent, symbol: "paperplane.fill",
                   colorRole: "neutral", fields: []),
@@ -554,6 +598,41 @@ public enum SystemCatalog {
                       FieldSpec(key: "lab", name: "Under lab", kind: .bool, defaultValue: .bool(false)),
                       FieldSpec(key: "held", name: "Held back", kind: .bool, defaultValue: .bool(false)),
                   ]),
+        // A room Tess builds by talking (R1, docs/design/tess-built-rooms/r1-spec.md): its parts are its children. A
+        // patch
+        // is only create, setValue, softDelete and setSortIndex, so undo and history come free.
+        ClassSpec(key: .room, name: "Room", parent: .thing, symbol: "square.dashed", colorRole: "neutral", fields: [
+            FieldSpec(key: "name", name: "Name", kind: .text),
+            FieldSpec(key: "color", name: "Color", kind: .choice, options: RoomKit.colorRoles),
+            // JSON of LookCatalog trait values, e.g. {"density":"airy","motion":"calm"}.
+            FieldSpec(key: "look", name: "Look", kind: .text),
+            // JSON array of grants, e.g. ["write Plant.lastWatered"]; reads of the classes a part binds are implicit.
+            FieldSpec(key: "reach", name: "Reach", kind: .text),
+            // JSON array of part names he asked for that the kit does not have yet; the install notes read it (R5 builds them).
+            FieldSpec(key: "queue", name: "Queued parts", kind: .text),
+            // When he took the room down (Design sheet 371); empty is a room that is up. Nothing it binds to is touched.
+            FieldSpec(key: "archivedAt", name: "Taken down", kind: .date),
+            // Set when a taken-down room is brought back: a replay of how it was made is owed until its first open.
+            FieldSpec(key: "restoredAt", name: "Brought back", kind: .date),
+        ]),
+        ClassSpec(key: .roomPart, name: "Room Part", parent: .thing, symbol: "square.on.square.dashed",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "kind", name: "Kind", kind: .choice, options: RoomKit.kinds.map(\.name)),
+                      FieldSpec(key: "place", name: "Place", kind: .choice, options: RoomKit.places),
+                      // JSON, per kind.
+                      FieldSpec(key: "props", name: "Props", kind: .text),
+                      // The class (and optionally a query) whose objects the part shows, resolved at render time.
+                      FieldSpec(key: "bind", name: "Bind", kind: .text),
+                  ]),
+        // A layer on an object's plain page (Design sheets 375 to 378): over a whole class ("every plant's page") or over
+        // one object ("just for the orchid"). Its parts are `roomPart` children, so a patch is the same four ops.
+        ClassSpec(key: .pageLayer, name: "Page Layer", parent: .thing, symbol: "doc.text", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "name", name: "Name", kind: .text),
+                      // The class (its id) the layer is for, or the one object (its id); exactly one is set.
+                      FieldSpec(key: "forClass", name: "For class", kind: .text),
+                      FieldSpec(key: "forObject", name: "For object", kind: .text),
+                  ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning", fields: [
             FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
@@ -577,6 +656,14 @@ public enum SystemCatalog {
                       // Where it lives in the Pantry (a Place) and the section inside it ("Door"); both optional.
                       FieldSpec(key: "place", name: "Place", kind: .ref, target: .place),
                       FieldSpec(key: "section", name: "Section", kind: .text),
+                      // What he told the Pantry by hand (Kitchen actions): in, low or out, and when. A later buy or cook
+                      // is newer than this; the ledger takes whichever fact is later.
+                      FieldSpec(key: "stock", name: "Stock", kind: .choice, options: ["in", "low", "out"]),
+                      FieldSpec(key: "stockAt", name: "Stock set", kind: .date),
+                      // "Not now": the Pantry stops asking until this moment (the next 4 am).
+                      FieldSpec(key: "snoozedUntil", name: "Snoozed until", kind: .date),
+                      // Pinned to the top of its place (three at most per place).
+                      FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
                   ]),
         // A place in the Pantry (Fridge, Freezer, Shelf, Counter, or his own): ordered, with its sections as words.
         ClassSpec(key: .place, name: "Place", parent: .thing, symbol: "refrigerator", colorRole: "health",
@@ -592,6 +679,8 @@ public enum SystemCatalog {
             FieldSpec(key: "sourceText", name: "Original text", kind: .text),
             // Set when the recipe page opens, without an op (kitchen week one: opened but never cooked).
             FieldSpec(key: "lastOpenedAt", name: "Last opened", kind: .date),
+            // Pinned to the top of the shelf (three at most).
+            FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
         ]),
         ClassSpec(key: .recipeLine, name: "Recipe Line", parent: .thing, symbol: "list.dash", colorRole: "health",
                   fields: [

@@ -56,7 +56,7 @@ struct ListLookupTests {
         try makeList("Packing", in: engine)
         store.save()
         let before = count(engine)
-        #expect(refusal("packing", "sunscreen", engine: engine) == "More than one list like packing.")
+        #expect(refusal("packing", "sunscreen", engine: engine) == "More than one list like packing")
         #expect(items(on: "Packing", engine: engine).isEmpty)
         #expect(count(engine) == before)
     }
@@ -66,7 +66,7 @@ struct ListLookupTests {
         try makeList("Trip 2025", in: engine)
         try makeList("Trip to Lisbon", in: engine)
         let before = count(engine)
-        #expect(refusal("trip", "adapter", engine: engine) == "More than one list like trip.")
+        #expect(refusal("trip", "adapter", engine: engine) == "More than one list like trip")
         #expect(items(on: "Trip 2025", engine: engine).isEmpty && items(on: "Trip to Lisbon", engine: engine).isEmpty)
         #expect(count(engine) == before)
     }
@@ -116,7 +116,7 @@ struct ListLookupTests {
         let engine = try engine()
         try engine.perform(AddGroceries(lines: ["eggs"]), by: .user)
         try makeList("Groceries", in: engine)
-        #expect(refusal("groceries", "soap", engine: engine) == "More than one list like groceries.")
+        #expect(refusal("groceries", "soap", engine: engine) == "More than one list like groceries")
     }
 
     @Test func refusalNamesNoPrivateWord() throws {
@@ -124,7 +124,7 @@ struct ListLookupTests {
         try makeList("lexapro", in: engine)
         try makeList("lexapro", in: engine)
         let line = try #require(refusal("lexapro", "refill", engine: engine))
-        #expect(line == "More than one list like that.")
+        #expect(line == "More than one list like that")
         #expect(!line.contains("lexapro"))
     }
 
@@ -141,7 +141,13 @@ struct ListLookupTests {
         #expect(again.output.id == list.id)
         #expect(lists.lists().count == before)
         #expect(lists.items(of: list).count == 2)
-        #expect(!again.record.ops.contains { if case .create = $0 { true } else { false } })
+        #expect(!again.record.ops.contains {
+            if case .create = $0 {
+                true
+            } else {
+                false
+            }
+        })
         #expect(CreateList.wasRepeat(again.record))
     }
 
@@ -177,7 +183,7 @@ struct ListLookupTests {
         let capture = TessCaptureEngine(engine: engine)
         let result = await capture.capture("new list: packing", context: TessContext())
         #expect(result.records.isEmpty)
-        #expect(result.line == "Packing, already a list.")
+        #expect(result.line == "Packing, already a list")
         let lists = ListContents(store: store, classes: engine.classes).lists()
         #expect(lists.count { $0.title.lowercased() == "packing" } == 1)
     }
@@ -186,6 +192,6 @@ struct ListLookupTests {
         let engine = try engine()
         let result = await TessCaptureEngine(engine: engine).capture("new list: packing", context: TessContext())
         #expect(result.records.count == 1)
-        #expect(result.line.hasSuffix(", new list."))
+        #expect(result.line.hasSuffix(", new list"))
     }
 }

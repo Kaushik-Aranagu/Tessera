@@ -125,7 +125,7 @@ private struct GroundWithSky: View {
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Colors.paper
-            TimelineView(.animation(minimumInterval: 1 / 15, paused: reduceMotion)) { context in
+            LiveTimeline(LiveFeatures.groundSky, minimumInterval: 1 / 15) { context in
                 let time = context.date.timeIntervalSinceReferenceDate
                 let hour = Double(Calendar.current.component(.hour, from: AppClock.adjust(context.date)))
                 sky(time: reduceMotion ? 0 : time, tints: Theme.Colors.skyTints(hour: hour))

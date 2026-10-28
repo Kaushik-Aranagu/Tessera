@@ -8,12 +8,15 @@ import TesseraCore
 enum AppsListRows {
     struct Row: Identifiable, Equatable {
         /// Bridge's dial also holds two doors that are not apps (sheet 283): the weather landing and Settings.
-        enum Extra: String { case lookout, settings }
+        enum Extra: String { case lookout, settings, chart }
 
         let app: HomeApp
         let summary: String
         let opens: HomeSentence.Opens?
         var extra: Extra?
+        /// A room that names itself (the Chart room): its own name and colour, read from its document.
+        var ownName: String?
+        var ownColor: Color?
 
         var id: String {
             extra?.rawValue ?? app.rawValue
@@ -24,6 +27,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: "Lookout"
             case .settings: "Settings"
+            case .chart: ownName ?? "Chart room"
             case nil: app.shipName
             }
         }
@@ -32,6 +36,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
             case .settings: Theme.Colors.ink
+            case .chart: ownColor ?? Theme.Colors.Accent.chart
             case nil: app.accent
             }
         }
@@ -41,6 +46,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: .lookout
             case .settings: .settings
+            case .chart: .chart
             case nil: .app(app)
             }
         }
@@ -72,6 +78,14 @@ enum AppsListRows {
             let line = lines.first { $0.app == app }
             return Row(app: home(app), summary: line.map { $0.text.isEmpty ? quiet : $0.text } ?? "",
                        opens: line?.opens)
+        }
+        // The Chart room sits after Purse (experimental, behind its flag; it has no line of its own yet).
+        if ChartRoomFlag.isOn, ChartRoomSummary.isUp(),
+           let purse = rows.firstIndex(where: { $0.app == .money && $0.extra == nil })
+        {
+            let chart = ChartRoomSummary.row()
+            rows.insert(Row(app: .tasks, summary: chart.line, opens: nil, extra: .chart, ownName: chart.name,
+                            ownColor: chart.color), at: purse + 1)
         }
         rows.append(Row(app: .tasks, summary: "", opens: nil, extra: .settings))
         return rows
@@ -121,6 +135,7 @@ enum AppsListRows {
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
     @Environment(\.playDoorway) private var playDoorway
+    @Environment(\.openShellDoor) private var openShellDoor
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
@@ -160,10 +175,15 @@ struct AppsListSlot: View {
                 // more away wait outside the frame.
                 ForEach(rows.indices, id: \.self) { index in
                     let offset = AppsListRows.relative(index, middle: middle, count: rows.count)
-                    if abs(offset) <= 2 {
+                    // The rows outside the three places exist only while the dial moves (they roll in); at rest they
+                    // are not there at all, so nothing reads or measures over the widget (bounds check, Oct 26).
+                    if abs(offset) <= 1 || (abs(offset) <= 2 && (drag != 0 || snapping)) {
                         line(rows[index], isMiddle: offset == 0, offset: offset)
                             .offset(y: (CGFloat(offset) + 1) * rowHeight + drag)
                             .transition(.identity)
+                            // The rows waiting outside the three places are clipped away; VoiceOver skips them too, so
+                            // nothing reads over the widget or the foot (bounds check, Oct 26).
+                            .accessibilityHidden(abs(offset) > 1)
                     }
                 }
             }
@@ -277,24 +297,26 @@ struct AppsListSlot: View {
                 settle(by: offset, count: rows.count)
             }
         } label: {
-            // Sheet 283 section 6: the dial on the left (x 24-184), focus 26 pt 700 in its colour, neighbours 20 pt
-            // with a 1.6 pt depth blur; the focus's one fact at x 186, left-aligned, 15 pt ink 2, cut on whole words.
+            // Sheet 283, Kaushik Oct 26: the dial on the RIGHT (x 218-378, names right-aligned), focus 26 pt bold in
+            // its
+            // colour, neighbours 20 pt with a 1.6 pt depth blur; the focus's one fact on the LEFT (x 24-216), 15 pt
+            // ink 2, cut on whole words.
             ZStack(alignment: .leading) {
-                Text(row.name)
-                    .font(.custom("Figtree", size: isMiddle ? 26 : 20, relativeTo: .title3)
-                        .weight(isMiddle ? .bold : .regular))
-                    .scaleEffect(isMiddle && held && !reduceMotion ? 1.06 : 1, anchor: .leading)
-                    .foregroundStyle(isMiddle ? row.accent : Theme.Colors.inkSecondary)
-                    .blur(radius: isMiddle || reduceMotion ? 0 : 1.6)
-                    .lineLimit(1)
-                    .frame(width: 160, alignment: .leading)
                 if isMiddle, !row.summary.isEmpty {
                     FitLine(forms: FitLine.cuts(row.summary), size: 15, color: Theme.Colors.inkSecondary)
                         .frame(width: 192, alignment: .leading)
-                        .offset(x: 162)
                         .id(row.id)
                         .transition(.offset(y: reduceMotion ? 0 : 6))
                 }
+                Text(row.name)
+                    .font(.custom("Figtree", size: isMiddle ? 26 : 20, relativeTo: .title3)
+                        .weight(isMiddle ? .bold : .regular))
+                    .scaleEffect(isMiddle && held && !reduceMotion ? 1.06 : 1, anchor: .trailing)
+                    .foregroundStyle(isMiddle ? row.accent : Theme.Colors.inkSecondary)
+                    .blur(radius: isMiddle || reduceMotion ? 0 : 1.6)
+                    .lineLimit(1)
+                    .frame(width: 160, alignment: .trailing)
+                    .offset(x: 194)
             }
             .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
             .contentShape(Rectangle())
@@ -302,13 +324,17 @@ struct AppsListSlot: View {
         .buttonStyle(.plain)
         .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.name), \(row.summary)" : row.name)
         .accessibilityHint(isMiddle ? "Opens \(row.name)" : "Brings it to the middle")
+        // Only the three rows in the dial's places are there for VoiceOver; the ones waiting outside are clipped.
+        .accessibilityHidden(abs(offset) > 1)
     }
 
     /// A tap on the middle row: the object its line names, else the app.
     private func open(_ row: AppsListRows.Row) {
         if row.extra == nil, case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
-        } else {
+        } else if !openShellDoor(row.door) {
+            // The standing shell holds the room when it can (its places change in place); else the doorway plays
+            // into the room's own page.
             playDoorway(row.accent, false) { door = row.door }
         }
     }

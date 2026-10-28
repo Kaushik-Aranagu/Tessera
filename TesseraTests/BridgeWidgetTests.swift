@@ -25,11 +25,11 @@ struct BridgeWidgetTests {
     }
 
     @Test func aLongBigLineCutsOnAWholeWordAndNeverEllipsizes() {
-        let cut = HomeOneThing.cut("Call the plumber about the kitchen sink tomorrow", size: 38, width: 262)
+        let cut = HomeOneThing.cut("Call the plumber about the kitchen sink tomorrow", width: 262)
         #expect(!cut.contains("...") && !cut.contains("…"))
         #expect("Call the plumber about the kitchen sink tomorrow".hasPrefix(cut))
         #expect(cut.count < 30)
-        #expect(HomeOneThing.cut("Tacos", size: 38, width: 262) == "Tacos")
+        #expect(HomeOneThing.cut("Tacos", width: 262) == "Tacos")
     }
 
     @Test func theMiddleLinesKeyWordHasNoUnderline() {
@@ -43,7 +43,9 @@ struct BridgeWidgetTests {
         let names = Set(rows.map(\.name))
         #expect(names.isSuperset(of: ["Deck", "Galley", "Purse", "Log", "Watch"]))
         #expect(!names.contains("Training") && !names.contains("Kitchen") && !names.contains("Money"))
-        #expect(rows.map(\.name) == ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse", "To do", "Settings"])
+        // The Chart room sits after Purse while its flag is On (it is On unless turned Off in Developer mode).
+        let chart = ChartRoomFlag.isOn ? [ChartRoomSummary.row().name] : []
+        #expect(rows.map(\.name) == ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse"] + chart + ["To do", "Settings"])
         #expect(rows.first { $0.name == "Lookout" }?.door == .lookout)
         #expect(rows.first { $0.name == "Settings" }?.door == .settings)
         #expect(rows.first { $0.name == "Galley" }?.door == .app(.kitchen))

@@ -12,6 +12,9 @@ struct ShellView<Room: RoomContent>: View {
     var act: (ShellIntent) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// The page behind the places; nil is the theme's page (Lookout draws its sky plate here).
+    @Environment(\.shellBackdrop) private var backdrop
     @State private var shown: [Place: SlotContent] = [:]
     @State private var styles: [Place: PlaceStyle] = [:]
     @State private var layout: LayoutKind = .landing
@@ -19,8 +22,14 @@ struct ShellView<Room: RoomContent>: View {
     @State private var busy: Set<Place> = []
     @State private var appliedRoute: ShellRoute?
     @State private var driver: Task<Void, Never>?
+    /// A route change is playing: a change of state waits for it (the change reads the latest content as it goes and
+    /// catches up when it ends), so it never swaps a place's content out from under the route's own moves.
+    @State private var changing = false
     /// The back edge's pull in points (sheet 283 v6): the screen never moves; content softens as it grows.
     @State private var pull: CGFloat = 0
+    /// Sheet 302: one soft haptic as the pull crosses the commit point (once per pull).
+    @State private var pullCue = HapticCue()
+    @State private var pullArmed = false
 
     private var reduceMotion: Bool {
         systemReduceMotion || ShellProbe.reduceMotion
@@ -37,13 +46,15 @@ struct ShellView<Room: RoomContent>: View {
             let dx = (proxy.size.width - 402) / 2
             ZStack(alignment: .topLeading) {
                 ForEach(Place.allCases, id: \.self) { place in
-                    let rect = ShellLayout.frame(place, in: layout)
+                    let rect = ShellLayout.screenRect(place, in: layout, scale: scale, typeSize: typeSize)
                     PlaceHost(place: place, content: shown[place], style: styles[place] ?? .rest, size: rect.size,
                               reduceMotion: reduceMotion, navigator: navigator, act: act)
                         .background(alignment: .topLeading) { wash(place) }
-                        .offset(x: rect.minX + dx, y: rect.minY * scale)
+                        .offset(x: rect.minX + dx, y: rect.minY)
                         .modifier(BackPull(place: place, amount: pullAmount, reduceMotion: reduceMotion))
                         .allowsHitTesting(shown[place] != nil && !busy.contains(place))
+                        // Live only when seen: a place with no content (the dial or glyph merged away) draws nothing.
+                        .liveScope(shown[place] != nil)
                         .zIndex(place == .glyph ? 1 : 0)
                 }
                 backEdge(height: proxy.size.height)
@@ -52,9 +63,11 @@ struct ShellView<Room: RoomContent>: View {
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+            // Bridge's mosaic measures its core and its shields in this space (its origin is the screen's top).
+            .coordinateSpace(.named(HomeMosaicPage.space))
         }
         .ignoresSafeArea()
-        .background { ThemedBackground() }
+        .background { (backdrop ?? AnyView(ThemedBackground())).ignoresSafeArea() }
         .onChange(of: next, initial: true) { _, screen in apply(screen) }
         .onDisappear { driver?.cancel() }
     }
@@ -73,7 +86,8 @@ struct ShellView<Room: RoomContent>: View {
 
     /// How far the pull has gone, 0 to 1 (full at 120 pt).
     private var pullAmount: CGFloat {
-        min(max(pull, 0) / ShellBack.full, 1)
+        // Reduce Motion: no pull effect at all, so there is nothing to resist.
+        reduceMotion ? 0 : min(max(ShellBack.resisted(pull), 0) / ShellBack.full, 1)
     }
 
     /// The back edge, x 0 to 24 (sheet 283 v6). The pull never drags the page: content blurs and fades with it and
@@ -86,14 +100,22 @@ struct ShellView<Room: RoomContent>: View {
                 .onChanged { value in
                     guard abs(value.translation.height) < 120 else { return }
                     pull = value.translation.width
+                    // The commit is still the raw 80 pt of the finger; the haptic plays once as it crosses.
+                    let past = ShellBack.commits(value.translation)
+                    if past, !pullArmed {
+                        pullCue.play(.bound)
+                    }
+                    pullArmed = past
                 }
                 .onEnded { value in
+                    pullArmed = false
                     let commit = ShellBack.commits(value.translation)
                     withTesseraAnimation(.easeOut(duration: ShellBack.settle), reduceMotion: reduceMotion) { pull = 0 }
                     if commit {
                         act(.back)
                     }
                 })
+            .tesseraFeedback(pullCue)
             .accessibilityHidden(true)
     }
 
@@ -113,6 +135,17 @@ struct ShellView<Room: RoomContent>: View {
     // MARK: Changes
 
     private func apply(_ screen: Screen) {
+        if appliedRoute != nil, navigator.route == appliedRoute, !changing, LookInk.shared.pass != nil {
+            // Sheet 299: a change of look only recolours the page; nothing arrives again. The places take their new
+            // content where they stand, with no move.
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) {
+                layout = screen.layout
+                shown = screen.slots
+            }
+            return
+        }
         if appliedRoute == nil {
             open(screen)
         } else if navigator.route != appliedRoute {
@@ -144,7 +177,7 @@ struct ShellView<Room: RoomContent>: View {
         for place in payloadOnly {
             shown[place] = screen[place]
         }
-        guard !changed.isEmpty else { return }
+        guard !changed.isEmpty, !changing else { return }
         for place in changed {
             styles[place] = PlaceStyle(move: moves[place] ?? .move, context: .state)
         }
@@ -174,6 +207,7 @@ struct ShellView<Room: RoomContent>: View {
         }
         // Places still entering from a change this one replaces are freed; this change's places wait for their entry.
         busy = plan.affected
+        changing = true
         driver = Task { @MainActor in
             let clock = ContinuousClock()
             let start = clock.now
@@ -183,15 +217,18 @@ struct ShellView<Room: RoomContent>: View {
                 playReduced(screen)
             } else if plan.oldLayout == plan.newLayout {
                 // Same layout: every place plays its own move; the delays live in each place's transition.
-                withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { shown = screen.slots }
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { shown = navigatorTarget.slots }
             } else {
                 guard await playLayoutChange(plan, screen, clock: clock, start: start) else { return }
             }
             guard await releaseTouches(plan, clock: clock, start: start) else { return }
             washes = [:]
+            changing = false
             if let changeID {
                 navigator.finish(changeID)
             }
+            // Catch up with any change of state that waited for the route's moves.
+            refresh(navigatorTarget)
         }
     }
 
@@ -271,19 +308,41 @@ struct ShellPlan {
     let oldLayout: LayoutKind
     let newLayout: LayoutKind
     let moves: [Place: PlaceMove]
+    /// Going between Bridge and a room: the room's keystone flip (nil otherwise).
+    let flip: KeystoneFlip?
+    /// True when a room's keystone comes in from Bridge; false when it goes back to Bridge's mosaic.
+    let flipIn: Bool
+    private let newSlots: [Place: SlotContent]
+
+    /// Bridge's apps, for the dial's reel when a room's doors come in from Bridge's dial.
+    static var bridgeApps: [String] {
+        ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse"] + (ChartRoomFlag.isOn ? ["Chart room"] : []) + ["Settings"]
+    }
 
     init(from old: Screen, to new: Screen) {
         oldLayout = old.layout
         newLayout = new.layout
-        moves = PlaceMove.plan(from: old, to: new)
+        newSlots = new.slots
+        let bridgeChange = (old.layout == .bridge) != (new.layout == .bridge)
+        flipIn = old.layout == .bridge
+        flip = bridgeChange ? (old.layout == .bridge ? new.flip : old.flip) : nil
+        var moves = PlaceMove.plan(from: old, to: new)
+        if bridgeChange {
+            // Between Bridge and a room every place plays its own move (sheet 283 v4), whatever its content's kind:
+            // the masthead flaps, the widget rises, the dial reels, the action word streams; only the keystone flips.
+            for (place, move) in moves where move == .collapseAndForm && place != .keystone && place != .glyph {
+                moves[place] = .move
+            }
+        }
+        self.moves = moves
     }
 
     var merging: Bool {
-        oldLayout == .landing && newLayout == .door
+        newLayout == .door && oldLayout != .door
     }
 
     var splitting: Bool {
-        oldLayout == .door && newLayout == .landing
+        oldLayout != newLayout && !merging
     }
 
     /// The places whose content changes (they wait for their entry before taking touches).
@@ -325,8 +384,16 @@ struct ShellPlan {
         case .merge, .split, .form, .dissolve: style.context = .merge
         case .glide, .absent: break
         }
-        if place == .dial, style.move == .move, case let .dial(old)? = dial?.payload {
-            style.reelFrom = old.map(\.name)
+        if place == .dial, style.move == .move, case .dial? = newSlots[.dial]?.payload {
+            switch dial?.payload {
+            case let .dial(old)?: style.reelFrom = old.map(\.name)
+            case .scene?: style.reelFrom = Self.bridgeApps
+            default: break
+            }
+        }
+        if place == .keystone, let flip, style.move != .untouched {
+            style.flip = flip
+            style.flipIn = flipIn
         }
         return style
     }
@@ -342,6 +409,18 @@ enum ShellBack {
     static let blur: CGFloat = 2.4
     static let fade = 0.4
     static let grow: CGFloat = 0.18
+
+    /// Sheet 302: where the page starts to answer less, and the share it keeps (70%) up to the commit.
+    static let resistFrom: CGFloat = 72
+    static let resistKeeps: CGFloat = 0.7
+
+    /// The finger's pull as the page shows it: the same up to 72 pt, 70% of the finger from 72 to 80 (so the
+    /// loosening and the nav word's growth slow just before the commit), then following the finger again, 2.4 pt
+    /// behind. It never moves the commit point, which stays the raw 80 pt.
+    static func resisted(_ pull: CGFloat) -> CGFloat {
+        guard pull > resistFrom else { return pull }
+        return resistFrom + (min(pull, commit) - resistFrom) * resistKeeps + max(pull - commit, 0)
+    }
 
     static func commits(_ translation: CGSize) -> Bool {
         translation.width > commit && abs(translation.height) < 120

@@ -25,9 +25,9 @@ enum FinishedWorkoutWords {
             parts.append(HouseTime.minutes(minutes))
         }
         parts.append("\(sets) \(sets == 1 ? "set" : "sets")")
-        var text = parts.joined(separator: ", ") + "."
+        var text = parts.joined(separator: ", ")
         if let best {
-            text += " \(best) was your best."
+            text += ". \(best) was your best"
         }
         return text
     }

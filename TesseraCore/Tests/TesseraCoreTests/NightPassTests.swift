@@ -32,12 +32,14 @@ struct NightPassTests {
     {
         TessBelief(id: id, subject: subject, key: key, value: value, confidence: 1, source: source, evidence: [UUID()],
                    evidenceOps: [], validFrom: from, validUntil: nil, supersedes: nil, uses: [],
-                   confirmations: confirmations, kept: kept, words: "You usually train around 6 am.", isPrivate: false)
+                   confirmations: confirmations, kept: kept, words: "You usually train around 6 am", isPrivate: false)
     }
 
     func revises(_ steps: [NightPass.Step]) -> Bool {
         steps.contains { step in
-            if case .revise = step { return true }
+            if case .revise = step {
+                return true
+            }
             return false
         }
     }
@@ -66,12 +68,14 @@ struct NightPassTests {
         let events = trained([at(10, 14, 6), at(10, 16, 18, 30), at(10, 20, 18, 30), at(10, 23, 18)])
         let steps = pass.plan(beliefs: [six], series: events, day: [])
         let revise = steps.compactMap { step -> (UUID, String, String, [UUID])? in
-            if case let .revise(belief, words, value, evidence) = step { return (belief, words, value, evidence) }
+            if case let .revise(belief, words, value, evidence) = step {
+                return (belief, words, value, evidence)
+            }
             return nil
         }
         #expect(revise.count == 1)
         #expect(revise.first?.0 == six.id)
-        #expect(revise.first?.1 == "You usually train around 6:30 pm.")
+        #expect(revise.first?.1 == "You usually train around 6:30 pm")
         #expect(revise.first?.2 == "{\"hour\":18.5}")
         #expect(revise.first?.3 == Array(events.dropFirst().map(\.id)))
     }
@@ -128,7 +132,13 @@ struct NightPassTests {
         #expect(steps.contains(.merge(keep: kept.id, close: first.id)))
         #expect(steps.contains(.merge(keep: kept.id, close: second.id)))
         // He can prefer two things: beans stays open.
-        #expect(!steps.contains { if case let .merge(_, close) = $0 { close == beans.id } else { false } })
+        #expect(!steps.contains {
+            if case let .merge(_, close) = $0 {
+                close == beans.id
+            } else {
+                false
+            }
+        })
     }
 
     @Test func twoUsualTimesThatDisagreeKeepTheNewestUnlessHeToldOne() {
@@ -140,7 +150,13 @@ struct NightPassTests {
     }
 
     func merges(_ steps: [NightPass.Step]) -> [NightPass.Step] {
-        steps.filter { if case .merge = $0 { true } else { false } }
+        steps.filter {
+            if case .merge = $0 {
+                true
+            } else {
+                false
+            }
+        }
     }
 
     @Test func hisKeptAndToldBeliefsThatDisagreeCloseNothing() {
@@ -176,8 +192,14 @@ struct NightPassTests {
         #expect(steps.contains(.summary(path: "/summaries/day/2026-10-23",
                                         text: "2 workouts: Push Day, Private workout\n1 task done: Pay rent")))
         // Friday closed, so no week summary.
-        #expect(!steps.contains { if case let .summary(path, _) = $0 { path.contains("week") } else { false } })
-        #expect(NightPass.lines([], empty: "A quiet day.") == "A quiet day.")
+        #expect(!steps.contains {
+            if case let .summary(path, _) = $0 {
+                path.contains("week")
+            } else {
+                false
+            }
+        })
+        #expect(NightPass.lines([], empty: "A quiet day") == "A quiet day")
         let notes = [NightPass.DayItem(kind: "note", name: "", at: at(10, 23, 9), room: "notes"),
                      NightPass.DayItem(kind: "note", name: "", at: at(10, 23, 10), room: "notes")]
         #expect(NightPass.lines(notes, empty: "") == "2 notes")
@@ -194,11 +216,23 @@ struct NightPassTests {
         let strict = pass.plan(beliefs: [], series: [], day: day)
         #expect(strict.contains(.summary(path: path, text: "1 workout: Push Day")))
         let lab = pass.plan(beliefs: [], series: [], day: day, policy: .lab)
-        #expect(lab.contains { if case let .summary(_, text) = $0 { text.contains("Groceries") } else { false } })
+        #expect(lab.contains {
+            if case let .summary(_, text) = $0 {
+                text.contains("Groceries")
+            } else {
+                false
+            }
+        })
         // Only money moved today: under strict that wakes nobody.
         let money = [NightPass.DayItem(kind: "spend", name: "Groceries", at: at(10, 23, 12), room: "money")]
         let quiet = pass.plan(beliefs: [], series: [], day: money, agents: AgentSpec.shipped)
-        #expect(!quiet.contains { if case .reflect = $0 { true } else { false } })
+        #expect(!quiet.contains {
+            if case .reflect = $0 {
+                true
+            } else {
+                false
+            }
+        })
     }
 
     @Test func sundayNightAddsTheWeek() {
@@ -207,7 +241,7 @@ struct NightPassTests {
         let week = [NightPass.DayItem(kind: "cook", name: "Turkey Chili", at: at(10, 20, 19), room: "kitchen")]
         let steps = monday.plan(beliefs: [], series: [], day: [], week: week)
         #expect(steps.contains(.summary(path: "/summaries/week/2026-W43", text: "1 cook: Turkey Chili")))
-        #expect(steps.contains(.summary(path: "/summaries/day/2026-10-25", text: "A quiet day.")))
+        #expect(steps.contains(.summary(path: "/summaries/day/2026-10-25", text: "A quiet day")))
     }
 
     @Test func clockWordsReadPlainly() {
@@ -243,6 +277,12 @@ struct NightPassTests {
         #expect(!steps.contains(.reflect(agent: "Training")))
         // A quiet day asks nobody.
         let quiet = pass.plan(beliefs: [], series: [], day: [], agents: AgentSpec.shipped)
-        #expect(!quiet.contains { if case .reflect = $0 { true } else { false } })
+        #expect(!quiet.contains {
+            if case .reflect = $0 {
+                true
+            } else {
+                false
+            }
+        })
     }
 }
