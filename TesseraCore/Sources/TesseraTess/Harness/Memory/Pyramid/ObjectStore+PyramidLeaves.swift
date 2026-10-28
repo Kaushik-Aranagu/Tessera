@@ -6,7 +6,7 @@ import TesseraCore
 // exactly as if it never happened. Its words are its own while Claude sees everything (his Oct 27 ruling,
 // `ClaudeSees`), so lab reads them; its shown label otherwise, and always when its words look like a key. A started
 // workout that never finished, a deleted row and anything after `now` never become a leaf. Workouts with their
-// working sets, cooks, tasks done and notes come first; money, health, body and the calendar wait for their own slice.
+// working sets, cooks, tasks done, notes and money so far; health, body and the calendar wait for their own slice.
 
 public extension MemoryPyramid {
     /// The most of a note's words a leaf keeps.
@@ -120,6 +120,50 @@ public extension MemoryPyramid {
                 } else {
                     leaves.append(PyramidLeaf(id: id, at: at, kind: "note", text: words, stats: ["notes": 1]))
                 }
+            }
+        }
+
+        // Money: a spend or money in is always walled, so under strict it never happened, and its amount adds only to
+        // its currency's total, which only lab reads. A currency with no total of its own adds to none.
+        func code(_ typed: String?) -> String {
+            let code = (typed ?? "").trimmingCharacters(in: .whitespaces).uppercased()
+            return code.isEmpty ? "USD" : code
+        }
+        func money(_ key: String, _ amount: Decimal) -> [String: Double] {
+            PyramidStats.shown.contains { $0.key == key } ? [key: Double(truncating: amount as NSDecimalNumber)] : [:]
+        }
+        func spoken(_ words: String?) -> String {
+            (words ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let spendClass = classes[.spend] {
+            for spend in store.objects(of: spendClass) where !spend.isDeleted {
+                guard let at = past(store.value("spentAt", of: spend)?.dateValue) else { continue }
+                // The typed digits, as the Month sums them: exact cents.
+                let amount = MoneyAmount.parse(store.value("typed", of: spend)?.stringValue ?? "")?.amount
+                    ?? store.number("amount", of: spend).flatMap { Decimal(string: String($0)) } ?? 0
+                let currency = code(store.value("currency", of: spend)?.stringValue)
+                let category = spoken(store.value("category", of: spend)?.stringValue)
+                let note = spoken(store.value("note", of: spend)?.stringValue)
+                let own = "Spent \(SpendLedger.shown(amount, currency: currency, grouped: true))"
+                    + (category.isEmpty ? "" : " on \(category)") + (note.isEmpty ? "" : ": \(note)")
+                leaves.append(PyramidLeaf(id: "spend-\(spend.id.uuidString)", at: at, kind: "spend",
+                                          text: walledText(own, ObjectPrivacy.spendLabel), taint: .deviceOnly,
+                                          stats: money("spent\(currency)", amount)))
+            }
+        }
+        if let inflowClass = classes[.inflow] {
+            for inflow in store.objects(of: inflowClass) where !inflow.isDeleted {
+                guard let at = past(store.value("at", of: inflow)?.dateValue) else { continue }
+                let amount = PoolBook.decimal(store.value("amountTyped", of: inflow)?.stringValue)
+                let pool = store.linkedObjects("pool", of: inflow).first
+                let currency = code(pool.flatMap { store.value("currency", of: $0)?.stringValue })
+                let source = spoken(store.value("source", of: inflow)?.stringValue)
+                let note = spoken(store.value("note", of: inflow)?.stringValue)
+                let own = "Got \(SpendLedger.shown(amount, currency: currency, grouped: true))"
+                    + (source.isEmpty ? "" : " from \(source)") + (note.isEmpty ? "" : ": \(note)")
+                leaves.append(PyramidLeaf(id: "inflow-\(inflow.id.uuidString)", at: at, kind: "inflow",
+                                          text: walledText(own, ObjectPrivacy.inflowLabel), taint: .deviceOnly,
+                                          stats: money("earned\(currency)", amount)))
             }
         }
         return leaves
