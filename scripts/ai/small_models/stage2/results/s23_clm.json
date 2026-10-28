@@ -1,0 +1,196 @@
+{
+ "test": "2.3 (Mac part: CLM score matrices; the pass verdict is s23b's)",
+ "dry_run": false,
+ "model": "mlx-community/Qwen3-8B-8bit",
+ "backend": "mlx",
+ "revision": "48a0b75b1ae72503e21e1558d040bc227510ff06",
+ "mlx_act": "native",
+ "calibration": {
+  "file": "/Users/kaushikaranagu/pilot-stage2/scripts/ai/small_models/stage2/results/s20_calib_ref.npz",
+  "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+  "n": 64,
+  "rule": "all-texts",
+  "rule_text": "mean cos >= 0.99 vs ref for the final vectors and for all 64 through each head",
+  "ref": {
+   "final": {
+    "mean": 0.999817,
+    "min": 0.999263
+   },
+   "state_head": {
+    "mean": 0.999404,
+    "min": 0.998588
+   },
+   "action_head": {
+    "mean": 0.999381,
+    "min": 0.998343
+   },
+   "role_matched": {
+    "mean": 0.999405,
+    "min": 0.998845
+   },
+   "state_head_on_questions": {
+    "mean": 0.99935,
+    "min": 0.998845
+   },
+   "action_head_on_turns": {
+    "mean": 0.999459,
+    "min": 0.999011
+   }
+  },
+  "ref_bf16": {
+   "final": {
+    "mean": 0.999777,
+    "min": 0.999112
+   },
+   "state_head": {
+    "mean": 0.99929,
+    "min": 0.996246
+   },
+   "action_head": {
+    "mean": 0.999293,
+    "min": 0.997734
+   },
+   "role_matched": {
+    "mean": 0.999314,
+    "min": 0.997734
+   },
+   "state_head_on_questions": {
+    "mean": 0.999258,
+    "min": 0.998703
+   },
+   "action_head_on_turns": {
+    "mean": 0.999371,
+    "min": 0.997734
+   }
+  },
+  "ntok": {
+   "mismatches": 0
+  },
+  "ok_all_texts": true,
+  "ok_role_matched": true,
+  "calib_ok": true,
+  "lm_states": {
+   "n": 64,
+   "tokens": 1322,
+   "mean_tokens": 20.66,
+   "truncated": 0,
+   "rows_rescaled_for_fp16": {},
+   "model": "mlx-community/Qwen3-8B-8bit",
+   "backend": "MlxLM"
+  }
+ },
+ "calib_ok": true,
+ "label": "calibrated",
+ "lm_states": {
+  "n": 7406,
+  "tokens": 215319,
+  "mean_tokens": 29.07,
+  "truncated": 0,
+  "rows_rescaled_for_fp16": {},
+  "model": "mlx-community/Qwen3-8B-8bit",
+  "backend": "MlxLM"
+ },
+ "locomo": {
+  "n_questions": 1536,
+  "recall10": {
+   "clm": 0.192646,
+   "raw": 0.013244,
+   "clm_fused": 0.499542,
+   "raw_fused": 0.128386,
+   "bge": 0.66217,
+   "bge_fused": 0.655345,
+   "bge_fused_plus_clm": 0.679312,
+   "bm25": 0.560696
+  },
+  "by_category": {
+   "multi-hop": {
+    "clm": 0.151641,
+    "raw": 0.008012,
+    "clm_fused": 0.260235,
+    "bge_fused": 0.395955
+   },
+   "when": {
+    "clm": 0.099688,
+    "raw": 0.004673,
+    "clm_fused": 0.515317,
+    "bge_fused": 0.759346
+   },
+   "inference": {
+    "clm": 0.088502,
+    "raw": 0.022645,
+    "clm_fused": 0.248111,
+    "bge_fused": 0.346387
+   },
+   "single-hop": {
+    "clm": 0.25327,
+    "raw": 0.017241,
+    "clm_fused": 0.601268,
+    "bge_fused": 0.736425
+   }
+  }
+ },
+ "bge_check": {
+  "bge_fused": 0.655345,
+  "stage1": 0.6553,
+  "tol": 0.005,
+  "ok": true,
+  "bge_dense": 0.66217
+ },
+ "front_matter_bar": {
+  "what": "CLM fused with BM25 minus bge-small rank-16 fused with BM25, per question (preview with this machine's bge-small vectors)",
+  "verdict": "s23b_clm_ranker.json, arm FRONT (the single source of this bar's verdict)",
+  "mean": -0.155804,
+  "ci": [
+   -0.177156,
+   -0.134083
+  ],
+  "signflip_p_one_sided": 1.0,
+  "label": "calibrated"
+ },
+ "reported": {
+  "clm_minus_bge_dense": {
+   "mean": -0.469523,
+   "ci": [
+    -0.492529,
+    -0.441534
+   ],
+   "signflip_p_one_sided": 1.0
+  },
+  "raw_minus_bge_dense": {
+   "mean": -0.648926,
+   "ci": [
+    -0.676599,
+    -0.618938
+   ],
+   "signflip_p_one_sided": 1.0
+  },
+  "bge_fused_plus_clm_minus_bge_fused": {
+   "mean": 0.023967,
+   "ci": [
+    0.007831,
+    0.040523
+   ],
+   "signflip_p_one_sided": 0.011719
+  },
+  "clm_minus_raw": {
+   "mean": 0.179402,
+   "ci": [
+    0.161745,
+    0.197015
+   ],
+   "signflip_p_one_sided": 0.000977
+  }
+ },
+ "quant": "mlx affine 8-bit, group 64",
+ "scores_files": {
+  "files": [
+   {
+    "path": "results/s23_clm_scores.npz",
+    "keys": 20,
+    "mb": 2.684
+   }
+  ],
+  "s23b_scores_arg": "results/s23_clm_scores.npz"
+ },
+ "seconds": 2138
+}
