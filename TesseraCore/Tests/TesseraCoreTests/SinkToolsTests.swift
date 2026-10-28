@@ -57,5 +57,9 @@ struct SinkToolsTests {
         let phrases = ElementCatalog.calls(room: "galley", place: .actionWord)
             .filter { ["washDishes", "addDishes"].contains($0.name) }.flatMap(\.phrases)
         #expect(!phrases.contains { ["wash", "used", "dirty", "in the sink"].contains($0) })
+        let calls = ElementCatalog.calls(room: "galley", place: .actionWord)
+        let wash = calls.filter { $0.name == "washDishes" }.flatMap(\.phrases)
+        let add = calls.filter { $0.name == "addDishes" }.flatMap(\.phrases)
+        #expect(!wash.contains { line in add.contains { line.contains($0) } })
     }
 }
