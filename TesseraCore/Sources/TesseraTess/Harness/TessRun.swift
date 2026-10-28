@@ -163,6 +163,14 @@ public final class TessRun {
         return stream
     }
 
+    /// Stops the run in flight (Cancel under "Asking Claude."): its work is cancelled and the host hears "Cancelled".
+    /// Ghost rows it already made stay for him to keep or drop.
+    public func cancel() {
+        guard let active = current, !active.done else { return }
+        active.task?.cancel()
+        emit(.failed("Cancelled"), active)
+    }
+
     private func subscribe(_ active: Active) -> AsyncStream<TessRunEvent> {
         AsyncStream { continuation in
             for event in active.buffer {
@@ -761,7 +769,13 @@ public final class TessRun {
         }
         let result = current.try(asked.calls, expecting: asked.expecting,
                                  scope: MemoryScope(agent, policy: door.policy()), onDevice: onDevice)
-        if result.failed.contains(where: { if case .overBudget = $0 { true } else { false } }) {
+        if result.failed.contains(where: {
+            if case .overBudget = $0 {
+                true
+            } else {
+                false
+            }
+        }) {
             // Nothing says the change is safe: no more tries, and no write for the rest of the ask.
             rehearsal = (runID, current, true)
             return (Self.slowRehearsal, true)
