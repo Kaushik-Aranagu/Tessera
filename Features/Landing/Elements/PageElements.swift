@@ -193,9 +193,9 @@ struct ItemPageElement: TesseraElement {
     static let siblingsBody = SiblingsBody(rows: Array(RankedPageElement.sample.prefix(7)), current: "c")
 
     static let facts = [
-        ItemFact(number: "80", unit: "kg", label: "Opens at"),
-        ItemFact(number: "4", unit: "sets", label: "Planned"),
+        ItemFact(number: "80", unit: "kg", label: "Today"),
         ItemFact(number: "100", unit: "kg", label: "Best"),
+        ItemFact(number: "112", unit: "kg", label: "Est. 1 rep"),
     ]
 
     var body: ItemBody {
@@ -272,7 +272,8 @@ struct ItemPageElement: TesseraElement {
                                                            width: unitWidth - 3, height: numberRect.height),
                                               size: unitSize, ink: .ink2, isUnit: true))
             }
-            render.runs.append(ElementRun(text: fact.label.uppercased(), rect: ItemPageLayout.labelRect(in: column),
+            render.runs.append(ElementRun(text: fact.label.uppercased(),
+                                          rect: ItemPageLayout.labelRect(in: column, scale: request.typeScale),
                                           size: ItemPageLayout.labelSize, ink: .planned, isUnit: true))
             render.shown.append(fact.label)
         }

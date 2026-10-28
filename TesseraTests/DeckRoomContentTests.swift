@@ -43,9 +43,9 @@ struct DeckRoomContentTests {
         pages.doors["library"] = DeckDoorPage(line: "12 exercises", rows: [])
         pages.items[lift] = DeckItem(
             title: "Bench Press", line: "Next: set 2, 80 kg \u{00D7} 5",
-            facts: [ItemFact(number: "80", unit: "kg", label: "Opens at"),
-                    ItemFact(number: "3", unit: "sets", label: "Planned"),
-                    ItemFact(number: "100", unit: "kg", label: "Best")],
+            facts: [ItemFact(number: "80", unit: "kg", label: "Today"),
+                    ItemFact(number: "100", unit: "kg", label: "Best"),
+                    ItemFact(number: "112", unit: "kg", label: "Est. 1 rep")],
             sets: SetsBody(lines: [SetLine(id: "s0", label: "Set 1", weight: "80", unit: "kg", reps: "5", state: .done),
                                    SetLine(
                                        id: "s1",
@@ -151,7 +151,7 @@ struct DeckRoomContentTests {
             Issue.record("Bench draws the sets body")
             return
         }
-        #expect(data.facts.map(\.label) == ["Opens at", "Planned", "Best"])
+        #expect(data.facts.map(\.label) == ["Today", "Best", "Est. 1 rep"])
         #expect(sets.lines.map(\.state) == [.done, .next])
         guard case let .pageTitle(title)? = item[.doorTitle]?.payload,
               case let .navWord(word)? = item[.navWord]?.payload

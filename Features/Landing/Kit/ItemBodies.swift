@@ -10,11 +10,11 @@ enum SetState: String, Equatable, Sendable {
     case done
     /// The set to do next: the room colour.
     case next
-    /// Still to come: ink.
+    /// Still to come: ink 2 for the label, ink for the numbers.
     case todo
 }
 
-/// One line of the sets body: "Warm-up 40 kg x 8".
+/// One line of the sets body: "Warm-up 40 kg, 8".
 struct SetLine: Identifiable, Equatable, Sendable {
     let id: String
     var label: String
@@ -24,7 +24,8 @@ struct SetLine: Identifiable, Equatable, Sendable {
     var state: SetState
 }
 
-/// Warm-up and sets, done in green, the next set in the room colour; last time underneath.
+/// Warm-up and sets, done in green, the next set in the room colour; last time underneath (sheet 284 board: 44 pt
+/// lines, the label small on the left, the load in Outfit Light on the right, then a 15 pt note 12 pt below).
 struct SetsBody: ItemBodyKind {
     static let name = "sets"
 
@@ -33,21 +34,23 @@ struct SetsBody: ItemBodyKind {
     var lastTime = ""
     var empty = "No sets yet"
 
-    /// The lines the body can hold: at most eight, so a row is never under 28 pt.
+    /// The lines the body can hold: at most eight.
     static let maxLines = 8
-    static let lastHeight: CGFloat = 58
-    static let rowMax: CGFloat = 46
-    static let labelWidth: CGFloat = 130
-    static let weightWidth: CGFloat = 124
-    static let numberSize: CGFloat = 24
-    static let labelSize: CGFloat = 17
+    static let rowMax: CGFloat = 44
+    static let noteGap: CGFloat = 12
+    static let noteHeight: CGFloat = 22
+    static let labelWidth: CGFloat = 96
+    static let numberSize: CGFloat = 20
+    static let labelSize: CGFloat = 14
+    static let notePrefix = "Last time: "
 
     var shown: [SetLine] {
         Array(lines.prefix(Self.maxLines))
     }
 
     func rowHeight(in frame: CGRect) -> CGFloat {
-        let area = max(0, frame.height - Self.lastHeight - 8)
+        let note = lastTime.isEmpty ? 0 : Self.noteGap + Self.noteHeight
+        let area = max(0, frame.height - note)
         return min(Self.rowMax, area / CGFloat(max(shown.count, 1)))
     }
 
@@ -58,41 +61,45 @@ struct SetsBody: ItemBodyKind {
             let top = frame.minY + CGFloat(index) * height
             let ink = Self.ink(line.state)
             let label = Self.labelSize * scale
-            render.runs.append(ElementRun(text: line.label, rect: CGRect(x: frame.minX, y: top + 2,
-                                                                         width: Self.labelWidth - 8,
-                                                                         height: height - 4),
-                                          size: label, bold: line.state == .next, ink: ink))
             let number = min(Self.numberSize * scale, height * 0.62)
-            let weightX = frame.minX + Self.labelWidth
-            render.runs.append(ElementRun(text: line.weight, rect: CGRect(x: weightX, y: top + 2,
-                                                                          width: Self.weightWidth - 40,
-                                                                          height: height - 4),
-                                          size: number, ink: ink))
-            render.runs.append(ElementRun(text: line.unit, rect: CGRect(x: weightX + Self.weightWidth - 38, y: top + 2,
-                                                                        width: 36, height: height - 4),
-                                          size: max(10, number / 2), ink: .ink2, isUnit: true))
-            render.runs.append(ElementRun(text: line.reps, rect: CGRect(x: weightX + Self.weightWidth + 8, y: top + 2,
-                                                                        width: 60, height: height - 4),
-                                          size: number, ink: ink))
-            render.shown.append(line.label)
-            if DoorText.width(line.label, size: label, bold: true) > Self.labelWidth - 8 {
+            let unitSize = max(10, number / 2)
+            let numberWidth = DoorText.width(line.weight, size: number, bold: false)
+            let unitWidth = line.unit.isEmpty ? 0 : DoorText.width(line.unit, size: unitSize, bold: false) + 3
+            let repsText = ", \(line.reps)"
+            let repsWidth = DoorText.width(repsText, size: number, bold: false)
+            let load = numberWidth + unitWidth + repsWidth
+            let labelWidth = min(frame.width - load - 12, Self.labelWidth * max(scale, 1))
+            render.runs.append(ElementRun(text: line.label, rect: CGRect(x: frame.minX, y: top + 2, width: labelWidth,
+                                                                         height: height - 4),
+                                          size: label, bold: line.state == .next,
+                                          ink: line.state == .todo ? .ink2 : ink))
+            if DoorText.width(line.label, size: label, bold: true) > labelWidth {
                 render.clipped = true
             }
+            var x = frame.maxX - load
+            render.runs.append(ElementRun(text: line.weight, rect: CGRect(x: x, y: top + 2, width: numberWidth,
+                                                                          height: height - 4),
+                                          size: number, ink: ink))
+            x += numberWidth
+            if unitWidth > 0 {
+                render.runs.append(ElementRun(text: line.unit, rect: CGRect(x: x + 3, y: top + 2,
+                                                                            width: unitWidth - 3, height: height - 4),
+                                              size: unitSize, ink: .ink2, isUnit: true))
+                x += unitWidth
+            }
+            render.runs.append(ElementRun(text: repsText, rect: CGRect(x: x, y: top + 2, width: frame.maxX - x,
+                                                                       height: height - 4),
+                                          size: number, ink: ink))
+            render.shown.append(line.label)
         }
         render.lost = lines.count - shown.count
         if !lastTime.isEmpty {
-            let top = frame.maxY - Self.lastHeight
-            render.runs.append(ElementRun(
-                text: "Last time",
-                rect: CGRect(x: frame.minX, y: top, width: 200, height: 14),
-                size: ItemPageLayout.labelSize,
-                ink: .ink2,
-                isUnit: true
-            ))
-            render.runs.append(ElementRun(text: lastTime, rect: CGRect(x: frame.minX, y: top + 18,
-                                                                       width: frame.width, height: 24),
+            let top = frame.minY + CGFloat(shown.count) * height + Self.noteGap
+            let note = Self.notePrefix + lastTime
+            render.runs.append(ElementRun(text: note, rect: CGRect(x: frame.minX, y: top, width: frame.width,
+                                                                   height: Self.noteHeight),
                                           size: 15, ink: .ink2))
-            if DoorText.width(lastTime, size: 15, bold: false) > frame.width {
+            if DoorText.width(note, size: 15, bold: false) > frame.width {
                 render.clipped = true
             }
         }
@@ -188,35 +195,24 @@ private struct SetsBodyView: View {
             let frame = CGRect(origin: .zero, size: proxy.size)
             let scale = RankedLayout.typeScale(typeSize)
             let height = data.rowHeight(in: frame)
-            ZStack(alignment: .topLeading) {
+            VStack(alignment: .leading, spacing: 0) {
                 if data.shown.isEmpty {
                     Text(data.empty)
                         .font(.custom("Figtree", size: 17).weight(.medium))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 } else {
-                    VStack(spacing: 0) {
-                        ForEach(data.shown) { line in
-                            SetLineView(line: line, accent: accent, scale: scale)
-                                .frame(height: height)
-                        }
+                    ForEach(data.shown) { line in
+                        SetLineView(line: line, accent: accent, scale: scale)
+                            .frame(height: height)
                     }
-                    .frame(width: proxy.size.width, alignment: .topLeading)
-                }
-                if !data.lastTime.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Last time")
-                            .font(.custom("Figtree", fixedSize: ItemPageLayout.labelSize).weight(.semibold))
-                            .textCase(.uppercase)
-                            .tracking(1.1)
-                            .foregroundStyle(Theme.Colors.RankInk.planned)
-                        Text(data.lastTime)
+                    if !data.lastTime.isEmpty {
+                        Text(SetsBody.notePrefix + data.lastTime)
                             .font(.custom("Figtree", fixedSize: 15 * min(scale, 1.2)))
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
+                            .padding(.top, SetsBody.noteGap)
                     }
-                    .frame(width: proxy.size.width, height: SetsBody.lastHeight, alignment: .topLeading)
-                    .offset(y: proxy.size.height - SetsBody.lastHeight)
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -233,40 +229,32 @@ private struct SetLineView: View {
     var body: some View {
         let color = Self.color(line.state, accent: accent)
         let number = SetsBody.numberSize * scale
-        HStack(spacing: 0) {
+        let weight: Font.Weight = line.state == .next ? .regular : .light
+        HStack(alignment: .lastTextBaseline, spacing: 0) {
             Text(line.label)
                 .font(.custom("Figtree", fixedSize: SetsBody.labelSize * scale)
-                    .weight(line.state == .next ? .bold : .medium))
-                .foregroundStyle(color)
+                    .weight(line.state == .next ? .semibold : .regular))
+                .foregroundStyle(line.state == .todo ? Theme.Colors.inkSecondary : color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-                .frame(width: SetsBody.labelWidth, alignment: .leading)
-            HStack(alignment: .lastTextBaseline, spacing: 3) {
-                Text(line.weight)
-                    .font(.custom("Outfit", fixedSize: number).weight(.light))
-                    .foregroundStyle(color)
+            Spacer(minLength: 8)
+            Text(line.weight)
+                .font(.custom("Outfit", fixedSize: number).weight(weight))
+                .foregroundStyle(color)
+            if !line.unit.isEmpty {
                 Text(line.unit)
                     .font(.custom("Figtree", fixedSize: max(10, number / 2)).weight(.regular))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .foregroundStyle(line.state == .todo ? Theme.Colors.inkSecondary : color)
+                    .padding(.leading, 3)
             }
-            .lineLimit(1)
-            .fixedSize()
-            .frame(width: SetsBody.weightWidth, alignment: .trailing)
-            Spacer(minLength: 8)
-            HStack(alignment: .lastTextBaseline, spacing: 3) {
-                Text("\u{00D7}")
-                    .font(.custom("Figtree", fixedSize: max(10, number / 2)).weight(.regular))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                Text(line.reps)
-                    .font(.custom("Outfit", fixedSize: number).weight(.light))
-                    .foregroundStyle(color)
-            }
-            .lineLimit(1)
-            .fixedSize()
+            Text(", \(line.reps)")
+                .font(.custom("Outfit", fixedSize: number).weight(weight))
+                .foregroundStyle(color)
         }
+        .lineLimit(1)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(line.label), \(line.weight) \(line.unit) for \(line.reps)\(Self.say(line.state))")
+        .accessibilityLabel("\(line.label), \(line.weight) \(line.unit), \(line.reps) reps\(Self.say(line.state))")
     }
 
     private static func say(_ state: SetState) -> String {

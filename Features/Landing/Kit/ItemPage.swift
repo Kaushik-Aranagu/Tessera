@@ -55,13 +55,22 @@ enum ItemPageLayout {
         }
     }
 
-    /// The number's rect inside its column (top), and the label's under it.
-    static func numberRect(in column: CGRect, scale: CGFloat) -> CGRect {
-        CGRect(x: column.minX, y: column.minY, width: column.width - 6, height: min(numberSize * scale * 1.2, 40))
+    /// Number, 3 pt, label: the block the column centres in the Facts row's 64 pt.
+    static func blockHeight(scale: CGFloat) -> CGFloat {
+        numberSize * scale * 1.1 + 3 + labelHeight
     }
 
-    static func labelRect(in column: CGRect) -> CGRect {
-        CGRect(x: column.minX, y: column.minY + 42, width: column.width - 6, height: 16)
+    static let labelHeight: CGFloat = 14
+
+    /// The number's rect inside its column, and the label's under it; the pair is centred in the row.
+    static func numberRect(in column: CGRect, scale: CGFloat) -> CGRect {
+        let top = column.minY + max(0, (column.height - blockHeight(scale: scale)) / 2)
+        return CGRect(x: column.minX, y: top, width: column.width - 6, height: numberSize * scale * 1.1)
+    }
+
+    static func labelRect(in column: CGRect, scale: CGFloat = 1) -> CGRect {
+        let number = numberRect(in: column, scale: scale)
+        return CGRect(x: column.minX, y: number.maxY + 3, width: column.width - 6, height: labelHeight)
     }
 }
 
@@ -155,15 +164,16 @@ struct FactsRow: View {
                 ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
                     Group {
                         if facts.indices.contains(index) {
-                            FactCell(fact: facts[index], color: index == 0 ? accent : Theme.Colors.ink, scale: scale)
+                            FactCell(fact: facts[index], color: index == 0 ? accent : Theme.Colors.ink, scale: scale,
+                                     weight: index == 0 ? .regular : .light)
                         } else {
                             Color.clear
                         }
                     }
-                    .frame(width: column.width, alignment: .topLeading)
+                    .frame(width: column.width, height: proxy.size.height, alignment: .leading)
                 }
             }
-            .frame(width: proxy.size.width, alignment: .topLeading)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
         }
         .accessibilityElement(children: .combine)
     }
@@ -173,9 +183,10 @@ private struct FactCell: View {
     let fact: ItemFact
     let color: Color
     let scale: CGFloat
+    var weight: Font.Weight = .light
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 3) {
             HStack(alignment: .lastTextBaseline, spacing: 3) {
                 if fact.about {
                     Text("about")
@@ -183,7 +194,7 @@ private struct FactCell: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
                 Text(fact.number)
-                    .font(.custom("Outfit", fixedSize: ItemPageLayout.numberSize * scale).weight(.light))
+                    .font(.custom("Outfit", fixedSize: ItemPageLayout.numberSize * scale).weight(weight))
                     .foregroundStyle(color)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -199,7 +210,7 @@ private struct FactCell: View {
             Text(fact.label)
                 .font(.custom("Figtree", fixedSize: ItemPageLayout.labelSize).weight(.semibold))
                 .textCase(.uppercase)
-                .tracking(1.1)
+                .tracking(1.05)
                 .foregroundStyle(Theme.Colors.RankInk.planned)
                 .lineLimit(1)
         }

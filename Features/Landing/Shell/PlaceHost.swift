@@ -430,7 +430,7 @@ private struct PageTitleView: View {
                     weight: .bold)
                 .frame(height: 46, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
-            FitLine(forms: FitLine.cuts(title.line), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+            FitLine(forms: FitLine.cuts(title.line), size: 15, color: Theme.Colors.inkSecondary, weight: .regular)
                 .frame(height: 22, alignment: .leading)
         }
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)

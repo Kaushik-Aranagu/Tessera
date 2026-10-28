@@ -244,7 +244,8 @@ private struct RankedRowView: View {
             HStack(alignment: .center, spacing: RankedLayout.gap) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(row.title)
-                        .font(.custom("Figtree", fixedSize: layout.titleSize).weight(index == 0 ? .bold : .medium))
+                        .font(.custom("Figtree", fixedSize: layout.titleSize).weight(index == 0 ? .bold : .semibold))
+                        .tracking(-0.015 * layout.titleSize)
                         .foregroundStyle(row.isPrivate ? Theme.Colors.inkSecondary : ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)

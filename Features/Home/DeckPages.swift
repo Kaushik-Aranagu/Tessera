@@ -180,13 +180,15 @@ extension DeckPages {
         let lines = DeckSets.lines(last: sets(before), today: sets(logged), planned: count)
         let open = (before ?? logged)?.sets.first.map { DeckSets.weightText($0.weight) }
         let best = lift.best.map { DeckSets.weightText($0.weight) }
+        let estimate = lift.best.flatMap { $0.e1RM > 0 ? DeckSets.weightText($0.e1RM) : nil }
         return DeckItem(
             title: lift.exercise.name,
             line: DeckSets.line(for: lines, hasHistory: true),
             facts: [
-                ItemFact(number: open?.number ?? "None", unit: open?.unit ?? "", label: "Opens at"),
-                ItemFact(number: "\(min(max(count, 1), 6))", unit: "sets", label: "Planned"),
+                ItemFact(number: open?.number ?? "None", unit: open?.unit ?? "",
+                         label: planned[lift.exercise.id] == nil ? "Last" : "Today"),
                 ItemFact(number: best?.number ?? "None", unit: best?.unit ?? "", label: "Best"),
+                ItemFact(number: estimate?.number ?? "None", unit: estimate?.unit ?? "", label: "Est. 1 rep"),
             ],
             sets: SetsBody(lines: lines, lastTime: DeckSets.lastTime(sets(before)))
         )
@@ -234,8 +236,7 @@ extension DeckPages {
             return RankedRow(id: "\(TrainingWallTarget.exercise(lift.exercise.id).id)#l", title: lift.exercise.name,
                              value: best?.number ?? "", unit: best?.unit ?? "", sub: "Last \(day(lift.last))")
         }
-        // Bests: the newest bests first; one set in the last month is new, in gold.
-        let monthAgo = calendar.date(byAdding: .day, value: -30, to: now) ?? now
+        // Bests: the newest bests first, every one in gold (best and new are gold).
         let bests = lifts.compactMap { lift -> (Lift, TrainingLedger.LoggedSet, Date)? in
             guard let best = lift.best, best.weight > 0,
                   let when = lift.sessions.first(where: { $0.sets.contains { $0.id == best.id } })?.date
@@ -246,7 +247,7 @@ extension DeckPages {
             let text = DeckSets.weightText(best.weight)
             return RankedRow(id: "best:\(lift.exercise.id.uuidString)#b", title: lift.exercise.name, value: text.number,
                              unit: text.unit, sub: "\(DeckSets.repsText(best.reps)) reps, \(day(when))",
-                             state: when >= monthAgo ? .best : .none)
+                             state: .best)
         }
 
         // Plan: the routines, today's first.
