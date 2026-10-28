@@ -159,7 +159,7 @@ Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never
 
 - 3 to 4 colors per page, chosen by meaning, never decoration. Color goes on type and 1-2 pt lines only.
 - Room accent: title and action word. Kind color: that kind's name, count, focus. State colors are fixed: done green (25803D / 8FC9A0, Money uses sage), late or needs care wine (9A2541 / EE8E9C), best or new gold (7E6A1E / D9C27A), planned or private slate (34506F / A7BCD6).
-- Room accents (light / dark): training 0B62AE / 8FB0EE, kitchen 93611A / C49A5E, lists 5E6B1F / B5BE7A, routines 8E4A78 / D59AC4, notes plum 8A4570 / E3A3CB, money sage 3F7A62 / 8DBFA7, weather sky amber C9772E / E8A06A. Settings uses ink (no accent) plus the kind colors.
+- Room accents (light / dark): training 0B62AE / 8FB0EE, kitchen 93611A / C49A5E, lists 5E6B1F / B5BE7A, routines 8E4A78 / D59AC4, notes violet 5B2277 / BB70E1, money sage 3F7A62 / 8DBFA7, weather sky amber C9772E / E8A06A. Settings uses ink (no accent) plus the kind colors.
 - Nothing within the Ember distance of Tess's Ember (FF5A26 light / FF6B3D dark), except the room currently cueing her.
 - The word wall may use many colors; every other element of the page still holds 3-4.
 
@@ -175,7 +175,7 @@ Cards, pills, buttons shapes, bars, rings, gauges, middle dots, filled dots, dec
 4. Training, Kitchen, Lists, Money, Settings have no approved keystone. Interim: the shared word wall (246 engine). Money wall shows no amounts and Money stays off Home.
 5. Money "About $40 a day left this month" is dropped (133 says no "left to spend"). Brief reads the due line only.
 6. Ember: use FF5A26 / FF6B3D (215 final). 241's old values are ignored; its ΔE column is rechecked in QA review.
-7. Notes color: plum 8A4570 / E3A3CB per 246.
+7. Notes color: violet 5B2277 / BB70E1 (Kaushik's pick, Oct 27, so the Log no longer matches the Watch's plum). It replaces the 246 plum 8A4570 / E3A3CB.
 8. Routines off the phone: private routines only show as "Private routine", all others by name; inside the room names read normally.
 9. Swipe left = Not now overrides older left-swipe Remove or Delete; those move to an action-word drag option or an editor.
 10. Counters: data values like "6 of 14" are not allowed on landings. Use "6 left" or the word form.
@@ -190,7 +190,7 @@ Cards, pills, buttons shapes, bars, rings, gauges, middle dots, filled dots, dec
 | Room | Accent | Keystone | Doors | Action word | Empty state |
 |---|---|---|---|---|---|
 | Bridge | none | mosaic | the apps list | none (Undo line) | per 236 |
-| Log | notes plum 8A4570 / E3A3CB | word wall | All notes, Lists, Ideas, From Tess, Voice memos, Pinned, Mentions, Private, Archive | New note | "Write the first thing down." |
+| Log | notes violet 5B2277 / BB70E1 | word wall | All notes, Lists, Ideas, From Tess, Voice memos, Pinned, Mentions, Private, Archive | New note | "Write the first thing down." |
 | Lookout | sky amber C9772E / E8A06A | skypiece | Hours, Week, Air | Rain alert | per 243 |
 | Deck | 0B62AE / 8FB0EE | blackboard | This week, Library | Start Push A (Log a walk on a rest day) | "Rest today. Next is Saturday." |
 | Galley | 93611A / C49A5E | pass rail | Tonight, Pantry, Recipes, Groceries, Leftovers | Cook (Dishes as a foot word) | "Tonight?" with "nothing planned yet" |

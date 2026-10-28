@@ -143,3 +143,21 @@ The board's Chart room now has seven sentences. The new one comes before "Let me
 - Reduce Motion: the change goes at once, with no line
 - Builder A: the reverse drying line is the same view with its trim end animated from 1 to 0, inside `withTesseraAnimation` with an ease-in curve. The op group is marked `undone` when the line reaches 0, not when Undo is tapped, so the store and the screen agree. No haptic on the way out
 - Probe: `docs/design/boards/r66/pdu.js` (ghost with the line running back, then gone and the outline back; no Undo while the next sentence dries)
+
+## Sheet 370: Allow waits
+
+- A change that widens what the room can do now waits for him. When "Let me mark one watered" has dried, the receipt no longer says "Watered, set". It reads "Waiting for your Allow" with "Not now", and the reach line above it, "This room can now mark plants watered" with Allow, is the only way forward
+- Until he taps Allow, nothing in the room can write: the widget place keeps its outline (sheet 358, it isn't set yet), and the action word stays on "Say anything else" instead of "Watered the orchid"
+- Not now plays the change backwards (sheet 368) and the room is as it was before the sentence
+- Allow sets it. The outline lets go, the action word turns to "Watered the orchid", and the receipt then reads "Watered, set" with Undo. Undo takes back the change and the grant together, so the room can't keep a reach he has taken back
+- Before this, the receipt said "set" while the room still waited for Allow, so the screen claimed something the store hadn't done. The receipt now only ever names what is true
+- Core: a patch whose validator result is `needsAllow` lands as a pending op group. It is committed (and the receipt says "set") only on Allow; Not now drops it. Undo of a committed reach patch reverts the grant in the same op group. Builder A: the receipt takes its word ("Not now" or "Undo") from that state
+- Probe: `docs/design/boards/r66/pal2.js` (waiting, Not now back to six sentences, Allow then "Watered, set", Undo back with no reach)
+
+## Ruling: the Log is violet
+
+- Kaushik's pick, 5:39 PM PDT Oct 27, on the card from sheet 365: the Log gets its own color, deep violet 5B2277 light / BB70E1 dark. The Watch keeps its plum 8E4A78 / D59AC4, which is in the locked woodland
+- Watch to Log is now ΔE00 16.5 in both themes (it was 2.0 and 3.1). Violet sits ΔE76 29 or more from every room in light and 40 or more in dark, and ΔE00 16 or more from every Ember color
+- It replaces the plum 8A4570 / E3A3CB the 246 landing proposed. The Legs plum in the Deck and the word wall's twelve brick colors are kind colors, not the room's, and stay as they are
+- Phone (Builder B): `Features/LayoutMode/LayoutRooms.swift` `.log` to (0x5B2277, 0xBB70E1); `Features/Notes/NotesWallLanding.swift` `plum(_:)` to violet, with its comment; `Features/Tess/SoulRoomTint.swift` `.notes, .lists` to violet. Nothing else changes
+- Board: `--notes` is 5B2277 / BB70E1. Probe: `docs/design/boards/r66/plg.js` (the Log's title in violet in both looks)

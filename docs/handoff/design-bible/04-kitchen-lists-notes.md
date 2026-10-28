@@ -269,7 +269,7 @@ Its visuals (‹ KITCHEN, Title 44, wet cobalt ghosts, USUALLY caps) are SUPERSE
 # NOTES
 
 ## Palette
-- Room color is **plum 8A4570 / E3A3CB**, used on the 246 landing. Violet 5B3FB8 is retired: it was ΔE00 6.1 from Ember. Confirming plum is still open.
+- Room color is **violet 5B2277 / BB70E1** (Kaushik's pick, Oct 27; sheet 370 ruling). The 246 plum 8A4570 / E3A3CB read as one with the Watch's 8E4A78. Violet 5B3FB8 stays retired: it was ΔE00 6.1 from Ember.
 - Doors' meaning colors:
   - All notes: ink.
   - Ideas: room.
