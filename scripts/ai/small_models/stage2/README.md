@@ -19,6 +19,8 @@ Every script's docstring holds its protocol and bar; anything added after a resu
 | `s23_clm.py` | 2.3 CLM vectors and score matrices, calibration, CLM-alone and fused reads | Mac, env B |
 | `s23b_clm_ranker.py` | 2.3 the pass bar: the s111 ranker on the CLM list against the bge-small ranker | cloud |
 | `s24_tap.py` | 2.4 the projector Π per tap, C3 and P11 | Mac, env B (pilot in the cloud) |
+| `s23c_clm_variants.py` | 2.3 post hoc: other ways to use CLM's heads (swapped, one head on both sides, an instruction); decides nothing | Mac, env B |
+| `s24c_pi_scaling.py` | 2.4 pilot diagnostic: Π against the amount of LongMemEval-S training text, Qwen3-0.6B only; decides nothing | cloud |
 
 `results/r16_bridges.npz` holds the stage 1 rank-16 bridges the Mac scripts read with.
 
@@ -73,6 +75,12 @@ cd scripts/ai/small_models/stage2
 - `s20_calib_ref.py` streams Qwen3-8B one layer at a time; on Qwen3-0.6B the streamed forward equals the full
   forward (max difference 0.0 in fp32). bf16 compute against fp32: mean cosine 0.99991.
 - `s23_clm.py` and `s24_tap.py` ran end to end on Qwen3-0.6B. The 2.4 pilot (`results/s24_tap_pilot_qwen3-0.6b.json`,
-  decides nothing): the hidden-state read reaches 0.375 against the text read's 0.662, and the best tap is the last.
+  decides nothing): on Qwen3-0.6B the hidden-state read reaches 0.375 against the text read's 0.662, and the best tap
+  is the last. This describes the 0.6B pilot only; on Qwen3-8B the closest tap is block 9 (see the results).
 - Known limits: the score files store float16, so a few scores tie (recorded in s23b's output); the s111 ranker can
   move by up to about 0.005 from last-bit changes in its inputs, so a borderline result is reported as borderline.
+
+## Results
+
+All four tests ran on Oct 28, 2026. Verdicts, what each does and does not show, and the options:
+`docs/research/two-plane-memory/6-stage2-results.md`. Charts: https://claude.ai/artifact/4aCLFzoq5PuYbnpJvgb2QE.
