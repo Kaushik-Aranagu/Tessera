@@ -320,7 +320,7 @@ final class ChartRoomModel {
     @ObservationIgnored var onArchived: (() -> Void)?
     @ObservationIgnored private var foldTask: Task<Void, Never>?
     @ObservationIgnored private var takeDownRecord: OpRecord?
-    static let archivedKey = "chartRoom.archived"
+    nonisolated static let archivedKey = "chartRoom.archived"
 
     private func storedDocument() -> ChartDoc? {
         guard let engine else { return nil }
