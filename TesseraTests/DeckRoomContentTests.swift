@@ -33,7 +33,29 @@ struct DeckRoomContentTests {
                                      needs: [["Push A today", "Bench"], ["2 done", "1 to go"], ["8 this month", ""]],
                                      widget: [WidgetItem(id: "today", header: "Tonight", big: "PUSH A"),
                                               WidgetItem(id: "week", header: "This week", big: "2")])
-        return DeckRoomContent.Facts(wall: wall, deck: deck, rows: DeckRoomContent.Facts.rows(wall: wall, deck: deck))
+        var pages = DeckPages()
+        let lift = TrainingWallTarget.exercise(exercise).id
+        pages.doors["today"] = DeckDoorPage(line: "Push, 4 lifts", rows: [
+            RankedRow(id: "\(lift)#t0", title: "Bench Press", value: "80", unit: "kg", sub: "3 sets of 5"),
+            RankedRow(id: "page#t1", title: "Row", state: .done),
+        ])
+        pages.doors["week"] = DeckDoorPage(line: "1 trained", rows: [RankedRow(id: "week#1", title: "Tuesday")])
+        pages.doors["library"] = DeckDoorPage(line: "12 exercises", rows: [])
+        pages.items[lift] = DeckItem(
+            title: "Bench Press", line: "Next: set 2, 80 kg \u{00D7} 5",
+            facts: [ItemFact(number: "80", unit: "kg", label: "Opens at"),
+                    ItemFact(number: "3", unit: "sets", label: "Planned"),
+                    ItemFact(number: "100", unit: "kg", label: "Best")],
+            sets: SetsBody(lines: [SetLine(id: "s0", label: "Set 1", weight: "80", unit: "kg", reps: "5", state: .done),
+                                   SetLine(id: "s1", label: "Set 2", weight: "80", unit: "kg", reps: "5", state: .next)],
+                           lastTime: "80 kg \u{00D7} 5, 5, 4")
+        )
+        return DeckRoomContent.Facts(wall: wall, deck: deck, rows: DeckRoomContent.Facts.rows(wall: wall, deck: deck),
+                                     pages: pages)
+    }
+
+    static var benchRoute: ShellRoute {
+        .item("deck", "today", "\(TrainingWallTarget.exercise(exercise).id)#t0")
     }
 
     @Test func openingADoorLeavesTheBoardUntouched() {
@@ -81,11 +103,102 @@ struct DeckRoomContentTests {
         for place in [Place.switcher, .needs, .widget, .glyph, .dial, .doorSummary, .tess] {
             #expect(door[place] == nil, "\(place) is empty on a door page")
         }
-        guard case let .list(rows)? = door[.page]?.payload else {
-            Issue.record("Today has a page")
+        guard case let .ranked(data)? = door[.page]?.payload else {
+            Issue.record("Today has a ranked page")
             return
         }
-        #expect(rows.map(\.title) == ["Bench 80 kg", "Row"])
+        #expect(data.rows.map(\.title) == ["Bench Press", "Row"])
+        #expect(door[.page]?.kind == .rows)
+        guard case let .navWord(word)? = door[.navWord]?.payload else {
+            Issue.record("the nav word")
+            return
+        }
+        #expect(word == "Doors")
+        guard case let .pageTitle(title)? = door[.doorTitle]?.payload else {
+            Issue.record("the door title")
+            return
+        }
+        #expect(title.name == "Today" && title.line == "Push, 4 lifts" && !title.isItem)
+    }
+
+    @Test func acrossOnTheDoorTitleGoesToTheNextDoorAndWraps() {
+        let content = DeckRoomContent(facts: Self.facts())
+        func title(_ door: String) -> PageTitle? {
+            guard case let .pageTitle(title)? = content.screen(for: .door("deck", door), state: RoomState())[.doorTitle]?
+                .payload else { return nil }
+            return title
+        }
+        #expect(title("today")?.next == .door("deck", "week"))
+        #expect(title("today")?.previous == .door("deck", "library"))
+        #expect(title("library")?.next == .door("deck", "today"))
+        #expect(title("today")?.nextFocus == 1)
+        #expect(title("today")?.previousFocus == 2)
+    }
+
+    @Test func theBenchItemPageHasFactsAndSets() {
+        let content = DeckRoomContent(facts: Self.facts())
+        let item = content.screen(for: Self.benchRoute, state: RoomState())
+        #expect(item.layout == .door)
+        guard case let .item(data)? = item[.page]?.payload, case let .sets(sets) = data.body else {
+            Issue.record("Bench draws the sets body")
+            return
+        }
+        #expect(data.facts.map(\.label) == ["Opens at", "Planned", "Best"])
+        #expect(sets.lines.map(\.state) == [.done, .next])
+        guard case let .pageTitle(title)? = item[.doorTitle]?.payload,
+              case let .navWord(word)? = item[.navWord]?.payload
+        else {
+            Issue.record("the item title")
+            return
+        }
+        #expect(title.name == "Bench Press" && title.isItem)
+        #expect(word == "Today", "the Nav word at level 2 is the door's name")
+        #expect(title.next == .item("deck", "today", "page#t1"))
+        #expect(title.previous == .item("deck", "today", "page#t1"))
+    }
+
+    @Test func aRowWithoutItsOwnPageDrawsItsSiblings() {
+        let item = DeckRoomContent(facts: Self.facts()).screen(for: .item("deck", "today", "page#t1"),
+                                                                 state: RoomState())
+        guard case let .item(data)? = item[.page]?.payload, case let .siblings(siblings) = data.body else {
+            Issue.record("a plain row draws siblings")
+            return
+        }
+        #expect(siblings.current == "page#t1")
+        #expect(siblings.rows.count == 2)
+    }
+
+    @Test func openingAnItemChangesOnlyWords() {
+        let content = DeckRoomContent(facts: Self.facts())
+        let door = content.screen(for: .door("deck", "today"), state: RoomState())
+        let item = content.screen(for: Self.benchRoute, state: RoomState())
+        let plan = PlaceMove.plan(from: door, to: item)
+        #expect(plan[.keystone] == .untouched)
+        #expect(plan[.title] == .untouched)
+        #expect(plan[.caption] == .untouched)
+        #expect(plan[.actionWord] == .untouched)
+        #expect(plan[.navWord] == .move)
+        #expect(plan[.doorTitle] == .move)
+        #expect(plan[.page] == .move, "the same kind with new words, never a collapse")
+        #expect(ShellPlan(from: door, to: item).merging == false)
+        #expect(ShellPlan(from: door, to: item).splitting == false)
+    }
+
+    @Test func backFromAnItemRestoresTheDoorAndItsState() {
+        let navigator = ShellNavigator(root: .landing("deck"))
+        var state = RoomState()
+        state.dialFocus = 2
+        navigator.state = state
+        navigator.push(.door("deck", "library"))
+        navigator.push(Self.benchRoute)
+        #expect(navigator.route.level == 2)
+        navigator.replace(.item("deck", "library", "x"))
+        #expect(navigator.stack.count == 3, "across replaces the top and does not grow the stack")
+        navigator.pop()
+        #expect(navigator.route == .door("deck", "library"))
+        navigator.pop()
+        #expect(navigator.route == .landing("deck"))
+        #expect(navigator.state.dialFocus == 2)
     }
 
     @Test func turningTheDialMovesOnlyTheSummary() {
@@ -116,9 +229,9 @@ struct DeckRoomContentTests {
     @Test func privateRoutinesNeverReachAPage() {
         let content = DeckRoomContent(facts: Self.facts())
         for door in ["today", "week", "library", "bests", "plan"] {
-            guard case let .list(rows)? = content.screen(for: .door("deck", door), state: RoomState())[.page]?
+            guard case let .ranked(data)? = content.screen(for: .door("deck", door), state: RoomState())[.page]?
                 .payload else { continue }
-            #expect(!rows.contains { $0.title.localizedCaseInsensitiveContains("diary") })
+            #expect(!data.rows.contains { $0.title.localizedCaseInsensitiveContains("diary") })
         }
         // The plan's page lists only the wall's routines, which hold no private one.
         let plan = Self.facts().rows["plan"] ?? []

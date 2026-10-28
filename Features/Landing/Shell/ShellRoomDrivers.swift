@@ -59,7 +59,7 @@ final class DeckRoomDriver: ShellRoomDriver {
             break
         case .back: return false
         case let .openDoor(id): navigator.push(.door(room, id))
-        case let .openItem(id): actions?.item(id)
+        case let .openItem(id): DeckRouting.open(id, navigator: navigator, actions: actions)
         case let .action(id): actions?.step(id)
         }
         return true

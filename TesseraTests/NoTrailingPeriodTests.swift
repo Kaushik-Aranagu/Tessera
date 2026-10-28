@@ -26,6 +26,16 @@ enum ShownLines {
         case let .action(steps, _): steps.flatMap { [$0.verb, $0.object] }
         case let .scene(_, label): [label]
         case let .parts(tree): tree.nodes.flatMap(\.flattened).flatMap(\.words)
+        case let .pageTitle(title): [title.name, title.line]
+        case let .ranked(data): data.rows.flatMap { [$0.title, $0.sub] }
+        case let .item(data): data.facts.map(\.label) + words(of: data.body)
+        }
+    }
+
+    private static func words(of body: ItemBody) -> [String] {
+        switch body {
+        case let .sets(sets): sets.lines.map(\.label) + [sets.lastTime]
+        case let .siblings(siblings): siblings.rows.flatMap { [$0.title, $0.sub] }
         }
     }
 

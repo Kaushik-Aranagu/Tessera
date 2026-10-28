@@ -3,7 +3,8 @@ import TesseraCore
 
 /// Deck (Training) as content for the standing shell (sheet 283 v5): level 0 is the landing, the same content as
 /// `TrainingWallLanding` (both read `TrainingWallFacts` and `TrainingDeckFacts`, and the words and foot below);
-/// level 1 is a door page: the Door title and a Page of that door's rows. The keystone is the blackboard, drawn by
+/// level 1 is a door page: the Door title and a Page of that door's ranked rows (sheet 284); level 2 is an item page:
+/// the Item title, Facts and a Body drawn by the item's kind (sets for a lift, siblings for the rest). The keystone is the blackboard, drawn by
 /// the host through `shellScene`; its id is the same at both levels, so opening a door never touches it. Private
 /// routines read "Private workout" and never reach the board, the switcher or a page. Pure: no views, no store reads.
 struct DeckRoomContent: RoomContent {
@@ -17,15 +18,21 @@ struct DeckRoomContent: RoomContent {
     struct Facts: Equatable {
         var wall: TrainingWallFacts
         var deck: TrainingDeckFacts
-        /// The rows of each door's page, by door id.
+        /// The rows of each door's page, by door id (the pre-284 rows; the shell draws `pages`).
         var rows: [String: [ShellRow]] = [:]
+        /// Sheet 284: each door's ranked page and each lift's item page.
+        var pages = DeckPages()
     }
 
     let facts: Facts
     var accent: Color = Theme.Colors.Accent.training
 
     func screen(for route: ShellRoute, state: RoomState) -> Screen {
-        route.level == 0 ? landing(state) : door(route.door ?? Self.firstDoor)
+        switch route.level {
+        case 0: landing(state)
+        case 1: door(route.door ?? Self.firstDoor)
+        default: item(door: route.door ?? Self.firstDoor, id: route.item ?? "")
+        }
     }
 
     // MARK: Level 0
@@ -62,21 +69,84 @@ struct DeckRoomContent: RoomContent {
     // MARK: Level 1
 
     private func door(_ id: String) -> Screen {
-        let door = facts.wall.doors.first { $0.id == id }
-        let rows = facts.rows[id] ?? []
-        let line = door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet" : "")
+        let doors = facts.wall.doors
+        let door = doors.first { $0.id == id }
+        let page = facts.pages.doors[id]
+        let rows = page?.rows ?? []
+        let line = page?.line ?? door?.label ?? door?.lines.first ?? (rows.isEmpty ? "Nothing here yet" : "")
+        let at = doors.firstIndex { $0.id == id }
+        let previous = at.flatMap { doors.count > 1 ? ($0 + doors.count - 1) % doors.count : nil }
+        let next = at.flatMap { doors.count > 1 ? ($0 + 1) % doors.count : nil }
+        let title = PageTitle(
+            name: door?.name ?? "Today", line: line,
+            previous: previous.map { .door(Self.room, doors[$0].id) }, next: next.map { .door(Self.room, doors[$0].id) },
+            previousFocus: previous, nextFocus: next
+        )
         return Screen(layout: .door, slots: [
-            .title: title,
-            .navWord: SlotContent(id: "deck.nav.deck", kind: .text, payload: .navWord(Self.title)),
-            .doorTitle: SlotContent(id: ContentID("deck.door.\(id).title"), kind: .text,
-                                    payload: .doorTitle(name: door?.name ?? "Today", line: line,
-                                                        color: door?.color ?? accent)),
+            .title: self.title,
+            .navWord: SlotContent(id: "deck.nav.doors", kind: .text, payload: .navWord("Doors")),
+            .doorTitle: SlotContent(id: ContentID("deck.door.\(id).title"), kind: .text, payload: .pageTitle(title)),
             .keystone: keystone,
             .caption: caption,
-            .page: SlotContent(id: ContentID("deck.door.\(id).page"), kind: .list, payload: .list(rows)),
+            .page: SlotContent(id: ContentID("deck.door.\(id).page"), kind: .rows,
+                               payload: .ranked(RankedPageData(rows: rows, accent: accent,
+                                                               moreID: DeckPages.moreID(id)))),
             .actionWord: action,
             .tess: nil,
         ])
+    }
+
+    // MARK: Level 2
+
+    private func item(door id: String, id itemID: String) -> Screen {
+        let doors = facts.wall.doors
+        let door = doors.first { $0.id == id }
+        let rows = facts.pages.doors[id]?.rows ?? []
+        let at = rows.firstIndex { $0.id == itemID }
+        let row = at.map { rows[$0] }
+        let previous = at.flatMap { rows.count > 1 ? ($0 + rows.count - 1) % rows.count : nil }
+        let next = at.flatMap { rows.count > 1 ? ($0 + 1) % rows.count : nil }
+        var name = row?.title ?? "Nothing here"
+        var line = row?.sub ?? ""
+        var shownFacts: [ItemFact] = []
+        var body = ItemBody.siblings(SiblingsBody.make(rows: rows, current: itemID))
+        if let row, !row.isPrivate, let lift = facts.pages.items[DeckPages.itemKey(itemID)] {
+            name = lift.title
+            line = lift.line
+            shownFacts = lift.facts
+            body = .sets(lift.sets)
+        } else if let row, !row.isPrivate, let at {
+            shownFacts = Self.plainFacts(row, index: at, count: rows.count, door: door?.name ?? "", doorID: id)
+        }
+        let title = PageTitle(
+            name: name, line: line,
+            previous: previous.map { .item(Self.room, id, rows[$0].id) },
+            next: next.map { .item(Self.room, id, rows[$0].id) }, isItem: true
+        )
+        return Screen(layout: .door, slots: [
+            .title: self.title,
+            .navWord: SlotContent(id: ContentID("deck.nav.door.\(id)"), kind: .text,
+                                  payload: .navWord(door?.name ?? "Today")),
+            .doorTitle: SlotContent(id: ContentID("deck.item.\(id).\(itemID).title"), kind: .text,
+                                    payload: .pageTitle(title)),
+            .keystone: keystone,
+            .caption: caption,
+            .page: SlotContent(id: ContentID("deck.item.\(id).\(itemID).page"), kind: .rows,
+                               payload: .item(ItemPageData(facts: shownFacts, body: body, accent: accent))),
+            .actionWord: action,
+            .tess: nil,
+        ])
+    }
+
+    /// The facts of a row with no page of its own yet: its value, where it ranks in the door.
+    static func plainFacts(_ row: RankedRow, index: Int, count: Int, door: String, doorID: String) -> [ItemFact] {
+        var facts: [ItemFact] = []
+        if !row.value.isEmpty {
+            let label = ["today": "Opens at", "library": "Best", "bests": "Best", "plan": "Takes"][doorID] ?? "Value"
+            facts.append(ItemFact(number: row.value, unit: row.unit, label: label, about: doorID == "plan"))
+        }
+        facts.append(ItemFact(number: "\(index + 1)", unit: "of \(count)", label: door))
+        return facts
     }
 
     // MARK: Shared by both levels (same ids: the keystone, title, caption and action are not touched)
@@ -262,7 +332,8 @@ extension DeckRoomContent.Facts {
     static func load(model: AppModel, scheme: ColorScheme) -> Self {
         let wall = TrainingWallFacts.load(model, dark: scheme == .dark)
         let deck = TrainingDeckFacts.load(model, wall: wall, dark: scheme == .dark)
-        return Self(wall: wall, deck: deck, rows: rows(wall: wall, deck: deck))
+        return Self(wall: wall, deck: deck, rows: rows(wall: wall, deck: deck),
+                    pages: DeckPages.load(model: model, wall: wall, deck: deck))
     }
 
     /// Each door's page: Today's lifts, the week's days, the library's lifts, the bests and the plan's routines.
@@ -376,8 +447,26 @@ struct DeckShellHost: View {
                 navigator.pop()
             }
         case let .openDoor(id): navigator.push(.door(DeckRoomContent.room, id))
-        case let .openItem(id): actions.item(id)
+        case let .openItem(id): DeckRouting.open(id, navigator: navigator, actions: actions)
         case let .action(id): actions.step(id)
+        }
+    }
+}
+
+/// What a tap on a row does in the Deck (sheet 284): on the landing the old targets (a lift, a routine); on a door page
+/// the row's item page; on an item page a sibling replaces it. "More" rows open the old library, stats or today page.
+@MainActor
+enum DeckRouting {
+    static func open(_ id: String, navigator: ShellNavigator, actions: DeckActions?) {
+        let route = navigator.route
+        if route.level == 0 {
+            actions?.item(id)
+        } else if DeckPages.isMore(id) {
+            actions?.door(String(id.dropFirst("more:".count)))
+        } else if route.level == 1 {
+            navigator.push(.item(route.room, route.door ?? DeckRoomContent.firstDoor, id))
+        } else {
+            navigator.replace(.item(route.room, route.door ?? DeckRoomContent.firstDoor, id))
         }
     }
 }
