@@ -287,6 +287,13 @@ struct ChartPlainPage: View {
             if pages == nil {
                 pages = ChartPageModel(engine: model.engine, object: object.id)
             }
+            // Simulator only (UI tests): the orchid's own "Last misted" part, put there when its page opens.
+            if LaunchFlags.has("-chartMistedPart"), object.title == "Orchid",
+               !book.page(for: object).contains(where: { $0.id == "misted" })
+            {
+                _ = try? model.engine.perform(PatchPage(object: object.id, patch: ChartPageModel.mistedPart(),
+                                                        only: true), by: .user)
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("chart.plainPage")
