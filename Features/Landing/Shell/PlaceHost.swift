@@ -18,7 +18,7 @@ struct PlaceHost: View {
                 PlaceRenderer(place: place, content: content, style: style, size: size, reduceMotion: reduceMotion,
                               navigator: navigator, act: act)
                     .opacity(content.ghost ? PartGhost.opacity : 1)
-                    .tesseraAnimation(PartGhost.sets, value: content.ghost)
+                    .animation(reduceMotion ? nil : PartGhost.sets, value: content.ghost)
                     .id(content.id)
                     .transition(PlaceTransition.make(place, style, reduceMotion: reduceMotion))
             }

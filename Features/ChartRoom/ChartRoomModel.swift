@@ -72,6 +72,19 @@ final class ChartRoomModel {
 
     private(set) var document: ChartDoc
     private(set) var pending: PendingPatch?
+    /// Where the change in flight is in the lifecycle (r1-spec section 9). Every flow moves it through `fire`.
+    private(set) var change: ChangeState = .idle
+    /// Where the room is: blank, live, archiving, archived or restored.
+    private(set) var phase: RoomPhase = .blank
+    /// A new sentence arrived while one was drying: its line runs to the end in 160 ms.
+    private(set) var completing = false
+    /// How long a drying line takes to finish when a new sentence arrives.
+    static let completeSeconds = 0.16
+    /// Reduce Motion shows every end state at once (the 2 s drying wait still applies; nothing else waits).
+    @ObservationIgnored var reduceMotion: Bool {
+        UIAccessibility.isReduceMotionEnabled || ShellProbe.reduceMotion
+    }
+
     /// What he said, in the widget place in quotes, while Tess works.
     private(set) var heard = ""
     /// One light tick as a ghost sets.
@@ -97,6 +110,22 @@ final class ChartRoomModel {
     @ObservationIgnored private var say: (String, @escaping () -> Void) -> Void
     @ObservationIgnored private(set) var engine: ActionEngine?
     @ObservationIgnored private var record: OpRecord?
+
+    /// Moves the change through its lifecycle; an event with no arrow from here is ignored (no unlisted exit).
+    @discardableResult
+    func fire(_ event: ChangeEvent) -> Bool {
+        guard let next = Lifecycle.next(change, event) else { return false }
+        change = next
+        return true
+    }
+
+    /// Moves the room through its lifecycle.
+    @discardableResult
+    func fire(_ event: RoomEvent) -> Bool {
+        guard let next = RoomLifecycle.next(phase, event) else { return false }
+        phase = next
+        return true
+    }
 
     /// The room's own name and the blank document every room starts from.
     static let blank = ChartDoc(name: "Chart room")
@@ -182,6 +211,7 @@ final class ChartRoomModel {
         }
         if let stored = storedDocument() {
             document = stored
+            syncPhase()
             // The sentences already in the room are the first ones he said: the next is the one after them.
             cursor = Self.canned.prefix { step in
                 step.patch.ops.filter { $0.op == "add" }.allSatisfy { stored.part($0.id ?? "") != nil }
@@ -200,25 +230,36 @@ final class ChartRoomModel {
     /// stays up, and Core's line is the refusal.
     func takeDown() {
         guard pending == nil, !takingDown else { return }
+        if phase == .blank, !document.parts.isEmpty {
+            phase = .live
+        }
+        guard fire(RoomEvent.takeDown) else { return }
         let was = document
         guard let engine else {
             document = Self.blank
             persist()
+            fire(RoomEvent.foldEnded)
             say("Room taken down, not the plants") { [weak self] in
+                self?.fire(RoomEvent.restore)
                 self?.document = was
                 self?.persist()
+                self?.fire(RoomEvent.replayEnded)
             }
             return
         }
         let book = RoomBook(store: engine.store, classes: engine.classes)
         guard let room = book.room(named: document.name) else {
             document = Self.blank
+            fire(RoomEvent.foldEnded)
             return
         }
         do {
             let record = try engine.perform(TakeDownRoom(room: room.id), by: .user).record
             document = Self.blank
+            fire(RoomEvent.foldEnded)
             say("Room taken down, not the plants") { [weak self] in
+                self?.fire(RoomEvent.restore)
+                defer { self?.fire(RoomEvent.replayEnded) }
                 // Bring back: the room, its history and its grants, from the room Core finds taken down.
                 if let down = RoomBook(store: engine.store, classes: engine.classes).takenDownRoom(named: was.name) {
                     _ = try? engine.perform(BringBackRoom(room: down.id), by: .user)
@@ -228,8 +269,11 @@ final class ChartRoomModel {
                 self?.document = self?.storedDocument() ?? was
             }
         } catch let ActionError.invalidArguments(_, reason) {
+            // The room stays up: the fold never plays, and he is back where he was.
+            fire(RoomEvent.touchWords)
             refuse(reason)
         } catch {
+            fire(RoomEvent.touchWords)
             refuse("That room could not be taken down")
         }
     }
@@ -367,6 +411,8 @@ final class ChartRoomModel {
         }
         picked = nil
         heard = said
+        fire(.sentence)
+        receipt = nil
         let next = PendingPatch(patch: patch, before: before, after: after)
         pending = next
         dryTask?.cancel()
@@ -382,6 +428,7 @@ final class ChartRoomModel {
         guard var current = pending, current.id == id else { return }
         current.dried = true
         pending = current
+        fire(.lineEnded(needsAllow: current.needsAllow))
         if current.needsAllow {
             heard = ""
         } else {
@@ -399,10 +446,12 @@ final class ChartRoomModel {
         if let engine, let record {
             guard RoomPatcher.stop([record], in: engine) else { return false }
         }
+        guard fire(.touchWords) else { return false }
         dryTask?.cancel()
         let again = current.patch.heard
         record = nil
         pending = nil
+        fire(.stopEnded)
         heard = ""
         cue.play(.selection)
         retry = again.isEmpty ? nil : again
@@ -415,7 +464,8 @@ final class ChartRoomModel {
 
     /// A tap on the ghost sets it now (a patch that widens reach never sets this way).
     func tapGhost() {
-        guard let pending, !pending.needsAllow, !unDrying else { return }
+        guard let pending, !pending.needsAllow, !unDrying, change == .staged else { return }
+        fire(.lineEnded(needsAllow: false))
         commit()
     }
 
@@ -426,6 +476,7 @@ final class ChartRoomModel {
         if let engine, let record {
             guard RoomReach.allow(record, in: engine) else { return }
         }
+        guard fire(.allow) else { return }
         commit(allowed: true)
     }
 
@@ -454,6 +505,9 @@ final class ChartRoomModel {
         pending = nil
         record = nil
         heard = ""
+        if phase == .blank {
+            fire(.firstSet)
+        }
         cursor = min(Self.canned.count, cursor + 1)
         cue.play(.selection)
         persist()
@@ -472,10 +526,16 @@ final class ChartRoomModel {
             self.cursor = cursor
             pending = nil
             unDrying = false
+            fire(.unDryEnded)
             cue.play(.undo)
             persist()
         }
-        guard let patch, pending == nil else {
+        guard let patch, pending == nil, fire(.undo) else {
+            finish()
+            return
+        }
+        // Reduce Motion: the change is undone at once, no line to run back.
+        if reduceMotion {
             finish()
             return
         }
@@ -506,8 +566,45 @@ final class ChartRoomModel {
 
     /// The Say word: plays the next canned sentence.
     func saySomething() {
-        guard pending == nil, let next = nextCanned else { return }
+        guard let next = nextCanned, !unDrying else { return }
+        if let current = pending {
+            // A new sentence while one dries: he has moved on, so it stands. Its line runs to the end in 160 ms, it
+            // sets (the last receipt goes as the new one starts), then the new change stages.
+            guard change == .staged, !current.needsAllow, !completing, fire(.newSentence) else { return }
+            completing = true
+            dryTask?.cancel()
+            let wait = reduceMotion ? 0 : Self.completeSeconds
+            dryTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(wait))
+                guard let self, !Task.isCancelled else { return }
+                commit()
+                completing = false
+                if let after = nextCanned {
+                    propose(after.patch, heard: after.heard)
+                }
+            }
+            return
+        }
         propose(next.patch, heard: next.heard)
+    }
+
+    /// "Not now" on a change waiting for Allow: the change un-dries (the group is undone when its line reaches 0).
+    func notNow() {
+        guard let current = pending, current.needsAllow, fire(.notNow) else { return }
+        if let engine, let record {
+            RoomReach.notNow(record, in: engine)
+        }
+        dryTask?.cancel()
+        unDrying = true
+        heard = ""
+        dryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(self?.reduceMotion == true ? 0 : Self.unDrySeconds))
+            guard let self, !Task.isCancelled else { return }
+            record = nil
+            pending = nil
+            unDrying = false
+            fire(.unDryEnded)
+        }
     }
 
     /// The action word the room built: its single field write, on the top item.
@@ -522,17 +619,25 @@ final class ChartRoomModel {
     }
 
     /// Simulator stills: the room as it is after the first `count` canned sentences, with every grant allowed.
+    /// A loaded room is live, an empty one blank (only before it is taken down or restored).
+    func syncPhase() {
+        guard phase == .blank || phase == .live else { return }
+        phase = document.parts.isEmpty ? .blank : .live
+    }
+
     func setSentences(_ count: Int) {
         var doc = Self.blank
         for step in Self.canned.prefix(count) {
             doc = doc.applying(ChartPatch(step.patch))
         }
         document = doc
+        syncPhase()
         cursor = min(count, Self.canned.count)
     }
 
     func load(_ doc: ChartDoc) {
         document = doc
+        syncPhase()
         cursor = Self.canned.count
         persist()
     }
@@ -662,6 +767,7 @@ final class ChartRoomModel {
 
     /// A rule refusal: Tess's one line, and her offer as a receipt button that runs it as a normal ghost change.
     func refuse(_ reason: String, offer: (label: String, patch: RoomPatch)? = nil) {
+        fire(.refuse)
         note = RoomNote(line: PartText.shown(reason), button: offer?.label, patch: offer?.patch)
     }
 
@@ -669,15 +775,18 @@ final class ChartRoomModel {
     func takeOffer() {
         guard let patch = note?.patch else { return }
         note = nil
+        fire(.settled)
         propose(patch)
     }
 
     func dismissNote() {
         note = nil
+        fire(.settled)
     }
 
     /// A kit miss (a part the kit does not have): queued for the next install, with Undo to take the request back.
     func kitMiss(_ part: String) {
+        fire(.queue)
         queued.append(part)
         say("\(part), queued for your next install") { [weak self] in self?.queued.removeAll { $0 == part } }
     }

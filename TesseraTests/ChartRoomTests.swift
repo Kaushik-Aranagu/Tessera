@@ -616,6 +616,113 @@ struct ChartRoomTests {
         #expect(soul.strokeBlink != nil, "the soul blinks as the line starts")
     }
 
+    // MARK: Sheet 374, one lifecycle: one test per arrow (r1-spec section 9)
+
+    @Test func everyArrowOfAChangeIsListedAndNoOther() {
+        typealias Arrow = (ChangeState, ChangeEvent, ChangeState)
+        let arrows: [Arrow] = [
+            (.idle, .sentence, .staged), (.set, .sentence, .staged), (.refused, .sentence, .staged),
+            (.queued, .sentence, .staged), (.waiting, .sentence, .waiting),
+            (.idle, .refuse, .refused), (.idle, .queue, .queued), (.refused, .settled, .idle), (
+                .queued,
+                .settled,
+                .idle
+            ),
+            (.staged, .lineEnded(needsAllow: false), .set), (.staged, .lineEnded(needsAllow: true), .waiting),
+            (.staged, .newSentence, .set), (.staged, .touchWords, .stopped), (.stopped, .stopEnded, .idle),
+            (.waiting, .allow, .set), (.waiting, .notNow, .undried), (.set, .undo, .undried),
+            (.undried, .unDryEnded, .idle),
+        ]
+        for (from, event, to) in arrows {
+            #expect(Lifecycle.next(from, event) == to, "\(from) on \(event)")
+        }
+        // Nothing else leaves a state: no unlisted exit (a stopped change cannot be undone, a waiting one cannot be
+        // stopped, a set one cannot be touched, and so on).
+        let events: [ChangeEvent] = [.sentence, .lineEnded(needsAllow: false), .lineEnded(needsAllow: true),
+                                     .newSentence, .touchWords, .stopEnded, .allow, .notNow, .undo, .unDryEnded,
+                                     .refuse, .queue, .settled]
+        var listed = 0
+        for state in ChangeState.allCases {
+            for event in events where Lifecycle.next(state, event) != nil {
+                listed += 1
+            }
+        }
+        // idle/set/refused/queued each take sentence, refuse and queue (4 x 3 = 12) except `idle`+`settled` etc.
+        #expect(listed == arrows.count + 6, "only the listed arrows exist (refuse and queue from the resting states)")
+        #expect(Lifecycle.next(.stopped, .undo) == nil && Lifecycle.next(.waiting, .touchWords) == nil)
+        #expect(Lifecycle.next(.set, .touchWords) == nil && Lifecycle.next(.undried, .sentence) == nil)
+        #expect(Lifecycle.canUndo(.set) && !Lifecycle.canUndo(.staged) && !Lifecycle.canUndo(.waiting))
+    }
+
+    @Test func everyArrowOfTheRoomIsListedAndNoOther() {
+        let arrows: [(RoomPhase, RoomEvent, RoomPhase)] = [
+            (.blank, .firstSet, .live), (.live, .takeDown, .archiving), (.archiving, .foldEnded, .archived),
+            (.archiving, .touchWords, .live), (.archived, .restore, .restored), (.restored, .replayEnded, .live),
+        ]
+        for (from, event, to) in arrows {
+            #expect(RoomLifecycle.next(from, event) == to, "\(from) on \(event)")
+        }
+        let events: [RoomEvent] = [.firstSet, .takeDown, .foldEnded, .touchWords, .restore, .replayEnded]
+        var listed = 0
+        for phase in RoomPhase.allCases {
+            for event in events where RoomLifecycle.next(phase, event) != nil {
+                listed += 1
+            }
+        }
+        #expect(listed == arrows.count, "no other exit")
+        #expect(RoomLifecycle.next(.blank, .takeDown) == nil, "a blank room has nothing to take down")
+    }
+
+    @Test func theFlowsGoThroughTheMachine() async throws {
+        let room = model()
+        #expect(room.change == .idle && room.phase == .blank)
+        room.saySomething()
+        #expect(room.change == .staged)
+        room.tapGhost()
+        #expect(room.change == .set && room.phase == .live)
+        room.saySomething()
+        #expect(room.cancelPending())
+        #expect(room.change == .idle, "stopped, then at rest")
+        room.saySomething()
+        room.tapGhost()
+        room.saySomething()
+        room.tapGhost()
+        room.saySomething()
+        #expect(room.change != .waiting, "the drying line has not ended")
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(room.change == .waiting, "a widening change waits for Allow")
+        room.notNow()
+        #expect(room.change == .undried && room.unDrying)
+        try await Task.sleep(for: .seconds(ChartRoomModel.unDrySeconds + 0.3))
+        #expect(room.change == .idle && room.pending == nil, "Not now un-dried it")
+    }
+
+    @Test func aNewSentenceWhileOneDriesSetsItInOneHundredSixtyMillisecondsThenStagesTheNext() async throws {
+        let said = Said()
+        let room = ChartRoomModel(data: DemoRoomData(), defaults: nil, drying: .seconds(5)) { text, undo in
+            said.lines.append(text)
+            said.undo = undo
+        }
+        room.saySomething()
+        #expect(room.change == .staged)
+        room.saySomething()
+        #expect(room.completing && room.pending != nil, "the first line is running to its end")
+        try await Task.sleep(for: .milliseconds(450))
+        #expect(!room.completing)
+        #expect(said.lines.first == "Plants, set", "the first change stood")
+        #expect(room.pending != nil && room.change == .staged, "the second is now staged")
+        #expect(room.receipt == nil, "the last receipt came down as the new one started")
+    }
+
+    @Test func underReduceMotionAnUndoIsDoneAtOnce() {
+        // The model's wait is zero when Reduce Motion is on: tested through the pure rule the model reads.
+        #expect(StopRun.total(from: 0.5, reduceMotion: true) == 0)
+        #expect(OutlineUnroll.foldDelay(rank: 0, count: 6, reduceMotion: true) == 0)
+        #expect(OutlineSetting.delay(y: 500, reduceMotion: true) == 0)
+        #expect(OutlineUnroll.delay(rank: 3, reduceMotion: true) == 0)
+        #expect(OutlineUnroll.trim(at: 0, rank: 3, reduceMotion: true) == 1)
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {

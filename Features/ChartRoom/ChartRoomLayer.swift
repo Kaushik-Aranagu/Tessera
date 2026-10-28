@@ -37,16 +37,14 @@ struct ChartRoomLayer: View {
                             nameDelay: OutlineUnroll.delay(rank: rank, reduceMotion: reduceMotion) + OutlineUnroll
                                 .nameAfter,
                             hidden: set)
-                        .animation(
-                            MotionPolicy.resolve(OutlineUnroll.animation(rank: rank), reduceMotion: reduceMotion),
-                            value: unrolled
-                        )
+                        .animation(reduceMotion ? nil : OutlineUnroll.animation(rank: rank), value: unrolled)
                         .frame(width: rect.width - 4, height: rect.height - 4, alignment: .topLeading)
                         .scaleEffect(step.scale)
                         .opacity(step.opacity)
                         .offset(x: rect.minX + 2, y: rect.minY + 2 + step.offset)
+                        // Reduce Motion: the outline is up or down at once, no fade.
                         .animation(
-                            OutlineSetting.animation(y: rect.minY / scale, reduceMotion: reduceMotion),
+                            reduceMotion ? nil : OutlineSetting.animation(y: rect.minY / scale, reduceMotion: false),
                             value: set
                         )
                         .allowsHitTesting(false)
@@ -55,7 +53,7 @@ struct ChartRoomLayer: View {
                 if let pending = model.pending {
                     ForEach(Place.allCases.filter { ghosts.contains($0) && $0 != .actionWord }, id: \.self) { place in
                         let rect = frame(place, scale: scale, dx: dx)
-                        DryingLine(reduceMotion: reduceMotion, reverse: model.unDrying)
+                        DryingLine(reduceMotion: reduceMotion, reverse: model.unDrying, completing: model.completing)
                             .frame(width: rect.width - 4, height: 1)
                             .offset(x: rect.minX + 2, y: rect.maxY - 2)
                             .allowsHitTesting(false)
@@ -282,6 +280,8 @@ private struct DryingLine: View {
     let reduceMotion: Bool
     /// Undo un-dries (sheet 368): the line starts whole and runs back to 0, right to left, 600 ms, ease in.
     var reverse = false
+    /// A new sentence arrived: the line runs to its end in 160 ms.
+    var completing = false
     @State private var drawn = false
 
     private var scale: CGFloat {
@@ -300,6 +300,13 @@ private struct DryingLine: View {
                 let run = reverse ? Animation.easeIn(duration: ChartRoomModel.unDrySeconds)
                     : Animation.linear(duration: PartGhost.drying)
                 withTesseraAnimation(run, reduceMotion: false) { drawn = true }
+            }
+            .onChange(of: completing) { _, now in
+                guard now, !reduceMotion, !reverse else { return }
+                // From where it got to (SwiftUI starts from the presentation value) to the end.
+                withTesseraAnimation(.linear(duration: ChartRoomModel.completeSeconds), reduceMotion: false) {
+                    drawn = true
+                }
             }
             .accessibilityHidden(true)
     }
