@@ -47,11 +47,10 @@ public struct TessSentLog {
         // A lab-mode row shows what was sent, exactly: it is in no backup and no export.
         let exact = entry.classDef?.systemKey == SystemCatalog.Key.tessSentExact.systemKey
         func walled(_ text: String) -> Bool {
-            text != Self.privatePhrase && text != Self.heldBackPayload
-                && (looksLikeClaudeKey(text) || (!exact && (SecretWords.mentions(text) || PrivateFacts.isWalled(
-                    text,
-                    lastWeightKg: lastKg
-                ))))
+            guard text != Self.privatePhrase, text != Self.heldBackPayload else { return false }
+            // A lab row keeps money and body words; nothing keeps a key.
+            let walls: WallReasons = exact ? .key : [.key, .secret, .money, .body]
+            return !Wall.judge(text, lastWeightKg: lastKg).isDisjoint(with: walls)
         }
         let lines = words(of: entry).components(separatedBy: "\n")
         guard let first = lines.first else { return Self.privatePhrase }

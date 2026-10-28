@@ -6,7 +6,11 @@ public let claudeKeyLine = "That looks like a Claude key. It goes in Settings, u
 /// The text with every Claude key taken out, for a field that must keep the rest of what was typed. A key pasted
 /// across a line break or a space comes out whole: the long key-like runs right after it go too (QA R4 on #471).
 public func withoutClaudeKeys(_ text: String) -> String {
-    text.replacing(keyWithTail, with: "")
+    let cut = text.replacing(keyWithTail, with: "")
+    // A key hidden by invisible or styled characters is cut from the canonical form; only text that held one loses
+    // its styling (input-hygiene H1).
+    guard looksLikeClaudeKey(cut) else { return cut }
+    return CanonicalText.of(cut).replacing(keyWithTail, with: "")
 }
 
 /// Whether text holds a Claude key (it starts with the Claude key prefix, in any case). Every interpreter and every
@@ -14,9 +18,10 @@ public func withoutClaudeKeys(_ text: String) -> String {
 /// so a pasted key never becomes a note, a log line or a backup (docs/research/claude-first-run.md).
 ///
 /// The prefix is matched with space around its dashes and with its last dash missing too (Research KS06, KS07), so a
-/// key mistyped or split by dictation is still held back.
+/// key mistyped or split by dictation is still held back. It reads the canonical form too, so a zero-width character
+/// or full-width letters never hide one (input-hygiene H1).
 public func looksLikeClaudeKey(_ text: String) -> Bool {
-    text.firstMatch(of: keyPrefix) != nil
+    text.firstMatch(of: keyPrefix) != nil || CanonicalText.of(text).firstMatch(of: keyPrefix) != nil
 }
 
 /// The key's prefix: space around its dashes, its last dash missing when a digit follows within 8 letters
