@@ -226,6 +226,8 @@ struct ChartPlainPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pages: ChartPageModel?
     @State private var routine: ObjectStop?
+    /// Simulator only: why the UI test's seeded part could not be written.
+    @State private var seedError: String?
 
     /// Objects of a class he made, while the Chart room is on (a system class keeps its own page).
     static func applies(to object: ObjectRecord) -> Bool {
@@ -276,6 +278,9 @@ struct ChartPlainPage: View {
                 .offset(x: ShellLayout.ownFrame(.navWord).minX + dx, y: ShellLayout.ownFrame(.navWord).minY * scale)
                 tessLine(scale: scale)
                 routineLines(parts: parts, scale: scale)
+                if let seedError {
+                    Text("seed error: \(seedError)").font(.system(size: 11)).offset(x: 24, y: 560 * scale)
+                }
                 if pages?.wasWatered() == true {
                     sayWords(scale: scale)
                 }
@@ -291,8 +296,12 @@ struct ChartPlainPage: View {
             if LaunchFlags.has("-chartMistedPart"), object.title == "Orchid",
                !book.page(for: object).contains(where: { $0.id == "misted" })
             {
-                _ = try? model.engine.perform(PatchPage(object: object.id, patch: ChartPageModel.mistedPart(),
-                                                        only: true), by: .user)
+                do {
+                    try model.engine.perform(PatchPage(object: object.id, patch: ChartPageModel.mistedPart(),
+                                                       only: true), by: .user)
+                } catch {
+                    seedError = "\(error)"
+                }
             }
         }
         .accessibilityElement(children: .contain)
