@@ -278,7 +278,7 @@ struct TrainingBlackboard: View {
 
 /// The precomputed slate: uneven darkness from three octaves of value noise, fine grain, a soft light from the
 /// top-left, seven faint ghosts of wiped chalk, and an edge that dissolves into the page as chalk dust.
-private struct BlackboardSlate: View {
+struct BlackboardSlate: View {
     let dark: Bool
 
     var body: some View {

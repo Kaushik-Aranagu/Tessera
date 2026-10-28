@@ -12,6 +12,12 @@ public extension ObjectStore {
         return store
     }
 
+    /// An in-memory copy of this store that nothing observes and nothing writes back from (`TesseraContext.fork`).
+    @MainActor
+    func fork() throws -> ObjectStore {
+        ObjectStore(context: try context.fork())
+    }
+
     /// Seeds the built-in classes, the exercise library and the starter plan if needed. Call once at launch.
     @discardableResult
     func prepareCatalog(now: Date = .now, calendar: Calendar = .current) throws -> [SystemCatalog.Key: ClassDef] {

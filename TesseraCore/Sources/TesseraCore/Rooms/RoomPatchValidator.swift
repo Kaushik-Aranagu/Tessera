@@ -21,11 +21,14 @@ public struct RoomPatchValidator {
         self.classes = classes
     }
 
-    public func validate(_ patch: RoomPatch, against current: RoomDocument) -> Outcome {
+    public func validate(_ patch: RoomPatch, against current: RoomDocument, picked: String? = nil) -> Outcome {
         // A key never rides in a room, in any of its words.
         if let text = Self.allText(of: patch).first(where: looksLikeClaudeKey) {
             _ = text
             return .refused("That looks like a key, and a key never goes in a room")
+        }
+        if let picked, let reason = Self.touchesBeyond(picked, patch: patch, document: current) {
+            return .refused(reason)
         }
         var document = current
         var added: [String] = []
@@ -133,8 +136,8 @@ public struct RoomPatchValidator {
     private func applyLook(_ step: RoomPatch.Step, to document: inout RoomDocument) -> String? {
         guard let trait = step.trait, let value = step.value else { return "A look change needs a trait and a value" }
         if trait == "color" {
-            guard RoomKit.colorRoles.contains(value) else {
-                return "\(value) isn't a color role; rooms use roles, never a hex"
+            if let reason = colorRefusal(value, room: document.name) {
+                return reason
             }
             document.color = value
             return nil
@@ -145,6 +148,64 @@ public struct RoomPatchValidator {
             return "\(trait) takes \(values.sorted().joined(separator: ", ")), not \(value)"
         }
         document.look[trait] = value
+        return nil
+    }
+
+    /// Why a room's color can't be this: not a role, or too near another room's (ΔE76 under 20 in either theme).
+    func colorRefusal(_ value: String, room: String) -> String? {
+        if RoomKit.tessRoles.contains(value) {
+            return "That's Tess's color"
+        }
+        if RoomColor.passed.contains(value) {
+            return nil
+        }
+        guard let pair = RoomColor.roles[value] else {
+            if RoomKit.colorRoles.contains(value) {
+                return "\(value.capitalized) colors parts, not a room"
+            }
+            if let word = RoomColor.words[value.lowercased()], let clash = RoomColor.clash(of: word) {
+                return "\(value.capitalized) is the \(clash.room)'s"
+            }
+            return "\(value) isn't a color role; rooms use roles, never a hex"
+        }
+        if let clash = RoomColor.clash(of: pair, besides: room) {
+            return "\(value.capitalized) is too near the \(clash.room)'s"
+        }
+        return nil
+    }
+
+    /// The first step that reaches past the picked place: another place's part, or a look the place doesn't take.
+    static func touchesBeyond(_ picked: String, patch: RoomPatch, document: RoomDocument) -> String? {
+        let line = "That changes more than the \(picked). Say it again without picking?"
+        let traits = Set(LookCatalog.places[picked]?.traits.map(\.name) ?? [])
+        for step in patch.ops {
+            switch step.op {
+            case "add":
+                if step.place != picked {
+                    return line
+                }
+            case "set", "remove":
+                if let id = step.id, let part = document.part(id), part.place != picked {
+                    return line
+                }
+                if step.place != nil, step.place != picked {
+                    return line
+                }
+            case "move":
+                if let id = step.id, let part = document.part(id), part.place != picked {
+                    return line
+                }
+                if step.place != nil, step.place != picked {
+                    return line
+                }
+            case "look":
+                if let trait = step.trait, !traits.contains(trait) {
+                    return line
+                }
+            default:
+                return line
+            }
+        }
         return nil
     }
 

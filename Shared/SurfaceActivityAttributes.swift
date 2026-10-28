@@ -17,6 +17,25 @@ struct CookActivityAttributes: ActivityAttributes {
         var others: Int
         /// The next step's text, nil for a private recipe or when there is none.
         var nextStep: String?
+        /// Sheet 344: set when a pan timer has hit zero, the food that is ready ("Chicken"). "Timer" for a private cook,
+        /// never a food name. The activity stays open after the last timer ends.
+        var readyFood: String?
+        /// The next timer's label ("onions to go") and its end, for `Text(timerInterval:)` ("5:58, onions to go").
+        var nextLabel: String?
+        var nextEndsAt: Date?
+        /// Where a tap goes: `tessera://cook?cook=<id>&alert=<food>`, which opens the ticket with the alert line
+        /// printed. Nil keeps `tessera://cook`.
+        var link: URL?
+
+        /// A timer has hit zero and the food is off the heat.
+        var isReady: Bool {
+            readyFood != nil
+        }
+
+        /// The next timer as a range for `Text(timerInterval:)`, counting down from now.
+        var nextInterval: ClosedRange<Date>? {
+            nextEndsAt.map { end in Date.now ... max(end, Date.now) }
+        }
 
         var interval: ClosedRange<Date> {
             let start = endsAt.addingTimeInterval(-max(total, 1))
@@ -53,6 +72,29 @@ struct CookTimerInput: Equatable {
 
 enum CookFace {
     static let privateRecipe = "Private recipe"
+    /// The lock screen's line when a pan timer ends (sheet 344).
+    static let readyLine = "READY, OFF THE HEAT"
+    /// The Island's words: "Chicken ready". A private cook has no food name, so it reads "Timer ready".
+    static func readyWord(food: String) -> String {
+        "\(food) ready"
+    }
+
+    /// The ready colour: wine (9A2541) mixed 45% toward white, as RGB 0 to 255 (the Island and the top line).
+    static let readyWine = mix(red: 0x9A, green: 0x25, blue: 0x41, towardWhite: 0.45)
+
+    static func mix(red: Int, green: Int, blue: Int, towardWhite amount: Double) -> (red: Int, green: Int, blue: Int) {
+        func lift(_ channel: Int) -> Int {
+            Int((Double(channel) + (255 - Double(channel)) * min(max(amount, 0), 1)).rounded())
+        }
+        return (lift(red), lift(green), lift(blue))
+    }
+
+    /// The Island swells once when a timer ends: scale 1.08 across by 1.14 up, over 520 ms. Reduce Motion: no swell.
+    static let swell = (x: 1.08, y: 1.14, duration: 0.52)
+
+    static func swells(reduceMotion: Bool) -> Bool {
+        !reduceMotion
+    }
 
     /// "+2" for two other timers; nothing when the soonest runs alone.
     static func plusWord(others: Int) -> String? {

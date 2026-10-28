@@ -193,6 +193,11 @@ public enum SystemCatalog {
                       // Which kind of day it is, so its colour and muscles do not depend on the title ("Bench day").
                       // Optional: a routine of his own may have none.
                       FieldSpec(key: "kind", name: "Kind", kind: .choice, options: ["push", "pull", "legs"]),
+                      // The warm-up before the first lift (sheet 230): "Rower", 8 minutes, "Keep it easy, about 22
+                      // strokes a minute." Empty is no warm-up.
+                      FieldSpec(key: "warmupName", name: "Warm-up", kind: .text),
+                      FieldSpec(key: "warmupMinutes", name: "Warm-up minutes", kind: .number, unit: "min"),
+                      FieldSpec(key: "warmupNote", name: "Warm-up note", kind: .text),
                       // The name Tess gave the day, and the exercises it was given for: while the title is still this,
                       // Tess may rename it as the exercises change; once he types another, it never does.
                       FieldSpec(key: "autoName", name: "Name from Tess", kind: .text),
@@ -587,6 +592,8 @@ public enum SystemCatalog {
             FieldSpec(key: "look", name: "Look", kind: .text),
             // JSON array of grants, e.g. ["write Plant.lastWatered"]; reads of the classes a part binds are implicit.
             FieldSpec(key: "reach", name: "Reach", kind: .text),
+            // JSON array of part names he asked for that the kit does not have yet; the install notes read it (R5 builds them).
+            FieldSpec(key: "queue", name: "Queued parts", kind: .text),
         ]),
         ClassSpec(key: .roomPart, name: "Room Part", parent: .thing, symbol: "square.on.square.dashed",
                   colorRole: "neutral", fields: [
