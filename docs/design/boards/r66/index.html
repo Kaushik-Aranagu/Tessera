@@ -1504,7 +1504,7 @@ function passCenter(el,list,onOpen,onStep){const pass=h('div','pass','<div class
   let y0=null,x0=null;e.onpointerdown=ev=>{y0=ev.clientY;x0=ev.clientX;e.setPointerCapture(ev.pointerId)};
   e.onpointerup=ev=>{if(y0==null)return;const dy=(ev.clientY-y0)/K,dx=(ev.clientX-x0)/K;y0=null;if(dy<-30){flip(1);return}if(dy>30){flip(-1);return}if(Math.abs(dy)<8&&Math.abs(dx)<8){const li=ev.target.closest('[data-step]');if(li&&onStep){onStep(+li.dataset.step);return}onOpen&&onOpen(tk.id)}};
   e._refresh=()=>{const cur=sheet.classList.contains('flipped')?'.back':'.front';e.querySelector(cur).innerHTML=pageHTML(tk,pi)};tix.appendChild(e)});return tix}
-const dishT=()=>({id:'dish',title:'Dishes',color:'money',pages:[{lines:[dishes?dishes+' waiting':'the sink is clear','since lunch']}]});
+const dishT=()=>({id:'dish',title:'Dishes',color:'money',pages:[{lines:[dishes?dishes+' waiting':'the sink is clear',dishes?'since lunch':'all put away']}]});
 const tacosT=big=>({id:'tacos',title:'Tacos',color:'clay',big,pages:[{sub:'25 min, tonight',lines:big?TACOS.ing.slice(0,6).map(([a,b])=>a+(b?', '+b:'')):TACOS.ing.slice(0,3).map(a=>a[0])},...(big?[{sub:'and',lines:TACOS.ing.slice(6).map(([a,b])=>a+(b?', '+b:''))}]:[]),{sub:'the plan',lines:TACOS.steps.map((s,i)=>({t:s,n:i+1,idx:i}))}]});
 const getT=big=>{const per=big?6:3;const pages=[];for(let i=0;i<GET.length;i+=per)pages.push({sub:i?'':GET.length+' things',lines:GET.slice(i,i+per)});return {id:'get',title:'Get',color:'lists',big,pages}};
 const riceT=()=>({id:'rice',title:'Rice',color:'wine',pages:[{lines:['goes out today','cooked Thursday']}]});
@@ -2088,7 +2088,10 @@ function widgetV3(el,R,id){const W=R.w,box=h('div','one lw');box.style.zIndex=6;
   else if(oa==='y'&&Math.abs(dy)>44)show((wi+(dy<0?1:-1)+W.length)%W.length,'y',dy<0?1:-1);
   else if(!oa&&W[wi].go)go(...W[wi].go)});
  const iv=RM?0:setInterval(()=>{if(ox==null&&document.contains(box))loop&&loop()},7000);
- return {box,start:()=>enter(cur),stop:()=>clearInterval(iv)}}
+ /* 388: an item can leave the widget from outside (the sink got washed). If it is the one showing, the next one comes up */
+ const drop=it=>{const k=W.indexOf(it);if(k<0||W.length<2)return -1;W.splice(k,1);if(k===wi)show(k%W.length,'y',1);else if(k<wi)wi--;return k};
+ const put=(it,k)=>{if(k<0||W.includes(it))return;W.splice(k,0,it);if(k<=wi)wi++};
+ return {box,start:()=>enter(cur),stop:()=>clearInterval(iv),drop,put}}
 
 /* ---------- the Foot: the action word. A verb in the room's colour, its object small under it (no "Start Push A").
    Tap does it. Drag across past 56 pt: the verb's letters stream out and the next option's stream in, the way the
@@ -2162,7 +2165,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const DL=dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
   open:d=>{const L=typeof LV!=='undefined'&&LV[id];const di=L?L.doors.findIndex(x=>x.k===d.k):-1;if(di>=0)return go('l1_'+id,{door:di});d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.')},
   change:d=>sumSet(sum,d.sum(),id,el)});
- const f=actionX(el,R);R.ready&&stops.push(R.ready({dial:DL,sum,act:f,band:swn,key,cap}));
+ const f=actionX(el,R);R.ready&&stops.push(R.ready({dial:DL,sum,act:f,band:swn,key,cap,wg:WG}));
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
  if(!el._flip&&!window.__morphing)opening([top,band,key,cap,mid,dh,sum,f],0);
  setTimeout(WG.start,el._flip?420:260);
@@ -2233,20 +2236,40 @@ SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 to
 
 /* ---------- Galley (Kitchen) ---------- */
 SCREENS.kitchen={title:'Kitchen',accent:'kitchen',tess:'Tacos tonight works. You need tortillas, cilantro and limes.',render(el){
- return landingV3(el,{name:'Galley',color:'var(--kitchenText)',theme:'steam',big:"font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;font-size:40px;letter-spacing:.04em;text-transform:uppercase",
+ /* 388: the ticket comes off the rail. Wash counts the dishes down on their own ticket, about a plate a beat, until it
+    reads "the sink is clear". A beat later the ticket is pulled off the rail the way a cook pulls a finished order:
+    the clip lets go, the ticket tips from one corner and lifts away, and the others spread along the rail to fill the
+    gap, with one light tick. The widget drops its dishes card and the action word says the sink is clear. Undo hangs
+    it back: it comes down onto the rail and the clip catches it, and the count is back. Reduce Motion: in place */
+ let A=null,KEY=null,WG=null,gt=[];const tkOf=()=>KEY&&[...KEY.querySelectorAll('.tk')].find(t=>t.querySelector('.ttk')?.textContent==='Dishes');
+ const objs=n=>['Tacos, 25 min',GET.length+' things, aisle by aisle',n?n+' dishes':'the sink is clear'];
+ const wash=e=>{if(!dishes)return receipt(e,'The sink is clear');gt.forEach(clearTimeout);gt=[];const was=dishes,tk=tkOf(),ls=tk?[...tk.querySelectorAll('.face.front .li')]:[],wit=R.w.find(x=>x.hdr==='Since lunch');
+  dishes=0;const wi=WG&&WG.drop?WG.drop(wit):-1;A&&A.retarget(objs(0),1);
+  const off=()=>{if(!tk)return;if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}if(RM){tk.style.display='none';return}
+   tk.querySelector('.clip').animate([{transform:'none'},{transform:'translateY(-3px)'}],{duration:160,fill:'forwards'});
+   const sh=tk.querySelector('.sheet');sh.style.right='auto';sh.style.width=tk.getBoundingClientRect().width/K+'px';
+   tk.style.transition='flex .5s .16s cubic-bezier(.3,.9,.3,1),opacity .34s .06s,transform .46s cubic-bezier(.3,.9,.3,1),margin .5s .16s cubic-bezier(.3,.9,.3,1)';tk.style.transformOrigin='30% 0';tk.style.transform='translateY(-70px) rotate(-4deg)';tk.style.marginLeft='-12px';tk.classList.add('gone')};
+  const say=n=>{if(ls[0])ls[0].textContent=n?n+' waiting':'the sink is clear';if(ls[1]&&!n)ls[1].textContent='all put away'};
+  if(RM||!ls.length){say(0);off()}else{let n=was;const step=()=>{n--;say(n);gt.push(setTimeout(n?step:off,n?80:480))};gt.push(setTimeout(step,80))}
+  receipt(e,'Dishes, done',()=>{gt.forEach(clearTimeout);gt=[];dishes=was;if(wit&&WG&&WG.put)WG.put(wit,wi);A&&A.retarget(objs(was),-1);if(!tk)return;
+   if(ls[0])ls[0].textContent=was+' waiting';if(ls[1])ls[1].textContent='since lunch';tk.style.display='';tk.classList.remove('gone');tk.style.transform='';tk.style.marginLeft='';const sh=tk.querySelector('.sheet');setTimeout(()=>{if(!tk.classList.contains('gone')){sh.style.right='';sh.style.width=''}},700);
+   const c=tk.querySelector('.clip');c.getAnimations().forEach(a=>a.cancel());if(!RM)c.animate([{transform:'translateY(-3px)'},{transform:'translateY(-3px)',offset:.7},{transform:'translateY(1px)',offset:.85},{transform:'none'}],{duration:560})})};
+ const R={name:'Galley',color:'var(--kitchenText)',theme:'steam',big:"font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;font-size:40px;letter-spacing:.04em;text-transform:uppercase",
   sw:{x:[{k:'Tonight',lines:['Tacos, 25 min','You have all 8 things']},{k:'Tomorrow',lines:['Dal, 40 min','Soak the lentils tonight']},{k:'This week',lines:['5 dinners planned','Shakshuka on Friday']}]},
   w:[{hdr:'Tonight',big:'Tacos',mid:'25 min, you have all 8 things',sml:'Char the tortillas first',go:['tonight']},
    {hdr:'Goes out today',big:'Rice',c:'var(--wine)',mid:'Cooked Thursday',sml:'Eat it with the tacos',go:['leftovers']},
    {hdr:'On the way home',big:'3',unit:' things',num:1,mid:'Limes, cilantro, tortillas',sml:'The store is open till 9',go:['groceries']},
-   {hdr:'Since lunch',big:'7',unit:' dishes',num:1,mid:'Waiting in the sink',sml:'About 10 minutes'}],
-  keystone:k=>{passCenter(k,[tacosT(false),getT(false),riceT(),dishT()],openT);return null},
+   ...(dishes?[{hdr:'Since lunch',big:String(dishes),unit:' dishes',num:1,mid:'Waiting in the sink',sml:'About 10 minutes'}]:[])],
+  keystone:k=>{passCenter(k,[tacosT(false),getT(false),riceT(),...(dishes?[dishT()]:[])],openT);return null},
   caption:'Swipe a ticket up for its next page.',
   doors:[{k:'Tonight',go:['tonight'],sum:()=>sum('Tacos for 2',['You have '+o('8')+un('of 8'),'Time '+o('25')+un('min'),'Char the tortillas first'],'Chicken 5 min, then the onions')},
    {k:'Pantry',n:31,go:['pantry'],sum:()=>sum('31 things in four places',PLACES.map(([n,c])=>n+' '+o(c)).slice(0,3),'Milk and eggs low')},
    {k:'Recipes',go:['recipes'],sum:()=>sum('4 you can make',['Tacos '+o('25')+un('min'),'Dal '+o('40')+un('min'),'Shakshuka '+o('30')+un('min')],'Pasta needs feta')},
    {k:'Groceries',n:GET.length,go:['groceries'],sum:()=>sum(GET.length+' to get',GET.slice(0,3),'Four of them are for tonight')},
    {k:'Leftovers',go:['leftovers'],sum:()=>sum('Eat first',['<span style="color:var(--wine)">Rice, today</span>','Dal, by Friday'],'Rice was cooked Thursday')}],
-  acts:[{v:'Cook',o:'Tacos, 25 min',f:()=>go('cook')},{v:'Shop',o:GET.length+' things, aisle by aisle',f:()=>go('shop')},{v:'Wash',o:'7 dishes',f:e=>receipt(e,'Dishes, done.')}]})}};
+  acts:[{v:'Cook',o:'Tacos, 25 min',f:()=>go('cook')},{v:'Shop',o:GET.length+' things, aisle by aisle',f:()=>go('shop')},{v:'Wash',o:objs(dishes)[2],f:e=>wash(e)}],
+  ready:({act,key,wg})=>{A=act;KEY=key;WG=wg;window.__gal={wash:()=>wash(el),get dishes(){return dishes},get w(){return R.w.map(x=>x.hdr)},get acts(){return R.acts.map(a=>a.o)},act}}};
+ return landingV3(el,R)}};
 
 /* ---------- Watch (Routines) ---------- */
 SCREENS.routines={title:'Routines',accent:'routines',tess:'Journal has been dry since Saturday. One line tonight brings it back.',render(el){
@@ -2316,7 +2339,7 @@ function tiles(src,room,mode,done){// mode 'in': src image flips away, the page 
  requestAnimationFrame(frame)}
 window.flipTo=(...a)=>flipTo(...a);window.fitLine=fitLine;const LANDS=['notes','weather','training','kitchen','routines','money'];
 function flipTo(id){const from=current,fromC=cleanup,mos=from&&$('#mosaic',from);
- if(RM||!mos){go(id);return}
+ if(RM||!mos){go0(id);return}
  // snapshot the mosaic as it is now, so the tiles carry exactly what was on screen
  const snap=document.createElement('canvas');snap.width=804;snap.height=440;snap.getContext('2d').drawImage(mos,0,0);
  stack.push({id});const el=h('div','screen');el._flip=1;

@@ -378,3 +378,17 @@ Watering the plants one by one in the room, each one drinks (385) and the senten
 - Reduce Motion: the line is simply there, and her eyes change shape at once and change back
 - Core: nothing new. Builder A: the Tess face gains a `smile` expression (the eye ellipses crossfade to two arcs, 0.1 per frame toward the target, about a third of a second each way), requested for 1.6 s. The room asks for it when a write leaves no plant with days since water above 0. The line goes through `TessLine` with `aim` naming the keystone for "everyone"
 - Probe: `docs/design/boards/r66/pjy.js` (three waterings say nothing; the fourth says "Everyone's had a drink" in four spoken words while her eyes smile and look at the keystone; 2.6 s later the line stays and her eyes are open; the line overlaps no other place; Undo clears it and names the basil; paper, black; Reduce Motion: there at once, no spoken words)
+
+## Sheet 388: the ticket comes off the rail
+
+On the Galley landing, Wash said "Dishes, done" and the Dishes ticket kept saying "7 waiting" on the rail. Now the rail does what a line cook's rail does with a finished order.
+
+- Wash counts the dishes down on their own ticket, about one a beat (80 ms a dish), until it reads "the sink is clear" and "all put away"
+- A beat later (about half a second) the ticket comes off, with one light tick. Its clip lets go with a small lift, the ticket tips from its left corner and rises away as it fades, and its words stay as they are while it goes. Then the other tickets spread along the rail to fill the gap
+- The widget's "Since lunch, 7 dishes" card goes with it. If that card was the one showing, the next one comes up. The action word's object reads "the sink is clear"
+- Undo, within its 10 s, hangs it back. The ticket comes down onto the rail and the clip catches it with a small dip, the count is back at 7 waiting, and the card and the object come back too
+- Washing a clear sink only says "The sink is clear". Coming back to the Galley later, the rail has three tickets and the widget has no dishes card
+- Reduce Motion: no count and no flight. The ticket is simply gone, and back on Undo
+- Board fix found by this round's probe: under Reduce Motion, opening any room from Bridge looped forever on the board. It was board code only, and it is fixed
+- Core: nothing new. Builder B: in the Galley's `TicketRail`, a ticket whose order is finished counts down with `.contentTransition(.numericText(countsDown: true))` stepping every 0.08 s, then leaves. Its content keeps a fixed width while its slot animates to zero (spring, 0.16 s after it starts to leave), and it rotates −4° around `UnitPoint(x: 0.3, y: 0)`, moves up 70 pt and fades. Its clip offsets up 3 pt over 0.16 s, with one light `.sensoryFeedback(.impact)`. On Undo the insertion runs in reverse and the clip keyframes from −3 pt, hold, then +1 pt, then 0, over 0.56 s. The landing widget drops the dishes item from its list and advances if it was the one showing
+- Probe: `docs/design/boards/r66/pgw.js` (partway through, the ticket reads fewer than 7 waiting and is still on the rail; afterwards it is off, the three others are equal and wider and none overlap, its words did not reflow, the receipt is "Dishes, done" with no full stop, the widget has no dishes card and the action word says the sink is clear; Undo brings back 7 waiting, the card and the object; washing again only says the sink is clear; coming back shows three tickets; paper, black, and with the dishes card showing; Reduce Motion: in place)
