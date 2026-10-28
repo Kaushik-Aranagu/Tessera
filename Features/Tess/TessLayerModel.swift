@@ -24,6 +24,8 @@ final class TessLayerModel {
         case claude, phone
         /// The phone answered because there is no Claude key: say so and where to add one.
         case phoneNoKey
+        /// The phone answered because Claude's call failed (a bad key, no network, a cap...): say why.
+        case phoneFailed(ClaudeFailure)
 
         /// The capture's source: Claude only when Claude answered; the grammar, the on-device model, a routed write
         /// or a miss kept on the phone are all this phone.
@@ -32,8 +34,31 @@ final class TessLayerModel {
         }
 
         /// As above, but with no key stored the phone's answer says why Claude did not answer.
-        init(_ source: TessCapture.Source?, keyPresent: Bool) {
-            self = source == .claude ? .claude : (keyPresent ? .phone : .phoneNoKey)
+        init(_ source: TessCapture.Source?, keyPresent: Bool, failure: ClaudeFailure? = nil) {
+            if source == .claude {
+                self = .claude
+            } else if !keyPresent {
+                self = .phoneNoKey
+            } else if let failure, Self.failureLine(failure) != nil {
+                self = .phoneFailed(failure)
+            } else {
+                self = .phone
+            }
+        }
+
+        /// Why Claude did not answer, in plain words with where to look; nil for a reason that is not worth a line
+        /// (a refusal, or "other").
+        static func failureLine(_ failure: ClaudeFailure) -> String? {
+            switch failure {
+            case .noKey: "No Claude key yet, so this stayed on the phone. Add one in Settings > Claude"
+            case .authFailed: "Your Claude key didn't work. Check it in Settings > Claude"
+            case .network: "Couldn't reach Claude, so this stayed on the phone"
+            case .timeout: "Claude took too long, so this stayed on the phone"
+            case .capReached: "Today's Claude limit is reached, so this stayed on the phone"
+            case .busy: "Claude is busy, so this stayed on the phone"
+            case .paused: "Claude is paused, so this stayed on the phone. Change it in Settings > Claude"
+            case .refused, .other: nil
+            }
         }
 
         /// Plain small text, sentence case, no full stop.
@@ -42,6 +67,7 @@ final class TessLayerModel {
             case .claude: "Answered by Claude"
             case .phone: "Answered on this phone"
             case .phoneNoKey: "No Claude key yet, so this stayed on the phone. Add one in Settings > Claude"
+            case let .phoneFailed(failure): Self.failureLine(failure) ?? "Answered on this phone"
             }
         }
     }

@@ -454,7 +454,8 @@ final class BridgeStage {
             let line = await model.ask(text)
             tessModel.say(line.isEmpty ? "Got it" : line, names: [],
                           answeredBy: TessLayerModel.AnswerSource(model.lastAnswerSource,
-                                                                  keyPresent: model.claudeKeyPresent))
+                                                                  keyPresent: model.claudeKeyPresent,
+                                                                  failure: model.claudeFailure))
             tessModel.offer(["That's all"])
         }
     }

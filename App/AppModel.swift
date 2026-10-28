@@ -260,6 +260,11 @@ final class AppModel {
     /// Whether a Claude key is stored: a Bool only, for Tess's status line ("Claude is on" or "No key yet"). The key's
     /// text is never kept.
     private(set) var claudeKeyPresent = false
+    /// Why the last call to Claude gave no answer (live path first, then the old one); nil after one that worked.
+    var claudeFailure: ClaudeFailure? {
+        tessLive?.lastFailure ?? claudeFlags.lastFailure
+    }
+
     /// He said Later, or Now already showed it this launch: Now stays quiet until the next cold launch.
     var keyQuestionQuietOnNow = false
 

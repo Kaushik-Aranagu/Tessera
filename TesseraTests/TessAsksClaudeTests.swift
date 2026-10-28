@@ -97,6 +97,12 @@ struct TessAsksClaudeTests {
         }
         #expect(TessLayerModel.AnswerSource.claude.line == "Answered by Claude")
         #expect(TessLayerModel.AnswerSource.phone.line == "Answered on this phone")
+        #expect(TessLayerModel.AnswerSource(.none, keyPresent: false) == .phoneNoKey)
+        #expect(TessLayerModel.AnswerSource(.none, keyPresent: true, failure: .authFailed) == .phoneFailed(.authFailed))
+        #expect(TessLayerModel.AnswerSource.phoneFailed(.authFailed).line
+            == "Your Claude key didn't work. Check it in Settings > Claude")
+        #expect(TessLayerModel.AnswerSource(.none, keyPresent: true, failure: .other) == .phone)
+        #expect(TessLayerModel.AnswerSource(.claude, keyPresent: false, failure: .network) == .claude)
         let layer = TessLayerModel()
         layer.say("Logged.", names: [], answeredBy: .claude)
         #expect(layer.lines.last?.answeredBy == .claude)
