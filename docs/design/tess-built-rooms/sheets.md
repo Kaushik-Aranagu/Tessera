@@ -288,3 +288,16 @@ When the thirstiest plant changes, the room's sentence and caption change their 
 - Reduce Motion: the names change in place
 - Core: nothing new. Builder A: the sentence is a `Text` built from runs, and the name run has a stable identity per role ("thirstiest"), not per plant. When its value changes, the old run's text goes into a transient overlay with a `.move(edge: .top)` plus opacity removal. The name run's frame animates from the old width to the new, clipped at its sides only. The new text comes in with `.move(edge: .bottom)` and opacity, 170 ms after the old one starts to leave. Run it all inside `withTesseraAnimation`
 - Probe: `docs/design/boards/r66/prn.js` (back from the orchid's page after watering it: the line and caption already say "monstera", the old "orchid" is on the layer for the first frames and then gone, the new names animate; again from the monstera's page to "fern"; paper, black; Reduce Motion: no overlay)
+
+## Sheet 381: the dates turn over
+
+Once every plant's page shows "Last three times" (sheet 376), watering a plant changes all three dates at once: the new watering comes in at the front and the oldest drops off the end. Until now the line just changed. Now it turns over like a departure board.
+
+- Each of the three places rolls from its old date to its new one, front first, 60 ms apart. The old date lifts away and fades, then the new one rises into the same place. On the fern's page: "Oct 23, Oct 20 and Oct 17" becomes "Oct 25, Oct 23 and Oct 20", and Oct 17 is the last to go
+- It happens in time with the number rising into "Today" (sheet 375), so the whole page answers the one tap
+- The dates never slide past the words between them. A first try slid each date one place along, and "Oct 20" ran over "and" on its way. Rolling in place keeps every word in its own place, and it is the same look as the room's sentence (sheet 380): old lifts away, new rises
+- Undo rolls them back down, the other way, so he can see that the newest date is the one that went
+- The line's text is right from the first frame. The leaving dates are drawn on top of the page and hidden from VoiceOver
+- Reduce Motion: the line just changes
+- Core: nothing new. Builder A: the line is a `Text` built from runs, and each date run's identity is its place (0, 1, 2), not its value. So a changed value rolls in place with `.contentTransition(.numericText(countsDown:))`, staggered by place, inside `withTesseraAnimation`. Use `countsDown: true` for Undo
+- Probe: `docs/design/boards/r66/psh.js` (the fern's page with the dates set: watering rolls all three places with Oct 17 leaving, and the text is right at once; Undo rolls them back; nothing cut; paper, black; Reduce Motion: no movement)

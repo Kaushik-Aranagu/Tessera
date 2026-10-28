@@ -2888,6 +2888,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .pl-key span{font:300 48px/1 var(--num);color:var(--ink2);padding-bottom:8px}
 .pl-care{left:24px;top:420px;width:354px;font:400 17px/24px var(--sans);color:var(--ink)}
 .pl-hist{left:24px;top:452px;width:354px;font:400 17px/24px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden}
+.pl-hist .dt{display:inline-block}
 .pl-mist{left:24px;top:476px;width:354px;font:400 17px/24px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden}
 .pl-mist .pl-ln{color:var(--routines);cursor:pointer}
 .chart .ch-c[data-p]{cursor:pointer}
@@ -3173,13 +3174,23 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
     part arrives like any change (his words, the ghost, the drying line), and Tess says what it reached: "Every plant’s
     page has it now, not just the monstera’s". Touching his words while it dries stops it (373); Undo un-dries it (368) */
  const day=x=>new Date(2026,9,25-x).toLocaleDateString('en-US',{month:'short',day:'numeric'});
- const hist=()=>{const e=EVERY[pl.n]||7,a=pl.d===0?[0,pl.was??e]:[pl.d,pl.d+e];a.push(a[1]+e);return 'Last three times: '+day(a[0])+', '+day(a[1])+' and '+day(a[2])};
+ const hist=()=>{const e=EVERY[pl.n]||7,a=pl.d===0?[0,pl.was??e]:[pl.d,pl.d+e];a.push(a[1]+e);const D=x=>'<span class="dt">'+day(x)+'</span>';return 'Last three times: '+D(a[0])+', '+D(a[1])+' and '+D(a[2])};
+ /* 381: watering moves the dates along by one, the way a departure board turns over. Each place rolls from its old
+    date to its new one, front first: the old date lifts away and the new one rises in, so the front reads the new
+    watering and the end lets the oldest go. Undo rolls them back down. The dates never slide past the words between
+    them, and the line's text is right from the first frame. Reduce Motion: the line just changes */
+ function shift(fn,dir){const er=el.getBoundingClientRect(),old=[...hs.querySelectorAll('.dt')].map(e=>({t:e.textContent,r:e.getBoundingClientRect()}));fn();
+  if(RM||!CV.hist||!old.length)return;const E='cubic-bezier(.2,.8,.2,1)',cs=getComputedStyle(hs),up=dir<0?'.45em':'-.45em',dn=dir<0?'-.4em':'.4em';
+  [...hs.querySelectorAll('.dt')].forEach((e,i)=>{const o=old[i];if(!o||o.t===e.textContent)return;const g=h('div','fx dt-out',o.t);g.setAttribute('aria-hidden','true');
+   g.style.cssText='position:absolute;z-index:8;pointer-events:none;white-space:nowrap;left:'+((o.r.left-er.left)/K)+'px;top:'+((o.r.top-er.top)/K)+'px;font:'+cs.font+';line-height:'+cs.lineHeight+';color:'+cs.color;el.appendChild(g);
+   g.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY('+up+')'}],{duration:170,delay:i*60,easing:'cubic-bezier(.4,0,.8,.4)',fill:'both'}).onfinish=()=>g.remove();
+   e.animate([{opacity:0,transform:'translateY('+dn+')'},{opacity:1,transform:'none'}],{duration:280,delay:i*60+150,easing:E,fill:'backwards'})})}
  let dry=null,heard='',tline='',ln0=null;const top={hist:452,mist:476};
  function draw(ghost){if(ghost===true)ghost='hist';ln.textContent='Watered '+ago(pl.d)+', '+WHERE[pl.n].replace(/^./,c=>c.toLowerCase());
   k.innerHTML=pl.d===0?'<b>Today</b>':'<b>'+pl.d+'</b><span>'+(pl.d===1?'day':'days')+'</span>';
   // the parts stack from the care note down, so an empty one leaves no gap, and Tess sits one line below the last
   let y=452;const hOn=CV.hist||ghost==='hist',mOn=OV.mist||ghost==='mist';
-  hs.textContent=hOn?hist():'';hs.classList.toggle('gh',ghost==='hist');if(hOn){top.hist=y;hs.style.top=y+'px';y+=24}
+  hs.innerHTML=hOn?hist():'';hs.classList.toggle('gh',ghost==='hist');if(hOn){top.hist=y;hs.style.top=y+'px';y+=24}
   ms.innerHTML=mOn?'Last misted <span class="pl-w">'+PLANTMIST.Orchid+'</span>, in <span class="pl-ln">Water houseplants</span>':'';ms.classList.toggle('gh',ghost==='mist');if(mOn){top.mist=y;ms.style.top=y+'px';y+=24}
   ts.style.top=Math.max(500,y+24)+'px';
   ts.className='ch-c '+(heard?'ch-heard live':'ch-tess');ts.textContent=heard?'“'+heard+'”':tline||(OV.mist?'The misting is the orchid’s own, the rest is every plant’s':CV.hist?'This page is every plant’s. Say a change and they all get it':'Every plant gets this plain page until you say how it should look');
@@ -3197,9 +3208,9 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
   const done=()=>{dry=null;l.remove();heard='';tline='Stopped, nothing changed';draw()};if(RM)return done();
   l.getAnimations().forEach(a=>a.pause());dry=setTimeout(()=>{const d=Math.max(140,600*p);l.getAnimations().forEach(a=>a.cancel());l.animate([{transform:'scaleX('+p+')'},{transform:'scaleX(0)'}],{duration:d,easing:'cubic-bezier(.5,0,.75,0)',fill:'both'});dry=setTimeout(done,d)},120)}
  ts.onclick=()=>{if(heard&&dry)stop()};
- act.onclick=()=>{if(dry)return;if(pl.d===0)return !CV.hist?say('hist'):mistOK&&!OV.mist?say('mist'):back();const was=pl.d;pl.was=was;pl.d=0;tline='';draw();
+ act.onclick=()=>{if(dry)return;if(pl.d===0)return !CV.hist?say('hist'):mistOK&&!OV.mist?say('mist'):back();const was=pl.d;shift(()=>{pl.was=was;pl.d=0;tline='';draw()},1);
   if(!RM)k.querySelector('b').animate([{transform:'translateY(.25em)',opacity:.2},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
-  receipt(el,pl.n+', watered',()=>{pl.d=was;delete pl.was;draw()})};
+  receipt(el,pl.n+', watered',()=>shift(()=>{pl.d=was;delete pl.was;draw()},-1))};
  draw();
  if(current&&current.dataset.id==='chart'){const row=[...current.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1'),nm=row&&row.querySelector('span'),
   col=[...current.querySelectorAll('.ch-key > div')].find(x=>x.querySelector('span')?.textContent===pl.n),nb=col&&col.querySelector('b');
