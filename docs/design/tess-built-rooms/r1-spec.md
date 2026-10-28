@@ -109,3 +109,35 @@ Each rejection returns one plain reason line. The first rejection goes back to t
 2. Builder A, in parallel: the player against the fixture (blank frame, all twelve parts, ghost, drying line, Allow), behind `chartRoom`.
 3. Core: `patchRoom` in `TessTools`, the job, the demo canned patches and the eval.
 4. Join: wire the job to the room and run the four board sentences end to end on the simulator, then the install list says what is in it and what isn't built yet (his Oct 26 rule).
+
+## 9. One lifecycle (sheets 358 to 373, as the board plays it)
+
+Every change Tess makes to a room, and the room itself, moves through these states and no others. Core owns the states; Builder A draws each one the same way wherever it happens.
+
+A change (one op group from one sentence):
+
+| State | What he sees | Way in | Ways out |
+|---|---|---|---|
+| Staged | his words in his line, the parts in ghost (38%), the drying line running (2 s) | a sentence | set when the line ends; stopped by touching his words or saying "wait" |
+| Stopped | the line holds 120 ms, runs back from where it got to, the ghost lets go; Tess: "Stopped, nothing changed"; no receipt | touch on his words while staged | none, nothing was written |
+| Waiting for Allow | the wine reach line with Allow; the place's outline stays up, since nothing is set; receipt "Waiting for your Allow" with Not now | a staged change whose validator result is `needsAllow` reaching the end of its line | set on Allow; un-dried on Not now |
+| Set | full ink, the outline lets go, receipt `say` with Undo for 10 s | the line ending, or Allow | un-dried by Undo |
+| Un-dried | the ghost comes back, the line runs back right to left (600 ms, easing in), the outline comes back up | Undo on a set change, Not now on a waiting one | none, the op group is marked `undone` when the line reaches 0 |
+| Refused | nothing changes; Tess says why in her line and offers what the rules allow | a validator `refuse` | none |
+| Queued | nothing changes now; the receipt names the next install | a part the kit doesn't have yet | lands with the install |
+
+Only one change is staged at a time. A new sentence takes the last receipt down as it starts, so Undo can never land on the wrong change; older changes are reached from the history (sheet 362).
+
+The room:
+
+| State | What he sees | Way in | Ways out |
+|---|---|---|---|
+| Blank | the frame sketches in from each place's top left corner (366) | "Make a room" (later), or the R1 Chart room | live after the first set change |
+| Live | the room, kept between visits (372) | any set change | archived by "Take this room down" |
+| Archiving | ghost, outlines up then folded into their corners, the empty room dissolves (371) | "Take this room down" | archived; or back to live if he touches his words half way (373) |
+| Archived | no row in the dial; Bridge's foot reads "Room taken down, not the plants" with Undo for 10 s | the fold ending | restored by Undo or "Bring back my plant room" |
+| Restored | the first open replays his set sentences in order at 0.12× (372), skipping refused and queued ones; Skip or any tap ends it | restore | live after the replay, once |
+
+Rules that cross every state: taking a room down never deletes the objects it binds to; wishes and grants end with the room and come back with it; nothing is written to the store before a change sets; every state has a Reduce Motion form that is the end state at once.
+
+Tests (Core): one case per arrow in both tables; a stopped change and an un-dried one each leave the store byte-identical to before; archive then restore round-trips the room document, its history and its grants; the replay writes nothing.

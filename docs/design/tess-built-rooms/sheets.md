@@ -202,3 +202,11 @@ The 2-second drying line was only a wait. Now it is the window for him to change
 - Undo (sheet 368) is for a change that has set. Stop is for one that hasn't. The two never overlap: the receipt with Undo only appears once a change has set
 - Core: a patch is applied to the store only when its drying ends. Until then it is a staged op group, and stop discards it. The 2 s is the same window the validator already uses. Builder A: the drying line is the view whose trim end runs from 0 to 1. Stop pauses that animation, reads its presentation value, and animates back to 0 from there inside `withTesseraAnimation`. A tap on the heard line calls the player's `cancelPending()`
 - Probe: `docs/design/boards/r66/pst.js` (stop at 1 s: the line holds, runs back, the ghost lets go, no receipt, Tess's line, same sentence offered; say it again and it sets; stop a refusal while it waits; stop a take-down half way and the room stays; Reduce Motion)
+
+## Sheet 374: one lifecycle
+
+- No new screen this round. Sheets 358 to 373 each added one state to how a change or a room behaves. They are now in one place, `r1-spec.md` section 9: two tables, one for a change (staged, stopped, waiting for Allow, set, un-dried, refused, queued) and one for the room (blank, live, archiving, archived, restored), each with what he sees, the way in and the ways out
+- The point is that every state has exactly one look, wherever it happens. A ghost is always 38%, a line always runs left to right to set and right to left to leave, and Tess's line always says what happened in words. So the room never needs a new convention for a new sentence
+- Three rules hold in every state: nothing is written before a change sets; taking a room down never deletes what it shows; every state's Reduce Motion form is its end state at once
+- Core's tests get one case per arrow, and the round trips (stop, un-dry, archive then restore) must leave the store byte-identical
+- Board: the Chart room's map note now lists 371 to 373
