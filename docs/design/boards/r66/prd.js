@@ -1,0 +1,10 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+__dirname+'/index.html'+(process.argv[2]==='black'?'?theme=black':''));await pg.waitForTimeout(600);
+await pg.evaluate(()=>go('tend'));await pg.waitForTimeout(900);
+await pg.evaluate(()=>{const r=window.__rt;r.S.done.add(0);r.S.done.add(1);r.S.i=2;r.S.j=0;r.S.left=600});await pg.evaluate(()=>window.__rt.next&&0);
+await pg.evaluate(()=>{const r=window.__rt;r.S.left=601});await pg.waitForTimeout(600);await pg.evaluate(()=>document.getAnimations().forEach(a=>a.finish()));
+const t=await pg.evaluate(()=>document.querySelector('.dk-time span').textContent);await pg.screenshot({path:'RD1.png'});
+await pg.evaluate(()=>window.__rt.next());await pg.waitForTimeout(200);
+const rc=await pg.evaluate(()=>[...document.querySelectorAll('.receipt')].map(x=>x.textContent).join('|'));
+console.log(t,'|',rc,errs);await b.close()})();

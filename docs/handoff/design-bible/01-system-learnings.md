@@ -362,7 +362,7 @@ The *principles* in those files still hold: MotionPolicy, the house spring, Redu
 ## Open questions and contradictions
 1. Ember: 241's table measures against Ember "3433D6 D6266E F2B21B" (the old living-colours palette), but Tess's Ember is FF5A26 / E5341C / FFA90F (215). 241's ΔE column may be against the wrong colors. Re-measure.
 2. Notes 246 and 247 put "From Tess" in "Tess blue", but Tess is Ember now. The color for Tess's words in rooms is unconfirmed.
-3. Proposed Notes plum 8A4570 / E3A3CB shares its light hex with Legs and People plum (D69CC0 dark) and is close to Routines plum 8E4A78.
+3. Settled Oct 27: the Log is violet 5B2277 / BB70E1 (his pick), so it no longer sits near Routines plum 8E4A78. Legs and People keep plum 8A4570 as kind colors.
 4. Money: sage (241, code) or sea teal 2A7878 / 7BC0C4 (README, 223)?
 5. Wheel blur cap: 1 pt (230) or 1.8 pt (246 dial)?
 6. Section labels: with a hairline under (page-palette-rule) or none (230, 246)?

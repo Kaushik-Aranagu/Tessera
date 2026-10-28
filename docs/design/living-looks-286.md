@@ -116,7 +116,86 @@ Tess's changes while he is away (live-visibility.md, section "Compatibility"):
 
 ## Open for the next round
 
-- Draw Column and Sentence for the Log's eight doors as well as the Deck's five. Column now uses two columns of
-  four.
-- Draw the Page looks (Even, Two columns, By time) on one room.
-- Draw the Layout mode swipe-through.
+- ~~Draw Column and Sentence for the Log's eight doors~~ Done in sheet 292 (`transitions-287.md`, "Many doors").
+- ~~Draw the Page looks (Even, Two columns, By time) on one room.~~ Done in sheet 293 (`transitions-287.md`, "Page forms").
+- ~~Draw the Layout mode swipe-through.~~ Done in sheet 308, below.
+
+## Sheet 308: the swipe-through (Oct 26)
+
+In shape mode (hold the Nav word, tap the doors), a swipe across the doors used to do nothing until the finger lifted,
+then the look changed. Now the swipe shows where it is going before it gets there.
+
+- **The doors follow the finger, held back.** They move a third of the finger's travel, easing out so they never go
+  past 28 pt, and thin to 65% as they go. They stay inside their own pane of glass, so nothing is cut.
+- **The foot says which look is coming.** The foot already lists Reel, Index and Sentence. As the finger moves, the
+  next look's word warms from grey to the room's colour while the current one cools. It reaches full colour exactly
+  at 40 pt, the point where letting go takes it, so the colour is the threshold and no marker is needed.
+- **Letting go past 40 pt** takes the look: the doors settle back over 160 ms as the look's own change plays.
+- **Letting go short of it** springs the doors home over 320 ms with a small overshoot, and the words cool back.
+- The glass lens still rides under the finger. Nothing new is drawn on the glass.
+- Reduce Motion: the doors do not move and the words do not warm; a swipe past 40 pt changes the look with the
+  150 ms crossfade.
+- Measured on the board (`t52.js`): Deck in paper and black, a 30 pt swipe that springs home, a 90 pt swipe that
+  takes Index, and a swipe back to Reel. `t39.js` still finds no cut words.
+
+For the builders: a `DragGesture` on the pane drives `@State var drag: CGFloat`. Doors: `.offset(x: pull(drag))`
+with `pull` = `drag / 3`, soft-capped at 28 pt, and `.opacity(1 - 0.35 * u)`, where `u = clamp((|drag| - 8) / 32)`.
+Foot words: tint the next look with `Theme.room.mix(with: .secondary, by: u)` and the current one with `1 - u`.
+On end, either `withTesseraAnimation(.snap)` the look change, or `withTesseraAnimation(.springHome)` back to zero.
+
+
+## Sheet 309: the Nav word changes its letters (Oct 26)
+
+Holding the Nav word to enter shape mode used to swap "Bridge" for "Done" in one frame. Now the word changes its
+letters instead.
+
+- Letters the two words share, in order and in the same case, stay and slide to their new places with a small
+  overshoot (340 ms). "Bridge" keeps its e for "Done".
+- The other letters leave upward by 5 pt with a touch of blur, 10 ms apart (140 ms).
+- The new letters rise in from 5 pt below only after the old ones have gone (from 170 ms, 26 ms apart), so two
+  letters never share a place mid-change.
+- Leaving shape mode plays the same change back, "Done" to "Bridge".
+- Changing mind mid-change (enter, leave, enter) starts from the word now meant, never from leftover letters.
+- VoiceOver hears the new word at once; Reduce Motion swaps it in place.
+- Measured on the board (`t53.js`): Deck in paper and Galley in black, with a fast on-off-on-off toggle; the word
+  always ends whole, and `t39.js` still finds no cut words.
+
+For the builders: `Text(word).contentTransition(.interpolate)` is not enough here, because it blends the glyphs.
+Lay out each letter as its own `Text` in an `HStack(spacing: 0)` keyed by its matched index (a longest common
+subsequence of the two words), with `.matchedGeometryEffect` for the kept letters and a `.move(edge: .top)` plus
+`.opacity` transition for the rest, all through `MotionPolicy`.
+
+## Sheet 310: shape mode's foot line (Oct 26)
+
+- **No full stops.** Shape mode's foot line ended its sentences ("Tap a place to reshape it.", "Drawn next round.").
+  They are gone, and the line now reads as one phrase: what the place is now, then what comes next in italics, for
+  example "Rise, stack, rows now, *more detail, just names* next round".
+- **It eases between places.** Tapping a new place used to swap the foot line in one frame. Now the old lines leave
+  upward by 3 pt (120 ms, 20 ms apart) and the new ones rise 4 pt into place (220 ms, 40 ms apart). Picking a look
+  for the doors only re-marks the words, so the line does not move under the finger.
+- Fast taps never stack two lines: only the last place picked is shown.
+- Reduce Motion: the line changes in place.
+- Measured on the board (`t54.js`): Deck in paper and Galley in black, every place in turn plus a burst of three
+  fast taps; no line ends in a stop, the Index word still changes the look, and `t39.js` still finds no cut words.
+
+For the builders: the foot line is a `Text` keyed by the picked place with `.id(place)` and a
+`.transition(.asymmetric(insertion: .offset(y: 4).combined(with: .opacity), removal: .offset(y: -3).combined(with:
+.opacity)))`, through `MotionPolicy`. Strip a trailing full stop at the source, as sheet 301 says.
+
+## Sheet 311: shape mode spreads from the finger (Oct 26)
+
+- Holding the Nav word used to bring in the panes of glass in a fixed order, 30 ms apart. Now they appear in order of
+  their distance from the held word, 0.4 ms a point, like a ripple from where he pressed: Needs first, then the
+  switcher and keystone, the widget, and the dial and summary last (about 270 ms across the screen).
+- Each pane grows from the side that faces the Nav word (its scale origin points at it), with the same small
+  overshoot as before.
+- On Done they gather back toward it: the farthest go first, 0.25 ms a point, each shrinking to 97% as it fades
+  over 200 ms. A pane stops taking taps the moment it starts to go.
+- Reduce Motion: they appear and go at once, as before.
+- Measured on the board (`t55b.js`, animations paused and sought, so every frame is exact): Deck in paper and
+  Galley in black; at 160 ms Needs is fully there and the summary not started; on Done the summary is gone by
+  200 ms while Needs is still at 91%.
+
+For the builders: give each pane `.transition(.scale(0.96, anchor: anchorFacing(navWord)).combined(with: .opacity))`
+with `.animation(MotionPolicy.shapeIn.delay(distance * 0.0004))`, the distance in points from the Nav word's centre
+to the pane's centre. The exit uses the same anchor with `(farthest - distance) * 0.00025`.
