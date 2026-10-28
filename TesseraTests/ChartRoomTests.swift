@@ -596,14 +596,14 @@ struct ChartRoomTests {
 
     @Test func aTessLineArrivesSixtyMillisecondsAWordWithABreathAfterEachComma() {
         let text = "Every plant's page has it now, not just the monstera's"
-        let starts = TessWords.starts(text)
+        let starts = TessLineTiming.starts(text)
         #expect(starts.count == 10)
         #expect(starts[0] == 0 && abs(starts[1] - 0.06) < 1e-9)
-        // "now," is the fifth word: the sixth starts one word and one breath later.
-        #expect(abs(starts[5] - starts[4] - (TessWords.perWord + TessWords.breath)) < 1e-9)
-        #expect(abs(starts[6] - starts[5] - TessWords.perWord) < 1e-9)
-        #expect(TessWords.shown(text, at: 0) == 1 && TessWords.shown(text, at: 10) == 10)
-        #expect(TessWords.total("") == 0)
+        // "now," is the sixth word: the seventh starts one word and one breath later.
+        #expect(abs(starts[5] - starts[4] - TessLineTiming.perWord) < 1e-9)
+        #expect(abs(starts[6] - starts[5] - (TessLineTiming.perWord + TessLineTiming.breath)) < 1e-9)
+        #expect(TessLineTiming.shown(text, at: 0) == 1 && TessLineTiming.shown(text, at: 10) == 10)
+        #expect(TessLineTiming.total("") == 0)
     }
 
     // MARK: Sheets 360 and 361: point, then say; how the room says no

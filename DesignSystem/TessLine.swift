@@ -6,7 +6,7 @@ import SwiftUI
 // opacity, so VoiceOver reads it at once and the layout never reflows while it comes in. Reduce Motion: whole at once,
 // no blink. She speaks in her own face (`TessFont`).
 
-enum TessWords {
+enum TessLineTiming {
     /// Seconds between one word's start and the next.
     static let perWord = 0.06
     /// The extra beat after a word that ends in a comma.
@@ -54,10 +54,10 @@ struct TessLine: View {
     var body: some View {
         TimelineView(.animation(
             minimumInterval: 1 / 30,
-            paused: !animated || elapsed(Date.now) > TessWords.total(text)
+            paused: !animated || elapsed(Date.now) > TessLineTiming.total(text)
         )) {
             context in
-            Text(attributed(shown: animated ? TessWords.shown(text, at: elapsed(context.date)) : .max))
+            Text(attributed(shown: animated ? TessLineTiming.shown(text, at: elapsed(context.date)) : .max))
                 .font(TessFont.line(size, relativeTo: .callout))
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
