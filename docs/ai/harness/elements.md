@@ -153,9 +153,9 @@ stays live on both. "Proposed" marks a tool Core still has to add over an engine
 | Deck | widget | tonight's session (routine), this week | `startWorkout` (proposed, referent), `restDay` (proposed), `openItem` | time, sessions this week | keystoneTakes, reform |
 | Deck | keystone | the board: lifts and numbers | `openItem`, `logSet` (asked) | bests, last sets | keystoneTakes (chalk) |
 | Deck | action word | Start, Log, Rest | `startWorkout`, `logSet`, `restDay` | the routine up next | keystoneTakes |
-| Galley | keystone | tickets (recipe, to get, dishes) | `openItem`, `startCooking` (proposed), `addGroceries` (asked) | dish, serve time, what's on the way | keystoneTakes |
+| Galley | keystone | tickets (recipe, to get, dishes) | `openItem`, `startCooking` (proposed), `addGroceries` (asked), `washDishes`, `addDishes` (asked) | dish, serve time, what's on the way | keystoneTakes |
 | Galley | widget | tonight, tomorrow (recipe) | `startCooking`, `setServeTime` (asked), `completeTask` (dishes), `openItem` | serve time | keystoneTakes, lines, strike |
-| Galley | action word | Cook, Get, Wash | `startCooking`, `cookTogether`, `addGroceries`, `startShop`, `completeTask`, `createRecipe` | pantry and groceries counts | keystoneTakes |
+| Galley | action word | Cook, Get, Wash | `startCooking`, `cookTogether`, `addGroceries`, `startShop`, `completeTask`, `createRecipe`, `washDishes` (Wash), `addDishes` (asked) | pantry and groceries counts | keystoneTakes |
 | Watch | keystone, widget, page | trees (routine) | `tendRoutine`, `pauseRoutine` (proposed, referent), `openItem` | today's steps, streak words (no counter) | strike (water), reform |
 | Watch | action word | Plant, Water, Pause | `plantRoutine` (proposed, asked), `tendRoutine`, `pauseRoutine` | the grove | keystoneTakes |
 | Purse | widget, page | amounts (spend, pool) | `openItem` | amounts as `deviceOnly` | navigate |

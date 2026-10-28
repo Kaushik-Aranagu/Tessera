@@ -52,7 +52,7 @@ public enum TessTools {
          createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking,
          logSpend,
          pinNote, rainAlert, restDay, tendRoutine,
-         plantRoutine, pauseRoutine, rehearse]
+         plantRoutine, pauseRoutine, addDishes, washDishes, rehearse]
     }
 
     /// The tools that write (every tool but the reads and rehearse), by name: a nonisolated list the request builder
@@ -61,6 +61,7 @@ public enum TessTools {
         "logSet", "createTask", "completeTask", "rescheduleTask", "addGroceries", "addToList", "createList",
         "createNote", "createRecipe", "startShop", "cookTogether", "setServeTime", "checkListItem", "startWorkout",
         "startCooking", "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine",
+        "addDishes", "washDishes",
     ]
 
     /// The tools Claude may be given: money too while `ClaudeSees.moneyWrites` is on. Never the rehearsal, which is

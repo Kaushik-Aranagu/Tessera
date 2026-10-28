@@ -21,7 +21,7 @@ struct TessToolsTests {
                                               "setServeTime", "checkListItem", "startWorkout", "startCooking",
                                               "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine",
                                               "plantRoutine",
-                                              "pauseRoutine", "rehearse"])
+                                              "pauseRoutine", "addDishes", "washDishes", "rehearse"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
