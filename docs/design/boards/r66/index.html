@@ -2880,6 +2880,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .pl-key b{font:300 96px/1 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
 .pl-key span{font:300 48px/1 var(--num);color:var(--ink2);padding-bottom:8px}
 .pl-care{left:24px;top:420px;width:354px;font:400 17px/24px var(--sans);color:var(--ink)}
+.pl-hist{left:24px;top:452px;width:354px;font:400 17px/24px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden}
 .chart .ch-c[data-p]{cursor:pointer}
 .ch-wish{left:24px;top:584px;width:354px;font:400 15px/22px var(--sans);color:var(--ink2);white-space:nowrap;transition:color .3s}.ch-wish.on{color:var(--ink)}
 .ch-nm{font-style:normal;display:inline-block}
@@ -2890,6 +2891,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
    the room's own top fact, live ("Orchid, 6 days"), so Bridge reads a built room the way it reads a preset one. The dial
    keeps the old name until he turns to that row; there, once, the old name lifts off and the new one rises in its place.
    Teal sits ΔE76 6.8 from the Purse's colour, so the plant room takes olive, the Lists colour the Log freed (sheet 280). */
+const CLASSVIEW={Plant:{hist:false}},EVERY={Orchid:7,Monstera:6,Fern:3,Basil:2};
 const WHERE={Orchid:'By the east window',Monstera:'By the couch',Fern:'In the bathroom',Basil:'On the kitchen sill'},CARE={Orchid:'Ice cubes, not a pour',Monstera:'When the top inch is dry',Fern:'Keep it out of the sun',Basil:'Pinch the flowers off'};
 ROOMS.chart={n:'Chart room',fact:'Say what it’s for',c:'var(--slate)',was:null,shown:'Chart room'};{const i=APPS.indexOf('money');if(i>=0&&!APPS.includes('chart'))APPS.splice(i+1,0,'chart')}
 function chartLabel(d,f){const R=ROOMS.chart;if(R.shown===R.n)return R.n;
@@ -3104,23 +3106,43 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
    watering here needs no Allow, because it is him marking his own plant, not a room Tess built doing it. Back in the
    room, the keystone and the doors show it, because the room only ever showed the plants */
 SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain page until you say how it should look.',render(el,P){el.classList.add('chart');
- const R=ROOMS.chart,pl=(R.saved&&R.saved.plants.find(p=>p.n===P.n))||{n:P.n,d:0};
+ const R=ROOMS.chart,pl=(R.saved&&R.saved.plants.find(p=>p.n===P.n))||{n:P.n,d:0},CV=CLASSVIEW.Plant;
  const bw=h('div','backw','Plants');bw.style.color='var(--lists)';bw.onclick=back;el.appendChild(bw);
  const t=h('div','ttl2',pl.n);t.style.color='var(--lists)';el.appendChild(t);
  const ln=h('div','ch-c ch-line');ln.style.top='128px';el.appendChild(ln);
  const k=h('div','ch-c pl-key');el.appendChild(k);
  const cp=h('div','ch-c ch-cap','Days since it was last watered');el.appendChild(cp);
  el.appendChild(h('div','ch-c pl-care',CARE[pl.n]||''));
- const ts=h('div','ch-c ch-tess','Every plant gets this plain page until you say how it should look');ts.style.top='470px';el.appendChild(ts);
+ const hs=h('div','ch-c pl-hist');el.appendChild(hs);
+ const ts=h('div','ch-c ch-tess');ts.style.top='500px';el.appendChild(ts);
  const act=h('button','ch-act');el.appendChild(act);
  const ago=d=>d===0?'today':d===1?'yesterday':d+' days ago';
- function draw(){ln.textContent='Watered '+ago(pl.d)+', '+WHERE[pl.n].replace(/^./,c=>c.toLowerCase());
+ /* 376: the page is the class's, so a change said on one plant's page is a change to every plant's page. The new
+    part arrives like any change (his words, the ghost, the drying line), and Tess says what it reached: "Every plant’s
+    page has it now, not just the monstera’s". Touching his words while it dries stops it (373); Undo un-dries it (368) */
+ const day=x=>new Date(2026,9,25-x).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+ const hist=()=>{const e=EVERY[pl.n]||7,a=pl.d===0?[0,pl.was??e]:[pl.d,pl.d+e];a.push(a[1]+e);return 'Last three times: '+day(a[0])+', '+day(a[1])+' and '+day(a[2])};
+ let dry=null,heard='',tline='',ln0=null;
+ function draw(ghost){ln.textContent='Watered '+ago(pl.d)+', '+WHERE[pl.n].replace(/^./,c=>c.toLowerCase());
   k.innerHTML=pl.d===0?'<b>Today</b>':'<b>'+pl.d+'</b><span>'+(pl.d===1?'day':'days')+'</span>';
-  act.className='ch-act'+(pl.d>0?' water':'');act.innerHTML=pl.d>0?'<span class="av">Watered</span><span class="ao">today</span>':'<span class="av">Back</span><span class="ao">to Plants</span>'}
- act.onclick=()=>{if(pl.d===0)return back();const was=pl.d;pl.d=0;draw();
+  hs.textContent=CV.hist||ghost?hist():'';hs.classList.toggle('gh',!!ghost);
+  ts.className='ch-c '+(heard?'ch-heard live':'ch-tess');ts.textContent=heard?'“'+heard+'”':tline||(CV.hist?'This page is every plant’s. Say a change and they all get it':'Every plant gets this plain page until you say how it should look');
+  const sayIt=pl.d===0&&!CV.hist;act.className='ch-act'+(pl.d>0?' water':'');
+  act.innerHTML=pl.d>0?'<span class="av">Watered</span><span class="ao">today</span>':sayIt?'<span class="av">Say</span><span class="ao">show when I watered it</span>':'<span class="av">Back</span><span class="ao">to Plants</span>'}
+ function line(from,to,dur,ease){const l=h('div','ch-dry');l.style.cssText='left:26px;top:'+(452+24-2)+'px;width:350px';el.appendChild(l);
+  if(!RM)l.animate([{transform:'scaleX('+from+')'},{transform:'scaleX('+to+')'}],{duration:dur,easing:ease,fill:'both'});return l}
+ function say(){heard='Show when I watered it';tline='';{const rc=el.querySelector('.receipt');if(rc)rc.remove()}draw(true);ln0=line(0,1,2000,'linear');ln0._t=performance.now();
+  dry=setTimeout(()=>{dry=null;ln0.remove();ln0=null;heard='';CV.hist=true;tline='Every plant’s page has it now, not just the '+pl.n.toLowerCase()+'’s';draw();
+   if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}
+   receipt(el,'Every plant’s page, set',()=>{if(dry)return;tline='';draw(true);CV.hist=false;const l=line(1,0,600,'cubic-bezier(.5,0,.75,0)');dry=setTimeout(()=>{dry=null;l.remove();draw()},RM?0:600)})},2000)}
+ function stop(){if(!dry||!ln0)return;clearTimeout(dry);const p=Math.min(1,(performance.now()-ln0._t)/2000),l=ln0;ln0=null;if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}
+  const done=()=>{dry=null;l.remove();heard='';tline='Stopped, nothing changed';draw()};if(RM)return done();
+  l.getAnimations().forEach(a=>a.pause());dry=setTimeout(()=>{const d=Math.max(140,600*p);l.getAnimations().forEach(a=>a.cancel());l.animate([{transform:'scaleX('+p+')'},{transform:'scaleX(0)'}],{duration:d,easing:'cubic-bezier(.5,0,.75,0)',fill:'both'});dry=setTimeout(done,d)},120)}
+ ts.onclick=()=>{if(heard&&dry)stop()};
+ act.onclick=()=>{if(dry)return;if(pl.d===0)return CV.hist?back():say();const was=pl.d;pl.was=was;pl.d=0;tline='';draw();
   if(!RM)k.querySelector('b').animate([{transform:'translateY(.25em)',opacity:.2},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
-  receipt(el,pl.n+', watered',()=>{pl.d=was;draw()})};
- draw();window.__pl={get d(){return pl.d}};return null}};
+  receipt(el,pl.n+', watered',()=>{pl.d=was;delete pl.was;draw()})};
+ draw();window.__pl={get d(){return pl.d},get hist(){return CV.hist},say,stop,get dry(){return !!dry}};return ()=>clearTimeout(dry)}};
 SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say what to change and I’ll redo that place.',render(el){
  const PL=[['Orchid',6,'Wednesday','Ice cubes, not a pour','By the east window'],['Monstera',4,'Friday','When the top inch is dry','By the couch'],['Fern',2,'Sunday','Keep it out of the sun','In the bathroom'],['Basil',1,'yesterday','Pinch the flowers off','On the kitchen sill']];
  return landingV3(el,{name:'Plants',color:'var(--lists)',theme:'grow',

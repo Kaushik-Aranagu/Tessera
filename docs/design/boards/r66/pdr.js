@@ -1,4 +1,4 @@
-// 375: "Give each plant a door" fills the doors place with the room's own dial (keystone order, summary on the left),
+// 375 (376: after watering, the plant page offers its class-wide change): "Give each plant a door" fills the doors place with the room's own dial (keystone order, summary on the left),
 // a door opens the plant's plain page, watering there needs no Allow, and back in the room the keystone and doors show it.
 const {chromium}=require('/opt/node22/lib/node_modules/playwright');
 (async()=>{const out={};for(const look of ['paper','black']){const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
