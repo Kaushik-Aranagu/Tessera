@@ -55,11 +55,11 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             .init(name: "longitude", value: String(format: "%.1f", rounded(longitude))),
             .init(
                 name: "current",
-                value: "temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_gusts_10m,wind_direction_10m"
+                value: "temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_gusts_10m,wind_direction_10m,relative_humidity_2m,pressure_msl"
             ),
             .init(
                 name: "hourly",
-                value: "temperature_2m,apparent_temperature,precipitation_probability,weather_code,is_day,wind_speed_10m,wind_gusts_10m,uv_index"
+                value: "temperature_2m,apparent_temperature,precipitation_probability,weather_code,is_day,wind_speed_10m,wind_gusts_10m,uv_index,relative_humidity_2m,pressure_msl"
             ),
             .init(
                 name: "daily",
@@ -166,6 +166,8 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             let wind_speed_10m: Double
             let wind_gusts_10m: Double
             let wind_direction_10m: Double?
+            let relative_humidity_2m: Double?
+            let pressure_msl: Double?
         }
 
         struct Hourly: Decodable {
@@ -178,6 +180,8 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             let wind_speed_10m: [Double?]
             let wind_gusts_10m: [Double?]
             let uv_index: [Double?]
+            let relative_humidity_2m: [Double?]?
+            let pressure_msl: [Double?]?
         }
 
         struct Daily: Decodable {
@@ -232,7 +236,9 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         let now = WeatherReport.Now(
             condition: condition, isDay: response.current.is_day == 1, temperatureC: response.current.temperature_2m,
             apparentC: response.current.apparent_temperature, windKph: response.current.wind_speed_10m,
-            gustKph: response.current.wind_gusts_10m, windFromDegrees: response.current.wind_direction_10m
+            gustKph: response.current.wind_gusts_10m, windFromDegrees: response.current.wind_direction_10m,
+            humidity: response.current.relative_humidity_2m.map { Int($0.rounded()) },
+            pressureHpa: response.current.pressure_msl
         )
         let h = response.hourly
         var hours: [WeatherReport.Hour] = []
@@ -246,7 +252,9 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
                 precipitationChance: (h.precipitation_probability[safe: index] ?? nil) ?? 0,
                 windKph: (h.wind_speed_10m[safe: index] ?? nil) ?? 0,
                 gustKph: (h.wind_gusts_10m[safe: index] ?? nil) ?? 0,
-                uvIndex: (h.uv_index[safe: index] ?? nil) ?? 0
+                uvIndex: (h.uv_index[safe: index] ?? nil) ?? 0,
+                humidity: (h.relative_humidity_2m?[safe: index] ?? nil).map { Int($0.rounded()) },
+                pressureHpa: (h.pressure_msl?[safe: index] ?? nil)
             ))
         }
         let d = response.daily

@@ -105,11 +105,13 @@ struct WeatherTests {
     static let forecastJSON = """
     {"latitude":37.8,"longitude":-122.4,"utc_offset_seconds":-25200,"timezone":"America/Los_Angeles",
      "current":{"time":"2026-10-24T00:00","temperature_2m":14.2,"apparent_temperature":13.0,"weather_code":61,"is_day":0,
-                "wind_speed_10m":10.0,"wind_gusts_10m":70.0,"wind_direction_10m":268.0},
+                "wind_speed_10m":10.0,"wind_gusts_10m":70.0,"wind_direction_10m":268.0,
+                "relative_humidity_2m":82.0,"pressure_msl":1004.3},
      "hourly":{"time":["2026-10-24T00:00","2026-10-24T01:00","2026-10-24T02:00"],
                "temperature_2m":[14.2,14.0,13.8],"apparent_temperature":[13.0,12.5,36.0],
                "precipitation_probability":[80,60,null],"weather_code":[61,3,0],"is_day":[0,0,0],
-               "wind_speed_10m":[10.0,9.0,8.0],"wind_gusts_10m":[20.0,18.0,16.0],"uv_index":[0.0,0.0,null]},
+               "wind_speed_10m":[10.0,9.0,8.0],"wind_gusts_10m":[20.0,18.0,16.0],"uv_index":[0.0,0.0,null],
+               "relative_humidity_2m":[82.0,85.0,null],"pressure_msl":[1004.3,1002.8,null]},
      "daily":{"time":["2026-10-24","2026-10-25"],"weather_code":[61,2],"temperature_2m_max":[18.0,20.5],
               "temperature_2m_min":[11.0,10.0],"apparent_temperature_max":[17.0,19.0],
               "precipitation_probability_max":[85,20],"wind_gusts_10m_max":[40.0,30.0],"uv_index_max":[3.0,5.5],
@@ -233,6 +235,7 @@ struct WeatherTests {
         let current = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
             .first { $0.name == "current" }?.value ?? ""
         #expect(current.contains("wind_direction_10m"))
+        #expect(current.contains("relative_humidity_2m") && current.contains("pressure_msl"))
     }
 
     @Test func twoAsksForTheSamePlaceShareOneFetch() async throws {

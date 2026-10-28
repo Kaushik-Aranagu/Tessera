@@ -15,6 +15,10 @@ public struct WeatherReport: Equatable, Sendable {
         public var gustKph: Double
         /// Where the wind comes from, in degrees (0 is north, 90 east); nil when the source gave none.
         public var windFromDegrees: Double?
+        /// Relative humidity, 0 to 100; nil when the source gave none.
+        public var humidity: Int?
+        /// Pressure at sea level in hectopascals; nil when the source gave none.
+        public var pressureHpa: Double?
         public var warnings: [WeatherWarning]
 
         /// "west", "north-east": the air line says "from the west". Nil with no direction.
@@ -23,9 +27,11 @@ public struct WeatherReport: Equatable, Sendable {
         }
 
         public init(condition: WeatherCondition, isDay: Bool, temperatureC: Double, apparentC: Double, windKph: Double,
-                    gustKph: Double, windFromDegrees: Double? = nil)
+                    gustKph: Double, windFromDegrees: Double? = nil, humidity: Int? = nil, pressureHpa: Double? = nil)
         {
             self.windFromDegrees = windFromDegrees
+            self.humidity = humidity
+            self.pressureHpa = pressureHpa
             self.condition = condition
             self.isDay = isDay
             self.temperatureC = temperatureC
@@ -51,6 +57,8 @@ public struct WeatherReport: Equatable, Sendable {
         public var windKph: Double
         public var gustKph: Double
         public var uvIndex: Double
+        public var humidity: Int?
+        public var pressureHpa: Double?
     }
 
     public struct Day: Equatable, Sendable, Identifiable {
@@ -143,6 +151,11 @@ public enum WeatherUnits {
     public static func mph(_ kph: Double) -> Double {
         kph / 1.609_344
     }
+
+    /// Pressure in inches of mercury (29.9 in), from hectopascals.
+    public static func inchesOfMercury(_ hpa: Double) -> Double {
+        hpa * 0.029_529_98
+    }
 }
 
 // MARK: - Sources
@@ -190,7 +203,8 @@ public struct SampleWeather: WeatherSource {
                 time: time, condition: condition, isDay: (7 ..< 19).contains(hour), temperatureC: temp,
                 apparentC: temp - 1, precipitationChance: condition.isPrecipitation ? 70 : 10,
                 windKph: 12 + Double(index % 5), gustKph: 22 + Double(index % 7),
-                uvIndex: (7 ..< 19).contains(hour) ? 4 : 0
+                uvIndex: (7 ..< 19).contains(hour) ? 4 : 0, humidity: 55 + index / 4,
+                pressureHpa: 1015 - Double(index) / 3
             )
         }
         let days: [WeatherReport.Day] = (0 ..< 7).map { index in
@@ -208,7 +222,10 @@ public struct SampleWeather: WeatherSource {
             temperatureC: 17,
             apparentC: 16,
             windKph: 12,
-            gustKph: 22
+            gustKph: 22,
+            windFromDegrees: 270,
+            humidity: 58,
+            pressureHpa: 1015
         )
         return WeatherReport(fetchedAt: now, now: current, hourly: hours, daily: days,
                              air: WeatherReport.AirQuality(usAQI: 42, pm25: 9, pm10: 14))
