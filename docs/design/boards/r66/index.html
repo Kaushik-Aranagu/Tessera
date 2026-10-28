@@ -342,6 +342,14 @@ requestAnimationFrame(tessDraw);
 let tlT=null;function tessSay(text){const L=$('#tessline');L.innerHTML='';const ws=text.split(' ');let d=0;
  ws.forEach(w=>{const s=h('span');s.textContent=w+' ';s.style.animationDelay=d+'ms';s.style.opacity=0;setTimeout(()=>{s.style.opacity=1},d);L.appendChild(s);d+=62+(/[.,]$/.test(w)?40:0)});
  clearTimeout(tlT);tlT=setTimeout(()=>{L.innerHTML=''},6000+d)}
+/* 383: Tess's line speaks. When she says something new on a page, her words arrive at her speaking pace, the same as
+   her face-tap line above (about 60 ms a word, a breath after a comma), and her face blinks once as she starts. What
+   she already said when a page opens is simply there. The line's text is whole from the first frame (every word is in
+   place at no ink), so nothing that reads it waits. Reduce Motion: the line is simply there */
+function speak(el){if(RM||!el)return;const t=el.textContent;if(!t)return;el.textContent='';let d=0;const ws=t.split(' ');
+ ws.forEach((w,i)=>{const s=document.createElement('span');s.className='sw-w';s.textContent=w;el.appendChild(s);if(i<ws.length-1)el.appendChild(document.createTextNode(' '));
+  s.animate([{opacity:0,transform:'translateY(3px)'},{opacity:1,transform:'none'}],{duration:260,delay:d,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});d+=62+(/[,.;:]$/.test(w)?40:0)});
+ window.__tblink=performance.now()+130}
 tessCv.addEventListener('click',()=>{const id=stack.length?stack[stack.length-1].id:'home';tessSay((SCREENS[id]&&SCREENS[id].tess)||'Ask me, or hold me to talk.')});
 
 /* the map of every screen, beside the phone */
@@ -2888,6 +2896,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-hist button.on{color:var(--ink);font-weight:600}
 .ch-hist b{font:400 14px var(--num);color:var(--ink2);white-space:nowrap}
 .ch-tess{left:36px;top:440px;width:330px;font:italic 400 20px/28px Newsreader,serif;color:var(--ink)}
+.ch-tess .sw-w{display:inline-block}
 .ch-heard.fast{opacity:.55;transition:none}
 .ch-heard.live{cursor:pointer;padding-block:8px;margin-top:-8px}
 .ch-doors{left:24px;top:640px;width:354px;height:120px}
@@ -2950,7 +2959,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  if(!RM)Object.values(pls).forEach((p,i)=>{const d=300+i*70;
   p.animate([{clipPath:'inset(0 100% 100% 0 round 12px)'},{clipPath:'inset(0 0 0 0 round 12px)'}],{duration:440,delay:d,easing:'cubic-bezier(.3,.7,.2,1)',fill:'backwards'});
   p.querySelector('i').animate([{opacity:0,transform:'translateX(-4px)'},{opacity:.7,transform:'none'}],{duration:240,delay:d+140,easing:'ease-out',fill:'backwards'})});
- const P0=[{n:'Orchid',d:6},{n:'Monstera',d:4},{n:'Fern',d:2},{n:'Basil',d:1}];let plants=P0.map(p=>({...p})),at=0,reach=false,dry=null;
+ const P0=[{n:'Orchid',d:6},{n:'Monstera',d:4},{n:'Fern',d:2},{n:'Basil',d:1}];let said=null,plants=P0.map(p=>({...p})),at=0,reach=false,dry=null;
  const SAY=[
   {s:'Make this my plant room',fills:['title','line'],r:'Plants, set'},
   {s:'Put them on the keystone by when I last watered',fills:['key','cap'],r:'Keystone, set'},
@@ -2980,6 +2989,8 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(hist);else if(at>=RI&&!reach)s+='<div class="ch-c ch-reach" data-p="wid"><span>This room can now mark plants watered</span><button data-a="allow">Allow</button></div>';
   if(hist);else if(heard)s+='<div class="ch-c ch-heard'+(rp?' fast':' live')+'">“'+heard+'”</div>';else if(tline)s+='<div class="ch-c ch-tess">'+tline+'</div>';
   layer.innerHTML=s;
+  // 383: a new line from Tess is spoken; one she already said when the room opened is simply there
+  {const tl=layer.querySelector('.ch-tess'),t=tl?tl.textContent:'';if(tl&&said!==null&&t!==said)speak(tl);said=t}
   {const dh=layer.querySelector('.ch-dial'),sm=layer.querySelector('.ch-dsum');if(dh){const L=[...plants].sort((a,b)=>b.d-a.d),f=Math.max(0,L.findIndex(p=>p.n===ROOMS.chart.door));
    dial(dh,L.map(p=>({n:p.n,d:p.d,color:p.d>=5?'var(--wine)':'var(--lists)'})),{start:f,slot:40,blur:1.6,label:(d,F)=>'<span style="font-size:'+(F?26:20)+'px;font-weight:'+(F?700:600)+'">'+d.n+'</span><i>'+d.d+'</i>',
     open:d=>{if(!dry&&!rp&&!tmw&&realAt==null&&!hist)go('plant',{n:d.n})},change:d=>{ROOMS.chart.door=d.n;sm.textContent=WHERE[d.n]}})}}
@@ -3203,7 +3214,9 @@ SCREENS.plant={title:'Plant',accent:'lists',tess:'Every plant gets this plain pa
   hs.innerHTML=hOn?hist():'';hs.classList.toggle('gh',ghost==='hist');if(hOn){top.hist=y;hs.style.top=y+'px';y+=24}
   ms.innerHTML=mOn?'Last misted <span class="pl-w">'+PLANTMIST.Orchid+'</span>, in <span class="pl-ln">Water houseplants</span>':'';ms.classList.toggle('gh',ghost==='mist');if(mOn){top.mist=y;ms.style.top=y+'px';y+=24}
   ts.style.top=Math.max(500,y+24)+'px';
-  ts.className='ch-c '+(heard?'ch-heard live':'ch-tess');ts.textContent=heard?'“'+heard+'”':tline||(OV.mist?'The misting is the orchid’s own, the rest is every plant’s':CV.hist?'This page is every plant’s. Say a change and they all get it':'Every plant gets this plain page until you say how it should look');
+  const wasSaid=ts._said;ts.className='ch-c '+(heard?'ch-heard live':'ch-tess');ts.textContent=heard?'“'+heard+'”':tline||(OV.mist?'The misting is the orchid’s own, the rest is every plant’s':CV.hist?'This page is every plant’s. Say a change and they all get it':'Every plant gets this plain page until you say how it should look');
+  // 383: a new line from Tess is spoken; the line the page opens with is simply there; his own words are never spoken back
+  if(heard)ts._said=null;else{const t=ts.textContent;if(wasSaid!==undefined&&wasSaid!==t)speak(ts);ts._said=t}
   const sayIt=pl.d===0&&!CV.hist,sayM=pl.d===0&&CV.hist&&mistOK&&!OV.mist;act.className='ch-act'+(pl.d>0?' water':'');
   act.innerHTML=pl.d>0?'<span class="av">Watered</span><span class="ao">today</span>':sayIt?'<span class="av">Say</span><span class="ao">show when I watered it</span>':sayM?'<span class="av">Say</span><span class="ao">just for the orchid, show its misting</span>':'<span class="av">Back</span><span class="ao">to Plants</span>'}
  function line(from,to,dur,ease,y){const l=h('div','ch-dry');l.style.cssText='left:26px;top:'+(y+24-2)+'px;width:350px';el.appendChild(l);

@@ -313,3 +313,15 @@ Sheet 307 (`docs/design/delights-290.md`) gave Tess's Undo line its manners: the
 - Reduce Motion: no thinning and no winding. The line goes at 10 s, or at once on Undo
 - Core: nothing new. Builder A and B: this is the shared `UndoLine` view that every room already uses. Its opacity for the word is a `TimelineView`-driven value (1 until 6 s, then down to 0.45 at 10 s), its removal is `.opacity`, and its Undo removal is a leading-edge mask. Rooms never draw their own Undo line
 - Probe: `docs/design/boards/r66/pun.js` (a plant page's receipt at 1, 8, 9.8 and 10.5 s: full ink, thinning, nearly 45%, gone; Undo winds the line while the change is already reversed, then it's gone; a new line comes back at full ink; Bridge's "Room taken down" line thins and fades the same way; paper, black; Reduce Motion: none of it)
+
+## Sheet 383: Tess's line speaks
+
+Tap Tess's face and her answer arrives word by word, at about the pace she would say it. Her lines on the pages themselves ("Every plant's page has it now, not just the monstera's", "Stopped, nothing changed") just appeared. Now a new line from her arrives the same way, so a line on the page reads as her speaking, not as a label changing.
+
+- Each word comes in at no ink and rises 3 pt into place, about 60 ms after the one before, with a breath after a comma. A ten-word line takes about two thirds of a second. Her face blinks once as she starts
+- Only a new line is spoken. The line a page opens with is already there. A line drawn again with the same words stays still
+- His own words, while they dry, are never spoken back to him. They are his, so they appear whole
+- The line's text is whole from the first frame: every word is in place at no ink, so VoiceOver and anything reading the line never wait for it
+- Reduce Motion: the line is simply there, and her face doesn't blink
+- Core: nothing new. Builder A: Tess's line is one `TessLine` view everywhere. When its text changes after it first appears, it reveals word by word with a per-word opacity and offset transition, staggered by `0.062 s` plus `0.04 s` after punctuation, inside `withTesseraAnimation`, and it asks the Tess face for one blink. VoiceOver reads the whole string at once
+- Probe: `docs/design/boards/r66/pts.js` (the plant page opens with its line still; his words while drying are not spoken; Tess's line when the change sets arrives word by word with a blink and then settles; in the room, "Stopped, nothing changed" is spoken; paper, black; Reduce Motion: no words moving)
