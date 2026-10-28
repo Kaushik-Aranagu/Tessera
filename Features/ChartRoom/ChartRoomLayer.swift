@@ -32,9 +32,10 @@ struct ChartRoomLayer: View {
                     let step = OutlineSetting.frame(at: 1, y: 0, setting: set, reduceMotion: reduceMotion)
                     let rank = DocumentRoom.outlined.firstIndex { $0.place == entry.place } ?? 0
                     Outline(name: entry.name, showsName: !ghosts.contains(entry.place) && (unrolled || reduceMotion),
-                            drawn: unrolled || reduceMotion ? 1 : 0, hidden: set,
+                            drawn: unrolled || reduceMotion ? 1 : 0,
                             nameDelay: OutlineUnroll.delay(rank: rank, reduceMotion: reduceMotion) + OutlineUnroll
-                                .nameAfter)
+                                .nameAfter,
+                            hidden: set)
                         .animation(
                             MotionPolicy.resolve(OutlineUnroll.animation(rank: rank), reduceMotion: reduceMotion),
                             value: unrolled
