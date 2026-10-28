@@ -132,7 +132,7 @@ struct RoomPatchTests {
         #expect(refusal(patch(.init(op: "look", trait: "motion", value: "wild")))?.contains("takes") == true)
         #expect(refusal(patch(add("a", "glyph", "glyph", ["symbol": .string("leaf"), "color": .string("#fff")])))?
             .contains("role") == true)
-        let colors = ["ember", "wine", "cobalt", "sage"].enumerated().map { index, role in
+        let colors = ["ochre", "wine", "violet", "sage"].enumerated().map { index, role in
             add("g\(index)", "title", index == 0 ? "title" : "caption", ["color": .string(role)])
         }
         #expect(refusal(patch(

@@ -1,5 +1,5 @@
 {
-  "color" : "slate",
+  "color" : "olive",
   "look" : {
     "density" : "airy",
     "motion" : "calm"
@@ -53,7 +53,7 @@
         "agg" : "max",
         "field" : "waterEvery",
         "label" : "days apart",
-        "unit" : "d"
+        "unit" : "days"
       }
     },
     {

@@ -66,11 +66,12 @@ public enum RoomKit {
     public nonisolated static let maxRows = 12
     /// A room shows three to four colors; counted in color roles.
     public nonisolated static let maxColors = 4
-    /// Theme color roles only, never hex: ink and its softer self, Tess's ember, the wine of a warning, slate (the
-    /// Chart
-    /// room's own), and each app's accent.
-    public nonisolated static let colorRoles = ["ink", "inkSoft", "ember", "wine", "slate", "cobalt", "ochre", "sage",
-                                                "violet", "olive", "dusk", "rain"]
+    /// Theme color roles only, never hex: ink and its softer self, the wine of a warning, slate (the Chart room's own),
+    /// and each app's accent. Ember and cobalt are Tess's and never a room's or a part's.
+    public nonisolated static let colorRoles = ["ink", "inkSoft", "wine", "slate", "ochre", "sage", "violet", "olive",
+                                                "dusk", "rain"]
+    /// Roles that are Tess's: a request for one gets a refusal with slate offered.
+    public nonisolated static let tessRoles: Set<String> = ["ember", "cobalt"]
     /// The vetted SF Symbols a glyph part may name.
     public nonisolated static let glyphs = [
         "leaf", "drop", "flame", "bolt", "heart", "star", "moon", "sun.max", "cloud.rain", "figure.walk",

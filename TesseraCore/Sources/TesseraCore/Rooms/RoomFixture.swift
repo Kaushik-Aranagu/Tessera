@@ -5,7 +5,7 @@ import Foundation
 /// validator's own tests start from; the same JSON is `docs/design/tess-built-rooms/fixture-chart-room.json`.
 public enum RoomFixture {
     public nonisolated static let chart = RoomDocument(
-        name: "Chart room", color: "slate", look: ["density": "airy", "motion": "calm"],
+        name: "Chart room", color: "olive", look: ["density": "airy", "motion": "calm"],
         reach: ["write Plant.lastWatered"],
         parts: [
             RoomPart(id: "title", kind: "title", place: "title", props: ["text": .string("Plants")]),
@@ -16,7 +16,7 @@ public enum RoomFixture {
             RoomPart(id: "days", kind: "number", place: "keystone",
                      props: ["label": .string("plants"), "agg": .string("count")], bind: "Plant"),
             RoomPart(id: "soon", kind: "number", place: "keystone",
-                     props: ["label": .string("days apart"), "unit": .string("d"), "field": .string("waterEvery"),
+                     props: ["label": .string("days apart"), "unit": .string("days"), "field": .string("waterEvery"),
                              "agg": .string("max")], bind: "Plant"),
             // A stack or grid draws its children; a child is not drawn again on its own.
             RoomPart(id: "pair", kind: "stack", place: "keystone",

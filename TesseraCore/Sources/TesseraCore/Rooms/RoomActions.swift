@@ -21,9 +21,12 @@ public struct PatchRoom: EngineAction {
     )
 
     public var patch: RoomPatch
+    /// What he said, kept as the op group's note so the room's history can read it back.
+    public var sentence: String?
 
-    public init(patch: RoomPatch) {
+    public init(patch: RoomPatch, sentence: String? = nil) {
         self.patch = patch
+        self.sentence = sentence
     }
 
     public func apply(_ transaction: inout Transaction) throws -> Output {
@@ -37,14 +40,14 @@ public struct PatchRoom: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: reason)
         case let .ok(document, widening):
             let room = try roomObject ?? transaction.create(transaction.classDef(.room), title: patch.room)
-            try write(document, over: current, on: room, in: &transaction)
+            try Self.write(document, over: current, on: room, in: &transaction)
             return Output(room: room.id, say: RoomPatchValidator.stripped(patch.say), widening: widening)
         }
     }
 
     /// Writes only what differs, so undo puts back exactly the old room.
-    @MainActor private func write(_ document: RoomDocument, over current: RoomDocument, on room: ObjectRecord,
-                                  in transaction: inout Transaction) throws
+    @MainActor static func write(_ document: RoomDocument, over current: RoomDocument, on room: ObjectRecord,
+                                 in transaction: inout Transaction) throws
     {
         let store = transaction.store
         if document.name != current.name || store.value("name", of: room) == nil {
@@ -85,7 +88,7 @@ public struct PatchRoom: EngineAction {
     }
 
     public func summary(in _: ObjectStore) -> String {
-        "Changed \(patch.room)"
+        RoomHistory.note(room: patch.room, sentence: sentence ?? patch.say)
     }
 
     public func receipt(in _: ObjectStore, output: Output) -> String? {
