@@ -8,6 +8,8 @@ import TesseraCore
 /// the last one can be undone from Tess's line in her band beside the soul (`TessVoice`).
 struct RoutineEditor: View {
     let routine: ObjectRecord
+    /// Set when another object's page opened this one (sheet 378): the back word reads its name in its colour.
+    var from: PageSource?
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
@@ -155,6 +157,9 @@ struct RoutineEditor: View {
 
     /// "Routines" when he came from the Routines page, else "Training".
     private var cameFrom: String {
+        if let from {
+            return from.name
+        }
         let stack = model.isWorkoutPresented ? model.workoutPath : model.path
         guard stack.count >= 2 else { return "Training" }
         if case .routines = stack[stack.count - 2] {
@@ -173,7 +178,7 @@ struct RoutineEditor: View {
                 Text("‹ \(cameFrom)")
                     .textRole(.label)
                     .textCase(.uppercase)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .foregroundStyle(from?.color ?? Theme.Colors.inkSecondary)
                     .frame(minHeight: 44)
             }
             .buttonStyle(HandleButtonStyle())

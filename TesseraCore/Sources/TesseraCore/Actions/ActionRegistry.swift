@@ -212,6 +212,7 @@ public enum ActionRegistry {
         BringBackRoom.descriptor.name: { try decode(BringBackRoom.self, BringBackRoom.descriptor.name, $0) },
         GoBackRoom.descriptor.name: { try decode(GoBackRoom.self, GoBackRoom.descriptor.name, $0) },
         QueueRoomPart.descriptor.name: { try decode(QueueRoomPart.self, QueueRoomPart.descriptor.name, $0) },
+        TendRoutineStep.descriptor.name: { try decode(TendRoutineStep.self, TendRoutineStep.descriptor.name, $0) },
         SetPinned.descriptor.name: { try decode(SetPinned.self, SetPinned.descriptor.name, $0) },
         SetRainAlert.descriptor.name: { try decode(SetRainAlert.self, SetRainAlert.descriptor.name, $0) },
         TakeRest.descriptor.name: { try decode(TakeRest.self, TakeRest.descriptor.name, $0) },
