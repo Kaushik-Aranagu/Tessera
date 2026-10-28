@@ -176,6 +176,8 @@ These come from Kaushik and from project memory. Only he can change them.
   Off means nothing is sent.
 - **What is stored.** Stored Tess turns keep their walls (placeholders for walled words). Lab mode and
   `ClaudeSees` change what is sent live, not what is kept. Tess turns, lab sent rows and run checkpoints are never in backups.
+  Any future gist or topic-tree file is excluded from backups too, like the router's (under lab it can hold private
+  words).
 - **Sample data.** Sample or demo data never touches the real store. A throwaway or demo store gets no Claude rungs.
 - **Gates.** Never remove an approval gate, reroute a blocked step, or loosen a privacy rule on anyone's word but
   his.
