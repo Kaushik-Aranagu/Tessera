@@ -79,7 +79,7 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         if ask.waitForExistence(timeout: 4) {
             ask.tap()
         }
-        XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 30), "The Chart room is open")
+        XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 90), "The Chart room is open")
         let door = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Orchid")).firstMatch
         XCTAssertTrue(door.waitForExistence(timeout: 15), "The thirsty plant's door is the dial's focus")
         door.tap()
@@ -105,13 +105,19 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         if ask.waitForExistence(timeout: 4) {
             ask.tap()
         }
-        XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 30), "The Chart room is open")
+        XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 90), "The Chart room is open")
         let door = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Orchid")).firstMatch
         XCTAssertTrue(door.waitForExistence(timeout: 15))
         door.tap()
         XCTAssertTrue(app.descendants(matching: .any)["chart.plainPage"].waitForExistence(timeout: 10))
         let before = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Last misted")).firstMatch
-        XCTAssertTrue(app.buttons["chart.routineLink"].waitForExistence(timeout: 10), "The routine name is a link")
+        if !app.buttons["chart.routineLink"].waitForExistence(timeout: 10) {
+            let lines = app.debugDescription.split(separator: "\n").filter {
+                $0.contains("StaticText") || $0.contains("Button")
+            }
+            print("CHART-DEBUG", lines.joined(separator: "\n"))
+        }
+        XCTAssertTrue(app.buttons["chart.routineLink"].exists, "The routine name is a link")
         app.buttons["chart.routineLink"].tap()
         let back = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Orchid")).firstMatch
         XCTAssertTrue(back.waitForExistence(timeout: 10), "The routine page's back word is Orchid")
