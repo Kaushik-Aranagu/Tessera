@@ -33,6 +33,7 @@ public enum SystemCatalog {
         case tessTurn
         case belief
         case routineRun, rest
+        case sinkLoad
         case tessAgent, notebookPage, agentEpisode
 
         public var systemKey: String {
@@ -587,6 +588,8 @@ public enum SystemCatalog {
         // A recipe: its ingredient lines and steps are its children, in order. The pasted text is kept verbatim.
         ClassSpec(key: .recipe, name: "Recipe", parent: .thing, symbol: "fork.knife", colorRole: "health", fields: [
             FieldSpec(key: "serves", name: "Serves", kind: .number),
+            // How many pans, pots and trays it dirties; empty counts as one (the sink, sheet 388).
+            FieldSpec(key: "cookware", name: "Cookware", kind: .number),
             FieldSpec(key: "activeMinutes", name: "Active", kind: .number, unit: "min"),
             FieldSpec(key: "totalMinutes", name: "Total", kind: .number, unit: "min"),
             FieldSpec(key: "sourceText", name: "Original text", kind: .text),
@@ -620,6 +623,15 @@ public enum SystemCatalog {
             FieldSpec(key: "serves", name: "Serves", kind: .number),
             FieldSpec(key: "cookedAt", name: "Cooked", kind: .date),
             FieldSpec(key: "note", name: "Note", kind: .text),
+        ]),
+        // One batch of dirty dishes that went into the sink together (Design sheet 388). Open while `washedAt` is empty.
+        // Not private: the count may show anywhere and go to Claude. Nothing resets on its own.
+        ClassSpec(key: .sinkLoad, name: "Sink Load", parent: .thing, symbol: "drop.fill", colorRole: "health", fields: [
+            FieldSpec(key: "count", name: "Dishes", kind: .number),
+            FieldSpec(key: "at", name: "In the sink", kind: .date),
+            FieldSpec(key: "label", name: "Label", kind: .text),
+            FieldSpec(key: "source", name: "From", kind: .ref, target: .thing),
+            FieldSpec(key: "washedAt", name: "Washed", kind: .date),
         ]),
         // Several recipes cooked in one session on one clock (multi-dish Cook, Part A). Status: planned, running,
         // paused, done or dropped. The plan itself is never stored: it is derived from the dishes on every read.

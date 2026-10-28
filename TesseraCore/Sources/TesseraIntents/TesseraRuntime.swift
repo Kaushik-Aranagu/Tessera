@@ -121,6 +121,8 @@ public enum TesseraIntentsCatalog {
         "addRecipeToGroceries": "in-app only: recipe page swipe",
         "removeRecipeFromGroceries": "in-app only: groceries",
         "addGroceries": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
+        "addDishes": "in-app only: the Galley's Wash (Siri comes later)",
+        "washDishes": "in-app only: the Galley's Wash (Siri comes later)",
         "createRecipe": "in-app only for now: paste a recipe (Tess ghost is kitchen slice 9)",
         "editRecipe": "in-app only: recipe page",
         "copyList": "in-app only for now (Tess \"copy packing for lisbon\" is lists slice 8)",

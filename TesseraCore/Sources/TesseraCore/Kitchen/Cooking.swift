@@ -300,16 +300,22 @@ public struct FinishCooking: EngineAction {
     public var cook: UUID
     public var note: String?
     public var time: Date?
+    /// A cook session adds one load for all its dishes itself, so it finishes each dish without one (absent: adds).
+    var skipsLoad: Bool?
 
-    public init(cook: UUID, note: String? = nil, time: Date? = nil) {
+    public init(cook: UUID, note: String? = nil, time: Date? = nil, addsLoad: Bool = true) {
         self.cook = cook
         self.note = note
         self.time = time
+        skipsLoad = addsLoad ? nil : true
     }
 
     public func apply(_ transaction: inout Transaction) throws {
         let cook = try transaction.object(cook, is: .cook)
         let end = time ?? .now
+        if skipsLoad != true {
+            try Sink.addCookLoad(for: [cook], source: cook, at: end, in: &transaction)
+        }
         try transaction.set("cookedAt", to: .date(end), on: cook)
         if let note, !note.isEmpty {
             try transaction.set("note", to: .text(note), on: cook)

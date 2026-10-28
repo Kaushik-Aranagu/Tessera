@@ -41,6 +41,7 @@ public enum ActionRegistry {
         MakeKind.descriptor, KeepNoteAsObject.descriptor, KeepAllNotes.descriptor,
         CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor, SetAway.descriptor,
         MarkArrived.descriptor, RepeatWorkout.descriptor, JoinTwins.descriptor, KeepTwinsApart.descriptor,
+        AddDishes.descriptor, WashDishes.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -199,6 +200,8 @@ public enum ActionRegistry {
         },
         RememberFact.descriptor.name: { try decode(RememberFact.self, RememberFact.descriptor.name, $0) },
         ForgetMemory.descriptor.name: { try decode(ForgetMemory.self, ForgetMemory.descriptor.name, $0) },
+        AddDishes.descriptor.name: { try decode(AddDishes.self, AddDishes.descriptor.name, $0) },
+        WashDishes.descriptor.name: { try decode(WashDishes.self, WashDishes.descriptor.name, $0) },
         SetPinned.descriptor.name: { try decode(SetPinned.self, SetPinned.descriptor.name, $0) },
         SetRainAlert.descriptor.name: { try decode(SetRainAlert.self, SetRainAlert.descriptor.name, $0) },
         TakeRest.descriptor.name: { try decode(TakeRest.self, TakeRest.descriptor.name, $0) },

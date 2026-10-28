@@ -480,10 +480,14 @@ public struct FinishCookSession: EngineAction {
         guard ["planned", "running", "paused"].contains(book.status(of: object)) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "that cook is over")
         }
+        var cooks: [ObjectRecord] = []
         for dish in book.dishes(of: object) {
             guard let cook = book.cook(of: dish) else { continue }
-            try FinishCooking(cook: cook.id, note: note, time: time).apply(&transaction)
+            cooks.append(cook)
+            try FinishCooking(cook: cook.id, note: note, time: time, addsLoad: false).apply(&transaction)
         }
+        // One load for the whole session: the largest serves in plates, a pan for each recipe, one board.
+        try Sink.addCookLoad(for: cooks, source: object, at: time ?? transaction.now, in: &transaction)
         try transaction.set("status", to: .choice("done"), on: object)
     }
 
