@@ -1,0 +1,1525 @@
+{
+ "test": "2.1",
+ "plan": "docs/research/two-plane-memory/5-stage2-plan.md",
+ "bars": {
+  "mean_cos": 0.999,
+  "min_cos": 0.99,
+  "bridge_tol": 0.002,
+  "p95_ms": 10.0,
+  "phone_median_ms": 20.0,
+  "torch_cos": 0.99999
+ },
+ "protocol": "see s21_coreml.py docstring",
+ "models": {
+  "bge-small": {
+   "convert": {
+    "hf_id": "BAAI/bge-small-en-v1.5",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "seq": 128,
+    "n_truncated_of_200": 0,
+    "host": {
+     "prompt_on_questions": "",
+     "lower": true,
+     "padding": "right"
+    },
+    "activations_fp32": {
+     "n_texts": 32,
+     "max_abs_any": 344.7,
+     "max_abs_norm_input": 344.7,
+     "norm_square_beyond_fp16": true,
+     "any_value_beyond_fp16": false,
+     "per_module": {
+      "BertLayer": {
+       "max_abs_in": 8.963,
+       "max_abs_out": 8.963,
+       "max_mean_sq_in": 0.0
+      },
+      "Embedding": {
+       "max_abs_in": 0.0,
+       "max_abs_out": 2.266,
+       "max_mean_sq_in": 0.0
+      },
+      "LayerNorm": {
+       "max_abs_in": 344.7,
+       "max_abs_out": 37.8,
+       "max_mean_sq_in": 309.7
+      },
+      "Linear:dense": {
+       "max_abs_in": 37.8,
+       "max_abs_out": 313.8,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:key": {
+       "max_abs_in": 8.963,
+       "max_abs_out": 14.32,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:query": {
+       "max_abs_in": 8.963,
+       "max_abs_out": 17.46,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:value": {
+       "max_abs_in": 8.963,
+       "max_abs_out": 7.013,
+       "max_mean_sq_in": 0.0
+      }
+     }
+    },
+    "norm": "native",
+    "fp16_emulation": {
+     "n": 32,
+     "mean_cos": 0.9999994970858097,
+     "min_cos": 0.9999991655349731,
+     "p01_cos": 0.9999991840124131,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "torch_check": {
+     "n": 200,
+     "mean_cos": 1.0000000184774398,
+     "min_cos": 0.9999998211860657,
+     "p01_cos": 0.9999998807907104,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "ok": true
+    },
+    "mil": {
+     "n_ops": 714,
+     "op_counts": {
+      "add": 39,
+      "cast": 4,
+      "const": 410,
+      "expand_dims": 2,
+      "gather": 1,
+      "gelu": 12,
+      "greater_equal": 1,
+      "layer_norm": 25,
+      "linear": 72,
+      "matmul": 24,
+      "mul": 13,
+      "reshape": 48,
+      "select": 1,
+      "slice_by_index": 1,
+      "softmax": 12,
+      "sub": 1,
+      "transpose": 48
+     },
+     "fp32_ops": {},
+     "const_nonfinite": [],
+     "n_const_nonfinite": 0,
+     "const_nonfinite_used_by": {},
+     "const_beyond_fp16": [],
+     "max_abs_const": 10000.0,
+     "io": [
+      "input_ids: multiArrayType { shape: 1 shape: 128 dataType: INT32 }",
+      "attention_mask: multiArrayType { shape: 1 shape: 128 dataType: INT32 }",
+      "embedding: multiArrayType { shape: 1 shape: 384 dataType: FLOAT16 }"
+     ]
+    },
+    "convert_s": 1.6,
+    "mlpackage": "/Users/kaushikaranagu/tess-s21/bge-small-s128.mlpackage",
+    "mlpackage_mb": 63.3,
+    "total_s": 8.2,
+    "fp16_risks": [
+     "norm inputs reach 344.7 (> 255.9), so their squares exceed fp16: native layer_norm op; safe only if the backend does not square in fp16 (parity on the Mac tells)"
+    ]
+   },
+   "bench": {
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "inputs": "1000 real tokenised LoCoMo texts, cycled",
+    "warmup": 50,
+    "timed_per_process": 1000,
+    "tokenize_p50_ms": 0.06445849976444151,
+    "tokenize_p95_ms": 0.09729309840622591,
+    "CPU_AND_NE": {
+     "compile_s": 0.15448162499887985,
+     "load_first_s": 1.492805292000412,
+     "load_second_s": 0.038394416002120124,
+     "first_pred_ms": 7.774082998366794,
+     "first_pred_ms_second_load": 3.596208000089973,
+     "p50_ms": 1.1356664999766508,
+     "p95_ms": 1.1696920008034795,
+     "mean_ms": 1.138912068485297,
+     "max_ms": 1.5127499973459635,
+     "first_process": {
+      "load_s": 1.492805292000412,
+      "first_pred_ms": 7.774082998366794,
+      "p50_ms": 1.1357500006852206,
+      "p95_ms": 1.1811479005700676
+     },
+     "second_process": {
+      "load_s": 0.038394416002120124,
+      "first_pred_ms": 3.596208000089973,
+      "p50_ms": 1.135353999416111,
+      "p95_ms": 1.1579601021367125
+     }
+    },
+    "ALL": {
+     "compile_s": 0.045237708000058774,
+     "load_first_s": 1.2065110840012494,
+     "load_second_s": 0.05366254100226797,
+     "first_pred_ms": 2.6644999998097774,
+     "first_pred_ms_second_load": 2.5637910002842546,
+     "p50_ms": 1.1483124999358552,
+     "p95_ms": 1.2708975995337823,
+     "mean_ms": 1.1716886290178081,
+     "max_ms": 1.7448329999751877,
+     "first_process": {
+      "load_s": 1.2065110840012494,
+      "first_pred_ms": 2.6644999998097774,
+      "p50_ms": 1.1982079995505046,
+      "p95_ms": 1.2964190516868257
+     },
+     "second_process": {
+      "load_s": 0.05366254100226797,
+      "first_pred_ms": 2.5637910002842546,
+      "p50_ms": 1.1353750014677644,
+      "p95_ms": 1.1524440502398647
+     }
+    },
+    "CPU_AND_GPU": {
+     "compile_s": 0.04390725000121165,
+     "load_first_s": 0.2968967500019062,
+     "load_second_s": 0.05284258300162037,
+     "first_pred_ms": 1110.4745829979947,
+     "first_pred_ms_second_load": 66.36741699912818,
+     "p50_ms": 13.955229000202962,
+     "p95_ms": 15.510051750425191,
+     "mean_ms": 11.62689574702199,
+     "max_ms": 25.322875000711065,
+     "first_process": {
+      "load_s": 0.2968967500019062,
+      "first_pred_ms": 1110.4745829979947,
+      "p50_ms": 13.499645499905455,
+      "p95_ms": 15.516081550049421
+     },
+     "second_process": {
+      "load_s": 0.05284258300162037,
+      "first_pred_ms": 66.36741699912818,
+      "p50_ms": 14.06231249893608,
+      "p95_ms": 15.507426449403283
+     }
+    },
+    "CPU_ONLY": {
+     "compile_s": 0.044914166999660665,
+     "load_first_s": 0.23987987500004238,
+     "load_second_s": 0.018086957999912556,
+     "first_pred_ms": 6.073457996535581,
+     "first_pred_ms_second_load": 6.0262500010139775,
+     "p50_ms": 3.0922919995646225,
+     "p95_ms": 3.887049349032168,
+     "mean_ms": 3.304508015016836,
+     "max_ms": 17.3556669979007,
+     "first_process": {
+      "load_s": 0.23987987500004238,
+      "first_pred_ms": 6.073457996535581,
+      "p50_ms": 3.0990830000519054,
+      "p95_ms": 3.881064550478186
+     },
+     "second_process": {
+      "load_s": 0.018086957999912556,
+      "first_pred_ms": 6.0262500010139775,
+      "p50_ms": 3.0860624992783414,
+      "p95_ms": 3.9619374969333845
+     }
+    }
+   },
+   "plan": {
+    "CPU_AND_NE": {
+     "n_ops": 714,
+     "ops_by_device": {
+      "none": 410,
+      "cpu": 13,
+      "ane": 291
+     },
+     "cost_by_device": {
+      "none": 0.0,
+      "cpu": 0.260521,
+      "ane": 0.739479
+     },
+     "ane_cost_share": 0.7394789540988554,
+     "off_ane": [
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.greater_equal",
+       "device": "cpu",
+       "cost": 2.6488862589170335e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 3.056931254378719e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "select",
+       "device": "cpu",
+       "cost": 6.844327228009229e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.25501967219889393,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.002329523798685625,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.002329523798685625,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.layer_norm",
+       "device": "cpu",
+       "cost": 0.0008086835863247829,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 4.228346388457625e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 4.228346388457625e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu"
+       ]
+      }
+     ],
+     "n_off_ane": 13
+    },
+    "ALL": {
+     "n_ops": 714,
+     "ops_by_device": {
+      "none": 410,
+      "cpu": 13,
+      "ane": 291
+     },
+     "cost_by_device": {
+      "none": 0.0,
+      "cpu": 0.260521,
+      "ane": 0.739479
+     },
+     "ane_cost_share": 0.7394789540988554,
+     "off_ane": [
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.greater_equal",
+       "device": "cpu",
+       "cost": 2.6488862589170335e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 3.056931254378719e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "select",
+       "device": "cpu",
+       "cost": 6.844327228009229e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.25501967219889393,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.002329523798685625,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.002329523798685625,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.layer_norm",
+       "device": "cpu",
+       "cost": 0.0008086835863247829,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 4.228346388457625e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 4.228346388457625e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 3.1589202590811833e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      }
+     ],
+     "n_off_ane": 13
+    }
+   },
+   "ane_cost_share": 0.7394789540988554,
+   "parity": {
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "compute_units": "CPU_AND_NE",
+    "n_truncated": 0,
+    "n_encoded": 7418,
+    "fp32_reference": "common.load_locomo vectors (ST fp32, CPU) in /Users/kaushikaranagu/tess-s21/stage1_cache (computed in this run)",
+    "n": 1000,
+    "mean_cos": 0.9999869703650475,
+    "min_cos": 0.9999783635139465,
+    "p01_cos": 0.9999821186065674,
+    "n_below_0_99": 0,
+    "n_below_0_999": 0,
+    "n_degenerate_vectors": 0,
+    "all_7418": {
+     "n": 7418,
+     "mean_cos": 0.9999869591658184,
+     "min_cos": 0.9999759793281555,
+     "p01_cos": 0.9999821883440018,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "cpu_and_gpu_first_200": {
+     "n": 200,
+     "mean_cos": 0.9999995791912079,
+     "min_cos": 0.9999991059303284,
+     "p01_cos": 0.9999992251396179,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "bridge_read_fp32": 0.6621697353599202,
+    "bridge_read_coreml": 0.6620612284154758,
+    "bridge_diff": -0.00010850694444441977,
+    "bridge_questions_changed": 2,
+    "bridge_ok": true,
+    "fp32_read_vs_stage1": {
+     "stage1": 0.6622,
+     "here": 0.6622,
+     "same_4dp": true
+    },
+    "parity_ok": true
+   },
+   "speed_ok": true,
+   "speed_basis": "CPU_AND_NE p95 1.170 ms <= 10",
+   "parity_ok": true
+  },
+  "qwen3-emb-0.6b": {
+   "convert": {
+    "hf_id": "Qwen/Qwen3-Embedding-0.6B",
+    "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+    "seq": 128,
+    "n_truncated_of_200": 0,
+    "host": {
+     "prompt_on_questions": "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery:",
+     "lower": false,
+     "padding": "right"
+    },
+    "activations_fp32": {
+     "n_texts": 32,
+     "max_abs_any": 6820.0,
+     "max_abs_norm_input": 6543.0,
+     "norm_square_beyond_fp16": true,
+     "any_value_beyond_fp16": false,
+     "per_module": {
+      "Embedding": {
+       "max_abs_in": 0.0,
+       "max_abs_out": 0.3262,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:down_proj": {
+       "max_abs_in": 3338.0,
+       "max_abs_out": 6820.0,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:gate_proj": {
+       "max_abs_in": 577.4,
+       "max_abs_out": 311.1,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:k_proj": {
+       "max_abs_in": 550.0,
+       "max_abs_out": 137.3,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:o_proj": {
+       "max_abs_in": 79.98,
+       "max_abs_out": 91.09,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:q_proj": {
+       "max_abs_in": 550.0,
+       "max_abs_out": 148.3,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:up_proj": {
+       "max_abs_in": 577.4,
+       "max_abs_out": 238.9,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:v_proj": {
+       "max_abs_in": 550.0,
+       "max_abs_out": 129.4,
+       "max_mean_sq_in": 0.0
+      },
+      "Qwen3DecoderLayer": {
+       "max_abs_in": 6543.0,
+       "max_abs_out": 6543.0,
+       "max_mean_sq_in": 0.0
+      },
+      "Qwen3RMSNorm:input_layernorm": {
+       "max_abs_in": 6543.0,
+       "max_abs_out": 550.0,
+       "max_mean_sq_in": 42520.0
+      },
+      "Qwen3RMSNorm:k_norm": {
+       "max_abs_in": 137.3,
+       "max_abs_out": 487.5,
+       "max_mean_sq_in": 775.3
+      },
+      "Qwen3RMSNorm:norm": {
+       "max_abs_in": 1183.0,
+       "max_abs_out": 60.98,
+       "max_mean_sq_in": 3184.0
+      },
+      "Qwen3RMSNorm:post_attention_layernorm": {
+       "max_abs_in": 6543.0,
+       "max_abs_out": 577.4,
+       "max_mean_sq_in": 42530.0
+      },
+      "Qwen3RMSNorm:q_norm": {
+       "max_abs_in": 148.3,
+       "max_abs_out": 41.04,
+       "max_mean_sq_in": 834.9
+      }
+     }
+    },
+    "norm": "safe",
+    "fp16_emulation_stock_norm": {
+     "n": 32,
+     "mean_cos": -0.572102605830878,
+     "min_cos": -1.0,
+     "p01_cos": -1.0,
+     "n_below_0_99": 32,
+     "n_below_0_999": 32,
+     "n_degenerate_vectors": 20
+    },
+    "fp16_emulation": {
+     "n": 32,
+     "mean_cos": 0.999994182959199,
+     "min_cos": 0.9999916553497314,
+     "p01_cos": 0.99999187707901,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "torch_check": {
+     "n": 200,
+     "mean_cos": 1.0000000217556952,
+     "min_cos": 0.9999998807907104,
+     "p01_cos": 0.9999998807907104,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "ok": true
+    },
+    "mil": {
+     "n_ops": 4865,
+     "op_counts": {
+      "abs": 113,
+      "add": 367,
+      "cast": 1,
+      "concat": 56,
+      "const": 2157,
+      "expand_dims": 56,
+      "gather": 2,
+      "greater_equal": 1,
+      "inverse": 113,
+      "linear": 196,
+      "matmul": 56,
+      "mul": 676,
+      "real_div": 226,
+      "reduce_max": 113,
+      "reduce_mean": 113,
+      "reshape": 168,
+      "rsqrt": 113,
+      "select": 1,
+      "silu": 28,
+      "slice_by_index": 113,
+      "softmax": 28,
+      "tile": 56,
+      "transpose": 112
+     },
+     "fp32_ops": {},
+     "const_nonfinite": [],
+     "n_const_nonfinite": 0,
+     "const_nonfinite_used_by": {},
+     "const_beyond_fp16": [],
+     "max_abs_const": 10000.0,
+     "io": [
+      "input_ids: multiArrayType { shape: 1 shape: 128 dataType: INT32 }",
+      "last_index: multiArrayType { shape: 1 dataType: INT32 }",
+      "embedding: multiArrayType { shape: 1 shape: 1024 dataType: FLOAT16 }"
+     ]
+    },
+    "convert_s": 18.9,
+    "mlpackage": "/Users/kaushikaranagu/tess-s21/qwen3-emb-0.6b-s128.mlpackage",
+    "mlpackage_mb": 1137.2,
+    "total_s": 333.7,
+    "fp16_risks": [
+     "norm inputs reach 6543 (> 255.9), so their squares exceed fp16: handled (safe norm on x / max|x|)",
+     "fp16_emulation_stock_norm: 20 of 32 vectors zero or non-finite, min cos -1.0000 (HF's stock norm, NOT in this package: why the safe norm is used)"
+    ]
+   },
+   "bench": {
+    "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+    "inputs": "1000 real tokenised LoCoMo texts, cycled",
+    "warmup": 50,
+    "timed_per_process": 1000,
+    "tokenize_p50_ms": 0.06197900074766949,
+    "tokenize_p95_ms": 0.08995865082397357,
+    "CPU_AND_NE": {
+     "compile_s": 0.1895284169986553,
+     "load_first_s": 9.599746707997838,
+     "load_second_s": 10.97806587499872,
+     "first_pred_ms": 31.50574999745004,
+     "first_pred_ms_second_load": 26.004583000030834,
+     "p50_ms": 26.06810350152955,
+     "p95_ms": 30.093289299838943,
+     "mean_ms": 24.345322122553625,
+     "max_ms": 33.50049999789917,
+     "first_process": {
+      "load_s": 9.599746707997838,
+      "first_pred_ms": 31.50574999745004,
+      "p50_ms": 25.70927099986875,
+      "p95_ms": 29.84112259764515
+     },
+     "second_process": {
+      "load_s": 10.97806587499872,
+      "first_pred_ms": 26.004583000030834,
+      "p50_ms": 26.45343750009488,
+      "p95_ms": 30.21264099807013
+     }
+    },
+    "ALL": {
+     "compile_s": 0.3288680840014422,
+     "load_first_s": 13.395172541997454,
+     "load_second_s": 10.976561375002348,
+     "first_pred_ms": 213.53437500147265,
+     "first_pred_ms_second_load": 50.22883399942657,
+     "p50_ms": 27.559166999708395,
+     "p95_ms": 32.00675659827539,
+     "mean_ms": 27.25452158749067,
+     "max_ms": 35.729999999603024,
+     "first_process": {
+      "load_s": 13.395172541997454,
+      "first_pred_ms": 213.53437500147265,
+      "p50_ms": 28.242395999768632,
+      "p95_ms": 32.42378479808394
+     },
+     "second_process": {
+      "load_s": 10.976561375002348,
+      "first_pred_ms": 50.22883399942657,
+      "p50_ms": 27.071354001236614,
+      "p95_ms": 31.09383990195056
+     }
+    },
+    "CPU_AND_GPU": {
+     "compile_s": 0.3344791659983457,
+     "load_first_s": 3.491722667000431,
+     "load_second_s": 2.5525815000000875,
+     "first_pred_ms": 1810.6542079985957,
+     "first_pred_ms_second_load": 374.13458400260424,
+     "p50_ms": 97.45199999997567,
+     "p95_ms": 128.88199134831666,
+     "mean_ms": 94.93633726797816,
+     "max_ms": 398.6127080024744,
+     "first_process": {
+      "load_s": 3.491722667000431,
+      "first_pred_ms": 1810.6542079985957,
+      "p50_ms": 91.96822899866675,
+      "p95_ms": 134.91303605023856
+     },
+     "second_process": {
+      "load_s": 2.5525815000000875,
+      "first_pred_ms": 374.13458400260424,
+      "p50_ms": 98.57560450109304,
+      "p95_ms": 114.73493785106257
+     }
+    },
+    "CPU_ONLY": {
+     "compile_s": 0.28209304199845064,
+     "load_first_s": 3.1739601669978583,
+     "load_second_s": 5.380927624999458,
+     "first_pred_ms": 95.03804199994192,
+     "first_pred_ms_second_load": 308.79579200336593,
+     "p50_ms": 112.06325000057404,
+     "p95_ms": 249.41880209880765,
+     "mean_ms": 124.58791510149968,
+     "max_ms": 474.18341700176825,
+     "first_process": {
+      "load_s": 3.1739601669978583,
+      "first_pred_ms": 95.03804199994192,
+      "p50_ms": 93.74781250153319,
+      "p95_ms": 286.65354549830226
+     },
+     "second_process": {
+      "load_s": 5.380927624999458,
+      "first_pred_ms": 308.79579200336593,
+      "p50_ms": 116.73739599973487,
+      "p95_ms": 160.1278934500442
+     }
+    }
+   },
+   "plan": {
+    "CPU_AND_NE": {
+     "n_ops": 4865,
+     "ops_by_device": {
+      "none": 2157,
+      "cpu": 7,
+      "ane": 2701
+     },
+     "cost_by_device": {
+      "none": 0.0,
+      "cpu": 0.235469,
+      "ane": 0.764531
+     },
+     "ane_cost_share": 0.7645310296947366,
+     "off_ane": [
+      {
+       "op": "ios18.greater_equal",
+       "device": "cpu",
+       "cost": 1.8441874492224085e-07,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 2.1282734332148318e-07,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "select",
+       "device": "cpu",
+       "cost": 4.7651054588603843e-07,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.23526835430369103,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.7181870644929274e-09,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.00019855898678235054,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.slice_by_index",
+       "device": "cpu",
+       "cost": 1.1815399713496362e-06,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      }
+     ],
+     "n_off_ane": 7
+    },
+    "ALL": {
+     "n_ops": 4865,
+     "ops_by_device": {
+      "none": 2157,
+      "gpu": 6,
+      "ane": 2699,
+      "cpu": 3
+     },
+     "cost_by_device": {
+      "none": 0.0,
+      "gpu": 0.220824,
+      "ane": 0.778973,
+      "cpu": 0.000204
+     },
+     "ane_cost_share": 0.7789727980551696,
+     "off_ane": [
+      {
+       "op": "ios18.greater_equal",
+       "device": "gpu",
+       "cost": 1.566237537185689e-07,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "gpu",
+       "cost": 1.6710352359743497e-07,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "select",
+       "device": "gpu",
+       "cost": 4.046924319684762e-07,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "gpu",
+       "cost": 0.22063158087519988,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.abs",
+       "device": "gpu",
+       "cost": 0.0001275092462571445,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios16.reduce_max",
+       "device": "gpu",
+       "cost": 6.381809952565385e-05,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.7510731015265666e-09,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.00020235939846488952,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.slice_by_index",
+       "device": "cpu",
+       "cost": 1.2041546028164355e-06,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      }
+     ],
+     "n_off_ane": 9
+    }
+   },
+   "ane_cost_share": 0.7645310296947366,
+   "parity": {
+    "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+    "compute_units": "CPU_AND_NE",
+    "n_truncated": 0,
+    "n_encoded": 1000,
+    "fp32_reference": "sentence-transformers fp32 on CPU, this run",
+    "n": 1000,
+    "mean_cos": 0.9999311946630478,
+    "min_cos": 0.9997425675392151,
+    "p01_cos": 0.9998490476608276,
+    "n_below_0_99": 0,
+    "n_below_0_999": 0,
+    "n_degenerate_vectors": 0,
+    "cpu_and_gpu_first_200": {
+     "n": 200,
+     "mean_cos": 0.9999974372982979,
+     "min_cos": 0.999995231628418,
+     "p01_cos": 0.9999960625171661,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "bridge": "n/a: the rank-16 bridges live in bge-small's 384-d space",
+    "parity_ok": true
+   },
+   "speed_ok": false,
+   "speed_basis": "CPU_AND_NE p95 30.093 ms (the faster)",
+   "parity_ok": true
+  },
+  "bge-base": {
+   "convert": {
+    "hf_id": "BAAI/bge-base-en-v1.5",
+    "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+    "seq": 128,
+    "n_truncated_of_200": 0,
+    "host": {
+     "prompt_on_questions": "",
+     "lower": true,
+     "padding": "right"
+    },
+    "activations_fp32": {
+     "n_texts": 32,
+     "max_abs_any": 414.0,
+     "max_abs_norm_input": 414.0,
+     "norm_square_beyond_fp16": true,
+     "any_value_beyond_fp16": false,
+     "per_module": {
+      "BertLayer": {
+       "max_abs_in": 15.6,
+       "max_abs_out": 15.6,
+       "max_mean_sq_in": 0.0
+      },
+      "Embedding": {
+       "max_abs_in": 0.0,
+       "max_abs_out": 1.405,
+       "max_mean_sq_in": 0.0
+      },
+      "LayerNorm": {
+       "max_abs_in": 414.0,
+       "max_abs_out": 103.4,
+       "max_mean_sq_in": 402.0
+      },
+      "Linear:dense": {
+       "max_abs_in": 103.4,
+       "max_abs_out": 398.7,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:key": {
+       "max_abs_in": 15.6,
+       "max_abs_out": 17.71,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:query": {
+       "max_abs_in": 15.6,
+       "max_abs_out": 21.5,
+       "max_mean_sq_in": 0.0
+      },
+      "Linear:value": {
+       "max_abs_in": 15.6,
+       "max_abs_out": 6.214,
+       "max_mean_sq_in": 0.0
+      }
+     }
+    },
+    "norm": "native",
+    "fp16_emulation": {
+     "n": 32,
+     "mean_cos": 0.9999990984797478,
+     "min_cos": 0.9999983310699463,
+     "p01_cos": 0.9999983495473862,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "torch_check": {
+     "n": 200,
+     "mean_cos": 1.0000000154972077,
+     "min_cos": 0.9999998211860657,
+     "p01_cos": 0.9999998807907104,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "ok": true
+    },
+    "mil": {
+     "n_ops": 714,
+     "op_counts": {
+      "add": 39,
+      "cast": 4,
+      "const": 410,
+      "expand_dims": 2,
+      "gather": 1,
+      "gelu": 12,
+      "greater_equal": 1,
+      "layer_norm": 25,
+      "linear": 72,
+      "matmul": 24,
+      "mul": 13,
+      "reshape": 48,
+      "select": 1,
+      "slice_by_index": 1,
+      "softmax": 12,
+      "sub": 1,
+      "transpose": 48
+     },
+     "fp32_ops": {},
+     "const_nonfinite": [],
+     "n_const_nonfinite": 0,
+     "const_nonfinite_used_by": {},
+     "const_beyond_fp16": [],
+     "max_abs_const": 10000.0,
+     "io": [
+      "input_ids: multiArrayType { shape: 1 shape: 128 dataType: INT32 }",
+      "attention_mask: multiArrayType { shape: 1 shape: 128 dataType: INT32 }",
+      "embedding: multiArrayType { shape: 1 shape: 768 dataType: FLOAT16 }"
+     ]
+    },
+    "convert_s": 4.1,
+    "mlpackage": "/Users/kaushikaranagu/tess-s21/bge-base-s128.mlpackage",
+    "mlpackage_mb": 207.5,
+    "total_s": 35.3,
+    "fp16_risks": [
+     "norm inputs reach 414 (> 255.9), so their squares exceed fp16: native layer_norm op; safe only if the backend does not square in fp16 (parity on the Mac tells)"
+    ]
+   },
+   "bench": {
+    "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+    "inputs": "1000 real tokenised LoCoMo texts, cycled",
+    "warmup": 50,
+    "timed_per_process": 1000,
+    "tokenize_p50_ms": 0.14260400166676845,
+    "tokenize_p95_ms": 0.22949340091145132,
+    "CPU_AND_NE": {
+     "compile_s": 0.09860850000040955,
+     "load_first_s": 2.4303376249990833,
+     "load_second_s": 0.057372792001842754,
+     "first_pred_ms": 8.665082998049911,
+     "first_pred_ms_second_load": 8.528250000381377,
+     "p50_ms": 5.102145500131883,
+     "p95_ms": 7.191510400662082,
+     "mean_ms": 5.275665469498563,
+     "max_ms": 12.21679199807113,
+     "first_process": {
+      "load_s": 2.4303376249990833,
+      "first_pred_ms": 8.665082998049911,
+      "p50_ms": 4.919603999951505,
+      "p95_ms": 7.121205949442809
+     },
+     "second_process": {
+      "load_s": 0.057372792001842754,
+      "first_pred_ms": 8.528250000381377,
+      "p50_ms": 5.2161250005156035,
+      "p95_ms": 7.238939252420095
+     }
+    },
+    "ALL": {
+     "compile_s": 0.09390595800141455,
+     "load_first_s": 2.4010547079997195,
+     "load_second_s": 0.06658174999756739,
+     "first_pred_ms": 9.773249999852851,
+     "first_pred_ms_second_load": 9.259665999707067,
+     "p50_ms": 5.022333500164677,
+     "p95_ms": 7.261119051872811,
+     "mean_ms": 5.196709140458552,
+     "max_ms": 22.7691660002165,
+     "first_process": {
+      "load_s": 2.4010547079997195,
+      "first_pred_ms": 9.773249999852851,
+      "p50_ms": 4.8895829986577155,
+      "p95_ms": 6.986510448587068
+     },
+     "second_process": {
+      "load_s": 0.06658174999756739,
+      "first_pred_ms": 9.259665999707067,
+      "p50_ms": 5.134562499733875,
+      "p95_ms": 7.455960100196534
+     }
+    },
+    "CPU_AND_GPU": {
+     "error": "exit -6:  API.\n/Users/kaushikaranagu/venvs/tess-coreml/lib/python3.12/site-packages/coremltools/optimize/torch/palettization/fake_palettize.py:82: SyntaxWarning: invalid escape sequence '\\_'\n  n_bits (:obj:`int`): Number of palettization bits. There would be :math:`2^{n\\_bits}` unique weights in the ``LUT``.\n/AppleInternal/Library/BuildRoots/4~CTvwugDDfOXWP3bM8oAqo5XYfZ79WYSAyp1F2m8/Library/Caches/com.apple.xbs/TemporaryDirectory.C3KX8h/Sources/MetalPerformanceShadersGraph/mpsgraph/MetalPerformanceShadersGraph/Core/Files/MPSGraphTensorData.mm:266: failed assertion `shape.count = 0 != strides.count = 2'"
+    },
+    "CPU_ONLY": {
+     "compile_s": 0.10696262499914155,
+     "load_first_s": 0.628535333002219,
+     "load_second_s": 0.2602478750013688,
+     "first_pred_ms": 22.58504099881975,
+     "first_pred_ms_second_load": 28.389292001520516,
+     "p50_ms": 19.239917000959394,
+     "p95_ms": 26.92654170296009,
+     "mean_ms": 20.32326654852841,
+     "max_ms": 62.531083000067156,
+     "first_process": {
+      "load_s": 0.628535333002219,
+      "first_pred_ms": 22.58504099881975,
+      "p50_ms": 19.74977099962416,
+      "p95_ms": 24.78182500144612
+     },
+     "second_process": {
+      "load_s": 0.2602478750013688,
+      "first_pred_ms": 28.389292001520516,
+      "p50_ms": 18.567604000054416,
+      "p95_ms": 32.56952710144105
+     }
+    }
+   },
+   "plan": {
+    "CPU_AND_NE": {
+     "n_ops": 714,
+     "ops_by_device": {
+      "none": 410,
+      "cpu": 13,
+      "ane": 291
+     },
+     "cost_by_device": {
+      "none": 0.0,
+      "cpu": 0.188894,
+      "ane": 0.811106
+     },
+     "ane_cost_share": 0.8111064418852185,
+     "off_ane": [
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.greater_equal",
+       "device": "cpu",
+       "cost": 9.603688549563314e-07,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 1.1083079005620166e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "select",
+       "device": "cpu",
+       "cost": 2.481449960632508e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.18491664643586384,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.001689164338865868,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.001689164338865868,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.layer_norm",
+       "device": "cpu",
+       "cost": 0.000586385713774082,
+       "supported": [
+        "ane",
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 1.5330111535638333e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 1.5330111535638333e-06,
+       "supported": [
+        "cpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu"
+       ]
+      }
+     ],
+     "n_off_ane": 13
+    },
+    "ALL": {
+     "n_ops": 714,
+     "ops_by_device": {
+      "none": 410,
+      "cpu": 13,
+      "ane": 291
+     },
+     "cost_by_device": {
+      "none": 0.0,
+      "cpu": 0.188894,
+      "ane": 0.811106
+     },
+     "ane_cost_share": 0.8111064418852185,
+     "off_ane": [
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.greater_equal",
+       "device": "cpu",
+       "cost": 9.603688549563314e-07,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 1.1083079005620166e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "select",
+       "device": "cpu",
+       "cost": 2.481449960632508e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.gather",
+       "device": "cpu",
+       "cost": 0.18491664643586384,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.001689164338865868,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.add",
+       "device": "cpu",
+       "cost": 0.001689164338865868,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.layer_norm",
+       "device": "cpu",
+       "cost": 0.000586385713774082,
+       "supported": [
+        "ane",
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 1.5330111535638333e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.expand_dims",
+       "device": "cpu",
+       "cost": 1.5330111535638333e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      },
+      {
+       "op": "ios18.cast",
+       "device": "cpu",
+       "cost": 1.1452845972150039e-06,
+       "supported": [
+        "cpu",
+        "gpu"
+       ]
+      }
+     ],
+     "n_off_ane": 13
+    }
+   },
+   "ane_cost_share": 0.8111064418852185,
+   "parity": {
+    "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+    "compute_units": "CPU_AND_NE",
+    "n_truncated": 0,
+    "n_encoded": 1000,
+    "fp32_reference": "sentence-transformers fp32 on CPU, this run",
+    "n": 1000,
+    "mean_cos": 0.9999961782097816,
+    "min_cos": 0.9999868869781494,
+    "p01_cos": 0.9999934428930283,
+    "n_below_0_99": 0,
+    "n_below_0_999": 0,
+    "n_degenerate_vectors": 0,
+    "cpu_and_gpu_first_200": {
+     "n": 200,
+     "mean_cos": 0.9999995431303978,
+     "min_cos": 0.9999991059303284,
+     "p01_cos": 0.9999992245435715,
+     "n_below_0_99": 0,
+     "n_below_0_999": 0,
+     "n_degenerate_vectors": 0
+    },
+    "bridge": "n/a: the rank-16 bridges live in bge-small's 384-d space",
+    "parity_ok": true
+   },
+   "speed_ok": true,
+   "speed_basis": "CPU_AND_NE p95 7.192 ms <= 10",
+   "parity_ok": true
+  }
+ },
+ "env": {
+  "python": "3.12.14",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "machine": "arm64",
+  "coremltools": "9.0",
+  "torch": "2.7.0",
+  "transformers": "4.57.6",
+  "sentence_transformers": "5.1.2",
+  "numpy": "2.2.6",
+  "utc": "2026-10-28T11:57:41Z",
+  "macos": "27.0",
+  "chip": "Apple M4"
+ },
+ "verdict_conditions": {
+  "bge_small_parity": true,
+  "bge_small_ne_p95_le_10ms": true,
+  "phone_median_le_20ms": null
+ },
+ "verdict": "pass (phone not checked)"
+}
