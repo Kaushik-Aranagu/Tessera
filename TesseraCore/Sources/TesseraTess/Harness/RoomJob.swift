@@ -8,6 +8,9 @@ import TesseraCore
 /// may go to Claude except the key (his Oct 27 rule). A plain rejection goes back once; a second is shown to him.
 @MainActor
 public enum RoomJob {
+    /// The one tool the job sends; no screen place offers it (it is not a place's call).
+    public static let toolName = "patchRoom"
+
     public enum Result {
         case applied(OpRecord, PatchRoom.Output)
         /// Tess's words, an offer when the rules allow a nearest thing, or a part queued for the next install.
