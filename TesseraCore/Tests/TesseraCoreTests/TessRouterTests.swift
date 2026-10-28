@@ -5,6 +5,7 @@ import Testing
 
 /// Tess model layer T1: the router, and route/model on the op log.
 @MainActor
+@Suite(.oldWalls)
 struct TessRouterTests {
     /// A stand-in model route that logs a task the way a model's tool call would.
     struct FakeModelRoute: TessModel {

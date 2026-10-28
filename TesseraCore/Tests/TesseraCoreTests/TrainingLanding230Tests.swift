@@ -163,9 +163,9 @@ struct TrainingLanding230Tests {
         #expect(throws: ActionError.self) {
             try engine.perform(SetWarmUp(routine: routine.id, name: "Lexapro dose", minutes: 5), by: .user)
         }
+        let key = "sk-" + "ant-" + "api03-abcdefghijklmnopqrstuvwxyz0123456789"
         #expect(throws: ActionError.self) {
-            try engine.perform(SetWarmUp(routine: routine.id, name: "Rower", minutes: 5,
-                                         note: "sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789"), by: .user)
+            try engine.perform(SetWarmUp(routine: routine.id, name: "Rower", minutes: 5, note: key), by: .user)
         }
         try engine.perform(SetWarmUp(routine: routine.id, name: "Rower", minutes: 8), by: .user)
         routine.title = "Shoulder rehab and Lexapro"

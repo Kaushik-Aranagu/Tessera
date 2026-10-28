@@ -88,6 +88,7 @@ extension DayStoryTests {
 }
 
 @MainActor
+@Suite(.oldWalls)
 struct HomeCaloriesTests {
     static let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
@@ -141,6 +142,7 @@ struct HomeCaloriesTests {
     }
 }
 
+@Suite(.oldWalls)
 struct UnitsEverywhereTests {
     @Test func theChosenWeightUnitMapsToTheAppsMassUnit() {
         #expect(DisplayUnits().massUnit == nil)

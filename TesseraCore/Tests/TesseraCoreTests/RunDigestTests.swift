@@ -91,7 +91,7 @@ struct RunDigestTests {
         var book = ProcedureBook()
         let learned = book.learn(digest)
         #expect(!learned && book.records.isEmpty)
-        let harness: Set = ["recall", "open", "remember", "notebook", "ask_agent", "query", "guide"]
+        let harness: Set = ["recall", "open", "remember", "notebook", "ask_agent", "query", "guide", "zoom"]
         #expect(RunDigest.knownTools.isSuperset(of: harness))
     }
 

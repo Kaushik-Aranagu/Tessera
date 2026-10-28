@@ -17,7 +17,7 @@ public enum ToolPicker {
     }
 
     public struct Pick: Sendable, Equatable {
-        /// Tool names to send, best first. Never a `deviceOnly` call when the plan reaches Claude.
+        /// Tool names to send, best first. A `deviceOnly` call reaches Claude only while `ClaudeSees.moneyWrites`.
         public var tools: [String]
         public var plan: RungPlan
         public var bound: Bound?
@@ -35,6 +35,9 @@ public enum ToolPicker {
     public static let maxTools = 12
     /// The reads every ask may use.
     static let reads = ["query", "open", "recall"]
+    /// The reads that run the moment their block closes, before the reply ends (H5): every ask's reads, and `zoom`,
+    /// which is offered only on an ask about his past.
+    static let runAtOnce: Set<String> = Set(reads).union([TessZoomTool.name])
     /// A bound call is a short command; a longer ask has more in it than the frame can fill.
     static let boundWords = 6
 
@@ -66,17 +69,17 @@ public enum ToolPicker {
         if let entry = single, words.count <= boundWords,
            let bound = bind(entry.call, at: entry.place, frame: frame, pointed: pointed)
         {
-            let plan = entry.call.reach == .deviceOnly ? device(entry.call.name) : forced(entry.call.name)
+            let plan = onPhone(entry.call) ? device(entry.call.name) : forced(entry.call.name)
             return Pick(tools: [entry.call.name], plan: plan, bound: bound, matched: [entry.call.name])
         }
 
-        // A money call named: the phone's own model only, with that call.
-        if let money = matched.first(where: { $0.call.reach == .deviceOnly }) {
+        // A money call named, while money stays off Claude: the phone's own model only, with that call.
+        if let money = matched.first(where: { onPhone($0.call) }) {
             return Pick(tools: [money.call.name], plan: device(money.call.name), bound: nil,
                         matched: matched.map { $0.call.name })
         }
 
-        let deviceOnly = Set(offered.filter { $0.call.reach == .deviceOnly }.map { $0.call.name })
+        let deviceOnly = Set(offered.filter { onPhone($0.call) }.map { $0.call.name })
         var tools: [String] = []
         let named: [String] = matched.map { $0.call.name }
         let shown: [String] = offered.map { $0.call.name }
@@ -104,6 +107,12 @@ public enum ToolPicker {
             let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) || $0 == RehearseFlags.tool }
                 .count
             tools.insert(TessGuide.name, at: lead)
+        }
+        if TessZoomTool.isAbout(ask), !tools.contains(TessZoomTool.name) {
+            // His past by time: the pyramid rides right after the calls that lead and the guide, like the guide.
+            let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) || $0 == RehearseFlags.tool
+                || $0 == TessGuide.name }.count
+            tools.insert(TessZoomTool.name, at: lead)
         }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks, rehearse: rehearse, count: rehearse == nil ? nil : RehearseFlags.count(ask))
@@ -177,7 +186,12 @@ public enum ToolPicker {
         return plan
     }
 
-    /// Money: never Claude. The phone's own model with the one call.
+    /// A call kept on the phone: a money call while `ClaudeSees.moneyWrites` is off.
+    static func onPhone(_ call: ElementCall) -> Bool {
+        ClaudeSees.keepsOnPhone(call.reach == .deviceOnly)
+    }
+
+    /// Money kept off Claude: the phone's own model with the one call.
     static func device(_ name: String) -> RungPlan {
         var plan = RungPlan.deviceOnly
         plan.toolChoice = .tool(name)

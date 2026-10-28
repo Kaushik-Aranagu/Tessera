@@ -7,6 +7,7 @@ import Testing
 /// one agent, each agent's notebook is its own, its episodes carry it from run to run, and every run starts from its
 /// personality and its memory through its walls.
 @MainActor
+@Suite(.oldWalls)
 struct AgentsTests {
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]

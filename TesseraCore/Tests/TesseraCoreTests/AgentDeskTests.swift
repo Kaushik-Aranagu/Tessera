@@ -6,6 +6,7 @@ import Testing
 /// Tess coordinates (docs/ai/harness/agents.md, section 6): she asks a room agent, it answers as itself from its own
 /// context and tools, its report is kept as its episode so the next run starts from it, and only she may ask.
 @MainActor
+@Suite(.oldWalls)
 struct AgentDeskTests {
     let helper = TessRunTests()
 

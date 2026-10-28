@@ -3,7 +3,7 @@
 # eval-runs/<date>-<world>-<policy>.json.
 #
 #   scripts/tess-eval.sh --world small|big --policy lab|strict [--kinds lookUp,count] [--phone-spent DOLLARS]
-#                        [--out DIR] [--dry]
+#                        [--out DIR] [--minutes N] [--dry]
 #
 # --dry answers with a scripted brain: nothing leaves the Mac and nothing is spent. Without it this SPENDS MONEY on the
 # Claude API, from the key in the Mac keychain (item com.kaushikaranagu.tessera.anthropic / api-key; the key is never
@@ -17,6 +17,7 @@ policy=lab
 kinds=""
 phone=""
 out=""
+minutes=""
 dry=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -25,6 +26,7 @@ while [ $# -gt 0 ]; do
     --kinds) kinds="$2"; shift 2 ;;
     --phone-spent) phone="$2"; shift 2 ;;
     --out) out="$2"; shift 2 ;;
+    --minutes) minutes="$2"; shift 2 ;;
     --dry) dry=1; shift ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -51,6 +53,7 @@ export TESSERA_EVAL_POLICY="$policy"
 export TESSERA_EVAL_KINDS="$kinds"
 export TESSERA_EVAL_PHONE_SPENT="$phone"
 [ -n "$out" ] && export TESSERA_EVAL_OUT="$out"
+[ -n "$minutes" ] && export TESSERA_EVAL_MINUTES="$minutes"
 [ "$dry" = 1 ] && export TESSERA_EVAL_DRY=1
 
 # Heavy jobs go through the Mac lanes (3 slots, own build folders).

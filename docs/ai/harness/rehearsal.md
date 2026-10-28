@@ -65,7 +65,8 @@ phone's own rung with its one call.
 - The count matches the ask when the ask says one ("move my 5 tasks", and the diff changed 5).
 - Nothing outside the agent's scope changed (`MemoryScope.reads` on every changed object), so the Deck can't edit
   the Galley.
-- No money action ran unless it came from the phone's own rung, the same wall as always.
+- With `ClaudeSees.moneyWrites` off, no money action ran unless it came from the phone's own rung. On (shipped, his
+  Oct 27 pick), a money call is tried like any other.
 
 **Tess's tool:** `rehearse(calls: [{name, arguments}])` returns the receipts, the diff and the failed checks as text.
 It writes nothing, so it doesn't count against the ghost budget, but it does count as a round. Then she calls the
@@ -82,8 +83,8 @@ same tools for real, or says what went wrong and what she would do instead.
 - **Out of time:** a try that passes `Rehearsal.seconds` (2 s) returns `overBudget`. She then hears "That took too
   long to try. Change nothing and ask him first", gets no more tries, and every write for the rest of the ask is
   refused with the same line. A slow rehearsal proves nothing, so she never acts unrehearsed.
-- A money call inside a rehearsal on a Claude rung still fails its check (`moneyOffPhone`). The rehearsal itself writes
-  nothing, so it isn't a ghost and doesn't use the ghost budget.
+- With `moneyWrites` off, a money call inside a rehearsal on a Claude rung fails its check (`moneyOffPhone`). The
+  rehearsal itself writes nothing, so it isn't a ghost and doesn't use the ghost budget.
 - The spec Claude sees takes the tool's own input: `calls`, an array of `{name, arguments}` with the arguments as
   JSON text, and `expecting`, the count he named or null. Its description is `RehearseFlags.description`.
 
