@@ -188,3 +188,17 @@ A room Tess built is a view over his things, so taking it down is the end of the
 - Reduce Motion: the room is simply there whole
 - Core: an archived room keeps its patch history in order. Restoring it replays the patches that set parts (`changed: true`), skipping refused and queued ones, against today's data. The replay is display only and writes nothing new. The room's `restoredAt` marks that the replay is owed, and the first open clears it. Builder A: the replay runs the R1 player's own patch animation at 0.12× duration, under one `withTesseraAnimation` task that a tap cancels by jumping to the final document. No haptic until the last step, then one soft one with Tess's line
 - Probe: `docs/design/boards/r66/prb.js` (kept on a quick return; the replay plays, skips the refused and queued sentences and ends whole with the grant; once only; a tap finishes it and does nothing else; Reduce Motion)
+
+## Sheet 373: touch your words to stop a change
+
+The 2-second drying line was only a wait. Now it is the window for him to change his mind, which voice needs most, since Tess can mishear.
+
+- While a change dries, his words in his line are a touch target (the line plus 8 pt above and below). Touching them stops it. On the phone, saying "wait" or "stop" does the same
+- The drying line holds where it got to for a breath (120 ms), then runs back from there to its start, at Undo's pace (600 ms for a whole line, so less when he caught it early, never under 140 ms), easing in. Then the ghost lets go and each place's outline comes back up (sheet 358)
+- Nothing was written, so there is no receipt and nothing to undo. Tess says "Stopped, nothing changed" in her line, and the action word offers the same sentence again, so trying it another way is one tap
+- A refusal or a queued part (sheet 361) waits 1.2 s with his words up and no line. Touching them then stops it the same way, and the ring is not queued
+- A take-down stopped half way (sheet 371) plays its fold backwards from where it got to. The outlines unfold out of their corners and the parts come back, and the room stays in the dial
+- One light tick at the touch. Reduce Motion: it stops at once
+- Undo (sheet 368) is for a change that has set. Stop is for one that hasn't. The two never overlap: the receipt with Undo only appears once a change has set
+- Core: a patch is applied to the store only when its drying ends. Until then it is a staged op group, and stop discards it. The 2 s is the same window the validator already uses. Builder A: the drying line is the view whose trim end runs from 0 to 1. Stop pauses that animation, reads its presentation value, and animates back to 0 from there inside `withTesseraAnimation`. A tap on the heard line calls the player's `cancelPending()`
+- Probe: `docs/design/boards/r66/pst.js` (stop at 1 s: the line holds, runs back, the ghost lets go, no receipt, Tess's line, same sentence offered; say it again and it sets; stop a refusal while it waits; stop a take-down half way and the room stays; Reduce Motion)
