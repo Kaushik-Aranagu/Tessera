@@ -1,7 +1,7 @@
 import XCTest
 
 /// The Chart room's controls take plain taps (QA G13): Say plays a sentence as a ghost, Allow on the wine line sets
-/// the widening patch, and Undo on the receipt takes it back. Opened from Bridge's apps list, in the standing shell.
+/// the widening patch, and Undo on the receipt takes it back. Opened in the standing shell from Bridge (`-shellWalk chart`: the dial reel only exposes rows near its centre).
 /// Simulator only.
 @MainActor
 final class ChartRoomUITests: SimulatorOnlyTestCase {
@@ -11,22 +11,11 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
 
     private func launchInChartRoom() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demoTime", "18:10", "-resetChart", "-shellProbe"]
+        app.launchArguments = ["-demoTime", "18:10", "-resetChart", "-shellProbe", "-shellWalk", "chart"]
         app.launch()
         let ask = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Don’t Allow"]
         if ask.waitForExistence(timeout: 4) {
             ask.tap()
-        }
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Chart room")).firstMatch
-        for _ in 0 ..< 8 where !row.waitForExistence(timeout: 3) {
-            app.swipeUp()
-        }
-        XCTAssertTrue(row.waitForExistence(timeout: 15), "The apps list has a Chart room row")
-        // A row at the side first comes to the middle, then opens.
-        row.tap()
-        sleep(1)
-        if !app.buttons["Say, what to build"].exists {
-            row.tap()
         }
         XCTAssertTrue(app.buttons["Say, what to build"].waitForExistence(timeout: 20), "The Chart room is open")
         return app

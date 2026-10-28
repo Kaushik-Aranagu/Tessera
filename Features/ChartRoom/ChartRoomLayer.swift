@@ -32,8 +32,13 @@ struct ChartRoomLayer: View {
                     let step = OutlineSetting.frame(at: 1, y: 0, setting: set, reduceMotion: reduceMotion)
                     let rank = DocumentRoom.outlined.firstIndex { $0.place == entry.place } ?? 0
                     Outline(name: entry.name, showsName: !ghosts.contains(entry.place) && (unrolled || reduceMotion),
-                            drawn: unrolled || reduceMotion ? 1 : 0)
-                        .animation(reduceMotion ? nil : OutlineUnroll.animation(rank: rank), value: unrolled)
+                            drawn: unrolled || reduceMotion ? 1 : 0,
+                            nameDelay: OutlineUnroll.delay(rank: rank, reduceMotion: reduceMotion) + OutlineUnroll
+                                .nameAfter)
+                        .animation(
+                            MotionPolicy.resolve(OutlineUnroll.animation(rank: rank), reduceMotion: reduceMotion),
+                            value: unrolled
+                        )
                         .frame(width: rect.width - 4, height: rect.height - 4, alignment: .topLeading)
                         .scaleEffect(step.scale)
                         .opacity(step.opacity)
@@ -43,6 +48,7 @@ struct ChartRoomLayer: View {
                             value: set
                         )
                         .allowsHitTesting(false)
+                        .accessibilityHidden(set)
                 }
                 if let pending = model.pending {
                     ForEach(Place.allCases.filter { ghosts.contains($0) && $0 != .actionWord }, id: \.self) { place in
@@ -181,6 +187,7 @@ private struct Outline: View {
     let name: String
     let showsName: Bool
     var drawn: Double = 1
+    var nameDelay: Double = 0
 
     var body: some View {
         UnrollShape()
@@ -194,7 +201,8 @@ private struct Outline: View {
                     .padding(.leading, 8)
                     .padding(.top, 5)
                     .opacity(showsName ? 1 : 0)
-                    .tesseraAnimation(.easeOut(duration: 0.4), value: showsName)
+                    .offset(x: showsName ? 0 : -8)
+                    .tesseraAnimation(.easeOut(duration: 0.4).delay(nameDelay), value: showsName)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(name), empty")

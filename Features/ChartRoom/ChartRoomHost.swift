@@ -42,7 +42,8 @@ final class ChartRoomDriver: ShellRoomDriver {
     let room = DocumentRoom.room
     let tessRoom: AppID? = nil
     let flip = KeystoneFlip.rows
-    let glyphRoom: GlyphKind.Room? = nil
+    /// Its glyphs come from the Watch's own drawings (a watering can, a grove): the vetted set for a plant room.
+    let glyphRoom: GlyphKind.Room? = .watch
     var accent: Color {
         ChartRoomSummary.color(chart.document.color)
     }

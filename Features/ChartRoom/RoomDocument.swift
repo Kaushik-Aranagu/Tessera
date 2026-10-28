@@ -336,7 +336,12 @@ extension ChartDoc {
                     next.parts.append(part)
                 }
             case let .look(trait, value):
-                next.look[trait] = value
+                // The room's colour is a role, kept on the room itself.
+                if trait == "color" {
+                    next.color = value
+                } else {
+                    next.look[trait] = value
+                }
             case let .grant(reach):
                 if !next.reach.contains(reach) {
                     next.reach.append(reach)

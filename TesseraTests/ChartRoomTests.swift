@@ -319,6 +319,60 @@ struct ChartRoomTests {
         #expect(chart != nil && rows[(chart ?? 1) - 1].app == .money && rows[(chart ?? 1) - 1].extra == nil)
     }
 
+    // MARK: Sheet 359: after a dozen sentences
+
+    @Test func twelveSentencesBuildTheSheet359Room() {
+        let room = model()
+        room.setSentences(12)
+        #expect(ChartRoomModel.canned.count == 12)
+        #expect(room.document.color == "olive")
+        let screen = DocumentRoom(nodes: room.nodes).screen(for: .landing("chart"), state: RoomState())
+        guard case let .switcher(across, _)? = screen[.switcher]?.payload else {
+            Issue.record("no switcher words")
+            return
+        }
+        #expect(across == ["Thirsty", "This week", "Light"])
+        guard case let .lines(needs)? = screen[.needs]?.payload else {
+            Issue.record("no needs")
+            return
+        }
+        #expect(needs == ["Orchid, 6 days", "Monstera, 4 days"])
+        let later = DocumentRoom(nodes: room.nodes).screen(for: .landing("chart"), state: RoomState(switcherIndex: 2))
+        if case let .lines(second)? = later[.needs]?.payload {
+            #expect(second == ["Orchid by the window", "Fern in the shade"])
+        }
+        guard case let .widget(items)? = screen[.widget]?.payload else {
+            Issue.record("no widget")
+            return
+        }
+        #expect(items.map(\.big) == ["Orchid", "Monstera", "Basil"])
+        #expect(items.first?.bigColor != nil && items.first?.middle == "Last watered Wednesday")
+        #expect(screen[.glyph]?.kind == .glyph)
+        guard case let .dial(doors)? = screen[.dial]?.payload else {
+            Issue.record("no doors")
+            return
+        }
+        #expect(doors.map(\.name) == ["Orchid", "Monstera", "Fern", "Basil"])
+        #expect(doors.first?.label == "Last watered Wednesday")
+        #expect(doors.first?.lines == ["Water every 7 days", "By the east window", "Ice cubes, not a pour"])
+        #expect(screen[.doorSummary] != nil)
+        guard case let .action(steps, _)? = screen[.actionWord]?.payload else { return }
+        #expect(steps.map(\.verb) == ["Watered", "Say"] && steps.first?.object == "the orchid")
+        // The caption and the keystone row keep inside their places and over nothing.
+        let resolved = room.nodes
+        var pieces: [(Place, PlacedPart)] = []
+        for place in [Place.keystone, .caption] {
+            let rect = ShellLayout.ownFrame(place)
+            for node in resolved[place] ?? [] {
+                for piece in PartLayout.place(node, in: rect) {
+                    #expect(rect.insetBy(dx: -0.5, dy: -0.5).contains(piece.rect), "\(piece.text)")
+                    pieces.append((place, piece))
+                }
+            }
+        }
+        #expect(!pieces.isEmpty)
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {

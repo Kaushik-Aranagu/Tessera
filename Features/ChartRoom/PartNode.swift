@@ -212,6 +212,11 @@ enum PartResolver {
 
     static func node(_ part: ChartPart, in doc: ChartDoc, data: (String) -> [BoundItem]) -> PartNode? {
         let props = part.props
+        // A pipe-joined record, each segment kept to the text rules.
+        func segments(_ record: String) -> String {
+            record.split(separator: "|", omittingEmptySubsequences: false).map { PartText.shown(String($0)) }
+                .joined(separator: "|")
+        }
         func shown(_ text: String?) -> String {
             let line = PartText.shown(text ?? "")
             return PartText.looksLikeKey(line) ? "" : line
@@ -220,14 +225,20 @@ enum PartResolver {
         switch part.kind {
         case .title:
             return .title(id: part.id, text: shown(props.text("text")))
+        case .line where !props.texts("words").isEmpty:
+            return .line(id: part.id, text: props.texts("words").map { shown($0) }.joined(separator: "|"))
         case .line:
             let top = lineTop(part, doc: doc, bound: bound, data: data)
             return .line(id: part.id, text: shown(PartText.fill(props.text("text") ?? "", items: bound, top: top)))
+        case .lines where !props.texts("windows").isEmpty:
+            return .lines(id: part.id, texts: props.texts("windows").map { segments($0) })
         case .lines:
             return .lines(id: part.id, texts: (props.texts("lines") + props.texts("texts")).prefix(2).map { shown($0) })
         case .number:
             let raw = aggregate(part, bound: bound) ?? props.text("value") ?? ""
             return .number(id: part.id, value: raw, unit: shown(props.text("unit")), label: shown(props.text("label")))
+        case .list where !props.texts("cards").isEmpty:
+            return .lines(id: part.id, texts: props.texts("cards").map { segments($0) })
         case .row, .list:
             let cap = part.kind == .row ? 4 : 8
             let list = items(part, data: data, cap: cap)
@@ -254,7 +265,7 @@ enum PartResolver {
         case .doors:
             return .doors(
                 id: part.id,
-                names: (props.texts("doors") + props.texts("names")).map { shown($0) }.filter { !$0.isEmpty }
+                names: (props.texts("doors") + props.texts("names")).map { segments($0) }.filter { !$0.isEmpty }
             )
         case .actionWord:
             let does = props.text("does")

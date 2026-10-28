@@ -23,14 +23,20 @@ struct DocumentRoom: RoomContent {
     /// The small line the Say word carries (it names the place he pointed at).
     var sayObject = DocumentRoom.sayObject
 
-    func screen(for _: ShellRoute, state _: RoomState) -> Screen {
+    func screen(for _: ShellRoute, state: RoomState) -> Screen {
         func slot(_ place: Place, _ kind: SlotKind, _ payload: SlotPayload?, id: String? = nil) -> SlotContent? {
             guard let payload else { return nil }
             let ids = (nodes[place] ?? []).map(\.id).joined(separator: ",")
             return SlotContent(id: ContentID(id ?? "chart.\(place.rawValue).\(ids)"), kind: kind, payload: payload,
                                ghost: ghost.contains(place))
         }
-        let needs = needsLines
+        let words = switcherWords
+        let windows = needsWindows
+        let window = windows.isEmpty ? 0 : ((state.switcherIndex % windows.count) + windows.count) % windows.count
+        let needs = windows.isEmpty ? needsLines : windows[window]
+        let cards = widgetCards
+        let card = cards.isEmpty ? nil : cards[((state.widgetIndex % cards.count) + cards.count) % cards.count]
+        let focus = doors.isEmpty ? nil : doors[((state.dialFocus % doors.count) + doors.count) % doors.count]
         func tree(_ place: Place) -> SlotPayload? {
             guard let list = nodes[place], !list.isEmpty else { return nil }
             // The Line runs the whole 354 pt unless the Needs beside it has words.
@@ -49,14 +55,20 @@ struct DocumentRoom: RoomContent {
                 slot(.title, .text, .title(text, accent: accent))
             },
             .navWord: SlotContent(id: "chart.nav.bridge", kind: .text, payload: .navWord("Bridge")),
-            .switcher: slot(.switcher, .parts, tree(.switcher)),
-            .needs: needs.isEmpty ? nil : slot(.needs, .text, .lines(needs)),
+            .switcher: words.isEmpty ? slot(.switcher, .parts, tree(.switcher))
+                : slot(.switcher, .switcher, .switcher(across: words, vertical: []), id: "chart.switcher.words"),
+            .needs: needs.isEmpty ? nil : slot(.needs, .text, .lines(needs), id: "chart.needs.\(window)"),
             .keystone: slot(.keystone, .parts, tree(.keystone)),
             .caption: caption.isEmpty ? nil : slot(.caption, .text, .lines(caption)),
-            .widget: slot(.widget, .parts, tree(.widget)),
-            .glyph: slot(.glyph, .parts, tree(.glyph)),
-            .dial: doors.isEmpty ? nil : slot(.dial, .dial, .dial(doors)),
-            .doorSummary: nil,
+            .widget: cards.isEmpty ? slot(.widget, .parts, tree(.widget))
+                : slot(.widget, .widget, .widget(cards), id: "chart.widget.cards"),
+            .glyph: card.map { slot(.glyph, .glyph, .glyph($0, color: accent), id: "chart.glyph.\($0.id)") }
+                ?? slot(.glyph, .parts, tree(.glyph)),
+            .dial: doors.isEmpty ? nil : slot(.dial, .dial, .dial(doors), id: "chart.dial"),
+            .doorSummary: focus.flatMap { door in
+                door.label == nil && door.lines.isEmpty ? nil
+                    : slot(.doorSummary, .summary, .summary(door), id: "chart.summary.\(door.id)")
+            },
             .actionWord: foot,
             .tess: nil,
         ])
@@ -84,11 +96,51 @@ struct DocumentRoom: RoomContent {
         }
     }
 
+    /// The Switcher's across words (a `line` part with `words`), pipe-joined in its node.
+    private var switcherWords: [String] {
+        (nodes[.switcher] ?? []).flatMap { node -> [String] in
+            guard case let .line(_, text) = node, text.contains("|") else { return [] }
+            return text.split(separator: "|").map(String.init)
+        }
+    }
+
+    /// The Needs for each Switcher word (a `lines` part with `windows`): each window two pipe-joined lines.
+    private var needsWindows: [[String]] {
+        (nodes[.needs] ?? []).flatMap { node -> [[String]] in
+            guard case let .lines(_, texts) = node, texts.contains(where: { $0.contains("|") }) else { return [] }
+            return texts.map { $0.split(separator: "|").map(String.init) }
+        }
+    }
+
+    /// The widget's items (a `list` part with `cards`): header, big, middle, small and a colour role, pipe-joined.
+    private var widgetCards: [WidgetItem] {
+        (nodes[.widget] ?? []).flatMap { node -> [WidgetItem] in
+            guard case let .lines(id, texts) = node, texts.contains(where: { $0.contains("|") }) else { return [] }
+            return texts.enumerated().map { index, text in
+                let f = text.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+                func at(_ i: Int) -> String {
+                    f.indices.contains(i) ? f[i] : ""
+                }
+                return WidgetItem(id: "\(id).\(index)", header: at(0), big: at(1), middle: at(2), small: at(3),
+                                  bigColor: at(4) == "wine" ? Theme.Colors.Accent.wine : nil, strikeable: false)
+            }
+        }
+    }
+
+    /// The doors (a `doors` part): name, then the summary's label and lines, pipe-joined. A door named `wine`-last
+    /// carries the wine.
     private var doors: [DialDoor] {
         (nodes[.dial] ?? []).flatMap { node -> [DialDoor] in
             guard case let .doors(_, names) = node else { return [] }
-            return names.enumerated().map { index, name in
-                DialDoor(id: "chart.door.\(index)", name: name, color: index == 0 ? accent : Theme.Colors.ink)
+            return names.enumerated().map { index, record in
+                var f = record.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+                let wine = f.last == "wine"
+                if wine {
+                    f.removeLast()
+                }
+                return DialDoor(id: "chart.door.\(index)", name: f.first ?? "",
+                                color: wine ? Theme.Colors.Accent.wine : accent,
+                                label: f.count > 1 ? f[1] : nil, lines: Array(f.dropFirst(2)))
             }
         }
     }
