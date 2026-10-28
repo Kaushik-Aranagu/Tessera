@@ -38,7 +38,7 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         if empty.exists {
             // Diagnostics for the log: what the screen holds, and a picture.
             let lines = app.debugDescription.split(separator: "\n").filter {
-                $0.contains("empty") || $0.contains("Say") || $0.contains("Plants") || $0.contains("orchid")
+                $0.contains("StaticText") || $0.contains("Button")
             }
             print("CHART-DEBUG", lines.joined(separator: "\n"))
             let shot = XCTAttachment(screenshot: app.screenshot())

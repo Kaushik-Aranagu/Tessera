@@ -32,7 +32,7 @@ struct ChartRoomLayer: View {
                     let step = OutlineSetting.frame(at: 1, y: 0, setting: set, reduceMotion: reduceMotion)
                     let rank = DocumentRoom.outlined.firstIndex { $0.place == entry.place } ?? 0
                     Outline(name: entry.name, showsName: !ghosts.contains(entry.place) && (unrolled || reduceMotion),
-                            drawn: unrolled || reduceMotion ? 1 : 0,
+                            drawn: unrolled || reduceMotion ? 1 : 0, hidden: set,
                             nameDelay: OutlineUnroll.delay(rank: rank, reduceMotion: reduceMotion) + OutlineUnroll
                                 .nameAfter)
                         .animation(
@@ -233,6 +233,8 @@ private struct Outline: View {
     let showsName: Bool
     var drawn: Double = 1
     var nameDelay: Double = 0
+    /// A set place's outline is gone to the eye and to VoiceOver alike.
+    var hidden = false
 
     var body: some View {
         UnrollShape()
@@ -246,11 +248,13 @@ private struct Outline: View {
                     .padding(.leading, 8)
                     .padding(.top, 5)
                     .opacity(showsName ? 1 : 0)
+                    .accessibilityHidden(true)
                     .offset(x: showsName ? 0 : -8)
                     .tesseraAnimation(.easeOut(duration: 0.4).delay(nameDelay), value: showsName)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(name), empty")
+            .accessibilityLabel(hidden ? "" : "\(name), empty")
+            .accessibilityHidden(hidden)
     }
 }
 
