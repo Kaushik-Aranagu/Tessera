@@ -108,9 +108,6 @@ final class ChartRoomModel {
         self.defaults = defaults
         self.drying = drying
         self.say = say ?? { _, _ in }
-        if say == nil {
-            self.say = { [weak self] text, undo in self?.showReceipt(text, undo: undo) }
-        }
         if let defaults, let json = defaults.string(forKey: Self.defaultsKey),
            let saved = try? ChartDoc.decode(json)
         {
@@ -119,6 +116,9 @@ final class ChartRoomModel {
         } else {
             document = Self.blank
             cursor = 0
+        }
+        if say == nil {
+            self.say = { [weak self] text, undo in self?.showReceipt(text, undo: undo) }
         }
     }
 
