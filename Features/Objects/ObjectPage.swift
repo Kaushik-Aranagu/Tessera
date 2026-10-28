@@ -57,8 +57,13 @@ struct ObjectPage: View {
         } else if case let .object(id) = route, let routine = model.object(id),
                   routine.classDef?.id == model.classDef(.routine)?.id
         {
-            // A routine's page is its editor (Features/Plans/RoutineEditor).
-            RoutineEditor(routine: routine, from: from)
+            // A routine with steps shows them to check off (sheets 313 and 379); any other routine's page is its
+            // editor (Features/Plans/RoutineEditor).
+            if RoutineSteps(store: model.store, classes: model.classes).steps(of: routine).isEmpty {
+                RoutineEditor(routine: routine, from: from)
+            } else {
+                RoutineStepsPage(routine: routine, from: from)
+            }
         } else if case let .object(id) = route, let note = model.object(id),
                   Self.resolveOpensAsNote(latched: noteLatch, live: { Self.opensAsNote(note, model: model) })
         {

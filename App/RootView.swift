@@ -16,6 +16,7 @@ struct RootView: View {
     @State private var demoCook: DemoCookCover?
     @State private var demoShop = false
     @State private var demoRoutine: DemoCookCover?
+    @State private var demoRoutinePage: DemoCookCover?
     /// Settings, opened from the entry at the top right of any page below Home.
     @State private var settingsOpen = false
     #if DEBUG
@@ -132,6 +133,25 @@ struct RootView: View {
         #if DEBUG
             .fullScreenCover(isPresented: $demoShop) { GalleyShopModePage() }
             .fullScreenCover(item: $demoRoutine) { RoutineModePage(routineID: $0.id) }
+            .fullScreenCover(item: $demoRoutinePage) { cover in
+                NavigationStack {
+                    if let routine = model.object(cover.id) {
+                        ObjectPage(
+                            route: .object(routine.id),
+                            from: PageSource(name: "Evening", color: GalleyPaper.olive)
+                        )
+                    }
+                }
+            }
+            .task {
+                // Simulator only (LaunchFlags): `-openRoutinePage` opens the sample Evening's steps page as if from
+                // a page named "Evening", for stills and the tap test.
+                guard LaunchFlags.has("-openRoutinePage") else { return }
+                let routine = (try? RoutineSample.evening(in: model.engine)) ?? nil
+                guard let routine else { return }
+                try? await Task.sleep(for: .milliseconds(900))
+                demoRoutinePage = DemoCookCover(id: routine.id)
+            }
             .task {
                 // Simulator only (LaunchFlags): `-openRoutine` opens the sample Evening in routine mode, for stills.
                 guard LaunchFlags.has("-openRoutine") else { return }
