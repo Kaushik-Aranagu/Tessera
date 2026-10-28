@@ -653,7 +653,12 @@
     "locomo_frozen_fused": 0.6381,
     "locomo_bridge_dense": 0.7151,
     "locomo_bridge_fused": 0.6632,
-    "locomo_ranker": 0.7732
+    "lme_frozen_dense": 0.9201,
+    "lme_frozen_fused": 0.9056,
+    "lme_bridge_dense": 0.9519,
+    "lme_bridge_fused": 0.9076,
+    "locomo_ranker": 0.7732,
+    "lme_ranker": 0.9231
    },
    "bridge_lr": {
     "picks": [
@@ -663,7 +668,7 @@
      0.0001,
      0.001
     ],
-    "lme_lr": null,
+    "lme_lr": 0.001,
     "dev": {
      "fold0": {
       "3e-05": 0.6862,
@@ -859,10 +864,11 @@
      "400"
     ],
     "feature_sha256_12": {
-     "locomo": "9f2b9da19b4b"
+     "locomo": "9f2b9da19b4b",
+     "lme": "ad9adbf69246"
     }
    },
-   "lme_status": "pending: /tmp/claude-0/stage2/enc/qwen3-emb-0.6b/lme.npz missing",
+   "lme_status": "run",
    "vs_bge_small": {
     "locomo": {
      "frozen_dense": {
@@ -981,13 +987,59 @@
       ]
      }
     },
-    "lme": {}
+    "lme": {
+     "frozen_dense": {
+      "n": 428,
+      "mean": 0.059657,
+      "ci": [
+       0.037421,
+       0.084074
+      ],
+      "ci_above_0": true
+     },
+     "frozen_fused": {
+      "n": 428,
+      "mean": 0.019431,
+      "ci": [
+       0.006852,
+       0.033646
+      ],
+      "ci_above_0": true
+     },
+     "bridge_dense": {
+      "n": 428,
+      "mean": 0.06803,
+      "ci": [
+       0.045986,
+       0.090577
+      ],
+      "ci_above_0": true
+     },
+     "bridge_fused": {
+      "n": 428,
+      "mean": 0.009385,
+      "ci": [
+       0.001558,
+       0.018615
+      ],
+      "ci_above_0": true
+     },
+     "ranker": {
+      "n": 428,
+      "mean": 0.004478,
+      "ci": [
+       -0.011605,
+       0.020132
+      ],
+      "ci_above_0": false
+     }
+    }
    }
   }
  },
  "verdicts": {
   "bge-base": {
-   "verdict": "quality fail; speed pending 2.1",
+   "verdict": "fail",
    "quality": "fail",
    "conditions": {
     "locomo_ci_above_0": false,
@@ -998,29 +1050,29 @@
     0.170898,
     0.170898
    ],
-   "speed_ok": null,
-   "speed_note": "results/s21_coreml.json missing",
-   "verdict_if_two_sided": "quality fail; speed pending 2.1",
+   "speed_ok": true,
+   "speed_note": "read",
+   "verdict_if_two_sided": "fail",
    "holm_p_two_sided": [
     0.341797,
     0.341797
    ]
   },
   "qwen3-emb-0.6b": {
-   "verdict": "quality pending; speed pending 2.1",
-   "quality": "pending",
+   "verdict": "fail: better but too slow",
+   "quality": "pass",
    "conditions": {
     "locomo_ci_above_0": true,
     "holm_p_below_0_05": true,
-    "lme_no_loss": null
+    "lme_no_loss": true
    },
    "holm_p": [
     0.017578,
     0.017578
    ],
-   "speed_ok": null,
-   "speed_note": "results/s21_coreml.json missing",
-   "verdict_if_two_sided": "quality pending; speed pending 2.1",
+   "speed_ok": false,
+   "speed_note": "read",
+   "verdict_if_two_sided": "fail: better but too slow",
    "holm_p_two_sided": [
     0.035156,
     0.035156
@@ -1031,5 +1083,5 @@
   "bge-base",
   "qwen3-emb-0.6b"
  ],
- "seconds": 1575
+ "seconds": 516
 }
