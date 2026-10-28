@@ -22,9 +22,21 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         return app
     }
 
-    private func say(_ app: XCUIApplication) {
-        app.buttons["Say, what to build"].tap()
-        sleep(3)
+    /// Waits until an element can take a tap (the page it sits on has settled).
+    private func waitHittable(_ element: XCUIElement, timeout: TimeInterval = 15, _ what: String) {
+        let hittable = NSPredicate(format: "exists == true AND isHittable == true")
+        let wait = XCTNSPredicateExpectation(predicate: hittable, object: element)
+        XCTAssertEqual(XCTWaiter().wait(for: [wait], timeout: timeout), .completed, "\(what) is ready")
+    }
+
+    /// Says the next sentence and waits for it to set: its receipt's Undo is the sign (never a fixed sleep).
+    private func say(_ app: XCUIApplication, setsAs undo: Bool = true) {
+        let word = app.buttons["Say, what to build"]
+        waitHittable(word, "The Say word")
+        word.tap()
+        if undo {
+            XCTAssertTrue(app.buttons["Undo"].waitForExistence(timeout: 15), "The change set and has its Undo")
+        }
     }
 
     func testSayAllowAndUndoTakePlainTaps() {
@@ -34,7 +46,6 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         say(app)
         say(app)
         say(app)
-        sleep(3)
         let empty = app.descendants(matching: .any)["Keystone, empty"]
         if empty.exists {
             // Diagnostics for the log: what the screen holds, and a picture.
@@ -49,9 +60,8 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         XCTAssertFalse(empty.exists, "The keystone set")
         app.buttons["Say, what to build"].tap()
         let allow = app.buttons["chart.allow"]
-        XCTAssertTrue(allow.waitForExistence(timeout: 5), "The reach line shows Allow")
-        sleep(3)
-        XCTAssertTrue(allow.exists, "It still waits after the drying line")
+        XCTAssertTrue(allow.waitForExistence(timeout: 15), "The reach line shows Allow once the drying line ends")
+        XCTAssertTrue(allow.exists, "It waits for Allow")
         allow.tap()
         XCTAssertFalse(allow.waitForExistence(timeout: 2), "Allow set the patch")
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Watered")).firstMatch
@@ -127,10 +137,11 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         ))
         .firstMatch
         if step.waitForExistence(timeout: 5) {
-            // Let the pushed page settle before the tap, and the check settle before coming back.
-            sleep(2)
+            // The pushed page is ready when its row takes a tap; the check is done when the row says so.
+            waitHittable(step, "The step row")
             step.tap()
-            sleep(2)
+            let checked = NSPredicate(format: "label CONTAINS[c] %@ OR value CONTAINS[c] %@", "done", "checked")
+            _ = XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: checked, object: step)], timeout: 3)
         }
         // Checking the step off updates the orchid's line: proven on a real engine in ChartPagesTests
         // (`theOrchidsLineReadsNeverThenTodayAfterItsRoutineStepIsChecked`). The routine page's own check control is
