@@ -1,10 +1,19 @@
 import SwiftUI
 import TesseraCore
 
+/// The page a page was pushed from: its name for the back word and its own colour (sheet 378).
+struct PageSource: Equatable {
+    let name: String
+    let color: Color
+}
+
 /// One page for every class and object: path, hero name, class line, summary numbers, properties (inherited
 /// ones marked ↑), contents, history, subclasses and backlinks — all rendered from the object model.
 struct ObjectPage: View {
     let route: Route
+    /// The page this one was opened from, when it names itself in its back word (sheet 378): "Orchid" in olive on
+    /// the routine the orchid's page opened.
+    var from: PageSource?
     @Environment(AppModel.self) private var model
     /// Whether this note opens in the editor, decided once per appearance so typing a walled word into a plain
     /// note cannot swap the editor for the masked page mid-sentence.
@@ -49,7 +58,7 @@ struct ObjectPage: View {
                   routine.classDef?.id == model.classDef(.routine)?.id
         {
             // A routine's page is its editor (Features/Plans/RoutineEditor).
-            RoutineEditor(routine: routine)
+            RoutineEditor(routine: routine, from: from)
         } else if case let .object(id) = route, let note = model.object(id),
                   Self.resolveOpensAsNote(latched: noteLatch, live: { Self.opensAsNote(note, model: model) })
         {
