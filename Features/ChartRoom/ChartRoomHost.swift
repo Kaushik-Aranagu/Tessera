@@ -69,7 +69,7 @@ final class ChartRoomDriver: ShellRoomDriver {
     func content(model: AppModel, scheme _: ColorScheme) -> any RoomContent {
         chart.attach(model.engine)
         return DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, accent: accent, sayObject: chart.sayObject,
-                            footSteps: chart.historyFoot)
+                            footSteps: chart.historyFoot ?? chart.replayFoot)
     }
 
     /// The object whose page a door opened (a sheet over the shell).
@@ -86,6 +86,8 @@ final class ChartRoomDriver: ShellRoomDriver {
     }
 
     func entered(navigator: ShellNavigator) {
+        // The first open of a restored room replays how it was made (sheet 372).
+        chart.openIfOwed()
         // A taken-down room goes: the empty room dissolves over Bridge, and the dial has one row less.
         chart.onArchived = { [weak navigator] in
             while navigator?.canPop == true {
@@ -137,6 +139,8 @@ private struct ChartRoomPresenter: View {
 func run(_ step: String, _ chart: ChartRoomModel) {
     if step == "say" {
         chart.saySomething()
+    } else if step == "skip" {
+        chart.skipReplay()
     } else if step == "close" {
         chart.closeHistory()
     } else if step == "goback" {
@@ -161,7 +165,7 @@ struct ChartShellHost: View {
                 nodes: chart.nodes,
                 ghost: chart.ghostPlaces,
                 sayObject: chart.sayObject,
-                footSteps: chart.historyFoot
+                footSteps: chart.historyFoot ?? chart.replayFoot
             ),
             navigator: navigator,
             accent: ChartRoomSummary.color(chart.document.color)

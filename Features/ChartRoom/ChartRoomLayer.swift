@@ -98,6 +98,14 @@ struct ChartRoomLayer: View {
                 noteLine(scale: scale)
                 historyPanel(scale: scale)
                 receiptLine(scale: scale)
+                if model.isReplaying {
+                    // A tap anywhere ends the replay and does nothing else.
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { model.skipReplay() }
+                        .accessibilityLabel("Skip to the room as you left it")
+                        .accessibilityAddTraits(.isButton)
+                }
                 if model.phase == .archiving, !reduceMotion {
                     // Sheet 371: sheet 366 backwards. The outlines come back up (doors first), then fold into their
                     // top-left corners, the title last.
@@ -264,6 +272,7 @@ struct ChartRoomLayer: View {
                 Text("\u{201C}\(PartText.shown(model.heard))\u{201D}")
                     .font(.custom("Newsreader", size: 20, relativeTo: .body).italic())
                     .foregroundStyle(Theme.Colors.inkSecondary)
+                    .opacity(model.isReplaying ? 0.55 : 1)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(width: rect.width - 12, alignment: .leading)

@@ -539,7 +539,7 @@ struct ChartRoomTests {
         #expect(app.store.objects(of: plants).map(\.title).sorted() == before, "the plants are never touched")
         #expect(room.document.parts.isEmpty)
         said.undo?()
-        #expect(room.phase == .live, "restored, then live after the replay")
+        #expect(room.phase == .restored, "restored: the replay is owed until the first open")
         #expect(book.room(named: "Chart room") != nil, "Undo brings the room back")
         #expect(room.document.parts.map(\.id) == ["title", "line"])
         #expect(app.store.objects(of: plants).map(\.title).sorted() == before)
@@ -771,7 +771,7 @@ struct ChartRoomTests {
         #expect(!ChartRoomSummary.isUp(defaults: suite), "no row in the dial")
         #expect(said.lines.last == "Room taken down, not the plants")
         said.undo?()
-        #expect(room.phase == .live && ChartRoomSummary.isUp(defaults: suite) && !room.document.parts.isEmpty)
+        #expect(room.phase == .restored && ChartRoomSummary.isUp(defaults: suite) && !room.document.parts.isEmpty)
     }
 
     @Test func wordsHalfWayThroughTheFoldKeepTheRoom() async throws {
@@ -784,6 +784,89 @@ struct ChartRoomTests {
         #expect(room.phase == .live && !room.document.parts.isEmpty)
         try await Task.sleep(for: .seconds(OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count) + 0.4))
         #expect(room.phase == .live, "the fold never finishes")
+    }
+
+    // MARK: Sheets 364 and 385: the room stays live, the watered plant drinks
+
+    private func keystoneItems(_ room: ChartRoomModel) -> [RankedItem] {
+        guard case let .row(_, items)? = room.nodes[.keystone]?.first else { return [] }
+        return items
+    }
+
+    @Test func wateringReRanksHandsTheGlowOverAfterTheMoveAndOnlyThePlantThatDrankDrinks() async throws {
+        let said = Said()
+        let room = model(said: said)
+        upToTheWideningPatch(room)
+        room.saySomething()
+        try await Task.sleep(for: .milliseconds(250))
+        room.allow()
+        #expect(keystoneItems(room).map(\.small) == ["Orchid", "Monstera", "Fern", "Basil"])
+        room.does("water")
+        var items = keystoneItems(room)
+        #expect(items.map(\.small) == ["Monstera", "Fern", "Basil", "Orchid"], "the orchid walks to the end of the row")
+        #expect(items.first { $0.small == "Orchid" }?.big == "0")
+        #expect(room.drinking?.name == "Orchid" && room.drinking?.up == true)
+        #expect(items.filter { $0.drinks != nil }.map(\.small) == ["Orchid"], "only the watered plant drinks")
+        #expect(items.first { $0.small == "Orchid" }?.isTop == true, "the glow has not moved yet")
+        #expect(items.first { $0.small == "Monstera" }?.isTop == false)
+        try await Task.sleep(for: .milliseconds(550))
+        items = keystoneItems(room)
+        #expect(items.first { $0.small == "Monstera" }?.isTop == true, "it hands over once the move has settled")
+        #expect(items.first { $0.small == "Orchid" }?.isTop == false)
+        try await Task.sleep(for: .seconds(DrinkRun.seconds))
+        #expect(room.drinking == nil, "nothing is left on the number afterwards")
+        // Undo plays it backwards: the thirst sinks back in and the orchid takes the glow again.
+        said.undo?()
+        #expect(room.drinking?.name == "Orchid" && room.drinking?.up == false)
+        #expect(keystoneItems(room).map(\.small) == ["Orchid", "Monstera", "Fern", "Basil"])
+        try await Task.sleep(for: .milliseconds(550))
+        #expect(keystoneItems(room).first { $0.small == "Orchid" }?.isTop == true)
+    }
+
+    // MARK: Sheet 372: a room comes back the way it was made
+
+    private func restoredRoom() async throws -> (ChartRoomModel, Said, ChartDoc) {
+        let said = Said()
+        let room = model(said: said)
+        for _ in 0 ..< 3 {
+            room.saySomething()
+            room.tapGhost()
+        }
+        let final = room.document
+        room.takeDown()
+        try await Task.sleep(for: .seconds(OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count) + 0.4))
+        #expect(room.phase == .archived)
+        said.undo?()
+        #expect(room.phase == .restored && room.document == final)
+        return (room, said, final)
+    }
+
+    @Test func aRestoredRoomReplaysHowItWasMadeOnceThenSaysSo() async throws {
+        let (room, _, final) = try await restoredRoom()
+        room.openIfOwed()
+        try await Task.sleep(for: .milliseconds(450))
+        #expect(room.isReplaying, "his sentences go by")
+        #expect(room.shown.parts.count < final.parts.count, "the room is partly built while it plays")
+        #expect(room.replayFoot?.first?.verb == "Skip" && room.replayFoot?.first?
+            .object == "to the room as you left it")
+        try await Task.sleep(for: .seconds(ReplayPlan.total + 0.5))
+        #expect(!room.isReplaying && room.phase == .live)
+        #expect(room.document == final && room.shown == final, "it ends whole")
+        #expect(room.note?.line == "Back the way you made it")
+        room.openIfOwed()
+        #expect(!room.isReplaying, "it plays once")
+    }
+
+    @Test func aTapSkipsTheReplayAtOnce() async throws {
+        let (room, _, final) = try await restoredRoom()
+        room.openIfOwed()
+        try await Task.sleep(for: .milliseconds(450))
+        #expect(room.isReplaying)
+        room.skipReplay()
+        #expect(!room.isReplaying && room.phase == .live && room.shown == final, "whole at once")
+        #expect(room.note?.line == "Back the way you made it")
+        room.skipReplay()
+        #expect(room.phase == .live, "a second tap does nothing")
     }
 
     // MARK: Sheets 360 and 361: point, then say; how the room says no

@@ -78,6 +78,20 @@ final class ChartRoomModel {
     private(set) var phase: RoomPhase = .blank
     /// A new sentence arrived while one was drying: its line runs to the end in 160 ms.
     private(set) var completing = false
+    /// Sheet 364: who wears the wine. Its own state: it follows the ranking after the move has settled.
+    private(set) var glow: String?
+    private var glowReady = false
+    /// Sheet 385: the plant that just drank (true) or whose drink was undone (false). Only that plant.
+    private(set) var drinking: (name: String, up: Bool)?
+    /// Sheet 372: a replay of how the room was made is playing; `replay` is the room as it stood at the beat.
+    private(set) var replay: (doc: ChartDoc, ghost: Set<Place>)?
+    var isReplaying: Bool {
+        replay != nil
+    }
+
+    @ObservationIgnored private var glowTask: Task<Void, Never>?
+    @ObservationIgnored private var replayTask: Task<Void, Never>?
+    @ObservationIgnored private var drinkTask: Task<Void, Never>?
     /// A stop running its line back (sheet 373): the places whose line was drying and how far it had got (0 to 1).
     private(set) var stopping: (places: Set<Place>, progress: Double)?
     @ObservationIgnored private var stagedAt = Date.now
@@ -292,7 +306,6 @@ final class ChartRoomModel {
         say("Room taken down, not the plants") { [weak self] in
             guard let self else { return }
             fire(RoomEvent.restore)
-            defer { fire(RoomEvent.replayEnded) }
             defaults?.set(false, forKey: Self.archivedKey)
             if let engine {
                 // Bring back: the room, its history and its grants, from the room Core finds taken down.
@@ -323,6 +336,75 @@ final class ChartRoomModel {
         say("Stopped, nothing changed") {}
     }
 
+    // MARK: A room comes back the way it was made (sheet 372)
+
+    /// The first open of a restored room replays his sentences (with Core's store the steps are `RoomReplay.steps`;
+    /// without one, this run's). Reduce Motion: the room is there whole. It plays once.
+    func openIfOwed() {
+        guard phase == .restored, replay == nil else { return }
+        var steps: [(note: String, doc: ChartDoc)] = memory.compactMap { row in row.doc.map { (row.note, $0) } }
+        if let engine, let book = Optional(RoomBook(store: engine.store, classes: engine.classes)),
+           let room = book.room(named: document.name), RoomReplay.isOwed(room, in: engine.store),
+           let real = try? RoomReplay.steps(of: document.name, engine: engine)
+        {
+            steps = real.map { ($0.note, ChartDoc($0.document)) }
+        }
+        let keep = ReplayPlan.changed(steps.map(\.doc))
+        let beats = ReplayPlan.timeline(count: keep.count, reduceMotion: reduceMotion)
+        guard !beats.isEmpty else {
+            finishReplay()
+            return
+        }
+        let final = document
+        replayTask?.cancel()
+        replayTask = Task { [weak self] in
+            var elapsed = 0.0
+            var previous = Self.blank
+            for beat in beats {
+                try? await Task.sleep(for: .seconds(max(0, beat.start - elapsed)))
+                guard let self, !Task.isCancelled else { return }
+                let step = steps[keep[beat.index]]
+                let ghost = Set(Place.allCases.filter {
+                    previous.parts(in: $0) != step.doc.parts(in: $0)
+                })
+                heard = step.note
+                replay = (step.doc, ghost)
+                previous = step.doc
+                elapsed = beat.start
+                try? await Task.sleep(for: .seconds(beat.dry))
+                guard !Task.isCancelled else { return }
+                replay = (step.doc, [])
+                elapsed += beat.dry
+            }
+            guard let self, !Task.isCancelled else { return }
+            document = final
+            finishReplay()
+        }
+    }
+
+    /// A tap anywhere while it plays: the room is there whole at once, and the tap does nothing else.
+    func skipReplay() {
+        guard phase == .restored else { return }
+        replayTask?.cancel()
+        finishReplay()
+    }
+
+    private func finishReplay() {
+        replay = nil
+        heard = ""
+        guard fire(RoomEvent.replayEnded) else { return }
+        if let engine, let room = RoomBook(store: engine.store, classes: engine.classes).room(named: document.name) {
+            _ = try? engine.perform(MarkRoomOpened(room: room.id), by: .system)
+        }
+        cue.play(.selection)
+        note = RoomNote(line: "Back the way you made it", button: nil, patch: nil)
+    }
+
+    /// While the replay plays the action word reads Skip, "to the room as you left it".
+    var replayFoot: [ShellStep]? {
+        isReplaying ? [ShellStep(id: "skip", verb: "Skip", object: "to the room as you left it")] : nil
+    }
+
     /// Called when the room has been taken down (the driver goes back to Bridge: the empty room dissolves over it).
     @ObservationIgnored var onArchived: (() -> Void)?
     @ObservationIgnored private var foldTask: Task<Void, Never>?
@@ -337,6 +419,9 @@ final class ChartRoomModel {
 
     /// The document as it should draw now: the pending patch applied (as a ghost) over the committed room.
     var shown: ChartDoc {
+        if let replay {
+            return replay.doc
+        }
         if let previewing {
             return previewing.doc ?? document
         }
@@ -352,6 +437,7 @@ final class ChartRoomModel {
     /// The nodes of every place, resolved against what the binds read now.
     var nodes: [Place: [PartNode]] {
         var resolved = PartResolver.resolve(shown) { [data] in data.items($0) }
+        resolved = followGlow(resolved)
         // A doors part bound to a class has one door per object, ranked like its sort (sheet 375).
         if let part = shown.parts(in: .dial).first(where: { $0.kind == .doors && $0.bind != nil }),
            let doors = realDoors(part)
@@ -363,6 +449,66 @@ final class ChartRoomModel {
             resolved[.dial] = [.doors(id: part.id, names: records)]
         }
         return resolved
+    }
+
+    /// The wine glow and the drink laid over a ranking: the glow is the state that follows after the move settled, the
+    /// drink belongs to the one plant that was watered.
+    private func followGlow(_ nodes: [Place: [PartNode]]) -> [Place: [PartNode]] {
+        guard glowReady || drinking != nil else { return nodes }
+        func lay(_ item: RankedItem) -> RankedItem {
+            var next = item
+            if glowReady {
+                next.isTop = item.small == glow
+            }
+            if let drinking, drinking.name == item.small {
+                next.drinks = drinking.up
+            }
+            return next
+        }
+        return nodes.mapValues { list in
+            list.map { node in
+                switch node {
+                case let .row(id, items): .row(id: id, items: items.map(lay))
+                case let .list(id, items): .list(id: id, items: items.map(lay))
+                default: node
+                }
+            }
+        }
+    }
+
+    /// The plant the ranking puts first (the thirstiest), by name; nil when nothing glows.
+    private var leader: String? {
+        for list in PartResolver.resolve(shown, data: { [data] in data.items($0) }).values {
+            for case let .row(_, items) in list {
+                if let top = items.first(where: \.isTop) {
+                    return top.small
+                }
+            }
+        }
+        return nil
+    }
+
+    /// After a change to the ranking: the glow follows once the move has settled, with one light tick (Reduce Motion:
+    /// at once, the tick stays). The first call only latches who has it now.
+    func refreshGlow() {
+        let next = leader
+        guard glowReady else {
+            glow = next
+            glowReady = true
+            return
+        }
+        guard next != glow else { return }
+        glowTask?.cancel()
+        let wait = GlowFollow.owner(current: glow, leader: next, elapsed: 0, reduceMotion: reduceMotion) == next
+            ? 0 : GlowFollow.settle
+        glowTask = Task { [weak self] in
+            if wait > 0 {
+                try? await Task.sleep(for: .seconds(wait))
+            }
+            guard let self, !Task.isCancelled else { return }
+            glow = leader
+            cue.play(.selection)
+        }
     }
 
     /// The real doors of a doors part: one per object of its class, from Core's `PageBook`. Nil without a store.
@@ -384,6 +530,9 @@ final class ChartRoomModel {
     /// The places a ghost fills, whose outline lets go and whose drying line runs.
     var ghostPlaces: Set<Place> {
         // A preview of the room as it was: every filled place is a ghost, and nothing is written.
+        if let replay {
+            return replay.ghost
+        }
         if previewing != nil || phase == .archiving {
             return Set(nodes.keys)
         }
@@ -688,13 +837,36 @@ final class ChartRoomModel {
 
     /// The action word the room built: its single field write, on the top item.
     func does(_ partID: String) {
+        refreshGlow() // latch who has the glow before the data moves
         guard let node = nodes[.actionWord]?.first(where: { $0.id == partID }),
               case let .actionWord(_, _, _, does?) = node,
               let bind = shown.part(partID)?.bind ?? PartResolver.bind(of: does),
               let top = PartResolver.topItem(in: shown, bind: bind, data: { [data] in data.items($0) }),
               let undo = data.write(does, to: top.name)
         else { return }
-        say("\(top.name), watered") { undo() }
+        say("\(top.name), watered") { [weak self] in
+            undo()
+            self?.drink(top.name, up: false)
+            self?.refreshGlow()
+        }
+        drink(top.name, up: true)
+        refreshGlow()
+    }
+
+    /// The drink: `up` the colour climbs out of the watered plant; not up, the thirst sinks back in. Only that plant,
+    /// for 0.76 s (Reduce Motion: it changes in place, nothing to wait for).
+    func drink(_ name: String, up: Bool) {
+        drinkTask?.cancel()
+        guard !reduceMotion else {
+            drinking = nil
+            return
+        }
+        drinking = (name, up)
+        drinkTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(DrinkRun.seconds))
+            guard !Task.isCancelled else { return }
+            self?.drinking = nil
+        }
     }
 
     /// Simulator stills: the room as it is after the first `count` canned sentences, with every grant allowed.

@@ -143,32 +143,95 @@ private struct NumberPart: View {
 /// A ranked row: numerals over names in equal columns, bottom-aligned above the foot; the top one in wine.
 private struct RankedRow: View {
     let items: [RankedItem]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
             let shown = Array(items.prefix(max(1, Int(proxy.size.width / PartLayout.minCell))))
             HStack(alignment: .bottom, spacing: 0) {
+                // Keyed by the bound object, so a re-rank moves each plant to its place (sheet 364).
                 ForEach(shown) { item in
-                    VStack(alignment: .leading, spacing: PartLayout.nameGap) {
-                        Text(item.big)
-                            .font(.custom("Outfit", size: PartLayout.numeral, relativeTo: .largeTitle).weight(.light))
-                            .monospacedDigit()
-                            .lineLimit(1)
-                        Text(item.small)
-                            .font(.custom("Figtree", size: PartLayout.nameSize, relativeTo: .callout).weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                    }
-                    .foregroundStyle(item.isTop ? Theme.Colors.Accent.wine : Theme.Colors.ink)
-                    .breathes(item.isTop)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(item.small), \(item.big)")
+                    cell(item)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(item.small), \(item.big)")
                 }
             }
             .padding(.bottom, PartLayout.foot)
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottomLeading)
+            // Reduce Motion: the room changes in place, at once.
+            .animation(reduceMotion ? nil : Theme.Motion.house, value: shown.map(\.id))
         }
+    }
+
+    @ViewBuilder
+    private func cell(_ item: RankedItem) -> some View {
+        let plain = Theme.Colors.ink
+        let wine = Theme.Colors.Accent.wine
+        let word = VStack(alignment: .leading, spacing: PartLayout.nameGap) {
+            Text(item.big)
+                .font(.custom("Outfit", size: PartLayout.numeral, relativeTo: .largeTitle).weight(.light))
+                .monospacedDigit()
+                .lineLimit(1)
+                // The number rolls (sheet 364): down when it is watered, up when that is undone.
+                .contentTransition(.numericText(countsDown: item.drinks != false))
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: item.big)
+            Text(item.small)
+                .font(.custom("Figtree", size: PartLayout.nameSize, relativeTo: .callout).weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        if let up = item.drinks {
+            // The watered plant drinks (sheet 385): the new colour climbs through its number and name from the foot
+            // (the thirst sinks back in from the top on Undo), a masked gradient and not a crossfade.
+            DrinkingText(from: up ? wine : plain, to: up ? plain : wine, up: up) { word }
+        } else {
+            word
+                .foregroundStyle(item.isTop ? wine : plain)
+                .breathes(item.isTop)
+        }
+    }
+}
+
+/// Two copies of the same words, the old colour whole and the new one under a rising waterline: a soft band a quarter
+/// of the height, climbing 0.76 s (fast, then slow). Drinking climbs from the foot; Undo sinks in from the top. Reduce
+/// Motion: the colour is the new one at once.
+private struct DrinkingText<Content: View>: View {
+    let from: Color
+    let to: Color
+    /// True: the new colour climbs from the foot. False: it comes in from the top.
+    let up: Bool
+    @ViewBuilder let content: () -> Content
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var level = 0.0
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            content().foregroundStyle(reduceMotion ? to : from)
+            if !reduceMotion {
+                content()
+                    .foregroundStyle(to)
+                    .mask { waterline }
+            }
+        }
+        .task {
+            guard !reduceMotion else { return }
+            let curve = up ? Animation.timingCurve(0.25, 0.6, 0.3, 1, duration: DrinkRun.seconds)
+                : Animation.timingCurve(0.45, 0, 0.55, 1, duration: DrinkRun.seconds)
+            withTesseraAnimation(curve, reduceMotion: false) { level = 1 }
+        }
+    }
+
+    /// Black where the new colour has reached, with a soft edge `DrinkRun.band` high.
+    private var waterline: some View {
+        let top = level * (1 + DrinkRun.band)
+        let edge = max(0, top - DrinkRun.band)
+        return LinearGradient(stops: [
+            .init(color: .black, location: 0),
+            .init(color: .black, location: min(1, edge)),
+            .init(color: .clear, location: min(1, max(top, edge + 0.001))),
+            .init(color: .clear, location: 1),
+        ], startPoint: up ? .bottom : .top, endPoint: up ? .top : .bottom)
     }
 }
 

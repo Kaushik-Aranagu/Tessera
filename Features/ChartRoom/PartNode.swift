@@ -16,6 +16,9 @@ struct RankedItem: Equatable, Sendable, Identifiable {
     var big: String
     var small: String
     var isTop = false
+    /// Sheet 385: this plant was just watered (true: the thirst climbs out) or the watering was undone (false: it sinks
+    /// back in). Nil for every other plant: only the watered one drinks.
+    var drinks: Bool?
 }
 
 indirect enum PartNode: Equatable, Sendable, Identifiable {
