@@ -424,3 +424,18 @@ On the Deck landing, Log ("yesterday's walk, 32 min") only said "Walk, 32 min, l
 - Core: the board's Log object needs a fact the app doesn't have yet. The app writes workouts to Health but reads none, so there is no "yesterday's walk, 32 min" to offer. This needs a Health read of walking workouts that aren't in the training log yet (the newest one, its day and minutes), and an action that logs it as an activity in one op group with Undo. Until that exists, the app's Log keeps opening This week, and this transition waits for it
 - Builder A: the flight is the shared foot-to-keystone move. When a foot action writes a line onto its keystone, its object label flies there (`matchedGeometryEffect`-style, 0.56 s, `.timingCurve(0.3, 0.8, 0.3, 1)`), scaled to the written line's width, with its color going from ink to the keystone's chalk. On the Deck, the chalk line then reveals left to right over 0.7 s, with the label masked away behind the same edge, and one light `.sensoryFeedback(.impact)` as it starts. Undo plays the existing wipe and ghost
 - Probe: `docs/design/boards/r66/pdk.js` (before: Log offers yesterday's walk and the board has no line. Just after the tap: the words are in flight, Log reads "what you did" and the receipt has no full stop. Partway: the flying words are rubbed away as far as the chalk has written. After: the chalk line is on the board and fits between the week and the lifts. Undo: the line goes, the ghost fades to nothing and the words are back. Logging again only says how. Coming back shows the line. Paper, black; Reduce Motion: in place, no flight, no ghost)
+
+## Sheet 391: the Lookout sets the alert, and the page notes lose their stop
+
+While checking the Lookout's door pages against sheet 284, the board itself had two slips. Both are fixed in v114.
+
+- **The Lookout's level 1 foot said "Add, to Hours".** Every door page's foot was "Add" and "Ask", but nothing can be added to the weather. On the Lookout's door pages it is now "Alert" with "before rain", then "Ask" with "Tess about {door}". Across on the Door title changes only Ask's object, and Alert stays. Alert's receipt is "Rain alert on, you’ll hear 30 minutes before", with Undo. The other rooms keep Add, since each has something to add to. On the board, a room's level 1 foot comes from `lvFoot` (the room's own `foot`, or Add and Ask)
+- **Four page notes ended in a full stop.** Each one is the single line under an item page's body, and each is now unstopped:
+  - the hour's advice, "Take the umbrella if you go out after 6:30";
+  - the lift's "Last time: 180 lb, 4 sets of 5, easy";
+  - the walk's "Rain from 7 tonight, go before 6:30";
+  - the journal's "Thirsty, not lost, one line waters it".
+
+  A note's own text, and Tess's words in a note she kept, keep their stops
+- Checklists for the builders: `docs/design/levels/lookout-checklist.md` is new. The Log and Galley checklists now note what Builder A's `ios/deck-levels` already has
+- Probe: `docs/design/boards/r66/pft.js`. It reads every door page and item page in every room: Door title, line, caption, rows, facts, body note and foot. None ends in a full stop. On the Lookout, the level 1 foot is Alert before rain, and after across to Tonight it still is, with no Add anywhere. It fails on the v113 board with the four notes and "Add"

@@ -6,6 +6,12 @@ Checked on Oct 28 against master. This is for Builder B. The contract is sheet 2
 
 - On his phone, a Log door still pushes the old pages: `NotesIndex` for All notes and `NotesDoorPage` for the others (`Features/Notes/NotesView.swift`). The shell version, `NotesShellHost` in `NotesRoomContent.swift`, only runs behind `-shell` on the simulator
 - The shell version has level 1 only: a plain `.list` of titles and times. It has no level 2. Tapping a row opens the editor sheet
+- **Update, later on Oct 28:** Builder A's `ios/deck-levels` (a08a8a3d) is further along than master:
+  - the Log already sits in the root shell by default (`NotesRoomDriver`);
+  - the five lines in point 2 have lost their full stop;
+  - the root shell draws Tess at every level (point 4).
+
+  Still open there: level 1 is a `.list`, the nav word reads "Log", there is no level 2, there are three doors, and private notes get a row each
 
 ## The move
 

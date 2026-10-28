@@ -2,6 +2,8 @@
 
 Written Oct 28 for Builder B. There's no Galley levels branch yet: the app's Galley doors still open the old full pages (Recipes, Pantry, Groceries). The contract is sheet 284 (`docs/design/levels-284.md`). The board is https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp v112: open the Galley, turn the dial, tap a door, then tap a row.
 
+**Update, later on Oct 28:** Builder A's `ios/deck-levels` (a08a8a3d) already puts the Galley in the root shell (`GalleyRoomContent`). It has five doors and keeps the rail at both levels. Its level 1 is still a plain `.list`, the nav word reads "Galley", the door title takes the room color, and there is no level 2. Everything below still applies on top of that.
+
 ## Reuse the Deck's kit
 
 Builder A's `ios/deck-levels` already has the shared pieces: the shell's level 2 route, the page title with across, `RankedPage` (the rank weights 1.7, 1.3, 1.08, 1, 0.94, 0.88, 0.84 and the title sizes), `ItemPage` (facts 1.2 : 1 : 1 over the body) and the siblings body. Build the Galley on those. Don't draw rows of your own. The fixes on `docs/design/levels/deck-checklist.md` (the foot per level, Tess at every level, per-door captions, units, settle) apply here too, so pick them up once Builder A lands them in the kit.
