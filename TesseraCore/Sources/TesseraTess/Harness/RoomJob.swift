@@ -21,6 +21,11 @@ public enum RoomJob {
     means, which places and parts it touches and what the kit allows, then call patchRoom once. Use only the kit and \
     the look traits listed; name a part by its id; a colour is a role, never a hex. If the kit has no such part, still \
     call patchRoom with the part he named so it can be queued. Lines have no full stop at the end. Never write money.
+    Every add gives the part a short id of your own (title, row, doors); set, remove and move name an id the room \
+    already has, never a placeholder. Leave fields you do not use as empty strings and index as -1. say is a short \
+    receipt such as "Plants, set", never a placeholder. A part's place must be one its kind allows; a title sits in the \
+    title place. A stack or grid lists other parts, never itself. To show a count or a ranking of his things, bind the \
+    part to their class.
     """
 
     /// The class catalog: his own classes by name, their fields and kinds.
