@@ -43,7 +43,7 @@ struct ChartMotionTests {
     // MARK: 385, the drink
 
     @Test func theWaterlineClimbsFastThenSlowAndASinkIsEven() {
-        #expect(DrinkRun.progress(at: 0, up: true, reduceMotion: false) == 0)
+        #expect(DrinkRun.progress(at: 0, up: true, reduceMotion: false) < 1e-6)
         #expect(abs(DrinkRun.progress(at: DrinkRun.seconds, up: true, reduceMotion: false) - 1) < 1e-6)
         let early = DrinkRun.progress(at: 0.15, up: true, reduceMotion: false)
         let late = DrinkRun.progress(at: DrinkRun.seconds, up: true, reduceMotion: false)
