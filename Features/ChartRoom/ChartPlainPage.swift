@@ -18,13 +18,7 @@ enum PlainPage {
         for part in parts {
             guard let place = Place(rawValue: part.place) else { continue }
             func words(_ text: String) -> String {
-                // "Last misted {@step.doneAt}" reads when the linked step was last checked off (sheet 379).
-                let done = fillDone(text, now: AppClock.now) { key in
-                    book.store.linkedObjects(key, of: object).first.flatMap {
-                        RestBook(store: book.store, classes: book.classes).lastDone(ofStep: $0.id)
-                    }
-                }
-                return PartText.shown(book.text(done, for: object, engine: engine))
+                filled(text, object: object, book: book, engine: engine)
             }
             let node: PartNode?
             switch part.kind {
@@ -58,6 +52,17 @@ enum PlainPage {
             }
         }
         return out
+    }
+
+    /// A page line with every token filled: "Last misted {@step.doneAt}" reads when the linked step was last checked
+    /// off (sheet 379), then Core's own tokens ({title}, {field}, {recent(...)}, {@link.parent.title}).
+    static func filled(_ template: String, object: ObjectRecord, book: PageBook, engine: ActionEngine?) -> String {
+        let done = fillDone(template, now: AppClock.now) { key in
+            book.store.linkedObjects(key, of: object).first.flatMap {
+                RestBook(store: book.store, classes: book.classes).lastDone(ofStep: $0.id)
+            }
+        }
+        return PartText.shown(book.text(done, for: object, engine: engine))
     }
 
     /// "today", "yesterday" or the weekday: when a routine step was last done, in a page's words (sheet 379).
@@ -283,6 +288,7 @@ struct ChartPlainPage: View {
                 pages = ChartPageModel(engine: model.engine, object: object.id)
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("chart.plainPage")
         .navigationDestination(item: $routine) { stop in
             // The routine opens with the plant's name as its back word, in the room's colour (sheet 378).
@@ -300,9 +306,10 @@ struct ChartPlainPage: View {
                     ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                         if case let .string(template) = item, let key = PlainPage.routineLink(in: template),
                            let target = PlainPage.routine(linkedBy: key, from: object, store: model.store),
-                           let split = PlainPage.splitAround(PartText.shown(book.text(template, for: object,
-                                                                                      engine: model.engine)),
-                                                             routine: target.title)
+                           let split = PlainPage.splitAround(
+                               PlainPage.filled(template, object: object, book: book, engine: model.engine),
+                               routine: target.title
+                           )
                         {
                             HStack(spacing: 0) {
                                 Text(split.prefix)
