@@ -421,10 +421,7 @@ struct ChartRoomTests {
 
     // MARK: A real store: Allow runs RoomReach.allow, refusals speak, the colour table is the dial's
 
-    /// Core's `RoomRefusals` looks a kind up lowercased ("actionword") against the kit's "actionWord", so a sentence
-    /// that adds an action word is refused as a kit miss through `RoomPatcher`. Until Core fixes that, the player's
-    /// own path is a known issue, and the held patch is proven below straight through the engine.
-    @Test func allowRunsRoomReachAllowOnARealStore() {
+    @Test func allowRunsRoomReachAllowOnARealStore() async throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
         let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let said = Said()
@@ -436,9 +433,42 @@ struct ChartRoomTests {
         }
         #expect(room.document.parts.map(\.id).contains("row"), "the first three sentences are in the store")
         room.saySomething()
-        withKnownIssue("Core refuses actionWord as a kit miss (kind lowercased)", isIntermittent: true) {
-            #expect(room.pending?.needsAllow == true)
+        #expect(room.pending?.needsAllow == true, "refused: \(room.note?.line ?? "nothing")")
+        let held = app.engine.pendingRecords().filter { $0.action == "patchRoom" }
+        #expect(held.count == 1 && RoomReach.holds(held[0], in: app.store), "the engine holds the widening patch")
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(room.pending != nil, "the drying line never commits it")
+        let before = said.lines.count
+        room.allow()
+        #expect(room.pending == nil)
+        #expect(app.engine.pendingRecords().filter { $0.action == "patchRoom" }.isEmpty, "Allow committed it")
+        #expect(said.lines.count == before + 1 && said.lines.last == "Watered, set",
+                "the receipt shows only after RoomReach.allow returned true")
+        let book = RoomBook(store: app.store, classes: app.classes)
+        let stored = try #require(book.room(named: "Chart room").map(book.document(of:)))
+        #expect(stored.reach == ["write Plant.lastWatered"])
+    }
+
+    @Test func allTwelveSentencesGoThroughTheRealPatcherAndMatchTheInMemoryRoom() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let room = model()
+        room.attach(app.engine)
+        for index in 0 ..< 12 {
+            room.saySomething()
+            #expect(room.pending != nil, "sentence \(index + 1) refused: \(room.note?.line ?? "nothing")")
+            if room.pending?.needsAllow == true {
+                room.allow()
+            } else {
+                room.tapGhost()
+            }
         }
+        let book = RoomBook(store: app.store, classes: app.classes)
+        let stored = try #require(book.room(named: "Chart room").map(book.document(of:)))
+        let memory = ChartRoomModel(data: DemoRoomData(), defaults: nil)
+        memory.setSentences(12)
+        #expect(ChartDoc(stored).parts.map(\.id) == memory.document.parts.map(\.id))
+        #expect(stored.color == "olive" && stored.reach == ["write Plant.lastWatered"])
     }
 
     @Test func roomReachAllowCommitsAHeldWideningPatchOnARealStore() throws {
