@@ -173,4 +173,24 @@ struct ChartPagesTests {
         undo()
         #expect(!pages.wasWatered(), "Undo takes the offer away")
     }
+
+    @Test func aLineReadsWhenItsLinkedStepWasLastDone() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/Los_Angeles") ?? .current
+        let now = calendar.date(from: DateComponents(year: 2026, month: 10, day: 28, hour: 12)) ?? .now
+        let today = now.addingTimeInterval(-3600)
+        let twoDays = now.addingTimeInterval(-2 * 86400)
+        #expect(PlainPage.fillDone("Last misted {@step.doneAt}", now: now, calendar: calendar) { _ in today }
+            == "Last misted today")
+        #expect(PlainPage.dayWord(nil, now: now, calendar: calendar) == "never")
+        #expect(PlainPage.dayWord(now.addingTimeInterval(-86400 - 3600), now: now, calendar: calendar) == "yesterday")
+        #expect(PlainPage.dayWord(twoDays, now: now, calendar: calendar).count > 3)
+        // After the step is checked off the line updates: the same template, a later date.
+        var done: Date?
+        let template = "Last misted {@step.doneAt}"
+        #expect(PlainPage.fillDone(template, now: now, calendar: calendar) { _ in done } == "Last misted never")
+        done = today
+        #expect(PlainPage.fillDone(template, now: now, calendar: calendar) { _ in done } == "Last misted today")
+        #expect(PlainPage.fillDone("Plain {title}", now: now, calendar: calendar) { _ in today } == "Plain {title}")
+    }
 }

@@ -18,7 +18,13 @@ enum PlainPage {
         for part in parts {
             guard let place = Place(rawValue: part.place) else { continue }
             func words(_ text: String) -> String {
-                PartText.shown(book.text(text, for: object, engine: engine))
+                // "Last misted {@step.doneAt}" reads when the linked step was last checked off (sheet 379).
+                let done = fillDone(text, now: AppClock.now) { key in
+                    book.store.linkedObjects(key, of: object).first.flatMap {
+                        RestBook(store: book.store, classes: book.classes).lastDone(ofStep: $0.id)
+                    }
+                }
+                return PartText.shown(book.text(done, for: object, engine: engine))
             }
             let node: PartNode?
             switch part.kind {
@@ -52,6 +58,42 @@ enum PlainPage {
             if let node {
                 out[place, default: []].append(node)
             }
+        }
+        return out
+    }
+
+    /// "today", "yesterday" or the weekday: when a routine step was last done, in a page's words (sheet 379).
+    nonisolated static func dayWord(_ date: Date?, now: Date, calendar: Calendar = .current) -> String {
+        guard let date else { return "never" }
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date),
+                                           to: calendar.startOfDay(for: now)).day ?? 0
+        switch days {
+        case ..<1: return "today"
+        case 1: return "yesterday"
+        case 2 ..< 7:
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US")
+            formatter.dateFormat = "EEEE"
+            return formatter.string(from: date)
+        default:
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US")
+            formatter.dateFormat = "MMM d"
+            return formatter.string(from: date)
+        }
+    }
+
+    /// `{@field.doneAt}` in a line: when the step the link field points to was last done ("Last misted today").
+    /// The date comes from `RestBook.lastDone(ofStep:)` through `lastDone`. Other tokens are left for `PageBook.text`.
+    nonisolated static func fillDone(_ template: String, now: Date, calendar: Calendar = .current,
+                                     lastDone: (String) -> Date?) -> String
+    {
+        var out = template
+        while let open = out.range(of: "{@"), let close = out[open.upperBound...].firstIndex(of: "}") {
+            let path = out[open.upperBound ..< close].split(separator: ".").map(String.init)
+            guard path.count == 2, path[1] == "doneAt" else { break }
+            out.replaceSubrange(open.lowerBound ... close,
+                                with: dayWord(lastDone(path[0]), now: now, calendar: calendar))
         }
         return out
     }
@@ -231,7 +273,9 @@ struct ChartPlainPage: View {
         }
         .accessibilityIdentifier("chart.plainPage")
         .navigationDestination(item: $routine) { stop in
-            ObjectPage(route: .object(stop.id))
+            // The routine opens with the plant's name as its back word, in the room's colour (sheet 378).
+            ObjectPage(route: .object(stop.id),
+                       from: PageSource(name: object.title, color: ChartRoomSummary.row().color))
         }
     }
 
