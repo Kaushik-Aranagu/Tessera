@@ -80,7 +80,7 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 
 - Swipe across a set keystone to see the next way Tess would draw it. The glass lens sits under the finger for the swipe only. The keystone follows the finger held back (a third of the travel, never past 28 pt), and there is one light haptic tick at 40 pt, where letting go takes the next way
 - The ways, in order: four numbers in a row (what he asked for), one big number for the thirstiest (112 pt, "days" at half size beside it, the other three listed small at the right), and a ladder (names on the left, numbers right-aligned, both stepping down in size from the thirstiest). Swiping right goes the other way round
-- The way he swipes to shows as a ghost (38%) in the keystone place. Tess's line in the widget place says which one it is: "2 of 3, one big number for the one that needs you". The action word reads "Keep" with "one big number"
+- The way he swipes to shows as a ghost (38%) in the keystone place. Tess's line in the widget place says which one it is: "One big number, for the one that needs you" (sheet 371 took out the "2 of 3" it first opened with, a counter the house rules don't allow). The action word reads "Keep" with "one big number"
 - Keep runs the 2-second drying line and sets it. The receipt reads "Keystone, one big number" with Undo. Swiping back to the way that is set drops the ghost. Nothing is written before Keep, and leaving the room drops a ghost
 - The transition is the witty part: every number is the same element in every way, so it flies to its new spot and size (the orchid's 6 grows from 64 pt to 112 pt, the basil's 1 slides into the side list), while the names fade in after 200 ms. Reduce Motion: no follow, no flight; the ghost changes in place
 - By voice: pick the keystone and say "Show me other ways". The same first ghost opens
@@ -161,3 +161,17 @@ The board's Chart room now has seven sentences. The new one comes before "Let me
 - It replaces the plum 8A4570 / E3A3CB the 246 landing proposed. The Legs plum in the Deck and the word wall's twelve brick colors are kind colors, not the room's, and stay as they are
 - Phone (Builder B): `Features/LayoutMode/LayoutRooms.swift` `.log` to (0x5B2277, 0xBB70E1); `Features/Notes/NotesWallLanding.swift` `plum(_:)` to violet, with its comment; `Features/Tess/SoulRoomTint.swift` `.notes, .lists` to violet. Nothing else changes
 - Board: `--notes` is 5B2277 / BB70E1. Probe: `docs/design/boards/r66/plg.js` (the Log's title in violet in both looks)
+
+## Sheet 371: taking a room down
+
+A room Tess built is a view over his things, so taking it down is the end of the view and never of the things. The board's Chart room now ends on "Take this room down", which the action word offers once nothing waits for Allow.
+
+- In the room: his words come up in his line as usual. Every part goes back to ghost (38%). Then each place's outline comes back up, doors first and 50 ms apart, so for a moment the room is the frame it started as. Then the outlines fold back into their top left corners, where their names sit, the same order, each 340 ms and easing in. The parts in each place fade with it. The title goes last. It is sheet 366 played backwards: the frame came in from the corners and goes out to them. Done by about 1.3 s
+- The room is empty by then, so nothing slides off the screen. What is left of it dissolves (240 ms) and Bridge is under it
+- On Bridge: the dial is on the room's row, which is gone. The rows from that place down close up into the gap. The one sliding into focus, the Lookout, starts as the neighbor it was (small, gray, soft) and grows into focus, and the row under it fades in from below the dial, with a small overshoot (460 ms, 40 ms apart). The summary line on the left reads the Lookout's fact
+- The foot reads "Room taken down, not the plants" with Undo for 10 s. The second half is the point: his plants and their watering days are all still his, and Tess can still answer about them
+- Undo opens the gap again: the row under it drops back down and the room's row comes back into focus, fading and growing in. On the board, if the room has never been seen in the dial under its new name, the relabel from sheet 365 plays then
+- While a change waits for Allow (sheet 370), the action word stays on "Say anything else", so a pending grant can't be taken down with the room by accident
+- Reduce Motion: Bridge simply appears with the row gone and the foot line; Undo simply puts it back
+- Core: taking a room down archives the Room object and its patch history in one op group (`archivedAt`), and deletes nothing it binds to. Undo is that op group's revert. An archived room keeps its sentences, so "Bring back my plant room" later restores it exactly. Taking a room down also ends its wishes (no notices from a room he can't see) and its grants. Builder A: the dial's rows are a `ForEach` over Room objects with stable ids, so removing one moves the rows below with the dial's spring; the fold is the 366 `trim` run from 1 to 0, staggered from the last place to the first
+- Probe: `docs/design/boards/r66/pdn.js` (outlines up doors first, the room gone, Bridge on the Lookout with the row closed up, the foot line and Undo, Undo puts the row back; no overlap with the foot; Reduce Motion)
