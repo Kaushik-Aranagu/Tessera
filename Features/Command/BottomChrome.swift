@@ -469,6 +469,13 @@ struct BottomChrome: View {
         focused = true
     }
 
+    /// A question the phone answers by itself: his best or PR of a lift, or a secret word (kept on the phone). Anything
+    /// else he asks, with or without a question mark, is Tess's to answer.
+    static func answersOnThePhone(_ text: String) -> Bool {
+        let lowered = text.lowercased()
+        return lowered.contains("best") || lowered.contains(/\bprs?\b/) || SecretWords.mentions(text)
+    }
+
     /// The same grammar path as before: questions about records are answered here; everything else is a capture
     /// through Tess's engine (grammar first, the on-device model when Apple Intelligence is available).
     private func commit(_ text: String) async {
@@ -478,8 +485,11 @@ struct BottomChrome: View {
             return
         }
         isBusy = true
-        let lowered = text.lowercased()
-        let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
+        // Only what the phone can answer itself stays here (his best lift, a PR, a secret word). Any other question
+        // goes
+        // to Tess, who answers it through the Door; the old catch-all filed it as a task, which is why she seemed
+        // silent.
+        let isQuestion = Self.answersOnThePhone(text)
         let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
         // A doubtful set count waits for a tap on one of its two answers (Core's set guard).
         let asked = isQuestion ? nil : model.pendingSetAsk

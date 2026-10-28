@@ -77,6 +77,26 @@ struct TessLiveTests {
         #expect(flags.lastFailure == nil)
     }
 
+    @Test func cancelStopsTheRunAndTheHostHearsCancelled() async {
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("slow")]])
+        haiku.delay = .seconds(30)
+        let tess = live(haiku)
+        let asking = Task { @MainActor () -> String in
+            let answer = await tess.ask("how many sets today")
+            return answer.failed ? answer.line : "answered"
+        }
+        try? await Task.sleep(for: .milliseconds(200))
+        tess.cancel()
+        #expect(await asking.value == "Cancelled")
+    }
+
+    @Test func theViewChangesAnAnswerCalledForAreKeptForTheHost() async {
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Here.")]])
+        let tess = live(haiku)
+        _ = await tess.ask("how many sets today")
+        #expect(tess.lastShell.isEmpty)
+    }
+
     @Test func theCaptureEngineLeavesTheMissToTessWhenTheInlineClaudeStepIsOff() {
         let capture = TessCaptureEngine(engine: engine)
         #expect(capture.claudeInline == true)

@@ -337,6 +337,10 @@ final class AppModel {
 
     /// The live Tess (`TessRun` behind the Door). Nil in a demo, where nothing leaves the phone.
     @ObservationIgnored var tessLive: TessLive?
+    /// The view changes Tess's last answer called for (open this, go back), for the shell's navigator to play.
+    var tessShellCalls: [TesseraTess.ShellIntent] {
+        tessLive?.lastShell ?? []
+    }
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
     var pendingSetAsk: TessSetCountAsk? {
@@ -806,6 +810,7 @@ extension AppModel {
     /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled.".
     func cancelAskingClaude() {
         claudeFlags.cancelAsking()
+        tessLive?.cancel()
     }
 }
 

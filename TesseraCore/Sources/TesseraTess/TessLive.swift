@@ -26,6 +26,8 @@ public final class TessLive {
     private let keys: any TessKeychain
     /// Why the last ask got no answer from Claude; nil after one that did.
     public private(set) var lastFailure: ClaudeFailure?
+    /// The view changes the last ask called for (open this, go back); the host's navigator plays them.
+    public private(set) var lastShell: [ShellIntent] = []
 
     /// - keys: where the Claude key lives (`SystemKeychain` in the app, a fake in tests).
     /// - asksClaude: the one switch "Tess asks Claude", read at every call.
@@ -59,6 +61,11 @@ public final class TessLive {
                       trace: trace, runs: runs)
     }
 
+    /// Stops the ask in flight; its answer comes back as "Cancelled".
+    public func cancel() {
+        run.cancel()
+    }
+
     /// Asks Tess and waits for her whole answer. Writes land as ghost rows (pending) she reports in `records`.
     public func ask(_ phrase: String, about: [ObjectRecord] = [], screen: String? = nil) async -> Answer {
         var answer = Answer()
@@ -78,6 +85,7 @@ public final class TessLive {
             answer.failure = await failure()
         }
         lastFailure = answer.failure
+        lastShell = answer.shell
         let wanted = Set(ghosts)
         answer.records = engine.store.context.all(OpRecord.self).filter { wanted.contains($0.id) }
             .sorted { $0.createdAt < $1.createdAt }
