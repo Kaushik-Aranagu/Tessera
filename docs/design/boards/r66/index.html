@@ -2954,7 +2954,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(top0!==top1){layer.querySelectorAll('.ch-nm').forEach(e=>e.animate([{opacity:0,transform:'translateY(.4em)'},{opacity:1,transform:'none'}],{duration:260,delay:180,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
    setTimeout(()=>{if(navigator.vibrate)try{navigator.vibrate(4)}catch(_){}},380)}}
  const wpull=dx=>{const s=Math.sign(dx),a=Math.abs(dx)/3;return s*(a<=20?a:20+8*(1-Math.exp(-(a-20)/10)))};const NAME={title:'title',line:'line',key:'keystone',cap:'caption',wid:'widget'};
- function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;
+ function say(){if(dry||at>=SAY.length)return;const S=SAY[at];heard=S.s;tline='';at++;{const rc=el.querySelector('.receipt');if(rc)rc.innerHTML=''}
   if(S.no){draw();dry=setTimeout(()=>{dry=null;heard='';tline=S.no;if(S.queue)queued=true;draw();
     if(S.queue)receipt(el,S.r,()=>{queued=false;tline='';draw()});
     else receipt(el,S.r,()=>{tline='';grow()},S.alt)},1200);return}
@@ -2962,7 +2962,15 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   // the drying line runs along the foot of each place it filled, 2 s, then the ghost sets
   const lines=S.fills.map(k=>{const [x,y,w,hh]=PL[k];const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
    if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});return l});
-  dry=setTimeout(()=>{dry=null;lines.forEach(l=>l.remove());heard='';if(S.wish)tline='The '+th().n.toLowerCase()+' gets there tomorrow. Tap the wish to see it';draw();receipt(el,S.r,()=>{at--;if(S.reach)reach=false;if(S.wish){tline='';if(tmw)tomorrow(false)}heard='';draw()})},2000)}
+  dry=setTimeout(()=>{dry=null;lines.forEach(l=>l.remove());heard='';if(S.wish)tline='The '+th().n.toLowerCase()+' gets there tomorrow. Tap the wish to see it';draw();receipt(el,S.r,()=>undry(S.fills,()=>{at--;if(S.reach)reach=false;if(S.wish){tline='';if(tmw)tomorrow(false)}heard='';draw()}))},2000)}
+ /* 368: Undo un-dries. The parts go back to ghost, the drying line runs back along the foot of each place it filled,
+    right to left and faster (600 ms), and then the parts let go and the outline comes back up (358). The change leaves
+    the way it came. Undo waits while another sentence is drying, so it never takes back the wrong one.
+    Reduce Motion: it goes at once */
+ function undry(fills,then){if(dry)return;if(tmw)tomorrow(false);if(RM)return then();draw(fills);
+  const ls=fills.map(k=>{const [x,y,w,hh]=PL[k];const l=h('div','ch-dry');l.style.cssText='left:'+(x+2)+'px;top:'+(y+hh-2)+'px;width:'+(w-4)+'px';el.appendChild(l);
+   l.animate([{transform:'scaleX(1)'},{transform:'scaleX(0)'}],{duration:600,easing:'cubic-bezier(.5,0,.75,0)',fill:'both'});return l});
+  dry=setTimeout(()=>{dry=null;ls.forEach(l=>l.remove());then()},600)}
  // tomorrow: every number steps one day on (each rises a little as it changes), the line, keystone and caption go ghost,
  // and Tess's line is the notice she would send. Nothing is written; Back, or the wish again, returns to today
  function tomorrow(on){if(on===tmw)return;plants.forEach(p=>p.d+=on?1:-1);tmw=on;sel=null;
@@ -3023,7 +3031,7 @@ MAP.length=0;MAP.push(
  {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
-MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363). Watered re-ranks the room live (364). Back on Bridge, the apps dial carries the room after Purse, renamed once he names it (365). The blank frame sketches itself in as the room opens (366). Tap the wish line to see tomorrow (367).'});
+MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363). Watered re-ranks the room live (364). Back on Bridge, the apps dial carries the room after Purse, renamed once he names it (365). The blank frame sketches itself in as the room opens (366). Tap the wish line to see tomorrow (367). Undo runs the drying line backwards (368).'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
 
 /* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.

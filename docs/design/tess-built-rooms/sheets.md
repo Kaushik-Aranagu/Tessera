@@ -133,3 +133,13 @@ The board's Chart room now has seven sentences. The new one comes before "Let me
 - Layout: in the widget place, Tess's line sits at the top, the reach line ("This room can now mark plants watered") below it, and the wish at the foot. The probe checks they never overlap
 - Core (R3 preview, not in R1): a wish is a `wish` part with a condition over a bind (`daysSince(lastWatered) >= 7`), an action (`notify`, with the text built from the bound object), and a check time (morning). The validator treats `notify` as a reach widening, so it waits for Allow the first time, like a write. The tomorrow preview evaluates the condition at now + 1 day without writing. Builder A: the wish line is a `line` part in the widget place, and tapping it toggles a `RoomState.preview(.tomorrow)`
 - Probe: `docs/design/boards/r66/pwi.js`. `pch.js`, `phi.js` and `plv.js` now walk seven sentences
+
+## Sheet 368: Undo un-dries
+
+- Undo on a change Tess made plays the change backwards. The parts go back to ghost (38%). The drying line comes back at full length along the foot of each place they filled, then runs back from right to left, faster than it came (600 ms, easing in). Then the parts let go, and the place's outline comes back up (sheet 358)
+- So a change arrives and leaves the same way, and he can see exactly which places it touched as it goes
+- A new sentence takes the last receipt down as it starts drying. An Undo tap can't land on the wrong change while the next one dries. The earlier change can still be taken back from the history (sheet 362)
+- Undo during the tomorrow preview (367) first returns to today, then un-dries
+- Reduce Motion: the change goes at once, with no line
+- Builder A: the reverse drying line is the same view with its trim end animated from 1 to 0, inside `withTesseraAnimation` with an ease-in curve. The op group is marked `undone` when the line reaches 0, not when Undo is tapped, so the store and the screen agree. No haptic on the way out
+- Probe: `docs/design/boards/r66/pdu.js` (ghost with the line running back, then gone and the outline back; no Undo while the next sentence dries)
