@@ -274,6 +274,17 @@ struct RoomPatchTests {
         #expect(book.room(named: "Chart room") == nil, "the room and its grant go back together")
     }
 
+    @Test func notNowPlaysAWaitingPatchBackwardsAndOnlyAllowedPatchesShowTheirReceipt() throws {
+        let widening = patch(add("w", "actionWord", "actionWord", ["does": .string("write Plant.lastWatered")]))
+        let result = try engine.perform(PatchRoom(patch: widening), by: .tess, pending: true)
+        #expect(result.output.needsAllow)
+        #expect(RoomReach.notNow(result.record, in: engine) && result.record.state == .undone)
+        #expect(book.room(named: "Chart room") == nil)
+        let plain = try engine.perform(PatchRoom(patch: patch(add("t", "title", "title", ["text": .string("A")]))),
+                                       by: .tess, pending: true)
+        #expect(!plain.output.needsAllow && !RoomReach.notNow(plain.record, in: engine))
+    }
+
     @Test func undoingAWideningPatchRemovesItsGrantInTheSameGroup() throws {
         try engine.perform(PatchRoom(patch: patch(add("t", "title", "title", ["text": .string("A")]))), by: .tess)
         let result = try engine.perform(PatchRoom(patch: patch(.init(op: "grant", reach: "write Plant.lastWatered"))),
