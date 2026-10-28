@@ -29,6 +29,12 @@ enum TessLineTiming {
         return last + perWord
     }
 
+    /// Whether a line blinks her face as it starts: only a line that arrives (not an opening line, not his own words),
+    /// and never under Reduce Motion.
+    static func blinks(arrives: Bool, reduceMotion: Bool) -> Bool {
+        arrives && !reduceMotion
+    }
+
     /// How many words have come in `time` seconds after the line started.
     static func shown(_ text: String, at time: Double) -> Int {
         starts(text).filter { $0 <= time }.count
@@ -67,7 +73,7 @@ struct TessLine: View {
         .accessibilityLabel(text)
         .onChange(of: text, initial: true) { _, _ in
             start = .now
-            if animated {
+            if TessLineTiming.blinks(arrives: arrives, reduceMotion: reduceMotion) {
                 onStart()
             }
         }

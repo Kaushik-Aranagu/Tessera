@@ -155,4 +155,22 @@ struct ChartPagesTests {
         #expect(PlainPage.routineLink(in: "Watered {recent(lastWatered,3)}") == nil)
         #expect(PlainPage.routineLink(in: "In {@step.title}") == nil)
     }
+
+    @Test func theRoutineNameIsTheLinkInsideItsLine() {
+        let split = PlainPage.splitAround("Last misted Thursday, in Water houseplants", routine: "Water houseplants")
+        #expect(split?.prefix == "Last misted Thursday, in " && split?.title == "Water houseplants")
+        #expect(PlainPage.splitAround("Nothing here", routine: "Water houseplants") == nil)
+        #expect(PlainPage.splitAround("x", routine: "") == nil)
+    }
+
+    @Test func aPageOffersToShowWhenOnlyAfterAWateringAndUndoTakesItAway() throws {
+        let orchid = try plant("Orchid")
+        let pages = ChartPageModel(engine: app.engine, object: orchid.id)
+        #expect(!pages.wasWatered(), "nothing watered yet, so no offer")
+        let data = EngineRoomData(engine: app.engine)
+        let undo = try #require(data.write("write Plant.lastWatered", to: "Orchid"))
+        #expect(pages.wasWatered(), "after a watering the page offers it")
+        undo()
+        #expect(!pages.wasWatered(), "Undo takes the offer away")
+    }
 }

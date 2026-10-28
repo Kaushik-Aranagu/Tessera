@@ -56,6 +56,18 @@ enum PlainPage {
         return out
     }
 
+    /// A line with a routine in it, split around the routine's name: "Last misted Thursday, in " and "Water
+    /// houseplants".
+    nonisolated static func splitAround(_ filled: String, routine title: String) -> (prefix: String, title: String)? {
+        guard !title.isEmpty, let range = filled.range(of: title, options: .backwards) else { return nil }
+        return (String(filled[..<range.lowerBound]), title)
+    }
+
+    /// The routine a plant's link field points to through its step's parent (sheet 378): `{@field.parent.title}`.
+    static func routine(linkedBy key: String, from object: ObjectRecord, store: ObjectStore) -> ObjectRecord? {
+        store.linkedObjects(key, of: object).first?.parent
+    }
+
     /// A routine named in a line through `{@field.parent.title}` (sheet 378): the field that links to it, if any.
     nonisolated static func routineLink(in template: String) -> String? {
         guard let open = template.range(of: "{@"), let close = template[open.upperBound...].firstIndex(of: "}") else {
@@ -88,6 +100,22 @@ final class ChartPageModel {
         self.engine = engine
         self.object = object
         self.drying = drying
+    }
+
+    /// Whether the object has been watered by an op that still stands: only then does its page offer to show when.
+    func wasWatered() -> Bool {
+        guard let record = engine.store.object(id: object), let field = record.classDef.flatMap({
+            engine.store.field("lastWatered", of: $0)
+        }) else { return false }
+        return engine.history(of: object, limit: 400).contains { entry in
+            entry.state != .undone && entry.ops.contains { op in
+                if case let .setValue(id, fieldID, _, _) = op {
+                    id == object && fieldID == field.id
+                } else {
+                    false
+                }
+            }
+        }
     }
 
     /// The change he can say on a plant's page: the dates it was watered, in its line.
@@ -139,6 +167,7 @@ struct ChartPlainPage: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pages: ChartPageModel?
+    @State private var routine: ObjectStop?
 
     /// Objects of a class he made, while the Chart room is on (a system class keeps its own page).
     static func applies(to object: ObjectRecord) -> Bool {
@@ -187,7 +216,10 @@ struct ChartPlainPage: View {
                 .frame(width: ShellLayout.ownFrame(.navWord).width, alignment: .trailing)
                 .offset(x: ShellLayout.ownFrame(.navWord).minX + dx, y: ShellLayout.ownFrame(.navWord).minY * scale)
                 tessLine(scale: scale)
-                sayWords(scale: scale)
+                routineLines(parts: parts, scale: scale)
+                if pages?.wasWatered() == true {
+                    sayWords(scale: scale)
+                }
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
@@ -198,6 +230,45 @@ struct ChartPlainPage: View {
             }
         }
         .accessibilityIdentifier("chart.plainPage")
+        .navigationDestination(item: $routine) { stop in
+            ObjectPage(route: .object(stop.id))
+        }
+    }
+
+    /// A line that names a routine through a link field (sheet 378): the routine's name is a plum link that pushes the
+    /// routine's page.
+    private func routineLines(parts: [RoomPart], scale: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(parts.filter { $0.kind == "lines" && $0.place == "page" }, id: \.id) { part in
+                if case let .array(items)? = part.props["lines"] {
+                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                        if case let .string(template) = item, let key = PlainPage.routineLink(in: template),
+                           let target = PlainPage.routine(linkedBy: key, from: object, store: model.store),
+                           let split = PlainPage.splitAround(PartText.shown(book.text(template, for: object,
+                                                                                      engine: model.engine)),
+                                                             routine: target.title)
+                        {
+                            HStack(spacing: 0) {
+                                Text(split.prefix)
+                                    .foregroundStyle(Theme.Colors.ink)
+                                Button { routine = ObjectStop(id: target.id) } label: {
+                                    Text(split.title)
+                                        .foregroundStyle(Theme.Colors.Accent.routines)
+                                        .frame(minHeight: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("chart.routineLink")
+                            }
+                            .font(.custom("Figtree", size: 20, relativeTo: .body))
+                        }
+                    }
+                }
+            }
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .frame(width: 354, alignment: .leading)
+        .offset(x: 24, y: 420 * scale)
     }
 
     /// What he can say here: a change for every page of the class, or just for this one (the action word's two steps).
@@ -262,7 +333,7 @@ struct ChartPlainPage: View {
 
     /// Tess's sentence, on the shared `TessLine`: a new line arrives word by word; the page's opening line is whole.
     private func tessWords(_ text: String, arrives: Bool = true) -> some View {
-        TessLine(text: text, arrives: arrives, size: 15)
+        TessLine(text: text, arrives: arrives, size: 15) { model.soul.lineStarted() }
             .frame(width: 354, alignment: .leading)
     }
 

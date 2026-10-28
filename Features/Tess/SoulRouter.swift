@@ -441,6 +441,12 @@ final class SoulRouter {
         setWear(0)
     }
 
+    /// Sheet 383: a new line of hers starts, and her face blinks once as it does (the shared `TessLine` calls this).
+    /// One blink, no haptic; Reduce Motion drops it.
+    func lineStarted() {
+        blinkOnce()
+    }
+
     /// Sheet 290: Tess blinks once as her change lands, the way you blink after doing something. One blink, no loop,
     /// no haptic of its own; Reduce Motion drops it.
     private func blinkOnce() {

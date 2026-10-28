@@ -8,6 +8,7 @@ struct ChartRoomLayer: View {
     let model: ChartRoomModel
 
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     /// The blank room's outlines unroll once as the room opens (sheet 366).
     @State private var unrolled = false
@@ -129,7 +130,7 @@ struct ChartRoomLayer: View {
     private func noteLine(scale: CGFloat) -> some View {
         if let note = model.note {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                TessLine(text: note.line, size: 15)
+                TessLine(text: note.line, size: 15) { app.soul.lineStarted() }
                 if let button = note.button {
                     Button { model.takeOffer() } label: {
                         Text(button)

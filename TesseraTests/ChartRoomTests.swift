@@ -606,6 +606,16 @@ struct ChartRoomTests {
         #expect(TessLineTiming.total("") == 0)
     }
 
+    @Test func herFaceBlinksOncePerNewLineAndNotForAnOpeningLine() {
+        #expect(TessLineTiming.blinks(arrives: true, reduceMotion: false))
+        #expect(!TessLineTiming.blinks(arrives: false, reduceMotion: false), "an opening line appears whole, no blink")
+        #expect(!TessLineTiming.blinks(arrives: true, reduceMotion: true), "Reduce Motion: no blink")
+        let soul = SoulRouter()
+        #expect(soul.strokeBlink == nil)
+        soul.lineStarted()
+        #expect(soul.strokeBlink != nil, "the soul blinks as the line starts")
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {
