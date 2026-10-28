@@ -38,8 +38,11 @@ public enum RoomRefusals {
     {
         let validator = RoomPatchValidator(store: store, classes: classes)
         for step in patch.ops {
-            if let kind = step.kind?.lowercased(), RoomKit.kind(kind) == nil, step.op == "add" || step.op == "set" {
-                return kitRefusal(kind)
+            // A kind is looked up as said and then ignoring case ("actionWord" is a kind however it is capitalised).
+            if let said = step.kind, step.op == "add" || step.op == "set", RoomKit.kind(said) == nil,
+               !RoomKit.kinds.contains(where: { $0.name.caseInsensitiveCompare(said) == .orderedSame })
+            {
+                return kitRefusal(said.lowercased())
             }
             if step.op == "look", step.trait == "color", let value = step.value,
                validator.colorRefusal(value, room: document.name) != nil

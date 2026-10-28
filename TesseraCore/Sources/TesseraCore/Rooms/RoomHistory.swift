@@ -153,6 +153,14 @@ public enum RoomPatcher {
     public static func apply(_ patch: RoomPatch, sentence: String, picked: String? = nil, engine: ActionEngine,
                              pending: Bool = true) throws -> Outcome
     {
+        // Only one change is staged at a time (R1 spec section 9): a new sentence sets the one still drying, so Undo on
+        // its receipt can never land on the wrong change. One waiting for Allow stays where it is.
+        for record in engine.pendingRecords() where !RoomReach.holds(record, in: engine.store)
+            && [PatchRoom.descriptor.name, QueueRoomPart.descriptor.name, TakeDownRoom.descriptor.name]
+            .contains(record.action)
+        {
+            try engine.commit(record)
+        }
         let book = RoomBook(store: engine.store, classes: engine.classes)
         let current = book.room(named: patch.room).map(book.document(of:)) ?? RoomDocument(name: patch.room)
         if let refusal = RoomRefusals.refusal(for: patch, against: current, store: engine.store,
