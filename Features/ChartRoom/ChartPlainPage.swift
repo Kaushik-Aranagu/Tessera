@@ -252,7 +252,7 @@ struct ChartPlainPage: View {
                 }
                 tessWords(done.line)
             } else {
-                tessWords(intro)
+                tessWords(intro, arrives: false)
             }
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -260,13 +260,9 @@ struct ChartPlainPage: View {
         .offset(x: 24, y: 668 * scale)
     }
 
-    /// Tess's sentence in full: three lines at most, never cut mid-sentence.
-    private func tessWords(_ text: String) -> some View {
-        Text(text)
-            .font(.custom("Figtree", size: 15, relativeTo: .callout))
-            .foregroundStyle(Theme.Colors.inkSecondary)
-            .lineLimit(3)
-            .fixedSize(horizontal: false, vertical: true)
+    /// Tess's sentence, on the shared `TessLine`: a new line arrives word by word; the page's opening line is whole.
+    private func tessWords(_ text: String, arrives: Bool = true) -> some View {
+        TessLine(text: text, arrives: arrives, size: 15)
             .frame(width: 354, alignment: .leading)
     }
 

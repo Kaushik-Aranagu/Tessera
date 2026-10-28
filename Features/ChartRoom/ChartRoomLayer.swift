@@ -129,7 +129,7 @@ struct ChartRoomLayer: View {
     private func noteLine(scale: CGFloat) -> some View {
         if let note = model.note {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                FitLine(forms: FitLine.cuts(note.line), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+                TessLine(text: note.line, size: 15)
                 if let button = note.button {
                     Button { model.takeOffer() } label: {
                         Text(button)

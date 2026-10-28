@@ -592,6 +592,20 @@ struct ChartRoomTests {
         #expect(!room.cancelPending(), "past the drying it falls through to Undo")
     }
 
+    // MARK: Sheet 383: the Tess line
+
+    @Test func aTessLineArrivesSixtyMillisecondsAWordWithABreathAfterEachComma() {
+        let text = "Every plant's page has it now, not just the monstera's"
+        let starts = TessWords.starts(text)
+        #expect(starts.count == 10)
+        #expect(starts[0] == 0 && abs(starts[1] - 0.06) < 1e-9)
+        // "now," is the fifth word: the sixth starts one word and one breath later.
+        #expect(abs(starts[5] - starts[4] - (TessWords.perWord + TessWords.breath)) < 1e-9)
+        #expect(abs(starts[6] - starts[5] - TessWords.perWord) < 1e-9)
+        #expect(TessWords.shown(text, at: 0) == 1 && TessWords.shown(text, at: 10) == 10)
+        #expect(TessWords.total("") == 0)
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {
