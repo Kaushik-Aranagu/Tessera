@@ -196,7 +196,7 @@ struct TessToolsTests {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
         // Claude's list: every tool but the device-only ones (logSpend is money).
-        #expect(tools.count == 22 && !tools.contains { $0["name"] as? String == "logSpend" }
+        #expect(tools.count == 24 && !tools.contains { $0["name"] as? String == "logSpend" }
             && !tools.contains { $0["name"] as? String == "rehearse" })
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {
