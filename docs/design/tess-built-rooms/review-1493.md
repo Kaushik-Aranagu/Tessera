@@ -18,4 +18,4 @@ From: Design, Oct 27 2026, 5:20 PM PDT. Read against `r1-spec.md` and sheets 357
 
 ## For Builder A, from the same read
 
-- `colorsInUse` counts the room's own color plus each part's. The board's plant room uses olive, wine (the glow), ink and ink 2. That's four, at the limit, so a fifth role is refused, which is what the board expects
+- `colorsInUse` counts the room's own color plus each part's. The board's plant room uses olive (the title and Watered), slate (the Say word), wine (the glow) and ink, with ink 2 counted as ink. That's four, at the limit, so a fifth role is refused, which is what the board expects
