@@ -228,8 +228,6 @@ struct ChartPlainPage: View {
     @State private var routine: ObjectStop?
     /// Bumped when a pushed routine page comes back, so the page re-reads what that page changed (a checked step).
     @State private var tick = 0
-    /// Simulator only: why the UI test's seeded part could not be written.
-    @State private var seedError: String?
 
     /// Objects of a class he made, while the Chart room is on (a system class keeps its own page).
     static func applies(to object: ObjectRecord) -> Bool {
@@ -281,13 +279,6 @@ struct ChartPlainPage: View {
                 .offset(x: ShellLayout.ownFrame(.navWord).minX + dx, y: ShellLayout.ownFrame(.navWord).minY * scale)
                 tessLine(scale: scale)
                 routineLines(parts: parts, scale: scale)
-                if LaunchFlags.has("-chartMistedPart") {
-                    let linked = model.store.linkedObjects("misted", of: object)
-                    Text(
-                        "seed \(seedError ?? "ok") plantsSeed \(UserDefaults.standard.string(forKey: "chartRoom.seedError") ?? "ok") parts \(parts.map(\.id).joined(separator: ",")) linked \(linked.map(\.title)) parent \(linked.first?.parent?.title ?? "none") routines \(model.classDef(.routine).map { model.store.objects(of: $0).map(\.title) } ?? []) steps \(model.classDef(.routineStep).map { model.store.objects(of: $0).count } ?? -1) raw \(String(describing: model.store.value("misted", of: object)))"
-                    )
-                    .font(.system(size: 11)).offset(x: 24, y: 560 * scale)
-                }
                 if pages?.wasWatered() == true {
                     sayWords(scale: scale)
                 }
@@ -303,12 +294,8 @@ struct ChartPlainPage: View {
             if LaunchFlags.has("-chartMistedPart"), object.title == "Orchid",
                !book.page(for: object).contains(where: { $0.id == "misted" })
             {
-                do {
-                    try model.engine.perform(PatchPage(object: object.id, patch: ChartPageModel.mistedPart(),
-                                                       only: true), by: .user)
-                } catch {
-                    seedError = "\(error)"
-                }
+                _ = try? model.engine.perform(PatchPage(object: object.id, patch: ChartPageModel.mistedPart(),
+                                                        only: true), by: .user)
             }
         }
         .accessibilityElement(children: .contain)
