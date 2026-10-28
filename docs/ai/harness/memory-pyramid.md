@@ -281,6 +281,15 @@ Each has a pass line set before it runs. A failure gets written up here too.
 2. **P2: wire it in.**
    - Add `zoom` as a tool, with a walk budget and cites down to the leaves.
    - Pass: fewer rounds per ask than flat recall.
+   - **Wired (Swift, Oct 27), not yet scored:** `TessZoomTool` (`zoom(path)`) reads one node through
+     `MemoryPyramid.zoom` under the Door's policy. The picker offers it on an ask about his past ("last week", "when
+     did I", a month name), right after the calls that lead, so it never cuts a call he named. Like the
+     other reads it runs the moment its block closes (H5, `ToolPicker.runAtOnce`). When it is offered, the pack carries one line on how
+     paths look, plus "Start at <path>" when the router is sure of a day or a month. A path with nothing there names
+     the nearest node above it. `TessRun` builds the pyramid from his store and keeps it until the store changes or
+     the day turns. The walk budget is the run's round limit, and a day lists its leaves by path, so cites reach a
+     leaf. The host still has to hand in the router it keeps (`pyramidRouter`) and the night's gists
+     (`pyramidGists`). Promotions aren't passed yet.
 3. **P3: the backward pass.**
    - Replay test-world asks over ten simulated nights.
    - Pass: descents per ask fall at least 30% by night 5, with no loss of accuracy. If the top fills with trivia,
@@ -300,6 +309,8 @@ Each has a pass line set before it runs. A failure gets written up here too.
      Ask words become weight keys, so `learn` takes only `PyramidTerms.walled`: an ask holding a key, a secret, a
      private title or a private word teaches nothing, key-shaped pieces are dropped, and a word walled later is
      dropped at night. The router's file is excluded from backups and its keys are never logged.
+     Any future file that keeps gists or the topic tree must be excluded from backups the same way: under lab their
+     words can hold a private thing's own words (his Oct 27 ruling), and backups keep their walls.
 4. **P4: more axes and more sources.**
    - **Topic axis (Swift, built; simulated in `scripts/ai/pyramid_topic_sim.py`, #1480):** `TopicTree` files free-text
      leaves by their words. A node past 24 children splits by 2-means. Sibling holders merge when asks keep using both

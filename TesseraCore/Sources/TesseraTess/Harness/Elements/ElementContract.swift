@@ -99,8 +99,8 @@ public enum Reaction: String, Sendable, Equatable {
     case reshape
 }
 
-/// Who may run a call. Money actions are never offered to Claude (his standing rule): they run on the phone's own
-/// rungs (rules and the on-device model), with the ghost row and Undo as always.
+/// Who may run a call. `deviceOnly` marks money calls: kept on the phone's own rungs (rules and the on-device model)
+/// only while `ClaudeSees.moneyWrites` is off; since his Oct 27 pick Claude may run them too. Ghost row, Undo always.
 public enum CallReach: String, Sendable, Equatable {
     case anyRung, deviceOnly
 }

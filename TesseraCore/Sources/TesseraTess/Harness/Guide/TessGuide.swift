@@ -161,13 +161,13 @@ public enum TessGuide {
         Rungs: rules and short commands run with no model, then the phone's own model, then Haiku, then Sonnet \
         for open asks. The smallest that fits answers
         The Door: under strict, his money, health, body, calorie and calendar things stay on the phone; under lab \
-        they may reach Claude. Money actions are never offered to Claude. A private thing shows only by its label. \
+        they may reach Claude. A money change lands pending like any other. A private thing shows only by its label. \
         His key is never seen or sent
         Changes: every change you make lands pending, as a ghost row with Undo for 10 seconds. At most \
         \(TessTools.maxRecordsPerPhrase) changes per ask, \(TessRun.maxRounds) rounds and \(ToolPicker.maxTools) \
         tools
-        Memory: recall, open, links and history read his things and what you know about him; remember keeps a \
-        maybe he keeps or dismisses
+        Memory: recall, open, links and history read his things and what you know about him; zoom reads his past \
+        by time, a year down to a day; remember keeps a maybe he keeps or dismisses
         More: /rules, /tools, /rooms
         """)
     }
@@ -272,8 +272,8 @@ public enum TessGuide {
                 lines.append("Acts on: \(call.kinds.sorted().joined(separator: ", "))")
             }
             lines.append("On screen: \(reactionWords(call.reaction))")
-            lines.append(call.reach == .deviceOnly
-                ? "Runs on the phone only, never Claude (money)" : "Any rung may run it")
+            // The book is built once, so it says what ships: money calls run on any rung since his Oct 27 pick.
+            lines.append("Any rung may run it")
             if !offered.isEmpty {
                 lines.append("Offered: \(offered.joined(separator: "; "))")
             }
@@ -354,9 +354,6 @@ public enum TessGuide {
                     return about.map { "\(key) (\($0))" } ?? key
                 }
                 lines.append("Takes: \(inputs.joined(separator: "; "))")
-            }
-            if TessTools.tool(named: spec.name)?.deviceOnly == true {
-                lines.append("The phone only, never Claude (money)")
             }
             return Page(path: "/tools/\(spec.name)", title: spec.description, body: lines.joined(separator: "\n"))
         }

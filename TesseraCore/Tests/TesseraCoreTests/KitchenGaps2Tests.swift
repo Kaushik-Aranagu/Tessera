@@ -5,6 +5,7 @@ import Testing
 
 /// Kitchen gap hunt 2 (docs/product/kitchen-gap-hunt-2.md): G1, G6 to G9 and G11.
 @MainActor
+@Suite(.oldWalls)
 struct KitchenGaps2Tests {
     let store = ObjectStore.open(inMemory: true)
 
@@ -138,6 +139,7 @@ struct KitchenGaps2Tests {
 // MARK: Gap hunt 3
 
 @MainActor
+@Suite(.oldWalls)
 struct KitchenGaps3Tests {
     let store = ObjectStore.open(inMemory: true)
 

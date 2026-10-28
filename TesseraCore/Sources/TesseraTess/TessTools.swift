@@ -55,9 +55,19 @@ public enum TessTools {
          plantRoutine, pauseRoutine, rehearse, patchRoom]
     }
 
-    /// The tools Claude may be given: everything but the device-only ones (money).
+    /// The tools that write (every tool but the reads and rehearse), by name: a nonisolated list the request builder
+    /// can read off the main actor. A test keeps it equal to `all`.
+    public nonisolated static let writeNames: Set<String> = [
+        "logSet", "createTask", "completeTask", "rescheduleTask", "addGroceries", "addToList", "createList",
+        "createNote", "createRecipe", "startShop", "cookTogether", "setServeTime", "checkListItem", "startWorkout",
+        "startCooking", "logSpend", "pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine",
+        "patchRoom",
+    ]
+
+    /// The tools Claude may be given: money too while `ClaudeSees.moneyWrites` is on. Never the rehearsal, which is
+    /// offered through its own spec and runs on the phone.
     public static var claudeTools: [Tool] {
-        all.filter { !$0.deviceOnly }
+        all.filter { $0.name != RehearseFlags.tool && !ClaudeSees.keepsOnPhone($0.deviceOnly) }
     }
 
     public static func tool(named name: String) -> Tool? {
@@ -339,10 +349,12 @@ public enum TessTools {
 
     /// Whether an object is private for what goes to Claude: the one title check for every countable class (a list,
     /// an item, an ingredient, a workout, a routine, a set), the cook rule for a cook, and the note, task, memory and
-    /// recipe rules. An object inside a private one (a set of a private workout) is private with it.
+    /// recipe rules. An object inside a private one (a set of a private workout) is private with it. Nothing is,
+    /// while Claude sees everything (`ClaudeSees`, his Oct 27 call).
     static func isPrivateForClaude(_ object: ObjectRecord, store: ObjectStore,
                                    classes: [SystemCatalog.Key: ClassDef]) -> Bool
     {
+        guard !ClaudeSees.everything else { return false }
         let last = BodyWeight.lastKg(in: store)
         var current: ObjectRecord? = object
         var depth = 0

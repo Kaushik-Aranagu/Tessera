@@ -114,8 +114,9 @@ final class HomePlanModel {
         // Claude's wording ships off until its eval passes (AI architecture): rules wording only, no call made.
         guard let plan, model.asksClaude, AppModel.planWordingReady else { return }
         wordingCalls += 1
+        // Event titles go as they are while Claude sees everything (his Oct 27 call).
         let pack = PlanPack(plan: plan, now: now, calendar: calendar, calendarKnown: false, restDay: restDay,
-                            otherNames: plan.notPlanned.map(\.title), includesEventTitles: false,
+                            otherNames: plan.notPlanned.map(\.title), includesEventTitles: ClaudeSees.everything,
                             lastWeightKg: BodyWeight.lastKg(in: model.store))
         wording?.cancel()
         wording = Task { @MainActor [weak self] in

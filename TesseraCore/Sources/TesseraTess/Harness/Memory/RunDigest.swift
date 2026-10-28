@@ -55,7 +55,7 @@ public struct RunDigest: Sendable, Equatable, Codable {
     public static var knownTools: Set<String> {
         AgentSpec.knownTools.union(TessRecallTools.names).union(ElementCatalog.shellCalls)
             .union(TessRun.shellSpecs().map(\.name))
-            .union([TessOpenTool.name, AgentNotebook.name, TessRun.askAgent, TessGuide.name])
+            .union([TessOpenTool.name, AgentNotebook.name, TessRun.askAgent, TessGuide.name, TessZoomTool.name])
     }
 
     /// The digest of one run, or nil when the trace holds none of its spans.
