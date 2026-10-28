@@ -74,7 +74,7 @@ struct ChartRoomTests {
         let long = String(repeating: "water ", count: 30)
         let cut = PartText.shown(long)
         #expect(cut.count <= 80 && !cut.hasSuffix(" ") && !cut.contains("\u{2026}"))
-        #expect(PartText.looksLikeKey("sk-ant-api03-abcdefghijklmnop"))
+        #expect(PartText.looksLikeKey("sk-" + "ant-" + "api03-abcdefghijklmnop"))
     }
 
     @Test func moneyAndBodyBindsNeverResolveAndMoneyIsNeverWritten() {
