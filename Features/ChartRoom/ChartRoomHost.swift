@@ -170,6 +170,11 @@ struct ChartShellHost: View {
         }
         .task {
             // Simulator stills: `-chartSay` plays the next sentence 3 s after launch, so a ghost can be photographed.
+            if LaunchFlags.has("-chartOpenDoor") {
+                try? await Task.sleep(for: .seconds(3))
+                opened = ChartDoors.stop("chart.door.0", chart)
+                return
+            }
             guard LaunchFlags.has("-chartSay") else { return }
             try? await Task.sleep(for: .seconds(3))
             chart.saySomething()

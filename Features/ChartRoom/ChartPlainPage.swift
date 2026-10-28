@@ -250,14 +250,24 @@ struct ChartPlainPage: View {
                 } undo: {
                     pages?.undo()
                 }
-                FitLine(forms: FitLine.cuts(done.line), size: 15, color: Theme.Colors.inkSecondary)
+                tessWords(done.line)
             } else {
-                FitLine(forms: FitLine.cuts(intro), size: 15, color: Theme.Colors.inkSecondary)
+                tessWords(intro)
             }
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .frame(width: 354, alignment: .leading)
-        .offset(x: 24, y: 690 * scale)
+        .offset(x: 24, y: 668 * scale)
+    }
+
+    /// Tess's sentence in full: three lines at most, never cut mid-sentence.
+    private func tessWords(_ text: String) -> some View {
+        Text(text)
+            .font(.custom("Figtree", size: 15, relativeTo: .callout))
+            .foregroundStyle(Theme.Colors.inkSecondary)
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(width: 354, alignment: .leading)
     }
 
     /// Before he says a change: the plain page's own line; on a page that is every plant's, who else it reaches.
