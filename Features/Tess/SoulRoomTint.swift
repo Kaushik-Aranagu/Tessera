@@ -11,7 +11,7 @@ enum SoulRoomTint {
         case .training: dark ? 0x8FB0EE : 0x0B62AE
         case .kitchen: dark ? 0xC49A5E : 0x93611A
         case .money: dark ? 0x8DBFA7 : 0x3F7A62
-        case .notes, .lists: dark ? 0xE3A3CB : 0x8A4570
+        case .notes, .lists: dark ? 0xBB70E1 : 0x5B2277
         case .routines: dark ? 0xD59AC4 : 0x8E4A78
         }
     }

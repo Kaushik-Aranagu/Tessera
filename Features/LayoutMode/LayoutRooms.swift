@@ -26,7 +26,7 @@ enum LayoutRoom: Int, CaseIterable, Identifiable {
     var hex: (light: UInt32, dark: UInt32)? {
         switch self {
         case .bridge: nil
-        case .log: (0x8A4570, 0xE3A3CB)
+        case .log: (0x5B2277, 0xBB70E1)
         case .lookout: (0xC9772E, 0xE8A06A)
         case .deck: (0x0B62AE, 0x8FB0EE)
         case .galley: (0x93611A, 0xC49A5E)
