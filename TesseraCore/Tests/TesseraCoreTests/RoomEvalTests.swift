@@ -4,8 +4,8 @@ import Foundation
 import Testing
 
 /// The Chart room's 20-sentence eval. Offline: every golden answer is valid and has the shape the sentence calls for,
-/// so the corpus itself is sound. Live (`TESSERA_ROOM_EVAL=1`, paid): each sentence goes to Claude through the room job
-/// and must pass the validator and match its shape.
+/// so the corpus itself is sound. Live (`scripts/ai/room-eval.sh`, paid, `RoomLiveEvalTests`): each sentence goes to
+/// Claude through the room job and the Door, and must pass the validator and match its shape.
 @MainActor
 struct RoomEvalTests {
     let store = ObjectStore.open(inMemory: true)
