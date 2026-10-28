@@ -1363,7 +1363,7 @@ function boardCenter(el,fill){const cv=h('canvas','tboard');cv.width=804;cv.heig
  function draw(){const dark=phone.dataset.look==='black';slate(dark);g.clearRect(0,0,402,874);g.drawImage(slateTex,0,0);for(let k=0;k<500;k++){const x=noise(k,3)*402,y=(noise(k,4)<.5?TOP:BOT)+(noise(k,5)-.5)*70;g.fillStyle='rgba(235,235,230,'+(.04+noise(k,6)*.1)+')';g.fillRect(x,y,1,1)}
   c2.setTransform(2,0,0,2,0,0);c2.globalCompositeOperation='source-over';c2.clearRect(0,0,402,874);fill(c2);(cv._x||[]).forEach(f=>f(c2));c2.globalCompositeOperation='destination-in';c2.drawImage(maskC,0,0,402,874);g.drawImage(ck,0,0,402,874);raf=requestAnimationFrame(draw)}
  raf=requestAnimationFrame(draw);return ()=>cancelAnimationFrame(raf)}
-const C='244,245,240',C2='220,222,216';const WEEK=[1,1,1,0,0,0];
+const C='244,245,240',C2='220,222,216';const WEEK=[1,1,1,0,0,0];let deckWalk=false;
 const ticks=(ck,y)=>['M','T','W','T','F','S'].forEach((d,i)=>{const x=26+i*30;chalk(ck,d,x,y,18,.75,C2);if(WEEK[i]){ck.strokeStyle='rgba('+C+',.9)';ck.lineWidth=2.4;ck.lineCap='round';ck.beginPath();ck.moveTo(x-2,y+12);ck.lineTo(x+4,y+20);ck.lineTo(x+14,y+4);ck.stroke()}});
 SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 tonight. Last time, three fives.',render(el){
  const stop=boardCenter(el,ck=>{chalk(ck,'Push A at 6:30, bench first',26,232,30,.95,C);chalk(ck,'about 45 min, 4 lifts, start on the rower',26,258,17,.7,C2);ticks(ck,318);chalk(ck,'5 weeks on plan',230,318,18,.8,C2);chalk(ck,'+10 on bench since Oct 1',230,342,18,.8,C2);let x=26;[['Bench',205],['Squat',275],['Deadlift',315],['Row',130]].forEach(([l,v])=>{x+=chalk(ck,l+' '+v,x,392,20,.65,C2)+18})});
@@ -2219,6 +2219,31 @@ SCREENS.weather={title:'Weather',accent:'weather',tess:'Rain from 7 until about 
 
 /* ---------- Deck (Training) ---------- */
 SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 tonight. Last time, three fives.',render(el){
+ /* 389: the walk goes up on the board. Log lifts its own words off the action word, "yesterday's walk, 32 min", and
+    they rise onto the blackboard. Where they land the chalk takes them over, letter by letter: the type is rubbed away
+    just behind the chalk's tip, a little dust falls, and there is one light tick as the chalk touches. The line keeps
+    its place between the week and the lifts. The object under Log moves on to "what you did". Undo wipes the line
+    (a faint ghost, as real chalk leaves) and the words come back to the action word. Reduce Motion: in place */
+ let A=null,cv=null,fly=null,gen=0;const LINE='Yesterday’s walk, 32 min',st={p:deckWalk?1:0,g:0},dust=[];let lastP=0,shed=0;
+ const m=document.createElement('canvas').getContext('2d');m.font='600 '+Math.round(17*1.04)+'px "Barlow Condensed"';const cw=()=>m.measureText(LINE).width;
+ const tw=(ms,f,done)=>{const g=gen,t0=performance.now();const s=now=>{if(g!==gen)return;const u=ms?Math.min(1,(now-t0)/ms):1;f(u);if(u<1)requestAnimationFrame(s);else done&&done()};requestAnimationFrame(s)};
+ const draw=ck=>{const w=cw(),now=performance.now();
+  if(!RM&&st.p>0&&st.p<1&&st.p-lastP>.07&&shed<10){lastP=st.p;shed++;dust.push({x:26+st.p*w+Math.random()*3,y:335+Math.random()*2,vy:.25+Math.random()*.3,vx:(Math.random()-.5)*.12,t:now,s:Math.random()<.3?1.6:1})}
+  for(let i=dust.length-1;i>=0;i--){const d=dust[i],age=(now-d.t)/900;if(age>=1){dust.splice(i,1);continue}d.y+=d.vy;d.x+=d.vx;d.vy*=.985;ck.fillStyle='rgba('+C+','+(.42*(1-age)*(1-age)).toFixed(3)+')';ck.fillRect(d.x,d.y,d.s,d.s)}
+  if(st.p>0){ck.save();ck.beginPath();ck.rect(18,316,8+st.p*(w+10),24);ck.clip();chalk(ck,LINE,26,334,17,.95,C);ck.restore()}else if(st.g>0)chalk(ck,LINE,26,334,17,st.g,C)};draw._walk=1;
+ const objs=()=>['Push A, about 45 min',deckWalk?'what you did':'yesterday’s walk, 32 min','a 2 min timer'];
+ const logWalk=e=>{if(deckWalk)return receipt(e,'Say what you did, Tess files it');deckWalk=true;gen++;const g=gen,ob=A&&A.querySelector('.ao');
+  const settle=()=>{if(g!==gen||!A)return;A.retarget(objs(),0);if(ob){ob.style.visibility='';if(!RM)ob.animate([{opacity:0},{opacity:1}],{duration:300,delay:160,fill:'backwards'})}};
+  let T=null;if(!RM&&ob&&cv){const r=document.createRange();r.selectNodeContents(ob);const q=r.getBoundingClientRect();if(q.width)T={...capText(ob),w:q.width}}
+  if(!T){st.p=1;settle()}else{
+   const er=el.getBoundingClientRect(),cr=cv.getBoundingClientRect(),sw=T.w/K,sc=cw()/sw,x0=(T.l-er.left)/K,y0=(T.t-er.top)/K,x1=(cr.left-er.left)/K+26,y1=(cr.top-er.top)/K+334-.96*T.fs*sc;
+   const c=h('div','fx tv',T.text);c.style.cssText='position:absolute;z-index:9;pointer-events:none;white-space:nowrap;transform-origin:0 0;line-height:normal;left:'+x0+'px;top:'+y0+'px;font-family:'+T.fam+';font-weight:'+T.fw+';font-size:'+T.fs+'px;letter-spacing:'+T.ls+';color:'+T.color;el.appendChild(c);fly=c;
+   ob.style.visibility='hidden';setTimeout(settle,140);setTimeout(()=>{if(fly===c)c.textContent=LINE},280);
+   c.animate([{transform:'none',color:T.color},{transform:'translate('+(x1-x0)+'px,'+(y1-y0)+'px) scale('+sc+')',color:'rgb('+C+')'}],{duration:560,easing:'cubic-bezier(.3,.8,.3,1)',fill:'forwards'}).onfinish=()=>{if(g!==gen)return;
+    if(navigator.vibrate)try{navigator.vibrate(3)}catch(_){}lastP=0;shed=0;
+    tw(700,u=>{st.p=u;const w=cw();c.style.clipPath='inset(-30% 0 -30% '+(Math.max(0,Math.min(1,(u*(w+10)-8)/w))*100).toFixed(1)+'%)'},()=>{c.remove();if(fly===c)fly=null})}}
+  receipt(e,'Walk, 32 min, logged',()=>{deckWalk=false;gen++;if(fly){fly.remove();fly=null}if(ob)ob.style.visibility='';A&&A.retarget(objs(),RM?0:-1);
+   if(RM){st.p=0;return}const p0=st.p;tw(320*p0,u=>{st.p=p0*(1-u)},()=>{st.p=0;st.g=.1;tw(2600,u=>{st.g=.1*(1-u)})})})};
  return landingV3(el,{name:'Deck',color:'var(--training)',theme:'chalk',big:"font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:50px;letter-spacing:.01em;text-transform:uppercase",
   sw:{x:[{k:'Today',lines:['Push A at 6:30 pm','4 lifts, about 45 min']},{k:'This week',lines:['Three of six done','Pull A tomorrow']},{k:'This month',lines:['14 workouts','Bench up 10 lb']}],
       y:[{k:'Push A',c:'var(--clay)',lines:['Bench first, 185 lb','Then press, row, triceps']},{k:'Pull A',c:'var(--teal)',lines:['Tomorrow morning','Deadlift first, 315 lb']},{k:'Legs',lines:['Thursday','Squat 275 lb']}]},
@@ -2232,7 +2257,9 @@ SCREENS.training={title:'Training',accent:'training',tess:'Bench opens at 185 to
    {k:'Library',n:28,sum:()=>sum('Everything you can do',['Workouts '+o('28'),'Kinds '+o('6'),'<span style="color:var(--gold)">New: hill sprints</span>'],'Push, Pull, Legs, runs and rows')},
    {k:'Bests',sum:()=>sum('Since Oct 1',['Bench '+o('205')+un('lb'),'Squat '+o('275')+un('lb'),'Deadlift '+o('315')+un('lb')],'Bench best three weeks ago')},
    {k:'Plan',sum:()=>sum('Week 5 of the block',['Bench since Oct 1 '+o('+10')+un('lb'),'Weeks to go '+o('1'),'Deload next week'],'Then the new block')}],
-  acts:[{v:'Start',o:'Push A, about 45 min',hold:1,f:()=>go('workout')},{v:'Log',o:'yesterday’s walk, 32 min',f:e=>receipt(e,'Walk, 32 min, logged.')},{v:'Rest',o:'a 2 min timer',f:e=>receipt(e,'Rest, 2:00.')}]})}};
+  acts:[{v:'Start',o:'Push A, about 45 min',hold:1,f:()=>go('workout')},{v:'Log',o:objs()[1],f:e=>logWalk(e)},{v:'Rest',o:'a 2 min timer',f:e=>receipt(e,'Rest, 2:00.')}],
+  ready:({act,key})=>{A=act;cv=key&&key.querySelector('canvas.tboard');if(cv){cv._x=(cv._x||[]).filter(f=>!f._walk);cv._x.push(draw)}
+   window.__dk={log:()=>logWalk(el),get walked(){return deckWalk},get p(){return st.p},get g(){return st.g},get fly(){return fly},act,cw}}})}};
 
 /* ---------- Galley (Kitchen) ---------- */
 SCREENS.kitchen={title:'Kitchen',accent:'kitchen',tess:'Tacos tonight works. You need tortillas, cilantro and limes.',render(el){

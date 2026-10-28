@@ -410,3 +410,17 @@ The board took a dish count for granted. The app has none, so here is the model 
   - The Wash object reads "{n} dishes", "1 dish" or "the sink is clear"
 - **Walls:** dishes are not private, so the count may show in widgets, backups and logs, and may go to Claude. Keep `washedAt` only for "last washed". Never count clear-sink days or washes in a row (no streaks)
 - **Sample data:** one open load, count 7, labeled "Lunch", at 12:40 PM today. That is the board's "7 waiting, since lunch"
+
+## Sheet 389: the walk goes up on the board
+
+On the Deck landing, Log ("yesterday's walk, 32 min") only said "Walk, 32 min, logged". The blackboard above it didn't change, though the board is where the Deck keeps its record. Now the words he tapped go up on the board.
+
+- Log lifts its own object off the action word. The words rise to the blackboard and settle into the gap between the week's ticks and the lifts, at the size the chalk will write them, turning from ink to chalk white on the way. As they rise, the first letter becomes a capital: "Yesterday's walk, 32 min"
+- Where they land, the chalk takes them over, letter by letter. The type is rubbed away just behind the chalk's tip, so the line is never written twice. A little dust falls from the tip (305), and there is one light tick as the chalk touches
+- The object under Log moves on to "what you did". Tapping Log again only says "Say what you did, Tess files it" and writes nothing
+- The receipt is "Walk, 32 min, logged". Undo, within its 10 s, wipes the line from its right end and leaves a faint ghost that fades over about 2.6 s, as real chalk does (290). The words ease back under Log
+- The line stays on the board. Coming back to the Deck later, it is there, and Log offers "what you did"
+- Reduce Motion: no flight and no dust. The line is simply on the board, and on Undo it is simply gone, with no ghost
+- Core: the board's Log object needs a fact the app doesn't have yet. The app writes workouts to Health but reads none, so there is no "yesterday's walk, 32 min" to offer. This needs a Health read of walking workouts that aren't in the training log yet (the newest one, its day and minutes), and an action that logs it as an activity in one op group with Undo. Until that exists, the app's Log keeps opening This week, and this transition waits for it
+- Builder A: the flight is the shared foot-to-keystone move. When a foot action writes a line onto its keystone, its object label flies there (`matchedGeometryEffect`-style, 0.56 s, `.timingCurve(0.3, 0.8, 0.3, 1)`), scaled to the written line's width, with its color going from ink to the keystone's chalk. On the Deck, the chalk line then reveals left to right over 0.7 s, with the label masked away behind the same edge, and one light `.sensoryFeedback(.impact)` as it starts. Undo plays the existing wipe and ghost
+- Probe: `docs/design/boards/r66/pdk.js` (before: Log offers yesterday's walk and the board has no line. Just after the tap: the words are in flight, Log reads "what you did" and the receipt has no full stop. Partway: the flying words are rubbed away as far as the chalk has written. After: the chalk line is on the board and fits between the week and the lifts. Undo: the line goes, the ghost fades to nothing and the words are back. Logging again only says how. Coming back shows the line. Paper, black; Reduce Motion: in place, no flight, no ghost)
