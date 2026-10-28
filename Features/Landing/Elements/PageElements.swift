@@ -35,19 +35,19 @@ private func inheritedAnswers() -> [TemplateEntry: TemplateAnswer] {
 /// The door's rows: a `ListElement` in the `page` place. Rows split the block by rank weights.
 struct RankedPageElement: TesseraElement {
     /// The sample the suite draws: the Deck's Library, seven lifts with their bests.
-    static let sample: [RankedRow] = [
-        RankedRow(id: "a", title: "Bench Press", value: "100", unit: "kg", sub: "Best, Oct 12", state: .best),
-        RankedRow(id: "b", title: "Back Squat", value: "140", unit: "kg", sub: "Last, Oct 20"),
-        RankedRow(id: "c", title: "Deadlift", value: "170", unit: "kg", sub: "Last, Oct 17"),
-        RankedRow(id: "d", title: "Overhead Press", value: "62.5", unit: "kg", sub: "Last, Oct 12"),
-        RankedRow(id: "e", title: "Barbell Row", value: "85", unit: "kg"),
-        RankedRow(id: "f", title: "Pull-up", value: "12", unit: "reps"),
-        RankedRow(id: "g", title: "Dip", value: "15", unit: "reps", state: .planned),
+    static let sample: [LevelRow] = [
+        LevelRow(id: "a", title: "Bench Press", value: "100", unit: "kg", sub: "Best, Oct 12", state: .best),
+        LevelRow(id: "b", title: "Back Squat", value: "140", unit: "kg", sub: "Last, Oct 20"),
+        LevelRow(id: "c", title: "Deadlift", value: "170", unit: "kg", sub: "Last, Oct 17"),
+        LevelRow(id: "d", title: "Overhead Press", value: "62.5", unit: "kg", sub: "Last, Oct 12"),
+        LevelRow(id: "e", title: "Barbell Row", value: "85", unit: "kg"),
+        LevelRow(id: "f", title: "Pull-up", value: "12", unit: "reps"),
+        LevelRow(id: "g", title: "Dip", value: "15", unit: "reps", state: .planned),
     ]
 
     static let sizeSteps: [CGFloat] = [36, 32, 28]
 
-    var rows: [RankedRow] = Self.sample
+    var rows: [LevelRow] = Self.sample
 
     var spec: ElementSpec {
         var answers = inheritedAnswers()
@@ -86,7 +86,7 @@ struct RankedPageElement: TesseraElement {
         )
     }
 
-    static func meaning(_ rows: [RankedRow]) -> ElementMeaning {
+    static func meaning(_ rows: [LevelRow]) -> ElementMeaning {
         ElementMeaning(
             place: .page,
             items: rows.map { ElementItem(kind: "row", name: $0.title, isPrivate: $0.isPrivate) },
@@ -96,7 +96,7 @@ struct RankedPageElement: TesseraElement {
         )
     }
 
-    static func ink(_ row: RankedRow, index: Int) -> ElementInk {
+    static func ink(_ row: LevelRow, index: Int) -> ElementInk {
         switch row.state {
         case .done: .done
         case .late: .late
@@ -106,7 +106,7 @@ struct RankedPageElement: TesseraElement {
         }
     }
 
-    static func draw(_ request: RenderRequest, rows: [RankedRow]) -> ElementRender {
+    static func draw(_ request: RenderRequest, rows: [LevelRow]) -> ElementRender {
         var render = ElementRender()
         let step = Self.sizeSteps[min(request.variant.size, Self.sizeSteps.count - 1)] / 100
         let shown = RankedLayout.shown(rows, moreID: "more")

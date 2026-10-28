@@ -58,7 +58,7 @@ struct RankedPageTests {
     }
 
     @Test func moreThanSevenRowsKeepSixAndAMoreRow() {
-        let rows = (0 ..< 12).map { RankedRow(id: "r\($0)", title: "Lift \($0)") }
+        let rows = (0 ..< 12).map { LevelRow(id: "r\($0)", title: "Lift \($0)") }
         let shown = RankedLayout.shown(rows, moreID: "more:library")
         #expect(shown.count == 7)
         #expect(shown.last?.id == "more:library")
@@ -124,7 +124,7 @@ struct RankedPageTests {
     }
 
     @Test func theSiblingsWindowKeepsTheCurrentRow() {
-        let rows = (0 ..< 12).map { RankedRow(id: "r\($0)", title: "Lift \($0)") }
+        let rows = (0 ..< 12).map { LevelRow(id: "r\($0)", title: "Lift \($0)") }
         for current in ["r0", "r6", "r11"] {
             let body = SiblingsBody.make(rows: rows, current: current)
             #expect(body.rows.count == 7)

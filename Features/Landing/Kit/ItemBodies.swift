@@ -121,7 +121,7 @@ struct SetsBody: ItemBodyKind {
 struct SiblingsBody: ItemBodyKind {
     static let name = "siblings"
 
-    var rows: [RankedRow]
+    var rows: [LevelRow]
     var current: String
 
     static let maxRows = RankedLayout.maxRows
@@ -129,7 +129,7 @@ struct SiblingsBody: ItemBodyKind {
     static let titleSize: CGFloat = 20
 
     /// At most seven rows, the current one always among them, centred where it can be.
-    static func make(rows: [RankedRow], current: String) -> Self {
+    static func make(rows: [LevelRow], current: String) -> Self {
         guard rows.count > maxRows, let place = rows.firstIndex(where: { $0.id == current }) else {
             return Self(rows: Array(rows.prefix(maxRows)), current: current)
         }

@@ -36,10 +36,10 @@ struct DeckRoomContentTests {
         var pages = DeckPages()
         let lift = TrainingWallTarget.exercise(exercise).id
         pages.doors["today"] = DeckDoorPage(line: "Push, 4 lifts", rows: [
-            RankedRow(id: "\(lift)#t0", title: "Bench Press", value: "80", unit: "kg", sub: "3 sets of 5"),
-            RankedRow(id: "page#t1", title: "Row", state: .done),
+            LevelRow(id: "\(lift)#t0", title: "Bench Press", value: "80", unit: "kg", sub: "3 sets of 5"),
+            LevelRow(id: "page#t1", title: "Row", state: .done),
         ])
-        pages.doors["week"] = DeckDoorPage(line: "1 trained", rows: [RankedRow(id: "week#1", title: "Tuesday")])
+        pages.doors["week"] = DeckDoorPage(line: "1 trained", rows: [LevelRow(id: "week#1", title: "Tuesday")])
         pages.doors["library"] = DeckDoorPage(line: "12 exercises", rows: [])
         pages.items[lift] = DeckItem(
             title: "Bench Press", line: "Next: set 2, 80 kg \u{00D7} 5",
@@ -55,7 +55,8 @@ struct DeckRoomContentTests {
                                        reps: "5",
                                        state: .next
                                    )],
-                           lastTime: "80 kg \u{00D7} 5, 5, 4")
+                           lastTime: "80 kg, 5, 5 and 4"),
+            start: "set 1, 80 kg"
         )
         return DeckRoomContent.Facts(wall: wall, deck: deck, rows: DeckRoomContent.Facts.rows(wall: wall, deck: deck),
                                      pages: pages)
@@ -72,8 +73,8 @@ struct DeckRoomContentTests {
         let plan = PlaceMove.plan(from: landing, to: door)
         #expect(plan[.keystone] == .untouched)
         #expect(plan[.title] == .untouched)
-        #expect(plan[.caption] == .untouched)
-        #expect(plan[.actionWord] == .untouched)
+        #expect(plan[.caption] == .move, "the door's own hint eases over the landing's")
+        #expect(plan[.actionWord] == .move, "Add and Ask replace Start, Log and Rest")
         #expect(plan[.navWord] == .move)
         #expect(plan[.doorTitle] == .enter)
         #expect(plan[.page] == .enter)
@@ -183,8 +184,8 @@ struct DeckRoomContentTests {
         let plan = PlaceMove.plan(from: door, to: item)
         #expect(plan[.keystone] == .untouched)
         #expect(plan[.title] == .untouched)
-        #expect(plan[.caption] == .untouched)
-        #expect(plan[.actionWord] == .untouched)
+        #expect(plan[.caption] == .untouched, "the door's caption stays at level 2")
+        #expect(plan[.actionWord] == .move, "the item's own verbs")
         #expect(plan[.navWord] == .move)
         #expect(plan[.doorTitle] == .move)
         #expect(plan[.page] == .move, "the same kind with new words, never a collapse")

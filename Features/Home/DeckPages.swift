@@ -8,7 +8,7 @@ import TesseraCore
 /// One door's page: the second line of its Door title and its rows in rank order.
 struct DeckDoorPage: Equatable {
     var line: String
-    var rows: [RankedRow]
+    var rows: [LevelRow]
 }
 
 /// A lift's item page: its title and one line, its three facts and its sets.
@@ -104,14 +104,24 @@ enum DeckSets {
             let text = weightText(kilograms)
             return text.unit.isEmpty ? text.number : "\(text.number) \(text.unit)"
         }
-        guard sets.allSatisfy({ $0.weight == first.weight }) else {
-            return sets.map { "\(load($0.weight)), \(repsText($0.reps))" }.joined(separator: " and ")
+        func said(_ group: [Entry]) -> String {
+            guard let head = group.first else { return "" }
+            if group.allSatisfy({ $0.reps == head.reps }) {
+                return "\(load(head.weight)), \(group.count) \(group.count == 1 ? "set" : "sets") of \(repsText(head.reps))"
+            }
+            let reps = group.map { repsText($0.reps) }
+            return "\(load(head.weight)), " + reps.dropLast().joined(separator: ", ") + " and " + (reps.last ?? "")
         }
-        if sets.allSatisfy({ $0.reps == first.reps }) {
-            return "\(load(first.weight)), \(sets.count) \(sets.count == 1 ? "set" : "sets") of \(repsText(first.reps))"
+        // Runs of one weight are said together; a change of weight starts a new part after a semicolon.
+        var groups: [[Entry]] = []
+        for set in sets {
+            if let last = groups.last?.last, last.weight == set.weight {
+                groups[groups.count - 1].append(set)
+            } else {
+                groups.append([set])
+            }
         }
-        let reps = sets.map { repsText($0.reps) }
-        return "\(load(first.weight)), " + reps.dropLast().joined(separator: ", ") + " and " + (reps.last ?? "")
+        return groups.map(said).joined(separator: "; ")
     }
 
     /// The foot's object for a lift: "set 1, 185 lb" (the first working set).
@@ -158,7 +168,7 @@ extension DeckPages {
 
     /// Today: the source workout, its rows, the sets each lift plans, and where each lift sits ("Push A, first lift").
     private struct TodayPage {
-        var rows: [RankedRow] = []
+        var rows: [LevelRow] = []
         var planned: [UUID: Int] = [:]
         var position: [UUID: String] = [:]
     }
@@ -172,7 +182,7 @@ extension DeckPages {
         var page = TodayPage()
         let name = source.map { ObjectPrivacy.routineTitle($0.title, in: store) } ?? ""
         if name == ObjectPrivacy.routineLabel {
-            page.rows = [RankedRow(id: "page#private", title: name, isPrivate: true)]
+            page.rows = [LevelRow(id: "page#private", title: name, isPrivate: true)]
             return page
         }
         for (index, slot) in (source?.orderedChildren.filter { !$0.isDeleted } ?? []).enumerated() {
@@ -190,7 +200,7 @@ extension DeckPages {
             if doneCount > 0, doneCount < count {
                 sub = "\(doneCount) of \(count) sets"
             }
-            page.rows.append(RankedRow(
+            page.rows.append(LevelRow(
                 id: "\(TrainingWallTarget.exercise(exercise.id).id)#t\(index)", title: exercise.name,
                 value: open == nil ? "" : text.number, unit: open == nil ? "" : text.unit, sub: sub,
                 state: doneCount >= count ? .done : .none
@@ -207,7 +217,7 @@ extension DeckPages {
         let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan) ?? 0
         let days = model.ledger.week(containing: now, plan: plan, now: now,
                                      sessionsPerWeek: perWeek > 0 ? perWeek : nil, calendar: calendar)
-        var rows: [RankedRow] = []
+        var rows: [LevelRow] = []
         var done = 0
         var planned = 0
         for (index, day) in days.enumerated() {
@@ -219,14 +229,14 @@ extension DeckPages {
                 done += 1
                 let name = ObjectPrivacy.routineTitle(first.title, in: store)
                 let minutes = first.duration.map { Int(($0 / 60).rounded()) } ?? 0
-                rows.append(RankedRow(id: id, title: title, value: minutes > 0 ? "\(minutes)" : "",
-                                      unit: minutes > 0 ? "min" : "", sub: "\(name), done", state: .done,
-                                      isPrivate: name == ObjectPrivacy.routineLabel))
+                rows.append(LevelRow(id: id, title: title, value: minutes > 0 ? "\(minutes)" : "",
+                                     unit: minutes > 0 ? "min" : "", sub: "\(name), done", state: .done,
+                                     isPrivate: name == ObjectPrivacy.routineLabel))
             } else if let routine = day.planned, !day.isRest {
                 planned += 1
                 let name = ObjectPrivacy.routineTitle(routine.title, in: store)
-                rows.append(RankedRow(id: id, title: title, value: isToday ? "" : "Plan", sub: name,
-                                      isPrivate: name == ObjectPrivacy.routineLabel))
+                rows.append(LevelRow(id: id, title: title, value: isToday ? "" : "Plan", sub: name,
+                                     isPrivate: name == ObjectPrivacy.routineLabel))
             }
         }
         return DeckDoorPage(line: "\(done) of \(done + planned) done", rows: rows)
@@ -240,18 +250,18 @@ extension DeckPages {
         let routines = model.objects(of: .plan).flatMap { store.linkedObjects("routines", of: $0) }
             .filter { !$0.isDeleted && seen.insert($0.id).inserted }
         guard !routines.isEmpty else { return nil }
-        let rows: [RankedRow] = routines.map { routine in
+        let rows: [LevelRow] = routines.map { routine in
             let id = TrainingWallTarget.routine(routine.id).id
             let title = ObjectPrivacy.routineTitle(routine.title, in: store)
             guard title != ObjectPrivacy.routineLabel else {
-                return RankedRow(id: id, title: title, sub: "Kept on the phone", isPrivate: true)
+                return LevelRow(id: id, title: title, sub: "Kept on the phone", isPrivate: true)
             }
             let slots = routine.orderedChildren.filter { !$0.isDeleted }
             let lifts = slots.compactMap { store.linkedClass("exercise", of: $0) }
                 .filter { !ObjectPrivacy.isPrivateWord($0.name, in: store) }
                 .prefix(4).map { TrainingWallFacts.lift($0.name) }
             let minutes = TrainingPage.estimatedMinutes(sets: NowPage.plannedSets(slots, store: store))
-            return RankedRow(id: id, title: title, value: "\(minutes)", unit: "min", sub: lifts.joined(separator: ", "))
+            return LevelRow(id: id, title: title, value: "\(minutes)", unit: "min", sub: lifts.joined(separator: ", "))
         }
         return DeckDoorPage(line: "\(rows.count) \(rows.count == 1 ? "workout" : "workouts")", rows: rows)
     }
@@ -271,7 +281,7 @@ extension DeckPages {
             return ItemFact(number: text.number, unit: text.unit, label: label)
         }
         let open = (before ?? logged)?.sets.first?.weight
-        let estimate = lift.best.flatMap { $0.e1RM > 0 ? $0.e1RM : nil }
+        let estimate = lift.best.flatMap { $0.e1RM > 0 ? $0.e1RM.rounded() : nil }
         let day = lift.last.formatted(.dateTime.month(.abbreviated).day())
         return DeckItem(
             title: lift.exercise.name,
@@ -312,8 +322,8 @@ extension DeckPages {
             let text = DeckSets.weightText(best.weight)
             let reps = Int(best.reps.rounded())
             let whenText = DeckSets.ago(when, now: now, calendar: calendar) ?? day(when)
-            return RankedRow(id: "best:\(lift.exercise.id.uuidString)#b", title: lift.exercise.name, value: text.number,
-                             unit: text.unit, sub: "\(reps) \(reps == 1 ? "rep" : "reps"), \(whenText)", state: .best)
+            return LevelRow(id: "best:\(lift.exercise.id.uuidString)#b", title: lift.exercise.name, value: text.number,
+                            unit: text.unit, sub: "\(reps) \(reps == 1 ? "rep" : "reps"), \(whenText)", state: .best)
         }
         let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
         let fresh = bests.filter { $0.2 >= monthStart }.count
@@ -323,23 +333,23 @@ extension DeckPages {
             line: wall.doors.first { $0.id == "library" }?.label ?? "Nothing logged yet",
             rows: lifts.map { lift in
                 let best = lift.best.map { DeckSets.weightText($0.weight) }
-                return RankedRow(id: "\(TrainingWallTarget.exercise(lift.exercise.id).id)#l",
-                                 title: lift.exercise.name, value: best?.number ?? "", unit: best?.unit ?? "",
-                                 sub: "Last \(day(lift.last))")
+                return LevelRow(id: "\(TrainingWallTarget.exercise(lift.exercise.id).id)#l",
+                                title: lift.exercise.name, value: best?.number ?? "", unit: best?.unit ?? "",
+                                sub: "Last \(day(lift.last))")
             }
         )
 
         // Plan: the routines, today's first (Core has no block, deload or goal facts yet).
         let routines = model.plan.map { store.linkedObjects("routines", of: $0) }?.filter { !$0.isDeleted } ?? []
-        let planRows: [RankedRow] = routines.map { routine in
+        let planRows: [LevelRow] = routines.map { routine in
             let title = ObjectPrivacy.routineTitle(routine.title, in: store)
             guard title != ObjectPrivacy.routineLabel else {
-                return RankedRow(id: TrainingWallTarget.routine(routine.id).id, title: title, isPrivate: true)
+                return LevelRow(id: TrainingWallTarget.routine(routine.id).id, title: title, isPrivate: true)
             }
             let slots = routine.orderedChildren.filter { !$0.isDeleted }
             let minutes = TrainingPage.estimatedMinutes(sets: NowPage.plannedSets(slots, store: store))
-            return RankedRow(id: TrainingWallTarget.routine(routine.id).id, title: title, value: "\(minutes)",
-                             unit: "min", sub: "\(slots.count) \(slots.count == 1 ? "lift" : "lifts")")
+            return LevelRow(id: TrainingWallTarget.routine(routine.id).id, title: title, value: "\(minutes)",
+                            unit: "min", sub: "\(slots.count) \(slots.count == 1 ? "lift" : "lifts")")
         }
 
         func line(_ id: String, _ fallback: String) -> String {

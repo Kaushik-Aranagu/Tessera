@@ -38,7 +38,12 @@ final class DeckLevelsUITests: SimulatorOnlyTestCase {
 
     func testTapADoorTapARowAndComeBack() {
         let app = launch()
-        openDoor(app, "Library")
+        openDoor(app, "Today")
+        let title = app.descendants(matching: .any)["shell.doorTitle"]
+        title.swipeLeft()
+        sleep(1)
+        title.swipeLeft()
+        sleep(1)
         XCTAssertTrue(settled(app).hasPrefix("route deck/1/library"))
         XCTAssertTrue(app.buttons["Back to Doors"].waitForExistence(timeout: 3), "The Nav word reads Doors")
         let row = firstRow(app)
@@ -70,7 +75,7 @@ final class DeckLevelsUITests: SimulatorOnlyTestCase {
 
     func testTheReduceMotionPathOpensARow() {
         let app = launch(["-shellReduceMotion"])
-        openDoor(app, "Library")
+        openDoor(app, "Today")
         let row = firstRow(app)
         XCTAssertTrue(row.waitForExistence(timeout: 4))
         row.tap()

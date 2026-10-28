@@ -180,7 +180,7 @@ struct DeckRoomContent: RoomContent {
     }
 
     /// The facts of a row with no page of its own yet: its value, where it ranks in the door.
-    static func plainFacts(_ row: RankedRow, index: Int, count: Int, door: String, doorID: String) -> [ItemFact] {
+    static func plainFacts(_ row: LevelRow, index: Int, count: Int, door: String, doorID: String) -> [ItemFact] {
         var facts: [ItemFact] = []
         if !row.value.isEmpty {
             let label = ["today": "Opens at", "library": "Best", "bests": "Best", "plan": "Takes"][doorID] ?? "Value"

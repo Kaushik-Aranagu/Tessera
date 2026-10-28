@@ -45,7 +45,7 @@ enum RankState: String, Equatable, Sendable {
 /// One row of a door page: a title, a value with its unit at half size, a sub line (only when the row is tall enough)
 /// and a state. A private row carries only "Private workout"-style words: the room fills `title` and leaves the rest
 /// empty, and `isPrivate` keeps it from ever being given a value.
-struct RankedRow: Identifiable, Equatable, Sendable {
+struct LevelRow: Identifiable, Equatable, Sendable {
     let id: String
     var title: String
     var value = ""
@@ -58,7 +58,7 @@ struct RankedRow: Identifiable, Equatable, Sendable {
 /// The Page's payload: the rows in rank order, the room's colour, and the id of the "and N more" row when more rows
 /// exist than the seven weights.
 struct RankedPageData: Equatable {
-    var rows: [RankedRow]
+    var rows: [LevelRow]
     var accent: Color
     /// A line to draw when the door holds nothing ("Nothing here yet").
     var empty = "Nothing here yet"
@@ -67,7 +67,7 @@ struct RankedPageData: Equatable {
 }
 
 /// One row placed: its rect in the Page's space and the sizes of its words.
-struct RankedRowLayout: Equatable, Sendable {
+struct LevelRowLayout: Equatable, Sendable {
     var rect: CGRect
     var titleSize: CGFloat
     var valueSize: CGFloat
@@ -97,11 +97,11 @@ enum RankedLayout {
 
     /// The rows the Page draws: all of them up to seven; past seven, the first six and a last row that stands for the
     /// rest, so nothing is lost.
-    static func shown(_ rows: [RankedRow], moreID: String?) -> [RankedRow] {
+    static func shown(_ rows: [LevelRow], moreID: String?) -> [LevelRow] {
         guard rows.count > maxRows else { return rows }
         guard let moreID else { return Array(rows.prefix(maxRows)) }
         let rest = rows.count - (maxRows - 1)
-        return Array(rows.prefix(maxRows - 1)) + [RankedRow(id: moreID, title: "\(rest) more", state: .planned)]
+        return Array(rows.prefix(maxRows - 1)) + [LevelRow(id: moreID, title: "\(rest) more", state: .planned)]
     }
 
     /// Row heights: the first `count` weights, normalised, so they add up to `total` exactly.
@@ -135,7 +135,7 @@ enum RankedLayout {
     /// The rows placed in `frame`. `scale` is Dynamic Type's; `ratio` is the title-to-height ratio (a fix steps it
     /// down); `dropSubs` removes every sub line (accessibility sizes, or a fix).
     static func rows(count: Int, in frame: CGRect, scale: CGFloat = 1, ratio: CGFloat = titleRatio,
-                     dropSubs: Bool = false) -> [RankedRowLayout]
+                     dropSubs: Bool = false) -> [LevelRowLayout]
     {
         var y = frame.minY
         return heights(count: count, total: frame.height).map { height in
@@ -146,7 +146,7 @@ enum RankedLayout {
             let unit = max(unitFloor, title * 0.41)
             let sub = subSize * min(scale, 1.2)
             let fitsSub = title * 1.25 + sub * 1.3 + 4 <= height
-            let layout = RankedRowLayout(rect: CGRect(x: frame.minX, y: y, width: frame.width, height: height),
+            let layout = LevelRowLayout(rect: CGRect(x: frame.minX, y: y, width: frame.width, height: height),
                                          titleSize: title, valueSize: value, unitSize: unit, subSize: sub,
                                          showsSub: !dropSubs && height > subMinHeight && fitsSub)
             y += height
@@ -156,7 +156,7 @@ enum RankedLayout {
 
     /// The ink a row's title and value wear: its state colour, else (the first row) the room colour mixed 58% with
     /// ink, else ink.
-    static func color(for row: RankedRow, index: Int, accent: Color) -> Color {
+    static func color(for row: LevelRow, index: Int, accent: Color) -> Color {
         if let state = row.state.color {
             return state
         }
@@ -206,7 +206,7 @@ struct RankedPage: View {
                 )
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                        RankedRowView(row: row, index: index, layout: layouts[index], accent: data.accent) {
+                        LevelRowView(row: row, index: index, layout: layouts[index], accent: data.accent) {
                             open(row.id)
                         }
                         .frame(height: layouts[index].rect.height)
@@ -232,10 +232,10 @@ struct RankedPage: View {
 
 /// One row: title (and a sub line under it when the row is tall enough) on the left, the value and its unit on the
 /// right. A value never wraps; the title yields to it.
-private struct RankedRowView: View {
-    let row: RankedRow
+private struct LevelRowView: View {
+    let row: LevelRow
     let index: Int
-    let layout: RankedRowLayout
+    let layout: LevelRowLayout
     let accent: Color
     let open: () -> Void
 
