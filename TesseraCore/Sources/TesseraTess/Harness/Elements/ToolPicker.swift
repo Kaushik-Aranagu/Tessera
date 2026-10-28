@@ -35,6 +35,9 @@ public enum ToolPicker {
     public static let maxTools = 12
     /// The reads every ask may use.
     static let reads = ["query", "open", "recall"]
+    /// The reads that run the moment their block closes, before the reply ends (H5): every ask's reads, and `zoom`,
+    /// which is offered only on an ask about his past.
+    static let runAtOnce: Set<String> = Set(reads).union([TessZoomTool.name])
     /// A bound call is a short command; a longer ask has more in it than the frame can fill.
     static let boundWords = 6
 
@@ -104,6 +107,12 @@ public enum ToolPicker {
             let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) || $0 == RehearseFlags.tool }
                 .count
             tools.insert(TessGuide.name, at: lead)
+        }
+        if TessZoomTool.isAbout(ask), !tools.contains(TessZoomTool.name) {
+            // His past by time: the pyramid rides right after the calls that lead and the guide, like the guide.
+            let lead = tools.prefix { named.contains($0) || LookWords.calls.contains($0) || $0 == RehearseFlags.tool
+                || $0 == TessGuide.name }.count
+            tools.insert(TessZoomTool.name, at: lead)
         }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks, rehearse: rehearse, count: rehearse == nil ? nil : RehearseFlags.count(ask))

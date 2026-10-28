@@ -166,8 +166,8 @@ public enum TessGuide {
         Changes: every change you make lands pending, as a ghost row with Undo for 10 seconds. At most \
         \(TessTools.maxRecordsPerPhrase) changes per ask, \(TessRun.maxRounds) rounds and \(ToolPicker.maxTools) \
         tools
-        Memory: recall, open, links and history read his things and what you know about him; remember keeps a \
-        maybe he keeps or dismisses
+        Memory: recall, open, links and history read his things and what you know about him; zoom reads his past \
+        by time, a year down to a day; remember keeps a maybe he keeps or dismisses
         More: /rules, /tools, /rooms
         """)
     }
