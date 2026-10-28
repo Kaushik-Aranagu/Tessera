@@ -35,8 +35,8 @@ struct SinkTests {
         Sink.facts(store: store, now: now)
     }
 
-    func recipe(_ cookware: Double? = nil) throws -> ObjectRecord {
-        let recipe = try engine.perform(CreateRecipe(text: RecipeParserTests.carbonara), by: .user).output
+    func recipe(_ cookware: Double? = nil, text: String = RecipeParserTests.carbonara) throws -> ObjectRecord {
+        let recipe = try engine.perform(CreateRecipe(text: text), by: .user).output
         if let cookware {
             try store.set("cookware", to: .number(cookware), on: recipe)
         }
@@ -48,7 +48,7 @@ struct SinkTests {
     }
 
     @Test func theSampleIsOneOpenLoadOfSevenLabeledLunchAtTwelveForty() throws {
-        let load = try #require(Sink.seedSample(store: store, classes: classes, now: now, calendar: calendar))
+        let load = try #require(try Sink.seedSample(store: store, classes: classes, now: now, calendar: calendar))
         #expect(store.number("count", of: load) == 7 && store.value("at", of: load)?.dateValue == at(12, 40))
         #expect(facts == Sink.Facts(waiting: 7, since: at(12, 40), minutes: 10, lastWashed: nil))
         #expect(Sink.ticket(facts, now: now, calendar: calendar) == ["Dishes", "7 waiting", "since lunch"])
@@ -56,7 +56,7 @@ struct SinkTests {
         #expect(card.header == "Since lunch" && card.number == 7 && card.unit == "dishes")
         #expect(card.line == "Waiting in the sink" && card.about == "About 10 minutes")
         #expect(Sink.washObject(facts) == "7 dishes")
-        #expect(Sink.seedSample(store: store, classes: classes, now: now, calendar: calendar) == nil, "once")
+        #expect(try Sink.seedSample(store: store, classes: classes, now: now, calendar: calendar) == nil, "once")
     }
 
     @Test func theSinceWordIsMealYesterdayWeekdayOrDate() {
@@ -99,7 +99,7 @@ struct SinkTests {
     }
 
     @Test func aSessionAddsOneLoadWithTheLargestServesAPanEachAndOneBoard() throws {
-        let one = try recipe(), two = try recipe(2)
+        let one = try recipe(), two = try recipe(2, text: "Toast\n\n1. Toast the bread.")
         try store.set("serves", to: .number(2), on: one)
         try store.set("serves", to: .number(6), on: two)
         let session = try engine.perform(StartCookSession(recipes: [one.id, two.id], serveAt: at(19), time: at(17)),
@@ -125,7 +125,7 @@ struct SinkTests {
         try engine.perform(AddDishes(count: 3, label: "Snack", at: at(15)), by: .user)
         let before = facts
         let wash = try engine.perform(WashDishes(at: at(17)), by: .user)
-        #expect(wash.output == 2 && wash.record.receipt == nil)
+        #expect(wash.output == 2 && wash.record.receipt == "Dishes, done")
         #expect(WashDishes().receipt(in: store, output: 2) == "Dishes, done")
         #expect(facts.waiting == 0 && facts.lastWashed == at(17))
         engine.undo(wash.record)
