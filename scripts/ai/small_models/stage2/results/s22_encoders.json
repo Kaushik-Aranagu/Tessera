@@ -1,0 +1,1035 @@
+{
+ "test": "2.2 bigger frozen encoders",
+ "protocol": "Stage 2.2: bigger frozen encoders through the whole stage 1 read stack (cloud; public data only).\n\nPlan: docs/research/two-plane-memory/5-stage2-plan.md, test 2.2. Its bars were committed before any stage 2 number\nexisted and are quoted here verbatim:\n\n  \"For each encoder, the whole stage 1 pipeline is rebuilt in that encoder's space with no new choices: rank-16 bridges\n  with the learning rate tuned on dev pairs (s11 protocol), the BM25-fused read, and the s111 ranker (same 25 features,\n  same dev-chosen hyperparameter grid, same inner bridges for training chats).\n  - **Pass:** for an encoder X, the ranker read with X beats the ranker read with bge-small on LoCoMo with CI > 0 and\n    Holm sign-flip p below 0.05; no loss on LongMemEval-S; and X meets the 2.1 speed bar on the Mac Neural Engine (or on\n    the GPU if that is faster).\n  - If X wins on quality but misses the speed bar, the verdict is \"fail: better but too slow\", reported as such.\n  - Reported, no bar: frozen read, bridge read and fused read per encoder, with CIs against bge-small (the front\n    matter's bar is \"beats bge-small with bridges\", i.e. the bridge and fused reads).\"\n  Common rules: \"Statistics: paired difference per question; chat-clustered bootstrap (4,000 draws, seed 0) and the\n  exact chat sign-flip test (all 1,024 sign patterns). \"CI > 0\" means the 95% interval's lower end is above zero.\"\n  \"LongMemEval-S: 428 questions, question-clustered bootstrap. A \"loss\" there is a point estimate below −0.005.\"\n  \"Two new encoders are tested in 2.2, so their sign-flip p values get Holm's correction.\"\n\nEncoders. bge-small (BAAI/bge-small-en-v1.5, the reference: the stage 1 caches; it must reproduce stage 1 exactly, LoCoMo\nbridge 0.6622 and fused 0.6553 equal per question to the stored stage 1 bridges' reads, ranker 0.7492 and LongMemEval-S\nranker 0.9187, or the run stops; pipeline.check_reference), bge-base\n(BAAI/bge-base-en-v1.5) and qwen3-emb-0.6b (Qwen/Qwen3-Embedding-0.6B, its stored query prompt on questions, none on\nturns). Vectors from encode_texts.py: <enc-dir>/<tag>/locomo.npz (rows = index over all LoCoMo turns concatenated in chat\norder, q = questions in chat order) and lme.npz (rows = LongMemEval-S text indices, q = the 428 questions). An encoder\nwhose locomo.npz is missing is reported as pending; one whose lme.npz is missing has its LongMemEval-S part pending.\n\nPipeline per encoder: pipeline.run_space, i.e. s11's rank-16 bridges with the lr tuned per outer fold on dev pairs (and\nthe all-chat bridge for LongMemEval-S by s11's rule), the frozen, bridge and BM25-fused reads, and s111's ranker (25\nfeatures, dev-chosen grid, inner bridges for training chats; LongMemEval-S fit on all 10 chats with the config of best\npooled dev recall). Nothing is chosen on test chats.\n\nThe bar, computed mechanically from unrounded values, for each new encoder X:\n  LoCoMo   d = ranker read of X minus ranker read of bge-small, per question (1,536). \"CI > 0\": the lower end of the\n           chat-clustered 95% bootstrap interval (common.cluster_boot, 4,000 draws, seed 0) is above 0. Sign-flip p:\n           exact over all 1,024 chat sign vectors with s112's statistic (sum_j e_j D_j / N). s112's convention, used for\n           the verdict, is ONE-SIDED (share of sign vectors whose statistic is >= the observed, observed included); the\n           two-sided p (|T| >= |observed|) and the verdict it would give are stored next to it. Holm over the family of\n           the two new encoders {bge-base, qwen3-emb-0.6b} (m = 2; any extra tag passed for a smoke test joins the\n           family). An encoder not run yet has an unknown p, so the Holm p of the other is an interval (here [p, 2p]):\n           the condition holds if its upper end is below 0.05, fails if its lower end is at least 0.05, else pending.\n  LongMemEval-S  the same difference over 428 questions, question-clustered CI reported; a loss iff the point estimate is\n           below -0.005 (with --locomo-only or no lme.npz this condition is pending).\n  Speed    results/s21_coreml.json (written by s21_coreml.py on the Mac), field models.<tag>.speed_ok (true or false).\n           A missing file, encoder or field leaves speed pending.\n  quality  pass iff CI > 0 and Holm p < 0.05 and no LongMemEval-S loss; fail if any of the three fails; else pending.\n  verdict  quality pass and speed_ok true: \"pass\"; quality pass and speed_ok false: \"fail: better but too slow\"; quality\n           fail and speed known: \"fail\"; speed unknown: \"quality <pass|fail|pending>; speed pending 2.1\"; quality\n           pending and speed known: \"quality pending; speed ok\" (or \"speed not ok\").\nReported, no bar: frozen (dense and fused), bridge and fused reads and the ranker per encoder on both benchmarks, each\nwith its paired difference against bge-small (LoCoMo: chat CI and sign-flip p; LongMemEval-S: question CI).\n\nOutputs: results/s22_encoders.json and a final log line \"s22 VERDICT: ...\". Compute (2 single-threaded workers): about\n7 min per encoder at d 384 (measured), about 12 at d 768 and 18 at d 1024 (bridge training scales with d), plus 2 min\nto load the data; every finished run is cached in the pipeline cache (bge-small is filled by pipeline.py --regress).\nSmoke test (writes only to the scratch directory): --write-fake <dir> writes the stage 1 bge-small vectors in\nencode_texts.py's format as <dir>/fake-bge-small/; then --enc-dir <dir> --encoders bge-small,fake-bge-small --out\n<scratch json> must give differences of exactly 0.",
+ "sign_flip": "s112 convention: one-sided, p = share of the 1,024 chat sign vectors with statistic >= observed (observed included); two-sided p stored too",
+ "encoders_requested": [
+  "bge-small",
+  "bge-base",
+  "qwen3-emb-0.6b"
+ ],
+ "locomo_only": false,
+ "reference_check": {
+  "max_abs_dev_per_question_vs_stage1_bridges": {
+   "locomo_bridge_dense": 0.0,
+   "locomo_bridge_fused": 0.0,
+   "lme_bridge_dense": 0.0,
+   "lme_bridge_fused": 0.0
+  },
+  "means": {
+   "locomo_bridge_dense": 0.6622,
+   "locomo_bridge_fused": 0.6553,
+   "locomo_ranker": 0.7492,
+   "lme_ranker": 0.9187
+  },
+  "stage1": {
+   "locomo_bridge_dense": 0.6622,
+   "locomo_bridge_fused": 0.6553,
+   "locomo_ranker": 0.7492,
+   "lme_ranker": 0.9187
+  },
+  "ok": true
+ },
+ "encoders": {
+  "bge-small": {
+   "status": "reference",
+   "dim": 384,
+   "means": {
+    "locomo_frozen_dense": 0.5738,
+    "locomo_frozen_fused": 0.6174,
+    "locomo_bridge_dense": 0.6622,
+    "locomo_bridge_fused": 0.6553,
+    "lme_frozen_dense": 0.8604,
+    "lme_frozen_fused": 0.8862,
+    "lme_bridge_dense": 0.8839,
+    "lme_bridge_fused": 0.8982,
+    "locomo_ranker": 0.7492,
+    "lme_ranker": 0.9187
+   },
+   "bridge_lr": {
+    "picks": [
+     0.0003,
+     0.0003,
+     0.001,
+     0.003,
+     0.0003
+    ],
+    "lme_lr": 0.0003,
+    "dev": {
+     "fold0": {
+      "3e-05": 0.6209,
+      "0.0001": 0.6432,
+      "0.0003": 0.6596,
+      "0.001": 0.6532,
+      "0.003": 0.6529,
+      "0.01": 0.6362
+     },
+     "fold1": {
+      "3e-05": 0.6302,
+      "0.0001": 0.6527,
+      "0.0003": 0.6552,
+      "0.001": 0.6514,
+      "0.003": 0.6377,
+      "0.01": 0.6289
+     },
+     "fold2": {
+      "3e-05": 0.6236,
+      "0.0001": 0.6507,
+      "0.0003": 0.653,
+      "0.001": 0.658,
+      "0.003": 0.6451,
+      "0.01": 0.6352
+     },
+     "fold3": {
+      "3e-05": 0.6283,
+      "0.0001": 0.6433,
+      "0.0003": 0.6464,
+      "0.001": 0.644,
+      "0.003": 0.6492,
+      "0.01": 0.6454
+     },
+     "fold4": {
+      "3e-05": 0.6419,
+      "0.0001": 0.6625,
+      "0.0003": 0.6702,
+      "0.001": 0.6687,
+      "0.003": 0.6665,
+      "0.01": 0.6606
+     }
+    },
+    "heldout": {
+     "3e-05": 0.641,
+     "0.0001": 0.6571,
+     "0.0003": 0.6652,
+     "0.001": 0.6592,
+     "0.003": 0.6643,
+     "0.01": 0.6617
+    }
+   },
+   "ranker": {
+    "picks": {
+     "0": [
+      "lambdarank",
+      "31",
+      "200"
+     ],
+     "1": [
+      "lambdarank",
+      "31",
+      "100"
+     ],
+     "2": [
+      "lambdarank",
+      "31",
+      "50"
+     ],
+     "3": [
+      "lambdarank",
+      "7",
+      "100"
+     ],
+     "4": [
+      "lambdarank",
+      "31",
+      "50"
+     ]
+    },
+    "dev": {
+     "fold0": {
+      "lambdarank/7/50": 0.7489,
+      "lambdarank/7/100": 0.7426,
+      "lambdarank/7/200": 0.7485,
+      "lambdarank/7/400": 0.7524,
+      "lambdarank/31/50": 0.7547,
+      "lambdarank/31/100": 0.7495,
+      "lambdarank/31/200": 0.7585,
+      "lambdarank/31/400": 0.7536,
+      "binary/7/50": 0.7304,
+      "binary/7/100": 0.7395,
+      "binary/7/200": 0.7495,
+      "binary/7/400": 0.7516,
+      "binary/31/50": 0.7431,
+      "binary/31/100": 0.7429,
+      "binary/31/200": 0.7392,
+      "binary/31/400": 0.7406
+     },
+     "fold1": {
+      "lambdarank/7/50": 0.7366,
+      "lambdarank/7/100": 0.7475,
+      "lambdarank/7/200": 0.7451,
+      "lambdarank/7/400": 0.7458,
+      "lambdarank/31/50": 0.7456,
+      "lambdarank/31/100": 0.7516,
+      "lambdarank/31/200": 0.7438,
+      "lambdarank/31/400": 0.7385,
+      "binary/7/50": 0.7191,
+      "binary/7/100": 0.7281,
+      "binary/7/200": 0.7362,
+      "binary/7/400": 0.7384,
+      "binary/31/50": 0.7364,
+      "binary/31/100": 0.7362,
+      "binary/31/200": 0.7387,
+      "binary/31/400": 0.7387
+     },
+     "fold2": {
+      "lambdarank/7/50": 0.7594,
+      "lambdarank/7/100": 0.7571,
+      "lambdarank/7/200": 0.7588,
+      "lambdarank/7/400": 0.755,
+      "lambdarank/31/50": 0.763,
+      "lambdarank/31/100": 0.7582,
+      "lambdarank/31/200": 0.7447,
+      "lambdarank/31/400": 0.7266,
+      "binary/7/50": 0.7424,
+      "binary/7/100": 0.7488,
+      "binary/7/200": 0.7449,
+      "binary/7/400": 0.7548,
+      "binary/31/50": 0.7337,
+      "binary/31/100": 0.7363,
+      "binary/31/200": 0.7366,
+      "binary/31/400": 0.7337
+     },
+     "fold3": {
+      "lambdarank/7/50": 0.7087,
+      "lambdarank/7/100": 0.7266,
+      "lambdarank/7/200": 0.7256,
+      "lambdarank/7/400": 0.7231,
+      "lambdarank/31/50": 0.7055,
+      "lambdarank/31/100": 0.7031,
+      "lambdarank/31/200": 0.6876,
+      "lambdarank/31/400": 0.6868,
+      "binary/7/50": 0.6924,
+      "binary/7/100": 0.6916,
+      "binary/7/200": 0.7105,
+      "binary/7/400": 0.7241,
+      "binary/31/50": 0.7011,
+      "binary/31/100": 0.6991,
+      "binary/31/200": 0.6933,
+      "binary/31/400": 0.7005
+     },
+     "fold4": {
+      "lambdarank/7/50": 0.7442,
+      "lambdarank/7/100": 0.7478,
+      "lambdarank/7/200": 0.7427,
+      "lambdarank/7/400": 0.7463,
+      "lambdarank/31/50": 0.7627,
+      "lambdarank/31/100": 0.7584,
+      "lambdarank/31/200": 0.7584,
+      "lambdarank/31/400": 0.7359,
+      "binary/7/50": 0.7467,
+      "binary/7/100": 0.7546,
+      "binary/7/200": 0.7503,
+      "binary/7/400": 0.7488,
+      "binary/31/50": 0.7608,
+      "binary/31/100": 0.7616,
+      "binary/31/200": 0.7486,
+      "binary/31/400": 0.7447
+     }
+    },
+    "pooled": {
+     "lambdarank/7/50": 0.74,
+     "lambdarank/7/100": 0.7443,
+     "lambdarank/7/200": 0.7446,
+     "lambdarank/7/400": 0.7448,
+     "lambdarank/31/50": 0.7459,
+     "lambdarank/31/100": 0.7437,
+     "lambdarank/31/200": 0.7381,
+     "lambdarank/31/400": 0.7284,
+     "binary/7/50": 0.7256,
+     "binary/7/100": 0.7319,
+     "binary/7/200": 0.7381,
+     "binary/7/400": 0.7437,
+     "binary/31/50": 0.7338,
+     "binary/31/100": 0.734,
+     "binary/31/200": 0.7306,
+     "binary/31/400": 0.7311
+    },
+    "lme_pick": [
+     "lambdarank",
+     "31",
+     "50"
+    ],
+    "feature_sha256_12": {
+     "locomo": "97a4e1a6fc27",
+     "lme": "638cf185b568"
+    }
+   }
+  },
+  "bge-base": {
+   "status": "run",
+   "dim": 768,
+   "means": {
+    "locomo_frozen_dense": 0.579,
+    "locomo_frozen_fused": 0.6256,
+    "locomo_bridge_dense": 0.6833,
+    "locomo_bridge_fused": 0.6586,
+    "lme_frozen_dense": 0.8921,
+    "lme_frozen_fused": 0.892,
+    "lme_bridge_dense": 0.9133,
+    "lme_bridge_fused": 0.8983,
+    "locomo_ranker": 0.7574,
+    "lme_ranker": 0.9214
+   },
+   "bridge_lr": {
+    "picks": [
+     0.001,
+     0.0003,
+     0.001,
+     0.001,
+     0.001
+    ],
+    "lme_lr": 0.001,
+    "dev": {
+     "fold0": {
+      "3e-05": 0.6346,
+      "0.0001": 0.6627,
+      "0.0003": 0.6679,
+      "0.001": 0.6775,
+      "0.003": 0.6609,
+      "0.01": 0.6329
+     },
+     "fold1": {
+      "3e-05": 0.6484,
+      "0.0001": 0.6701,
+      "0.0003": 0.6707,
+      "0.001": 0.6695,
+      "0.003": 0.6452,
+      "0.01": 0.6347
+     },
+     "fold2": {
+      "3e-05": 0.6445,
+      "0.0001": 0.6648,
+      "0.0003": 0.6638,
+      "0.001": 0.678,
+      "0.003": 0.6636,
+      "0.01": 0.6445
+     },
+     "fold3": {
+      "3e-05": 0.6371,
+      "0.0001": 0.6488,
+      "0.0003": 0.6541,
+      "0.001": 0.6554,
+      "0.003": 0.6435,
+      "0.01": 0.6273
+     },
+     "fold4": {
+      "3e-05": 0.6633,
+      "0.0001": 0.6836,
+      "0.0003": 0.6825,
+      "0.001": 0.6894,
+      "0.003": 0.6733,
+      "0.01": 0.6716
+     }
+    },
+    "heldout": {
+     "3e-05": 0.6587,
+     "0.0001": 0.6731,
+     "0.0003": 0.6783,
+     "0.001": 0.6882,
+     "0.003": 0.6769,
+     "0.01": 0.6633
+    }
+   },
+   "ranker": {
+    "picks": {
+     "0": [
+      "lambdarank",
+      "7",
+      "200"
+     ],
+     "1": [
+      "lambdarank",
+      "31",
+      "50"
+     ],
+     "2": [
+      "binary",
+      "31",
+      "50"
+     ],
+     "3": [
+      "binary",
+      "7",
+      "400"
+     ],
+     "4": [
+      "lambdarank",
+      "31",
+      "100"
+     ]
+    },
+    "dev": {
+     "fold0": {
+      "lambdarank/7/50": 0.7473,
+      "lambdarank/7/100": 0.7496,
+      "lambdarank/7/200": 0.761,
+      "lambdarank/7/400": 0.7588,
+      "lambdarank/31/50": 0.7527,
+      "lambdarank/31/100": 0.7475,
+      "lambdarank/31/200": 0.743,
+      "lambdarank/31/400": 0.7348,
+      "binary/7/50": 0.7414,
+      "binary/7/100": 0.7508,
+      "binary/7/200": 0.754,
+      "binary/7/400": 0.7543,
+      "binary/31/50": 0.7501,
+      "binary/31/100": 0.7564,
+      "binary/31/200": 0.7482,
+      "binary/31/400": 0.7489
+     },
+     "fold1": {
+      "lambdarank/7/50": 0.7531,
+      "lambdarank/7/100": 0.7512,
+      "lambdarank/7/200": 0.7566,
+      "lambdarank/7/400": 0.7611,
+      "lambdarank/31/50": 0.7662,
+      "lambdarank/31/100": 0.7593,
+      "lambdarank/31/200": 0.7633,
+      "lambdarank/31/400": 0.7629,
+      "binary/7/50": 0.7511,
+      "binary/7/100": 0.7531,
+      "binary/7/200": 0.7615,
+      "binary/7/400": 0.7554,
+      "binary/31/50": 0.7508,
+      "binary/31/100": 0.7518,
+      "binary/31/200": 0.7564,
+      "binary/31/400": 0.7552
+     },
+     "fold2": {
+      "lambdarank/7/50": 0.7658,
+      "lambdarank/7/100": 0.7693,
+      "lambdarank/7/200": 0.7745,
+      "lambdarank/7/400": 0.7751,
+      "lambdarank/31/50": 0.7789,
+      "lambdarank/31/100": 0.7784,
+      "lambdarank/31/200": 0.7808,
+      "lambdarank/31/400": 0.7816,
+      "binary/7/50": 0.7648,
+      "binary/7/100": 0.7643,
+      "binary/7/200": 0.7697,
+      "binary/7/400": 0.7679,
+      "binary/31/50": 0.7834,
+      "binary/31/100": 0.7811,
+      "binary/31/200": 0.7817,
+      "binary/31/400": 0.7778
+     },
+     "fold3": {
+      "lambdarank/7/50": 0.7057,
+      "lambdarank/7/100": 0.7044,
+      "lambdarank/7/200": 0.7078,
+      "lambdarank/7/400": 0.7138,
+      "lambdarank/31/50": 0.7068,
+      "lambdarank/31/100": 0.7032,
+      "lambdarank/31/200": 0.6999,
+      "lambdarank/31/400": 0.7018,
+      "binary/7/50": 0.6934,
+      "binary/7/100": 0.7016,
+      "binary/7/200": 0.7143,
+      "binary/7/400": 0.7145,
+      "binary/31/50": 0.7028,
+      "binary/31/100": 0.6926,
+      "binary/31/200": 0.7061,
+      "binary/31/400": 0.6963
+     },
+     "fold4": {
+      "lambdarank/7/50": 0.7344,
+      "lambdarank/7/100": 0.7452,
+      "lambdarank/7/200": 0.7582,
+      "lambdarank/7/400": 0.7548,
+      "lambdarank/31/50": 0.7409,
+      "lambdarank/31/100": 0.7615,
+      "lambdarank/31/200": 0.7611,
+      "lambdarank/31/400": 0.7359,
+      "binary/7/50": 0.7449,
+      "binary/7/100": 0.7337,
+      "binary/7/200": 0.7308,
+      "binary/7/400": 0.7315,
+      "binary/31/50": 0.7351,
+      "binary/31/100": 0.7359,
+      "binary/31/200": 0.738,
+      "binary/31/400": 0.7283
+     }
+    },
+    "pooled": {
+     "lambdarank/7/50": 0.7421,
+     "lambdarank/7/100": 0.7444,
+     "lambdarank/7/200": 0.7519,
+     "lambdarank/7/400": 0.7531,
+     "lambdarank/31/50": 0.7501,
+     "lambdarank/31/100": 0.7498,
+     "lambdarank/31/200": 0.7493,
+     "lambdarank/31/400": 0.7441,
+     "binary/7/50": 0.7393,
+     "binary/7/100": 0.7417,
+     "binary/7/200": 0.7474,
+     "binary/7/400": 0.746,
+     "binary/31/50": 0.7458,
+     "binary/31/100": 0.7449,
+     "binary/31/200": 0.7471,
+     "binary/31/400": 0.7428
+    },
+    "lme_pick": [
+     "lambdarank",
+     "7",
+     "400"
+    ],
+    "feature_sha256_12": {
+     "locomo": "bb815555508b",
+     "lme": "06e13c987b6b"
+    }
+   },
+   "lme_status": "run",
+   "vs_bge_small": {
+    "locomo": {
+     "frozen_dense": {
+      "n": 1536,
+      "mean": 0.005216,
+      "ci": [
+       -0.013644,
+       0.024567
+      ],
+      "ci_above_0": false,
+      "signflip_p_one_sided": 0.310547,
+      "signflip_p_two_sided": 0.621094,
+      "per_chat": [
+       -0.018333,
+       0.068313,
+       -0.033991,
+       -0.009121,
+       -0.0042,
+       -0.044106,
+       0.008333,
+       0.048604,
+       0.007579,
+       0.042735
+      ]
+     },
+     "frozen_fused": {
+      "n": 1536,
+      "mean": 0.008183,
+      "ci": [
+       -0.007337,
+       0.025315
+      ],
+      "ci_above_0": false,
+      "signflip_p_one_sided": 0.188477,
+      "signflip_p_two_sided": 0.376953,
+      "per_chat": [
+       -0.006667,
+       -0.05144,
+       0.011184,
+       -0.009492,
+       0.001873,
+       0.059688,
+       -0.023333,
+       0.022251,
+       0.053421,
+       0.007479
+      ]
+     },
+     "bridge_dense": {
+      "n": 1536,
+      "mean": 0.021105,
+      "ci": [
+       0.002458,
+       0.03934
+      ],
+      "ci_above_0": true,
+      "signflip_p_one_sided": 0.029297,
+      "signflip_p_two_sided": 0.058594,
+      "per_chat": [
+       -0.030556,
+       0.061728,
+       -0.012829,
+       0.005946,
+       0.057598,
+       0.016599,
+       0.065556,
+       0.025218,
+       0.033055,
+       0.004274
+      ]
+     },
+     "bridge_fused": {
+      "n": 1536,
+      "mean": 0.00322,
+      "ci": [
+       -0.003051,
+       0.009912
+      ],
+      "ci_above_0": false,
+      "signflip_p_one_sided": 0.181641,
+      "signflip_p_two_sided": 0.363281,
+      "per_chat": [
+       0.014444,
+       0.02572,
+       0.017763,
+       -0.008934,
+       -0.002006,
+       -0.014295,
+       0.001111,
+       0.007155,
+       0.008696,
+       -0.00641
+      ]
+     },
+     "ranker": {
+      "n": 1536,
+      "mean": 0.0082,
+      "ci": [
+       -0.00517,
+       0.023951
+      ],
+      "ci_above_0": false,
+      "signflip_p_one_sided": 0.170898,
+      "signflip_p_two_sided": 0.341797,
+      "per_chat": [
+       -0.001667,
+       0.020165,
+       -0.032785,
+       0.003079,
+       0.001083,
+       0.029336,
+       0.032778,
+       -0.005148,
+       0.055116,
+       -0.004808
+      ]
+     }
+    },
+    "lme": {
+     "frozen_dense": {
+      "n": 428,
+      "mean": 0.03162,
+      "ci": [
+       0.011833,
+       0.051714
+      ],
+      "ci_above_0": true
+     },
+     "frozen_fused": {
+      "n": 428,
+      "mean": 0.005841,
+      "ci": [
+       -0.005454,
+       0.017603
+      ],
+      "ci_above_0": false
+     },
+     "bridge_dense": {
+      "n": 428,
+      "mean": 0.029361,
+      "ci": [
+       0.008527,
+       0.052181
+      ],
+      "ci_above_0": true
+     },
+     "bridge_fused": {
+      "n": 428,
+      "mean": 0.000117,
+      "ci": [
+       -0.010399,
+       0.011215
+      ],
+      "ci_above_0": false
+     },
+     "ranker": {
+      "n": 428,
+      "mean": 0.002765,
+      "ci": [
+       -0.012422,
+       0.018576
+      ],
+      "ci_above_0": false
+     }
+    }
+   }
+  },
+  "qwen3-emb-0.6b": {
+   "status": "run",
+   "dim": 1024,
+   "means": {
+    "locomo_frozen_dense": 0.6407,
+    "locomo_frozen_fused": 0.6381,
+    "locomo_bridge_dense": 0.7151,
+    "locomo_bridge_fused": 0.6632,
+    "locomo_ranker": 0.7732
+   },
+   "bridge_lr": {
+    "picks": [
+     0.001,
+     0.001,
+     0.001,
+     0.0001,
+     0.001
+    ],
+    "lme_lr": null,
+    "dev": {
+     "fold0": {
+      "3e-05": 0.6862,
+      "0.0001": 0.7025,
+      "0.0003": 0.7137,
+      "0.001": 0.7217,
+      "0.003": 0.7127,
+      "0.01": 0.7074
+     },
+     "fold1": {
+      "3e-05": 0.687,
+      "0.0001": 0.6995,
+      "0.0003": 0.6969,
+      "0.001": 0.7009,
+      "0.003": 0.6947,
+      "0.01": 0.6915
+     },
+     "fold2": {
+      "3e-05": 0.6893,
+      "0.0001": 0.7022,
+      "0.0003": 0.6982,
+      "0.001": 0.7133,
+      "0.003": 0.7085,
+      "0.01": 0.6921
+     },
+     "fold3": {
+      "3e-05": 0.6902,
+      "0.0001": 0.7086,
+      "0.0003": 0.7013,
+      "0.001": 0.6951,
+      "0.003": 0.6894,
+      "0.01": 0.7
+     },
+     "fold4": {
+      "3e-05": 0.6937,
+      "0.0001": 0.7119,
+      "0.0003": 0.7195,
+      "0.001": 0.729,
+      "0.003": 0.7228,
+      "0.01": 0.7134
+     }
+    },
+    "heldout": {
+     "3e-05": 0.696,
+     "0.0001": 0.7087,
+     "0.0003": 0.7158,
+     "0.001": 0.7224,
+     "0.003": 0.7201,
+     "0.01": 0.6959
+    }
+   },
+   "ranker": {
+    "picks": {
+     "0": [
+      "lambdarank",
+      "31",
+      "50"
+     ],
+     "1": [
+      "lambdarank",
+      "31",
+      "100"
+     ],
+     "2": [
+      "lambdarank",
+      "7",
+      "100"
+     ],
+     "3": [
+      "lambdarank",
+      "7",
+      "200"
+     ],
+     "4": [
+      "lambdarank",
+      "31",
+      "400"
+     ]
+    },
+    "dev": {
+     "fold0": {
+      "lambdarank/7/50": 0.7814,
+      "lambdarank/7/100": 0.7842,
+      "lambdarank/7/200": 0.7819,
+      "lambdarank/7/400": 0.7926,
+      "lambdarank/31/50": 0.7931,
+      "lambdarank/31/100": 0.7882,
+      "lambdarank/31/200": 0.79,
+      "lambdarank/31/400": 0.7799,
+      "binary/7/50": 0.7658,
+      "binary/7/100": 0.7792,
+      "binary/7/200": 0.7792,
+      "binary/7/400": 0.7766,
+      "binary/31/50": 0.7822,
+      "binary/31/100": 0.788,
+      "binary/31/200": 0.7801,
+      "binary/31/400": 0.784
+     },
+     "fold1": {
+      "lambdarank/7/50": 0.7605,
+      "lambdarank/7/100": 0.7621,
+      "lambdarank/7/200": 0.7694,
+      "lambdarank/7/400": 0.7676,
+      "lambdarank/31/50": 0.7667,
+      "lambdarank/31/100": 0.7699,
+      "lambdarank/31/200": 0.76,
+      "lambdarank/31/400": 0.7648,
+      "binary/7/50": 0.7532,
+      "binary/7/100": 0.7504,
+      "binary/7/200": 0.756,
+      "binary/7/400": 0.7649,
+      "binary/31/50": 0.7492,
+      "binary/31/100": 0.7527,
+      "binary/31/200": 0.7666,
+      "binary/31/400": 0.7631
+     },
+     "fold2": {
+      "lambdarank/7/50": 0.7624,
+      "lambdarank/7/100": 0.7825,
+      "lambdarank/7/200": 0.7808,
+      "lambdarank/7/400": 0.7819,
+      "lambdarank/31/50": 0.7817,
+      "lambdarank/31/100": 0.7781,
+      "lambdarank/31/200": 0.7755,
+      "lambdarank/31/400": 0.769,
+      "binary/7/50": 0.7706,
+      "binary/7/100": 0.7707,
+      "binary/7/200": 0.7744,
+      "binary/7/400": 0.7719,
+      "binary/31/50": 0.7662,
+      "binary/31/100": 0.7706,
+      "binary/31/200": 0.7679,
+      "binary/31/400": 0.7671
+     },
+     "fold3": {
+      "lambdarank/7/50": 0.7513,
+      "lambdarank/7/100": 0.7506,
+      "lambdarank/7/200": 0.763,
+      "lambdarank/7/400": 0.7556,
+      "lambdarank/31/50": 0.7484,
+      "lambdarank/31/100": 0.7497,
+      "lambdarank/31/200": 0.74,
+      "lambdarank/31/400": 0.744,
+      "binary/7/50": 0.7458,
+      "binary/7/100": 0.753,
+      "binary/7/200": 0.7517,
+      "binary/7/400": 0.7436,
+      "binary/31/50": 0.7467,
+      "binary/31/100": 0.7385,
+      "binary/31/200": 0.7434,
+      "binary/31/400": 0.7406
+     },
+     "fold4": {
+      "lambdarank/7/50": 0.7613,
+      "lambdarank/7/100": 0.7591,
+      "lambdarank/7/200": 0.7584,
+      "lambdarank/7/400": 0.7551,
+      "lambdarank/31/50": 0.7591,
+      "lambdarank/31/100": 0.7555,
+      "lambdarank/31/200": 0.754,
+      "lambdarank/31/400": 0.7659,
+      "binary/7/50": 0.7515,
+      "binary/7/100": 0.7573,
+      "binary/7/200": 0.753,
+      "binary/7/400": 0.7573,
+      "binary/31/50": 0.7584,
+      "binary/31/100": 0.7641,
+      "binary/31/200": 0.7595,
+      "binary/31/400": 0.7605
+     }
+    },
+    "pooled": {
+     "lambdarank/7/50": 0.764,
+     "lambdarank/7/100": 0.7689,
+     "lambdarank/7/200": 0.7718,
+     "lambdarank/7/400": 0.7722,
+     "lambdarank/31/50": 0.7712,
+     "lambdarank/31/100": 0.7696,
+     "lambdarank/31/200": 0.7653,
+     "lambdarank/31/400": 0.7651,
+     "binary/7/50": 0.7582,
+     "binary/7/100": 0.7631,
+     "binary/7/200": 0.764,
+     "binary/7/400": 0.7637,
+     "binary/31/50": 0.7614,
+     "binary/31/100": 0.7636,
+     "binary/31/200": 0.7642,
+     "binary/31/400": 0.7638
+    },
+    "lme_pick": [
+     "lambdarank",
+     "7",
+     "400"
+    ],
+    "feature_sha256_12": {
+     "locomo": "9f2b9da19b4b"
+    }
+   },
+   "lme_status": "pending: /tmp/claude-0/stage2/enc/qwen3-emb-0.6b/lme.npz missing",
+   "vs_bge_small": {
+    "locomo": {
+     "frozen_dense": {
+      "n": 1536,
+      "mean": 0.066899,
+      "ci": [
+       0.042238,
+       0.09125
+      ],
+      "ci_above_0": true,
+      "signflip_p_one_sided": 0.000977,
+      "signflip_p_two_sided": 0.001953,
+      "per_chat": [
+       0.028333,
+       0.140947,
+       0.016996,
+       0.086691,
+       0.054468,
+       0.002033,
+       0.1,
+       0.03726,
+       0.118231,
+       0.107372
+      ]
+     },
+     "frozen_fused": {
+      "n": 1536,
+      "mean": 0.020683,
+      "ci": [
+       0.006597,
+       0.035794
+      ],
+      "ci_above_0": true,
+      "signflip_p_one_sided": 0.006836,
+      "signflip_p_two_sided": 0.013672,
+      "per_chat": [
+       0.015,
+       0.019547,
+       0.013925,
+       0.021636,
+       0.014179,
+       0.039702,
+       0.026667,
+       -0.019197,
+       0.072268,
+       0.016026
+      ]
+     },
+     "bridge_dense": {
+      "n": 1536,
+      "mean": 0.052953,
+      "ci": [
+       0.023367,
+       0.079728
+      ],
+      "ci_above_0": true,
+      "signflip_p_one_sided": 0.006836,
+      "signflip_p_two_sided": 0.013672,
+      "per_chat": [
+       -0.038333,
+       0.066872,
+       0.02193,
+       0.102812,
+       0.098462,
+       0.093564,
+       0.057222,
+       0.001134,
+       0.070247,
+       0.058226
+      ]
+     },
+     "bridge_fused": {
+      "n": 1536,
+      "mean": 0.007809,
+      "ci": [
+       -0.003663,
+       0.02149
+      ],
+      "ci_above_0": false,
+      "signflip_p_one_sided": 0.12207,
+      "signflip_p_two_sided": 0.244141,
+      "per_chat": [
+       0.007222,
+       0.06214,
+       0.031579,
+       -0.008096,
+       0.006086,
+       -0.019309,
+       -0.008889,
+       -0.010733,
+       0.036524,
+       0.010684
+      ]
+     },
+     "ranker": {
+      "n": 1536,
+      "mean": 0.023964,
+      "ci": [
+       0.009651,
+       0.037631
+      ],
+      "ci_above_0": true,
+      "signflip_p_one_sided": 0.008789,
+      "signflip_p_two_sided": 0.017578,
+      "per_chat": [
+       0.012778,
+       0.059671,
+       -0.012281,
+       0.046809,
+       0.036396,
+       0.010501,
+       0.038333,
+       -0.001047,
+       0.052605,
+       0.006944
+      ]
+     }
+    },
+    "lme": {}
+   }
+  }
+ },
+ "verdicts": {
+  "bge-base": {
+   "verdict": "quality fail; speed pending 2.1",
+   "quality": "fail",
+   "conditions": {
+    "locomo_ci_above_0": false,
+    "holm_p_below_0_05": false,
+    "lme_no_loss": true
+   },
+   "holm_p": [
+    0.170898,
+    0.170898
+   ],
+   "speed_ok": null,
+   "speed_note": "results/s21_coreml.json missing",
+   "verdict_if_two_sided": "quality fail; speed pending 2.1",
+   "holm_p_two_sided": [
+    0.341797,
+    0.341797
+   ]
+  },
+  "qwen3-emb-0.6b": {
+   "verdict": "quality pending; speed pending 2.1",
+   "quality": "pending",
+   "conditions": {
+    "locomo_ci_above_0": true,
+    "holm_p_below_0_05": true,
+    "lme_no_loss": null
+   },
+   "holm_p": [
+    0.017578,
+    0.017578
+   ],
+   "speed_ok": null,
+   "speed_note": "results/s21_coreml.json missing",
+   "verdict_if_two_sided": "quality pending; speed pending 2.1",
+   "holm_p_two_sided": [
+    0.035156,
+    0.035156
+   ]
+  }
+ },
+ "holm_family": [
+  "bge-base",
+  "qwen3-emb-0.6b"
+ ],
+ "seconds": 1575
+}
