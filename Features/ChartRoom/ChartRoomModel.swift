@@ -132,8 +132,63 @@ final class ChartRoomModel {
         RoomColor.otherRooms = Dictionary(uniqueKeysWithValues: LayoutRoom.allCases.compactMap { room in
             room.hex.map { (room.name, RoomColor.Pair($0.light, $0.dark)) }
         })
+        // `-resetChart` (simulator only) starts a blank room: a room already in the store is taken down, not deleted.
+        if LaunchFlags.has("-resetChart"), let room = RoomBook(store: engine.store, classes: engine.classes)
+            .room(named: document.name)
+        {
+            _ = try? engine.perform(TakeDownRoom(room: room.id), by: .user)
+        }
         if let stored = storedDocument() {
             document = stored
+            // The sentences already in the room are the first ones he said: the next is the one after them.
+            cursor = Self.canned.prefix { step in
+                step.patch.ops.filter { $0.op == "add" }.allSatisfy { stored.part($0.id ?? "") != nil }
+            }.count
+        }
+    }
+
+    // MARK: Taking a room down (sheet 371)
+
+    /// True while the fold plays (the room's outlines fold into their corners before the room is gone).
+    private(set) var takingDown = false
+
+    /// Take the room down: it is archived in ONE op group and nothing it binds to is touched (the plants stay). The
+    /// receipt "Room taken down, not the plants" has a 10 s Undo that brings the room back. A room waiting for his
+    /// Allow
+    /// stays up, and Core's line is the refusal.
+    func takeDown() {
+        guard pending == nil, !takingDown else { return }
+        let was = document
+        guard let engine else {
+            document = Self.blank
+            persist()
+            say("Room taken down, not the plants") { [weak self] in
+                self?.document = was
+                self?.persist()
+            }
+            return
+        }
+        let book = RoomBook(store: engine.store, classes: engine.classes)
+        guard let room = book.room(named: document.name) else {
+            document = Self.blank
+            return
+        }
+        do {
+            let record = try engine.perform(TakeDownRoom(room: room.id), by: .user).record
+            document = Self.blank
+            say("Room taken down, not the plants") { [weak self] in
+                // Bring back: the room, its history and its grants, from the room Core finds taken down.
+                if let down = RoomBook(store: engine.store, classes: engine.classes).takenDownRoom(named: was.name) {
+                    _ = try? engine.perform(BringBackRoom(room: down.id), by: .user)
+                } else {
+                    engine.undo(record)
+                }
+                self?.document = self?.storedDocument() ?? was
+            }
+        } catch let ActionError.invalidArguments(_, reason) {
+            refuse(reason)
+        } catch {
+            refuse("That room could not be taken down")
         }
     }
 

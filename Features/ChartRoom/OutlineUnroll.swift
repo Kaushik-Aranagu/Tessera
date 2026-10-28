@@ -37,6 +37,28 @@ enum OutlineUnroll {
         reduceMotion || time >= delay(rank: rank, reduceMotion: false) + nameAfter
     }
 
+    // MARK: Taking the room down (sheet 371): the unroll backwards
+
+    /// When the outlines have all come back up (doors first) and the fold begins.
+    static let foldStart = 0.4
+    /// The whole take-down, for a room of `count` outlined places.
+    static func downSeconds(count: Int) -> Double {
+        foldStart + apart * Double(max(0, count - 1)) + seconds
+    }
+
+    /// Seconds after the take-down starts that the place at `rank` (0 the first down the screen, the title) starts to
+    /// fold: the last place first, the title last. Zero under Reduce Motion (no fold at all).
+    static func foldDelay(rank: Int, count: Int, reduceMotion: Bool) -> Double {
+        reduceMotion ? 0 : foldStart + apart * Double(max(0, count - 1 - rank))
+    }
+
+    /// How much of the outline is still drawn `time` seconds into the take-down: the trim run from 1 back to 0.
+    static func foldTrim(at time: Double, rank: Int, count: Int, reduceMotion: Bool) -> Double {
+        guard !reduceMotion else { return 1 }
+        let p = min(max((time - foldDelay(rank: rank, count: count, reduceMotion: false)) / seconds, 0), 1)
+        return pow(1 - p, 3)
+    }
+
     /// The SwiftUI animation of one place's unroll (the place's own delay inside it); the caller wraps it in
     /// MotionPolicy, which turns it into the short fade under Reduce Motion.
     static func animation(rank: Int) -> Animation {

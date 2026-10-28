@@ -474,6 +474,58 @@ struct ChartRoomTests {
         #expect(said.lines.last?.hasSuffix("queued for your next install") == true)
     }
 
+    // MARK: Sheet 371: taking a room down
+
+    @Test func theFoldIsTheUnrollBackwardsTitleLast() {
+        #expect(OutlineUnroll.foldDelay(rank: 5, count: 6, reduceMotion: false) == 0.4)
+        #expect(abs(OutlineUnroll.foldDelay(rank: 0, count: 6, reduceMotion: false) - 0.75) < 1e-9)
+        #expect(OutlineUnroll.foldDelay(rank: 0, count: 6, reduceMotion: true) == 0)
+        #expect(OutlineUnroll.foldTrim(at: 0, rank: 0, count: 6, reduceMotion: false) == 1)
+        #expect(OutlineUnroll
+            .foldTrim(at: OutlineUnroll.downSeconds(count: 6), rank: 0, count: 6, reduceMotion: false) < 0.001)
+        #expect(OutlineUnroll.downSeconds(count: 6) > 1.1 && OutlineUnroll.downSeconds(count: 6) < 1.4)
+    }
+
+    @Test func takingTheRoomDownLeavesThePlantsAndUndoBringsItBack() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let said = Said()
+        let room = model(said: said)
+        room.attach(app.engine)
+        room.saySomething()
+        room.tapGhost()
+        let book = RoomBook(store: app.store, classes: app.classes)
+        let plants = try #require(RoomBind(store: app.store, classes: app.classes).classDef(for: "Plant"))
+        let before = app.store.objects(of: plants).map(\.title).sorted()
+        #expect(before.count == 4 && book.room(named: "Chart room") != nil)
+        room.takeDown()
+        #expect(said.lines.last == "Room taken down, not the plants")
+        #expect(book.room(named: "Chart room") == nil, "the room leaves the dial")
+        #expect(app.store.objects(of: plants).map(\.title).sorted() == before, "the plants are never touched")
+        #expect(room.document.parts.isEmpty)
+        said.undo?()
+        #expect(book.room(named: "Chart room") != nil, "Undo brings the room back")
+        #expect(room.document.parts.map(\.id) == ["title", "line"])
+        #expect(app.store.objects(of: plants).map(\.title).sorted() == before)
+    }
+
+    @Test func aRoomWaitingForAllowStaysUpAndSaysWhy() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        _ = try RoomSample.seedPlants(store: app.store, classes: app.classes)
+        let patch = RoomPatch(room: "Chart room", say: "Watered, set", ops: [
+            .init(op: "grant", reach: "write Plant.lastWatered"),
+            .init(op: "add", id: "water", kind: "actionWord", place: "actionWord",
+                  props: ["verb": .string("Watered"), "does": .string("write Plant.lastWatered")]),
+        ])
+        _ = try app.engine.perform(PatchRoom(patch: patch), by: .tess, pending: true)
+        let room = model()
+        room.attach(app.engine)
+        room.takeDown()
+        #expect(room.note?.line == "This room is waiting for your Allow, so it stays up")
+        #expect(RoomBook(store: app.store, classes: app.classes).room(named: "Chart room") != nil)
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {
