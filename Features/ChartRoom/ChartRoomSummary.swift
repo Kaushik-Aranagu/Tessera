@@ -54,3 +54,10 @@ enum ChartRoomSummary {
         return (name(doc), color(doc.color), fact(doc) ?? "")
     }
 }
+
+extension ChartRoomSummary {
+    /// A taken-down room has no row in the dial (the dial's rows are the rooms that are up).
+    static func isUp(defaults: UserDefaults = .standard) -> Bool {
+        !defaults.bool(forKey: ChartRoomModel.archivedKey)
+    }
+}

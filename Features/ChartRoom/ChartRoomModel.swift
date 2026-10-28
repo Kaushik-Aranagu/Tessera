@@ -232,54 +232,95 @@ final class ChartRoomModel {
     /// Allow
     /// stays up, and Core's line is the refusal.
     func takeDown() {
-        guard pending == nil, !takingDown else { return }
+        guard pending == nil, !takingDown, phase != .archiving else { return }
         if phase == .blank, !document.parts.isEmpty {
             phase = .live
         }
         guard fire(RoomEvent.takeDown) else { return }
         let was = document
-        guard let engine else {
-            document = Self.blank
-            persist()
-            fire(RoomEvent.foldEnded)
-            say("Room taken down, not the plants") { [weak self] in
-                self?.fire(RoomEvent.restore)
-                self?.document = was
-                self?.persist()
-                self?.fire(RoomEvent.replayEnded)
+        var held: OpRecord?
+        if let engine {
+            let book = RoomBook(store: engine.store, classes: engine.classes)
+            if let room = book.room(named: document.name) {
+                do {
+                    // Staged like a change: stopped inside its 2 s it leaves nothing; it sets when the fold ends.
+                    held = try engine.perform(TakeDownRoom(room: room.id), by: .user, pending: true).record
+                } catch let ActionError.invalidArguments(_, reason) {
+                    // The room stays up: the fold never plays, and he is back where he was.
+                    fire(RoomEvent.touchWords)
+                    refuse(reason)
+                    return
+                } catch {
+                    fire(RoomEvent.touchWords)
+                    refuse("That room could not be taken down")
+                    return
+                }
             }
-            return
         }
-        let book = RoomBook(store: engine.store, classes: engine.classes)
-        guard let room = book.room(named: document.name) else {
-            document = Self.blank
-            fire(RoomEvent.foldEnded)
-            return
+        takeDownRecord = held
+        // The fold: outlines come back up (doors first), then fold into their corners, the title last. Reduce Motion:
+        // the end state at once.
+        let wait = reduceMotion ? 0 : OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count)
+        foldTask?.cancel()
+        foldTask = Task { [weak self] in
+            if wait > 0 {
+                try? await Task.sleep(for: .seconds(wait))
+            }
+            guard let self, !Task.isCancelled else { return }
+            finishArchive(was: was)
         }
-        do {
-            let record = try engine.perform(TakeDownRoom(room: room.id), by: .user).record
-            document = Self.blank
-            fire(RoomEvent.foldEnded)
-            say("Room taken down, not the plants") { [weak self] in
-                self?.fire(RoomEvent.restore)
-                defer { self?.fire(RoomEvent.replayEnded) }
+    }
+
+    /// The fold ended: the room is archived (a row less in the dial), the foot says so with Undo for 10 s.
+    private func finishArchive(was: ChartDoc) {
+        guard fire(RoomEvent.foldEnded) else { return }
+        let held = takeDownRecord
+        takeDownRecord = nil
+        if let engine, let held {
+            try? engine.commit(held)
+        }
+        document = Self.blank
+        persist()
+        defaults?.set(true, forKey: Self.archivedKey)
+        say("Room taken down, not the plants") { [weak self] in
+            guard let self else { return }
+            fire(RoomEvent.restore)
+            defer { fire(RoomEvent.replayEnded) }
+            defaults?.set(false, forKey: Self.archivedKey)
+            if let engine {
                 // Bring back: the room, its history and its grants, from the room Core finds taken down.
                 if let down = RoomBook(store: engine.store, classes: engine.classes).takenDownRoom(named: was.name) {
                     _ = try? engine.perform(BringBackRoom(room: down.id), by: .user)
-                } else {
-                    engine.undo(record)
+                } else if let held {
+                    engine.undo(held)
                 }
-                self?.document = self?.storedDocument() ?? was
+                document = storedDocument() ?? was
+            } else {
+                document = was
             }
-        } catch let ActionError.invalidArguments(_, reason) {
-            // The room stays up: the fold never plays, and he is back where he was.
-            fire(RoomEvent.touchWords)
-            refuse(reason)
-        } catch {
-            fire(RoomEvent.touchWords)
-            refuse("That room could not be taken down")
+            persist()
         }
+        onArchived?()
     }
+
+    /// Touching his words half way through the fold keeps the room: the take-down is thrown away and the room is live.
+    func stopTakeDown() {
+        guard phase == .archiving else { return }
+        if let engine, let held = takeDownRecord, !RoomPatcher.stop([held], in: engine) {
+            return
+        }
+        foldTask?.cancel()
+        takeDownRecord = nil
+        fire(RoomEvent.touchWords)
+        cue.play(.selection)
+        say("Stopped, nothing changed") {}
+    }
+
+    /// Called when the room has been taken down (the driver goes back to Bridge: the empty room dissolves over it).
+    @ObservationIgnored var onArchived: (() -> Void)?
+    @ObservationIgnored private var foldTask: Task<Void, Never>?
+    @ObservationIgnored private var takeDownRecord: OpRecord?
+    static let archivedKey = "chartRoom.archived"
 
     private func storedDocument() -> ChartDoc? {
         guard let engine else { return nil }
@@ -336,7 +377,7 @@ final class ChartRoomModel {
     /// The places a ghost fills, whose outline lets go and whose drying line runs.
     var ghostPlaces: Set<Place> {
         // A preview of the room as it was: every filled place is a ghost, and nothing is written.
-        if previewing != nil {
+        if previewing != nil || phase == .archiving {
             return Set(nodes.keys)
         }
         guard let pending else { return [] }
@@ -418,6 +459,7 @@ final class ChartRoomModel {
         heard = said
         fire(.sentence)
         receipt = nil
+        defaults?.set(false, forKey: Self.archivedKey)
         stagedAt = .now
         let next = PendingPatch(patch: patch, before: before, after: after)
         pending = next
@@ -481,6 +523,11 @@ final class ChartRoomModel {
     func hear(_ words: String) -> Bool {
         let word = words.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased()
         guard ["wait", "stop"].contains(word) else { return false }
+        // Half way through a take-down, his words keep the room (sheet 373).
+        if phase == .archiving {
+            stopTakeDown()
+            return true
+        }
         return cancelPending()
     }
 
@@ -662,6 +709,7 @@ final class ChartRoomModel {
 
     func load(_ doc: ChartDoc) {
         document = doc
+        defaults?.set(false, forKey: Self.archivedKey)
         syncPhase()
         cursor = Self.canned.count
         persist()

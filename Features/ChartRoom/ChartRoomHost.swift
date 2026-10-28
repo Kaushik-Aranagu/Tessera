@@ -85,6 +85,15 @@ final class ChartRoomDriver: ShellRoomDriver {
         return true
     }
 
+    func entered(navigator: ShellNavigator) {
+        // A taken-down room goes: the empty room dissolves over Bridge, and the dial has one row less.
+        chart.onArchived = { [weak navigator] in
+            while navigator?.canPop == true {
+                navigator?.pop()
+            }
+        }
+    }
+
     func overlay(navigator _: ShellNavigator) -> AnyView {
         AnyView(ChartRoomLayer(model: chart))
     }

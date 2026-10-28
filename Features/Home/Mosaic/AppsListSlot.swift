@@ -80,7 +80,9 @@ enum AppsListRows {
                        opens: line?.opens)
         }
         // The Chart room sits after Purse (experimental, behind its flag; it has no line of its own yet).
-        if ChartRoomFlag.isOn, let purse = rows.firstIndex(where: { $0.app == .money && $0.extra == nil }) {
+        if ChartRoomFlag.isOn, ChartRoomSummary.isUp(),
+           let purse = rows.firstIndex(where: { $0.app == .money && $0.extra == nil })
+        {
             let chart = ChartRoomSummary.row()
             rows.insert(Row(app: .tasks, summary: chart.line, opens: nil, extra: .chart, ownName: chart.name,
                             ownColor: chart.color), at: purse + 1)

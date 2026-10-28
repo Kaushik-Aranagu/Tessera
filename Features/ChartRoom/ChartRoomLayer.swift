@@ -98,6 +98,17 @@ struct ChartRoomLayer: View {
                 noteLine(scale: scale)
                 historyPanel(scale: scale)
                 receiptLine(scale: scale)
+                if model.phase == .archiving, !reduceMotion {
+                    // Sheet 371: sheet 366 backwards. The outlines come back up (doors first), then fold into their
+                    // top-left corners, the title last.
+                    ForEach(Array(DocumentRoom.outlined.enumerated()), id: \.offset) { rank, entry in
+                        let rect = frame(entry.place, scale: scale, dx: dx)
+                        FoldOutline(rank: rank, count: DocumentRoom.outlined.count)
+                            .frame(width: rect.width - 4, height: rect.height - 4)
+                            .offset(x: rect.minX + 2, y: rect.minY + 2)
+                            .allowsHitTesting(false)
+                    }
+                }
                 if let stopping = model.stopping {
                     ForEach(Place.allCases.filter { stopping.places.contains($0) }, id: \.self) { place in
                         let rect = frame(place, scale: scale, dx: dx)
@@ -183,6 +194,18 @@ struct ChartRoomLayer: View {
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .frame(height: 56, alignment: .leading)
                     }
+                    Button {
+                        model.closeHistory()
+                        model.takeDown()
+                    } label: {
+                        Text("Take this room down")
+                            .font(.custom("Figtree", size: 15, relativeTo: .callout).weight(.semibold))
+                            .foregroundStyle(Theme.Colors.Accent.wine)
+                            .frame(minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("chart.takeDown")
                     ForEach(model.historyRows) { row in
                         Button { model.preview(row) } label: {
                             VStack(alignment: .leading, spacing: 0) {
@@ -345,6 +368,38 @@ private struct StopLine: View {
                 try? await Task.sleep(for: .seconds(StopRun.hold))
                 withTesseraAnimation(.easeIn(duration: StopRun.runBack(from: progress)), reduceMotion: false) {
                     value = 0
+                }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// One outline in the fold: it rises back into place at once, then runs from its whole round back into its top-left
+/// corner, staggered so the last place folds first and the title last.
+private struct FoldOutline: View {
+    let rank: Int
+    let count: Int
+    @State private var up = false
+    @State private var drawn = 1.0
+
+    var body: some View {
+        UnrollShape()
+            .trim(from: 0, to: max(0.001, drawn))
+            .stroke(Theme.Colors.inkTertiary.opacity(0.7), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+            .opacity(up ? 1 : 0)
+            .offset(y: up ? 0 : OutlineSetting.drop)
+            .task {
+                withTesseraAnimation(.easeOut(duration: 0.35), reduceMotion: false) { up = true }
+                try? await Task.sleep(for: .seconds(OutlineUnroll.foldDelay(
+                    rank: rank,
+                    count: count,
+                    reduceMotion: false
+                )))
+                withTesseraAnimation(
+                    .timingCurve(0.4, 0, 0.6, 1, duration: OutlineUnroll.seconds),
+                    reduceMotion: false
+                ) {
+                    drawn = 0
                 }
             }
             .accessibilityHidden(true)

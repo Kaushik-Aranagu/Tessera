@@ -518,7 +518,7 @@ struct ChartRoomTests {
         #expect(OutlineUnroll.downSeconds(count: 6) > 1.1 && OutlineUnroll.downSeconds(count: 6) < 1.4)
     }
 
-    @Test func takingTheRoomDownLeavesThePlantsAndUndoBringsItBack() throws {
+    @Test func takingTheRoomDownLeavesThePlantsAndUndoBringsItBack() async throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
         let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let said = Said()
@@ -531,11 +531,15 @@ struct ChartRoomTests {
         let before = app.store.objects(of: plants).map(\.title).sorted()
         #expect(before.count == 4 && book.room(named: "Chart room") != nil)
         room.takeDown()
+        #expect(room.phase == .archiving, "the fold plays first")
+        try await Task.sleep(for: .seconds(OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count) + 0.4))
+        #expect(room.phase == .archived)
         #expect(said.lines.last == "Room taken down, not the plants")
         #expect(book.room(named: "Chart room") == nil, "the room leaves the dial")
         #expect(app.store.objects(of: plants).map(\.title).sorted() == before, "the plants are never touched")
         #expect(room.document.parts.isEmpty)
         said.undo?()
+        #expect(room.phase == .live, "restored, then live after the replay")
         #expect(book.room(named: "Chart room") != nil, "Undo brings the room back")
         #expect(room.document.parts.map(\.id) == ["title", "line"])
         #expect(app.store.objects(of: plants).map(\.title).sorted() == before)
@@ -745,6 +749,41 @@ struct ChartRoomTests {
         room.saySomething()
         #expect(room.cancelPending())
         #expect(room.stopping != nil && (room.stopping?.progress ?? 2) <= 1, "the layer runs the line back from here")
+    }
+
+    @Test func aTakeDownFoldsThenArchivesAndTheDialLosesItsRow() async throws {
+        let suite = UserDefaults(suiteName: "chart.\(UUID().uuidString)") ?? .standard
+        let said = Said()
+        let room = ChartRoomModel(data: DemoRoomData(), defaults: suite, drying: .milliseconds(60)) { text, undo in
+            said.lines.append(text)
+            said.undo = undo
+        }
+        room.saySomething()
+        room.tapGhost()
+        #expect(ChartRoomSummary.isUp(defaults: suite))
+        var arrived = false
+        room.onArchived = { arrived = true }
+        room.takeDown()
+        #expect(room.phase == .archiving && !room.document.parts.isEmpty, "the room is still there while it folds")
+        #expect(room.ghostPlaces == Set(room.nodes.keys), "every place is a ghost")
+        try await Task.sleep(for: .seconds(OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count) + 0.4))
+        #expect(room.phase == .archived && room.document.parts.isEmpty && arrived)
+        #expect(!ChartRoomSummary.isUp(defaults: suite), "no row in the dial")
+        #expect(said.lines.last == "Room taken down, not the plants")
+        said.undo?()
+        #expect(room.phase == .live && ChartRoomSummary.isUp(defaults: suite) && !room.document.parts.isEmpty)
+    }
+
+    @Test func wordsHalfWayThroughTheFoldKeepTheRoom() async throws {
+        let room = model()
+        room.saySomething()
+        room.tapGhost()
+        room.takeDown()
+        #expect(room.phase == .archiving)
+        #expect(room.hear("stop"))
+        #expect(room.phase == .live && !room.document.parts.isEmpty)
+        try await Task.sleep(for: .seconds(OutlineUnroll.downSeconds(count: DocumentRoom.outlined.count) + 0.4))
+        #expect(room.phase == .live, "the fold never finishes")
     }
 
     // MARK: Sheets 360 and 361: point, then say; how the room says no
