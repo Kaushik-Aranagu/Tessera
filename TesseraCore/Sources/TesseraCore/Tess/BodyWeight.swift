@@ -39,7 +39,7 @@ public enum BodyWeight {
     /// His exercises' names, lowercased ("bench press", "good morning"), matched as whole phrases. A name made only
     /// of day, body or weigh words is left out (QA on #638: "Good Morning" must never hide "82 kg this morning").
     @MainActor
-    static func exerciseNames(in store: ObjectStore) -> [String] {
+    public static func exerciseNames(in store: ObjectStore) -> [String] {
         let plain = PrivateFacts.dayWords.union(PrivateFacts.bodyWords).union(PrivateFacts.bodyUnits)
             .union(PrivateFacts.weighWords).union(["good", "bb", "db", "kb"])
         // The library's exercises are classes under Exercise ("Bench Press"); his own may be objects too.
@@ -56,7 +56,7 @@ public enum BodyWeight {
     /// weigh-in counts (QA W1, AI architecture on #627): a weigh word, or a weight unit with nothing but day words
     /// beside it. "bp 120/80", "ibuprofen 200 mg" and "squat 140 kg" are never his weight, and a clock time is never a
     /// number to read.
-    static func kilograms(in text: String, exercises: [String] = []) -> Double? {
+    public static func kilograms(in text: String, exercises: [String] = []) -> Double? {
         let lower = PrivateFacts.withoutTimes(text.lowercased())
         let words = PrivateFacts.words(lower)
         // A named exercise makes the number a bar, not a weigh-in (Product 8:28 PM PT): "weighed squat at 140 kg".

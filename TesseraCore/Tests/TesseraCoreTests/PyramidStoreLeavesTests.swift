@@ -264,6 +264,63 @@ struct PyramidStoreLeavesTests {
         }
     }
 
+    func healthAndCalendar() throws {
+        let sleep = try make(.sleepNight, "Sleep")
+        try store.set("date", to: .date(at(10, 6, hour: 7)), on: sleep)
+        try store.set("asleepMinutes", to: .number(440), on: sleep)
+        let steps = try make(.stepsDay, "Steps")
+        try store.set("date", to: .date(at(10, 6, hour: 0)), on: steps)
+        try store.set("count", to: .number(8412), on: steps)
+        let heart = try make(.restingHeartRate, "Resting heart rate")
+        try store.set("date", to: .date(at(10, 7, hour: 0)), on: heart)
+        try store.set("bpm", to: .number(58), on: heart)
+        for (title, day, cancelled) in [("Dentist", 7, false), ("Lunch with Sam", 8, true)] {
+            let event = try make(.event, title)
+            try store.set("start", to: .date(at(10, day, hour: 9)), on: event)
+            try store.set("cancelled", to: .bool(cancelled), on: event)
+        }
+        let later = try make(.event, "Flight")
+        try store.set("start", to: .date(now.addingTimeInterval(86400 * 3)), on: later)
+        let weighIn = try make(.note, "Weigh-in")
+        try store.set("body", to: .text("82 kg this morning"), on: weighIn)
+        try store.set("isPrivate", to: .bool(true), on: weighIn)
+        weighIn.createdAt = at(10, 7, hour: 7)
+    }
+
+    @Test func healthBodyAndTheCalendarAreWalledWithTheirOwnTotals() throws {
+        try workout("Push Day", on: at(10, 6), sets: [(95, 3)])
+        try healthAndCalendar()
+        let all = leaves()
+        let walled = all.filter { $0.taint == .deviceOnly }
+        #expect(Set(walled.map(\.kind)) == ["sleep", "steps", "heart", "event", "note"], "\(walled)")
+        // Under the old walls each is a plain name; a cancelled or future event never happened.
+        let texts = Set(walled.map(\.text))
+        #expect(texts == ["A night's sleep", "Steps", "Resting heart rate", "Calendar event", "Private note"])
+        let pyramid = MemoryPyramid(leaves: all, calendar: calendar)
+        let month = try #require(pyramid.nodes["/time/2026/10"])
+        #expect(month.stats["events"] == 1 && month.stats["steps"] == 8412 && month.stats["weighIns"] == 1)
+        #expect(month.stats["weightKg"] == 82 && month.stats["nights"] == 1, "\(month.stats)")
+        let lab = pyramid.zoom("/time/2026/10", policy: .lab).text
+        for total in ["calendar events", "steps", "hours of sleep", "kg body weight", "bpm resting heart rate"] {
+            #expect(lab.contains(total), "\(total): \(lab)")
+        }
+        // Strict reads as if none of it happened.
+        let strict = pyramid.zoom("/time/2026/10", policy: .strict).text
+        let without = MemoryPyramid(leaves: all.filter { $0.taint == .claudeSafe }, calendar: calendar)
+        #expect(strict == without.zoom("/time/2026/10", policy: .strict).text)
+        #expect(pyramid.zoom("/time/2026/10/07", policy: .strict).isError)
+    }
+
+    @Test func underLabHealthAndTheCalendarAreTheirOwnWords() throws {
+        try ClaudeSees.$everything.withValue(true) {
+            try healthAndCalendar()
+            let texts = Set(leaves().map(\.text))
+            #expect(texts.isSuperset(of: ["Slept 7 h 20 min", "Walked 8,412 steps", "Resting heart rate 58 bpm",
+                                          "On the calendar: Dentist", "82 kg this morning"]), "\(texts)")
+            #expect(!texts.contains { $0.contains("Sam") || $0.contains("Flight") })
+        }
+    }
+
     @Test func thePyramidReadsTheSlice() throws {
         try workout("Push Day", on: at(10, 6), sets: [(95, 3), (85, 8)])
         try workout("Pull Day", on: at(10, 8), sets: [(70, 8)])

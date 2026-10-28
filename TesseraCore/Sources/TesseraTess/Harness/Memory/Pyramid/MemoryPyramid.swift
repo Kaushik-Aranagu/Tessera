@@ -127,6 +127,9 @@ public enum PyramidStats {
               value: average("sleepHours", over: "nights")),
         Shown(key: "weight", label: "kg body weight on average", taint: .deviceOnly,
               value: average("weightKg", over: "weighIns")),
+        Shown(key: "steps", label: "steps", taint: .deviceOnly, value: sum("steps")),
+        Shown(key: "restingBpm", label: "bpm resting heart rate on average", taint: .deviceOnly,
+              value: average("restingBpm", over: "heartDays")),
     ]
 
     /// The totals strict shows. Only a claude-safe leaf adds to them.
