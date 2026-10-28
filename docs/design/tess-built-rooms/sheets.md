@@ -365,3 +365,16 @@ Sheet 384 gave Tess's eyes a reason to move when she listens and speaks. Now she
 - Reduce Motion: her eyes still follow the dial, placed at once with no glide, and there is no blink at the notch. A door opens without a flight, so there is nothing to ride
 - Core: nothing new. Builder A: the shared `RoomDial` sets the Tess face's gaze target to the focused label's frame on each detent (0.9 s), and asks for one blink when the detent wraps. `SharedElementFlight` hands its first flying label to the face as the target for its duration, then the destination's frame for 0.7 s. Gaze size has a floor of 0.45
 - Probe: `docs/design/boards/r66/pwt.js` (turning to the monstera, she looks at it, then comes home; past the notch to the basil she blinks; to the fern she doesn't; opening the orchid's door, her eyes are on the flying name, then on the title, then home; paper, black; Reduce Motion: she follows the dial with no blink and nothing to ride)
+
+## Sheet 387: everyone's had a drink
+
+Watering the plants one by one in the room, each one drinks (385) and the sentence catches up (380). When the last thirsty plant drank, the sentence said "4 plants, all watered" and nothing else happened. Now Tess marks the moment, quietly.
+
+- Only on the last one. Watering a plant while another is still thirsty says nothing, as before
+- Tess says "Everyone's had a drink", word by word (383), looking at the keystone as she says "Everyone's" (384)
+- Her eyes smile once: for about 1.6 s they close into two small arcs, then open again. It is the only time her eyes take that shape on this board, so it stays worth something
+- It is not a count or a reward. There is no number of days, no "all four" and nothing kept for next time (no streaks). It's her noticing, then the room is just watered
+- Undo, within its 10 s, takes the line back and opens her eyes, and the basil is thirsty again
+- Reduce Motion: the line is simply there, and her eyes change shape at once and change back
+- Core: nothing new. Builder A: the Tess face gains a `smile` expression (the eye ellipses crossfade to two arcs, 0.1 per frame toward the target, about a third of a second each way), requested for 1.6 s. The room asks for it when a write leaves no plant with days since water above 0. The line goes through `TessLine` with `aim` naming the keystone for "everyone"
+- Probe: `docs/design/boards/r66/pjy.js` (three waterings say nothing; the fourth says "Everyone's had a drink" in four spoken words while her eyes smile and look at the keystone; 2.6 s later the line stays and her eyes are open; the line overlaps no other place; Undo clears it and names the basil; paper, black; Reduce Motion: there at once, no spoken words)

@@ -335,6 +335,9 @@ let tessMix=0;
    glass, so the title and the line under her read as different looks; a thing just above her still gets a clear look
    (386). Reduce Motion: the eyes are placed at once and rest on the first thing named */
 const gz={x:0,y:0,m:0};let gzA=null,gzQ=[];
+/* 387: her eyes smile. For a moment after something is all done, her eyes close into two small arcs, then open again.
+   Reduce Motion: they change at once, with no ease */
+let joyV=0,joyTo=0;function tessJoy(ms){joyTo=performance.now()+(ms??1600)}window.__tjoy=()=>+joyV.toFixed(2);
 function tessLook(a,ms,still){gzQ.forEach(clearTimeout);gzQ=[];gzA=a?{a,end:performance.now()+(ms||2000),still}:null}
 function tessGaze(seq){seq=seq.filter(s=>s[0]);if(!seq.length)return;if(RM){const f=seq.find(s=>s[0]!=='you')||seq[0];return tessLook(f[0],seq.reduce((n,s)=>n+s[1],0))}
  tessLook(null);let t=0;seq.forEach(([a,ms])=>{gzQ.push(setTimeout(()=>{gzA={a,end:performance.now()+ms}},t));t+=ms})}
@@ -353,7 +356,10 @@ function tessDraw(now){tessT=now/1000;const t=tessT;tc.clearRect(0,0,192,192);ga
   g.addColorStop(0,'rgba('+c+','+(k?.75:.95)+')');g.addColorStop(.55,'rgba('+c+','+(k?.45:.6)+')');g.addColorStop(1,'rgba('+c+',0)');
   tc.fillStyle=g;tc.beginPath();tc.arc(cx,cy,R*1.1,0,7);tc.fill()}
  const bl=((t%5)<.13||performance.now()<(window.__tblink||0))?.15:1,gl=Math.sin(t*.7)*3;tc.fillStyle=black?'rgba(21,21,23,.82)':'rgba(30,24,30,.86)';
- [[-9,-4],[9,-4]].forEach(([dx,dy])=>{tc.beginPath();tc.ellipse(cx+dx+gl*(1-gz.m)+gz.x*.55,cy+dy+gz.y*.55,3.2,4.6*bl,0,0,7);tc.fill()});
+ {const jw=performance.now()<joyTo?1:0;joyV+=(jw-joyV)*(RM?1:.1);if(Math.abs(joyV-jw)<.01)joyV=jw}
+ [[-9,-4],[9,-4]].forEach(([dx,dy])=>{const ex=cx+dx+gl*(1-gz.m)+gz.x*.55,ey=cy+dy+gz.y*.55;
+  if(joyV<1){tc.globalAlpha=1-joyV;tc.beginPath();tc.ellipse(ex,ey,3.2,4.6*(joyV>0?1:bl)*(1-joyV*.6),0,0,7);tc.fill();tc.globalAlpha=1}
+  if(joyV>0){tc.globalAlpha=joyV;tc.strokeStyle=tc.fillStyle;tc.lineWidth=2.4;tc.lineCap='round';tc.beginPath();tc.arc(ex,ey+2.2,3.8,Math.PI*1.18,Math.PI*1.82);tc.stroke();tc.globalAlpha=1}});
  requestAnimationFrame(tessDraw)}
 requestAnimationFrame(tessDraw);
 let tlT=null;function tessSay(text){const L=$('#tessline');L.innerHTML='';const ws=text.split(' ');let d=0;
@@ -3005,7 +3011,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
  // 384: what a word of Tess's means in this room: a plant is its number, the thirstiest is the top one, a way is the keystone
  const aim=w=>{const p=w==='thirstiest'?th():plants.find(p=>p.n.toLowerCase()===w);if(p)return layer.querySelector('.ch-key b[data-k="'+p.n+'"]')||layer.querySelector('.ch-nm');
-  if(/^(number|numbers|ladder|keystone)$/.test(w))return layer.querySelector('.ch-key');return w==='wish'?layer.querySelector('.ch-wish'):null};
+  if(/^(number|numbers|ladder|keystone|everyone)$/.test(w))return layer.querySelector('.ch-key');return w==='wish'?layer.querySelector('.ch-wish'):null};
  function draw(ghost){const t=th();let s='';
   {const R=ROOMS.chart;R.th=at>=1&&t.d>0?t.n:'';R.n=at>=1?'Plants':'Chart room';R.c=at>=1?'var(--lists)':'var(--slate)';R.fact=at>=1?(t.d>0?t.n+', '+t.d+(t.d===1?' day':' days'):'All watered'):'Say what it’s for'}if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> is thirsty':', all watered')+'</div>';
@@ -3160,7 +3166,9 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
   if(!RM)l.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:2000,easing:'linear',fill:'both'});
   cur={ls:[l],t0:performance.now(),back:()=>{}};
   dry=setTimeout(()=>{dry=null;cur=null;l.remove();heard='';calm=true;draw();receipt(el,'Keystone, calmer',()=>{calm=false;draw()})},2000)}
- act.onclick=()=>{if(dry)return;if(realAt!=null){const was=realAt;realAt=null;hist=false;draw();return receipt(el,'Back to '+tm(at-1),()=>{at=was;draw()})}if(hist){hist=false;return draw()}if(wv!=null)return keep();if(sel)return pointed();const t=th();if(tmw)return tomorrow(false);if(at>=RI&&reach&&t.d>0){const was=t.d;rerank(t,0);receipt(el,t.n+', watered',()=>rerank(t,was));return}if(at>=SAY.length&&!(at>=RI&&!reach))return down();say()};
+ act.onclick=()=>{if(dry)return;if(realAt!=null){const was=realAt;realAt=null;hist=false;draw();return receipt(el,'Back to '+tm(at-1),()=>{at=was;draw()})}if(hist){hist=false;return draw()}if(wv!=null)return keep();if(sel)return pointed();const t=th();if(tmw)return tomorrow(false);if(at>=RI&&reach&&t.d>0){const was=t.d,all=plants.every(x=>x===t||x.d===0);
+   /* 387: the last thirsty plant watered, Tess says so, looking at the keystone, and her eyes smile once. Undo takes it back */
+   if(all){tline='Everyone’s had a drink';tessJoy(1600)}rerank(t,0);receipt(el,t.n+', watered',()=>{if(all){tline='';tessJoy(0)}rerank(t,was)});return}if(at>=SAY.length&&!(at>=RI&&!reach))return down();say()};
  layer.onpointerdown=e=>{held=false;if(!e.target.closest('.ch-ttl')||dry)return;clearTimeout(hT);hT=setTimeout(()=>{held=true;hist=!hist;if(!hist&&realAt!=null){at=realAt;realAt=null}sel=null;if(navigator.vibrate)try{navigator.vibrate([6,40,6])}catch(e){}draw()},450)};
  layer.onpointerup=layer.onpointerleave=()=>clearTimeout(hT);
  layer.addEventListener('pointerdown',e=>{swiped=false;if(!e.target.closest('.ch-key')||at<2||dry||hist||realAt!=null)return;wx0=e.clientX;wdx=0;wtick=false;wid=e.pointerId});
