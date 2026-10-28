@@ -193,6 +193,77 @@ struct PyramidStoreLeavesTests {
         #expect(!texts.contains { $0.contains("Bins") })
     }
 
+    @discardableResult
+    func spend(_ typed: String, currency: String = "", category: String = "", note: String = "", on date: Date) throws
+        -> ObjectRecord
+    {
+        let spend = try make(.spend, "Spend")
+        try store.set("typed", to: .text(typed), on: spend)
+        try store.set("currency", to: .text(currency), on: spend)
+        try store.set("category", to: .text(category), on: spend)
+        try store.set("note", to: .text(note), on: spend)
+        try store.set("spentAt", to: .date(date), on: spend)
+        return spend
+    }
+
+    func inflow(_ typed: String, into pool: ObjectRecord, note: String = "", on date: Date) throws {
+        let inflow = try make(.inflow, "Paycheck")
+        try store.setLinks("pool", on: inflow, to: [pool])
+        try store.set("amountTyped", to: .text(typed), on: inflow)
+        try store.set("source", to: .choice("paycheck"), on: inflow)
+        try store.set("note", to: .text(note), on: inflow)
+        try store.set("at", to: .date(date), on: inflow)
+    }
+
+    @Test func moneyIsWalledAndAddsToItsCurrencysTotal() throws {
+        try workout("Push Day", on: at(10, 6), sets: [(95, 3)])
+        try spend("12.40", category: "coffee", note: "with Sam", on: at(10, 6))
+        try spend("3.10", on: at(10, 7))
+        try spend("8", currency: "EUR", note: "museum", on: at(10, 7))
+        try spend("900", currency: "JPY", on: at(10, 8))
+        try spend("5", on: now.addingTimeInterval(86400 * 2))
+        try store.softDelete(spend("40", on: at(10, 9)))
+        let euros = try make(.pool, "Euro account")
+        try store.set("currency", to: .text("EUR"), on: euros)
+        try inflow("2,400.00", into: euros, on: at(10, 1))
+        let all = leaves()
+        let money = all.filter { ["spend", "inflow"].contains($0.kind) }
+        #expect(money.count == 5 && money.allSatisfy { $0.taint == .deviceOnly }, "\(money)")
+        // Under the old walls a spend is its label, as everywhere outside its own page.
+        #expect(money.allSatisfy { [ObjectPrivacy.spendLabel, ObjectPrivacy.inflowLabel].contains($0.text) })
+        let pyramid = MemoryPyramid(leaves: all, calendar: calendar)
+        let month = try #require(pyramid.nodes["/time/2026/10"])
+        // The typed digits, by currency; a currency with no total of its own adds to none.
+        #expect(abs((month.stats["spentUSD"] ?? 0) - 15.5) < 0.001, "\(month.stats)")
+        #expect(month.stats["spentEUR"] == 8 && month.stats["earnedEUR"] == 2400, "\(month.stats)")
+        #expect(month.stats.keys.allSatisfy { !$0.contains("JPY") })
+        let lab = pyramid.zoom("/time/2026/10", policy: .lab).text
+        #expect(lab.contains("dollars spent") && lab.contains("euros in"), "\(lab)")
+        // Strict reads as if no money moved: no total, and a day of only money is not there.
+        let strict = pyramid.zoom("/time/2026/10", policy: .strict).text
+        #expect(!strict.contains("dollars") && !strict.contains("euros"), "\(strict)")
+        #expect(pyramid.zoom("/time/2026/10/07", policy: .strict).isError)
+        let without = MemoryPyramid(leaves: all.filter { $0.taint == .claudeSafe }, calendar: calendar)
+        #expect(strict == without.zoom("/time/2026/10", policy: .strict).text)
+    }
+
+    @Test func underLabMoneyIsItsOwnWordsButNeverAKey() throws {
+        try ClaudeSees.$everything.withValue(true) {
+            try spend("12.40", category: "food", note: "lunch with Sam", on: at(10, 6))
+            try spend("3", currency: "EUR", on: at(10, 6, hour: 9))
+            try spend("1", note: "key " + "sk-" + "ant-" + "made-up-for-a-test-0123456789", on: at(10, 6, hour: 10))
+            let checking = try make(.pool, "Checking")
+            try inflow("1200", into: checking, note: "October", on: at(10, 1))
+            let texts = leaves().map(\.text)
+            #expect(texts.contains("Spent $12.40 on food: lunch with Sam"), "\(texts)")
+            #expect(texts.contains("Spent €3.00"), "\(texts)")
+            #expect(texts.contains("Got $1,200.00 from paycheck: October"), "\(texts)")
+            #expect(texts.contains(ObjectPrivacy.spendLabel) && !texts.contains { $0.contains("sk-" + "ant-") })
+            let day = MemoryPyramid(leaves: leaves(), calendar: calendar).zoom("/time/2026/10/06", policy: .lab).text
+            #expect(day.contains("lunch with Sam"), "\(day)")
+        }
+    }
+
     @Test func thePyramidReadsTheSlice() throws {
         try workout("Push Day", on: at(10, 6), sets: [(95, 3), (85, 8)])
         try workout("Pull Day", on: at(10, 8), sets: [(70, 8)])
