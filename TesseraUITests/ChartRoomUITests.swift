@@ -33,7 +33,19 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         say(app)
         say(app)
         say(app)
-        XCTAssertFalse(app.descendants(matching: .any)["Keystone, empty"].exists, "The keystone set")
+        sleep(3)
+        let empty = app.descendants(matching: .any)["Keystone, empty"]
+        if empty.exists {
+            // Diagnostics for the log: what the screen holds, and a picture.
+            let lines = app.debugDescription.split(separator: "\n").filter {
+                $0.contains("empty") || $0.contains("Say") || $0.contains("Plants") || $0.contains("orchid")
+            }
+            print("CHART-DEBUG", lines.joined(separator: "\n"))
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.lifetime = .keepAlways
+            add(shot)
+        }
+        XCTAssertFalse(empty.exists, "The keystone set")
         app.buttons["Say, what to build"].tap()
         let allow = app.buttons["chart.allow"]
         XCTAssertTrue(allow.waitForExistence(timeout: 5), "The reach line shows Allow")
