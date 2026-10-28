@@ -168,4 +168,16 @@ public enum RoomPatcher {
         let result = try engine.perform(PatchRoom(patch: patch, sentence: sentence), by: .tess, pending: pending)
         return .applied(result.record, result.output)
     }
+
+    /// Stop (Design sheet 373): touching his words while a change dries throws the staged group away. Nothing is
+    /// written that outlasts it: no receipt, no Undo, no history line. It works on a patch, a queued part or a
+    /// take-down still inside its 2 s, and is false once the group has set.
+    @discardableResult
+    public static func stop(_ records: [OpRecord?], in engine: ActionEngine) -> Bool {
+        var stopped = false
+        for record in records.compactMap(\.self) where record.state == .pending {
+            stopped = ((try? engine.discard(record)) != nil) || stopped
+        }
+        return stopped
+    }
 }

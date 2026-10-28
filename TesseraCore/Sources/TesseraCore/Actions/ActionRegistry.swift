@@ -204,6 +204,7 @@ public enum ActionRegistry {
         ForgetMemory.descriptor.name: { try decode(ForgetMemory.self, ForgetMemory.descriptor.name, $0) },
         PatchRoom.descriptor.name: { try decode(PatchRoom.self, PatchRoom.descriptor.name, $0) },
         TakeDownRoom.descriptor.name: { try decode(TakeDownRoom.self, TakeDownRoom.descriptor.name, $0) },
+        MarkRoomOpened.descriptor.name: { try decode(MarkRoomOpened.self, MarkRoomOpened.descriptor.name, $0) },
         BringBackRoom.descriptor.name: { try decode(BringBackRoom.self, BringBackRoom.descriptor.name, $0) },
         GoBackRoom.descriptor.name: { try decode(GoBackRoom.self, GoBackRoom.descriptor.name, $0) },
         QueueRoomPart.descriptor.name: { try decode(QueueRoomPart.self, QueueRoomPart.descriptor.name, $0) },

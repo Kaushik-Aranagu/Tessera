@@ -259,4 +259,61 @@ struct RoomStep2Tests {
         engine.undo(again.record)
         #expect(book.room(named: "Chart room") != nil)
     }
+
+    @Test func aRestoredRoomOwesAReplayOfHowItWasMadeThatWritesNothing() throws {
+        func say(_ sentence: String, _ steps: RoomPatch.Step...) throws {
+            engine.now = { Date(timeIntervalSince1970: 1_792_670_400 + Double(RoomHistory.entries(
+                of: "Chart room",
+                engine: engine
+            ).count) * 60) }
+            try engine.perform(PatchRoom(patch: RoomPatch(room: "Chart room", say: "ok", ops: steps),
+                                         sentence: sentence), by: .tess)
+        }
+        try say("Make this my plant room", add("title", "title", "title", ["text": .string("Plants")]))
+        try say("Put a line under it", add("line", "line", "caption", ["text": .string("hello")]))
+        try say(
+            "Same again",
+            .init(op: "look", trait: "motion", value: "calm"),
+            .init(op: "look", trait: "motion", value: "calm")
+        )
+        try say("Make it calmer", .init(op: "look", trait: "motion", value: "still"))
+        let room = try #require(book.room(named: "Chart room"))
+        try engine.perform(TakeDownRoom(room: room.id), by: .user)
+        try engine.perform(BringBackRoom(room: room.id), by: .user)
+        #expect(RoomReplay.isOwed(room, in: store))
+        let before = store.context.all(OpRecord.self).count
+        let steps = try RoomReplay.steps(of: "Chart room", engine: engine)
+        #expect(steps.map(\.note) == ["Make this my plant room", "Put a line under it", "Same again", "Make it calmer"])
+        #expect(steps.map(\.document.parts.count) == [1, 2, 2, 2])
+        #expect(steps.last?.document == book.document(of: room))
+        #expect(store.context.all(OpRecord.self).count == before, "the replay writes nothing")
+        try engine.perform(MarkRoomOpened(room: room.id), by: .system)
+        #expect(!RoomReplay.isOwed(room, in: store))
+    }
+
+    @Test func stoppingAChangeWhileItDriesThrowsItAwayAndLeavesNoTrace() throws {
+        // A patch.
+        let patch = try engine.perform(PatchRoom(patch: patch(add("t", "title", "title", ["text": .string("A")])),
+                                                 sentence: "Add a title"), by: .tess, pending: true)
+        #expect(RoomPatcher.stop([patch.record], in: engine) && patch.record.state == .undone)
+        #expect(book.room(named: "Chart room") == nil && RoomHistory.entries(of: "Chart room", engine: engine).isEmpty)
+        // A queued part, while it waits.
+        guard case let .refused(_, queued) = try RoomPatcher.apply(self.patch(add("pots", "ring", "keystone")),
+                                                                   sentence: "A ring of pots", engine: engine),
+            let record = queued
+        else {
+            Issue.record("a ring is queued")
+            return
+        }
+        #expect(RoomPatcher.stop([record], in: engine))
+        #expect(book.room(named: "Chart room") == nil)
+        // A take-down stopped halfway leaves the room up.
+        try engine.perform(PatchRoom(patch: self.patch(add("t", "title", "title", ["text": .string("A")]))), by: .tess)
+        let room = try #require(book.room(named: "Chart room"))
+        let down = try engine.perform(TakeDownRoom(room: room.id), by: .user, pending: true)
+        #expect(RoomPatcher.stop([down.record], in: engine) && book.room(named: "Chart room") != nil)
+        // Once set, it cannot be stopped, only undone.
+        let set = try engine.perform(TakeDownRoom(room: room.id), by: .user)
+        #expect(!RoomPatcher.stop([set.record], in: engine))
+    }
 }

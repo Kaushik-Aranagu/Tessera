@@ -59,6 +59,7 @@ public struct BringBackRoom: EngineAction {
                                                reason: "There is already a \(object.title) up")
         }
         try transaction.set("archivedAt", to: nil, on: object)
+        try transaction.set("restoredAt", to: .date(transaction.now), on: object)
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -78,5 +79,79 @@ public extension RoomBook {
             .max { (store.value("archivedAt", of: $0)?.dateValue ?? .distantPast)
                 < (store.value("archivedAt", of: $1)?.dateValue ?? .distantPast)
             }
+    }
+}
+
+/// The first open of a room that was brought back clears the mark that a replay is owed (a marker only; the replay
+/// itself writes nothing).
+public struct MarkRoomOpened: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "markRoomOpened", summary: "Note that a restored room was opened",
+        parameters: [.init("room", .object, "The room")], isOfferedToModel: false
+    )
+
+    public var room: UUID
+
+    public init(room: UUID) {
+        self.room = room
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let object = try transaction.object(room, is: .room)
+        try transaction.set("restoredAt", to: nil, on: object)
+    }
+
+    public func summary(in _: ObjectStore) -> String {
+        "Opened a restored room"
+    }
+
+    public func receipt(in _: ObjectStore) -> String? {
+        nil
+    }
+}
+
+/// A room coming back the way it was made (Design sheet 372): the sentences that changed it, in order, each with the
+/// room as it stood after it. Builder A plays them against today's data; the replay is display only and writes nothing.
+@MainActor
+public enum RoomReplay {
+    public struct Step: Equatable, Sendable {
+        /// What he said.
+        public let note: String
+        public let at: Date
+        /// The room right after this sentence.
+        public let document: RoomDocument
+    }
+
+    /// Whether a replay is owed: the room was brought back and not opened since.
+    public static func isOwed(_ room: ObjectRecord, in store: ObjectStore) -> Bool {
+        store.value("restoredAt", of: room)?.dateValue != nil
+    }
+
+    /// The patches that changed the room, oldest first. A sentence that left the room as it was (a refusal, a repeat)
+    /// is not a step.
+    public static func steps(of room: String, engine: ActionEngine) throws -> [Step] {
+        let entries = RoomHistory.entries(of: room, engine: engine).sorted { $0.at < $1.at }
+        let fork = try engine.store.fork()
+        let classes = try SystemCatalog.seed(in: fork.context)
+        let copy = ActionEngine(store: fork, classes: classes)
+        let records = entries.compactMap { entry in
+            fork.context.all(OpRecord.self).first { $0.id == entry.record }
+        }
+        for record in records.reversed() {
+            copy.undo(record)
+        }
+        let book = RoomBook(store: fork, classes: classes)
+        var previous: RoomDocument?
+        var steps: [Step] = []
+        for (entry, record) in zip(entries, records) {
+            copy.redo(record)
+            guard let object = book.room(named: room) else { continue }
+            let document = book.document(of: object)
+            if document != previous {
+                steps.append(Step(note: entry.note, at: entry.at, document: document))
+            }
+            previous = document
+        }
+        return steps
     }
 }
