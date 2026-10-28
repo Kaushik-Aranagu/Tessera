@@ -118,13 +118,27 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         }
         XCTAssertTrue(app.buttons["chart.routineLink"].exists, "The routine name is a link")
         app.buttons["chart.routineLink"].tap()
-        let back = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Orchid")).firstMatch
+        let back = app.buttons["Back to Orchid"]
         XCTAssertTrue(back.waitForExistence(timeout: 10), "The routine page's back word is Orchid")
+        // Checking the step off (a tap on its row) is read by the orchid's line when he comes back.
+        let step = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label BEGINSWITH %@",
+            "Mist the orchid"
+        ))
+        .firstMatch
+        if step.waitForExistence(timeout: 5) {
+            step.tap()
+        }
         // Checking the step off updates the orchid's line: proven on a real engine in ChartPagesTests
         // (`theOrchidsLineReadsNeverThenTodayAfterItsRoutineStepIsChecked`). The routine page's own check control is
         // Builder B's, so this test goes no further than the push and its back word.
         back.tap()
         XCTAssertTrue(app.descendants(matching: .any)["chart.plainPage"].waitForExistence(timeout: 10),
                       "The back word came back to the orchid's page")
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Last misted today"))
+                .firstMatch.waitForExistence(timeout: 10),
+            "Checking the step updated the orchid's line"
+        )
     }
 }
