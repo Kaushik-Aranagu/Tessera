@@ -1,0 +1,233 @@
+{
+ "note": "post hoc, exploratory",
+ "baseline": {
+  "dense": 0.6622,
+  "fused": 0.6553
+ },
+ "rules": {
+  "move\u2192key \u03b70.1 | haiku": {
+   "gain": 0.0074,
+   "ci": [
+    0.0029,
+    0.0121
+   ],
+   "fused_gain": 0.0035,
+   "fused_ci": [
+    0.0006,
+    0.0071
+   ],
+   "multi_hop_gain": 0.0145,
+   "chats_up": 8
+  },
+  "move\u2192key \u03b70.1 | visible": {
+   "gain": 0.0084,
+   "ci": [
+    0.0039,
+    0.0126
+   ],
+   "fused_gain": 0.0005,
+   "fused_ci": [
+    -0.0028,
+    0.0038
+   ],
+   "multi_hop_gain": 0.0131,
+   "chats_up": 8
+  },
+  "move\u2192key \u03b70.1 | clean": {
+   "gain": 0.0177,
+   "ci": [
+    0.0095,
+    0.0261
+   ],
+   "fused_gain": 0.0037,
+   "fused_ci": [
+    0.0013,
+    0.0062
+   ],
+   "multi_hop_gain": 0.0223,
+   "chats_up": 9
+  },
+  "move\u2192key \u03b70.1 | self": {
+   "gain": -0.0025,
+   "ci": [
+    -0.0076,
+    0.0019
+   ],
+   "fused_gain": -0.0002,
+   "fused_ci": [
+    -0.0033,
+    0.0028
+   ],
+   "multi_hop_gain": 0.0042,
+   "chats_up": 4
+  },
+  "move\u2192key \u03b70.05 | haiku": {
+   "gain": 0.0047,
+   "ci": [
+    0.0022,
+    0.0071
+   ],
+   "fused_gain": 0.0024,
+   "fused_ci": [
+    -0.0009,
+    0.0061
+   ],
+   "multi_hop_gain": 0.0091,
+   "chats_up": 9
+  },
+  "move\u2192key \u03b70.05 | visible": {
+   "gain": 0.0063,
+   "ci": [
+    0.0038,
+    0.009
+   ],
+   "fused_gain": -0.0009,
+   "fused_ci": [
+    -0.005,
+    0.0027
+   ],
+   "multi_hop_gain": 0.01,
+   "chats_up": 10
+  },
+  "move\u2192key \u03b70.05 | clean": {
+   "gain": 0.0141,
+   "ci": [
+    0.0103,
+    0.018
+   ],
+   "fused_gain": -0.0008,
+   "fused_ci": [
+    -0.0063,
+    0.0038
+   ],
+   "multi_hop_gain": 0.0173,
+   "chats_up": 10
+  },
+  "move\u2192key \u03b70.05 | self": {
+   "gain": -0.0002,
+   "ci": [
+    -0.0036,
+    0.0029
+   ],
+   "fused_gain": 0.0004,
+   "fused_ci": [
+    -0.0022,
+    0.0032
+   ],
+   "multi_hop_gain": 0.0056,
+   "chats_up": 3
+  },
+  "centred\u2192key | haiku": {
+   "gain": 0.0077,
+   "ci": [
+    0.0041,
+    0.0115
+   ],
+   "fused_gain": 0.0045,
+   "fused_ci": [
+    0.0013,
+    0.0084
+   ],
+   "multi_hop_gain": 0.0145,
+   "chats_up": 9
+  },
+  "centred\u2192key | visible": {
+   "gain": 0.0098,
+   "ci": [
+    0.0047,
+    0.0143
+   ],
+   "fused_gain": 0.0006,
+   "fused_ci": [
+    -0.003,
+    0.0045
+   ],
+   "multi_hop_gain": 0.0148,
+   "chats_up": 8
+  },
+  "centred\u2192key | clean": {
+   "gain": 0.0197,
+   "ci": [
+    0.0106,
+    0.0287
+   ],
+   "fused_gain": 0.0035,
+   "fused_ci": [
+    0.0018,
+    0.0055
+   ],
+   "multi_hop_gain": 0.0235,
+   "chats_up": 9
+  },
+  "centred\u2192key | self": {
+   "gain": -0.0061,
+   "ci": [
+    -0.0115,
+    -0.0013
+   ],
+   "fused_gain": 0.0002,
+   "fused_ci": [
+    -0.0033,
+    0.0043
+   ],
+   "multi_hop_gain": 0.003,
+   "chats_up": 3
+  },
+  "combo\u2192key | haiku": {
+   "gain": 0.0111,
+   "ci": [
+    0.0052,
+    0.0177
+   ],
+   "fused_gain": 0.0071,
+   "fused_ci": [
+    0.0031,
+    0.0115
+   ],
+   "multi_hop_gain": 0.0179,
+   "chats_up": 10
+  },
+  "combo\u2192key | visible": {
+   "gain": 0.0115,
+   "ci": [
+    0.0046,
+    0.0172
+   ],
+   "fused_gain": 0.0048,
+   "fused_ci": [
+    0.0013,
+    0.0084
+   ],
+   "multi_hop_gain": 0.0173,
+   "chats_up": 9
+  },
+  "combo\u2192key | clean": {
+   "gain": 0.0253,
+   "ci": [
+    0.0161,
+    0.0335
+   ],
+   "fused_gain": 0.0058,
+   "fused_ci": [
+    0.0031,
+    0.0086
+   ],
+   "multi_hop_gain": 0.0317,
+   "chats_up": 9
+  },
+  "combo\u2192key | self": {
+   "gain": -0.0075,
+   "ci": [
+    -0.0141,
+    -0.0013
+   ],
+   "fused_gain": 0.002,
+   "fused_ci": [
+    -0.0022,
+    0.0066
+   ],
+   "multi_hop_gain": -0.0101,
+   "chats_up": 4
+  }
+ }
+}

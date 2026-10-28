@@ -1,0 +1,179 @@
+{
+ "locomo": {
+  "n": 1536,
+  "share_read_again": 0.3496,
+  "mean_reads": 1.615,
+  "single": 0.6553,
+  "fused": 0.7019,
+  "fused_minus_single": [
+   0.0466,
+   [
+    0.0375,
+    0.0553
+   ]
+  ],
+  "union_opened": 0.7419,
+  "mean_opened": 12.21,
+  "accuracy_hop0": 0.6094,
+  "accuracy_last": 0.6855,
+  "by_type": {
+   "inference": {
+    "n": 92,
+    "single": 0.3464,
+    "fused": 0.4186,
+    "diff": [
+     0.0722,
+     [
+      0.035,
+      0.1118
+     ]
+    ],
+    "read_again": 0.793
+   },
+   "multi-hop": {
+    "n": 282,
+    "single": 0.396,
+    "fused": 0.4622,
+    "diff": [
+     0.0662,
+     [
+      0.0402,
+      0.0892
+     ]
+    ],
+    "read_again": 0.465
+   },
+   "single-hop": {
+    "n": 841,
+    "single": 0.7364,
+    "fused": 0.7757,
+    "diff": [
+     0.0392,
+     [
+      0.0249,
+      0.0525
+     ]
+    ],
+    "read_again": 0.246
+   },
+   "when": {
+    "n": 321,
+    "single": 0.7593,
+    "fused": 0.8006,
+    "diff": [
+     0.0413,
+     [
+      0.0217,
+      0.0591
+     ]
+    ],
+    "read_again": 0.393
+   }
+  }
+ },
+ "lme": {
+  "n": 428,
+  "share_read_again": 0.4019,
+  "mean_reads": 1.745,
+  "single": 0.8982,
+  "fused": 0.9149,
+  "fused_minus_single": [
+   0.0167,
+   [
+    0.0025,
+    0.0308
+   ]
+  ],
+  "union_opened": 0.9401,
+  "mean_opened": 11.67,
+  "accuracy_hop0": 0.6098,
+  "accuracy_last": 0.6986,
+  "by_type": {
+   "knowledge-update": {
+    "n": 72,
+    "single": 0.9954,
+    "fused": 0.9954,
+    "diff": [
+     0.0,
+     [
+      0.0,
+      0.0
+     ]
+    ],
+    "read_again": 0.208
+   },
+   "multi-session": {
+    "n": 125,
+    "single": 0.8589,
+    "fused": 0.8901,
+    "diff": [
+     0.0312,
+     [
+      0.0123,
+      0.0535
+     ]
+    ],
+    "read_again": 0.464
+   },
+   "single-session-assistant": {
+    "n": 5,
+    "single": 1.0,
+    "fused": 1.0,
+    "diff": [
+     0.0,
+     [
+      0.0,
+      0.0
+     ]
+    ],
+    "read_again": 0.6
+   },
+   "single-session-preference": {
+    "n": 30,
+    "single": 0.6944,
+    "fused": 0.7889,
+    "diff": [
+     0.0944,
+     [
+      -0.0389,
+      0.2333
+     ]
+    ],
+    "read_again": 0.933
+   },
+   "single-session-user": {
+    "n": 64,
+    "single": 0.9688,
+    "fused": 0.9844,
+    "diff": [
+     0.0156,
+     [
+      0.0,
+      0.0469
+     ]
+    ],
+    "read_again": 0.141
+   },
+   "temporal-reasoning": {
+    "n": 132,
+    "single": 0.8907,
+    "fused": 0.8861,
+    "diff": [
+     -0.0045,
+     [
+      -0.0263,
+      0.0139
+     ]
+    ],
+    "read_again": 0.447
+   }
+  }
+ },
+ "verdict": {
+  "multi_hop_fused": 0.4622,
+  "multi_hop_above_0_475": false,
+  "multi_hop_gain_ci_above_zero": true,
+  "no_overall_loss": true,
+  "pass": false
+ }
+}
