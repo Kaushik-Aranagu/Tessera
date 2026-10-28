@@ -339,3 +339,16 @@ Tess's eyes used to drift slowly side to side whatever was happening. Now they s
 - Reduce Motion: her eyes are placed at once with no glide, and they rest on the first thing named for the whole line, so they make one move and one move back
 - Core: nothing new. Builder A: the Tess face takes a gaze target, either a view's frame in global coordinates or "you". Its eye offset springs toward that target (settling in about 0.15 s to look and 0.7 s to return), with the cloud moving at 0.45 of the eye offset. Its size is the target's distance over 0.85 of the screen height, capped at 1, so up to 3 pt sideways and 2.2 pt up or down. `TessLine` passes each word's time and an `aim(word)` lookup that the room supplies, and the drying view sets "his words, then the place" for its 2 s. Lines and text don't change, and VoiceOver hears nothing new
 - Probe: `docs/design/boards/r66/pgz.js` (the room: on his words, then the title as it dries, then home; the no line looks at you, then the keystone; stopped looks at you, eyes still; a plant page: his words, the dates line, then the title on "monstera's", then home; a face tap looks at you; text unchanged; paper, black; Reduce Motion: placed at once, first thing only)
+
+## Sheet 385: the watered plant drinks
+
+When he marks the orchid watered in the room (sheet 364), its number rolls down to 0 and walks to the end, and its wine faded to ink all at once. Now the plant drinks: the new color climbs up through its number and its name from the bottom, the way water climbs a stem.
+
+- The waterline is a soft edge about a quarter of the glyph's height. It rises from the foot of the number and the name to the top in about 0.75 s, while the number counts down and walks to its place. It climbs fast and slows near the top, the way water rises in a stem
+- The door, if the orchid is the one in focus in the room's dial, drinks the same way, wine to olive
+- Only the plant that was watered drinks. The glow handing over to the next thirstiest stays the light tick of 364, and the sentence still catches up as in 380
+- Undo: the thirst sinks back in from the top down, evenly, over the same 0.75 s, as the number counts back up and walks home
+- Nothing is left on the number afterwards. It is the plain number in its plain color
+- Reduce Motion: the colors change in place
+- Core: nothing new. Builder A: in the keystone and the dial label, a color change that belongs to the plant whose days changed is drawn as a mask instead of a color crossfade. A `LinearGradient` three times the text's height, old color above and new below with a band a quarter of the text's height between them, is masked by the text and slides up by two text heights (`.timingCurve(0.25, 0.6, 0.3, 1, duration: 0.76)` up, `(0.45, 0, 0.55, 1)` down), then swapped for the plain foreground style. Other color changes keep their crossfade
+- Probe: `docs/design/boards/r66/pdi.js` with `pdi_an.py` (midway through watering, the foot of the 0 and of "Orchid" is the new color and the top is still wine; the focused door drinks; afterwards nothing is left on the number and the sentence names the monstera; midway through Undo the top of the 6 is wine and the foot is still ink, then it is the plain thirsty 6 again; paper, black; Reduce Motion: in place)

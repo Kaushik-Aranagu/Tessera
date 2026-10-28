@@ -3049,11 +3049,23 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
     its own: the watered plant's number rolls down to 0 and walks to the end, the others close up, and the glow hands
     over to the next thirstiest only once the move has settled (one light tick). The name in the line and the caption
     rises into place. Undo plays it backwards. Same in every way of 363. Reduce Motion: it changes in place */
+ /* 385: the watered plant drinks. Its new color climbs up through its number and its name from the foot, the way water
+    climbs a stem, with a soft edge like a waterline, over about 0.75 s while it walks to its place. It climbs fast and
+    slows near the top, as water does in a stem. Undo, and the thirst sinks back in from the top down, evenly. The door, if it's the one in focus, drinks the same way. Only the plant that was
+    watered does it: the glow handing over to the next one stays the light tick of 364. Reduce Motion: in place */
+ function drink(e,c0,c1,up){if(RM||!e||c0===c1)return;const s=e.style,P=['background-image','background-size','background-repeat','-webkit-background-clip','background-clip','-webkit-text-fill-color'];
+  [[P[0],'linear-gradient(to bottom,'+(up?c0:c1)+' 0 46%,'+(up?c1:c0)+' 54% 100%)'],[P[1],'100% 300%'],[P[2],'no-repeat'],[P[3],'text'],[P[4],'text'],[P[5],'transparent']].forEach(([k,v])=>s.setProperty(k,v));
+  const a=e.animate([{backgroundPosition:'0 '+(up?0:100)+'%'},{backgroundPosition:'0 '+(up?100:0)+'%'}],{duration:760,easing:up?'cubic-bezier(.25,.6,.3,1)':'cubic-bezier(.45,0,.55,1)',fill:'both'});a._drink=up?'up':'down';
+  a.onfinish=()=>{a.cancel();P.forEach(k=>s.removeProperty(k))}}
  function rerank(p,d){const old={},oc={},q='.ch-key b[data-k],.ch-key span[data-n]',id=e=>e.dataset.k?'b'+e.dataset.k:'s'+e.dataset.n;
   layer.querySelectorAll(q).forEach(e=>{old[id(e)]=e.getBoundingClientRect();oc[id(e)]=getComputedStyle(e).color});
+  const fd=()=>[...layer.querySelectorAll('.ch-dial .d')].find(x=>x.style.opacity==='1'),f0=fd(),dn=f0&&f0.querySelector('span')?.textContent,dc=f0&&getComputedStyle(f0).color;
   const from=p.d,top0=th();p.d=d;draw();const top1=th();if(RM)return;
+  {const f1=fd();if(f1&&dn===p.n&&f1.querySelector('span')?.textContent===p.n)drink(f1,dc,getComputedStyle(f1).color,d<from)}
   layer.querySelectorAll(q).forEach(e=>{const o=old[id(e)];if(!o)return;const n=e.getBoundingClientRect(),c=getComputedStyle(e).color,num=!!e.dataset.k,late=c!==oc[id(e)]&&(e.dataset.k||e.dataset.n)===top1.n;
-   e.animate([{transformOrigin:'0 0',transform:'translate('+(o.left-n.left)/K+'px,'+(o.top-n.top)/K+'px)'+(num?' scale('+(o.height/n.height)+')':''),color:oc[id(e)]},
+   const mine=(e.dataset.k||e.dataset.n)===p.n&&c!==oc[id(e)],T0='translate('+(o.left-n.left)/K+'px,'+(o.top-n.top)/K+'px)'+(num?' scale('+(o.height/n.height)+')':'');
+   if(mine){e.animate([{transformOrigin:'0 0',transform:T0},{transformOrigin:'0 0',transform:'none'}],{duration:520,easing:'cubic-bezier(.22,.9,.24,1)'});return drink(e,oc[id(e)],c,d<from)}
+   e.animate([{transformOrigin:'0 0',transform:T0,color:oc[id(e)]},
     ...(late?[{color:oc[id(e)],offset:.72}]:[]),{transformOrigin:'0 0',transform:'none',color:c}],{duration:520,easing:'cubic-bezier(.22,.9,.24,1)'})});
   const nb=layer.querySelector('.ch-key b[data-k="'+p.n+'"]');
   if(nb&&from!==d){const sg=Math.sign(d-from);let v=from;nb.textContent=v;const tick=()=>{if(!nb.isConnected)return;v+=sg;nb.textContent=v;if(v!==d)setTimeout(tick,Math.max(40,380/Math.abs(d-from)))};setTimeout(tick,60)}
