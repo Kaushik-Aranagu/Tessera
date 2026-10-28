@@ -1,0 +1,359 @@
+{
+ "note": "post hoc control, not pre-registered",
+ "locomo": {
+  "all": {
+   "single": 0.6553,
+   "dense": 0.6622,
+   "read_again": 0.7019,
+   "control": 0.709,
+   "free": 0.6958,
+   "n": 1536,
+   "read_again_minus_control": [
+    -0.0071,
+    [
+     -0.0147,
+     0.0003
+    ]
+   ],
+   "read_again_minus_dense": [
+    0.0398,
+    [
+     0.0214,
+     0.0564
+    ]
+   ],
+   "read_again_minus_free": [
+    0.0062,
+    [
+     -0.0106,
+     0.0206
+    ]
+   ]
+  },
+  "by_type": {
+   "inference": {
+    "single": 0.3464,
+    "dense": 0.4216,
+    "read_again": 0.4186,
+    "control": 0.4458,
+    "free": 0.4252,
+    "n": 92,
+    "read_again_minus_control": [
+     -0.0272,
+     [
+      -0.05,
+      -0.0052
+     ]
+    ],
+    "read_again_minus_dense": [
+     -0.003,
+     [
+      -0.0858,
+      0.0785
+     ]
+    ],
+    "read_again_minus_free": [
+     -0.0066,
+     [
+      -0.0451,
+      0.0445
+     ]
+    ]
+   },
+   "multi-hop": {
+    "single": 0.396,
+    "dense": 0.4798,
+    "read_again": 0.4622,
+    "control": 0.4724,
+    "free": 0.4797,
+    "n": 282,
+    "read_again_minus_control": [
+     -0.0102,
+     [
+      -0.0361,
+      0.0109
+     ]
+    ],
+    "read_again_minus_dense": [
+     -0.0176,
+     [
+      -0.0593,
+      0.0183
+     ]
+    ],
+    "read_again_minus_free": [
+     -0.0175,
+     [
+      -0.0431,
+      0.0052
+     ]
+    ]
+   },
+   "single-hop": {
+    "single": 0.7364,
+    "dense": 0.7124,
+    "read_again": 0.7757,
+    "control": 0.7846,
+    "free": 0.7671,
+    "n": 841,
+    "read_again_minus_control": [
+     -0.0089,
+     [
+      -0.0196,
+      0.0034
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.0632,
+     [
+      0.0338,
+      0.0915
+     ]
+    ],
+    "read_again_minus_free": [
+     0.0085,
+     [
+      -0.0111,
+      0.0264
+     ]
+    ]
+   },
+   "when": {
+    "single": 0.7593,
+    "dense": 0.7596,
+    "read_again": 0.8006,
+    "control": 0.7944,
+    "free": 0.7762,
+    "n": 321,
+    "read_again_minus_control": [
+     0.0062,
+     [
+      -0.0096,
+      0.0216
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.041,
+     [
+      0.0129,
+      0.0678
+     ]
+    ],
+    "read_again_minus_free": [
+     0.0244,
+     [
+      -0.0077,
+      0.0526
+     ]
+    ]
+   }
+  }
+ },
+ "lme": {
+  "all": {
+   "single": 0.8982,
+   "dense": 0.8839,
+   "read_again": 0.9149,
+   "control": 0.9189,
+   "free": 0.9148,
+   "n": 428,
+   "read_again_minus_control": [
+    -0.004,
+    [
+     -0.0212,
+     0.0134
+    ]
+   ],
+   "read_again_minus_dense": [
+    0.031,
+    [
+     0.0077,
+     0.0551
+    ]
+   ],
+   "read_again_minus_free": [
+    0.0001,
+    [
+     -0.0178,
+     0.0185
+    ]
+   ]
+  },
+  "by_type": {
+   "knowledge-update": {
+    "single": 0.9954,
+    "dense": 0.9722,
+    "read_again": 0.9954,
+    "control": 1.0,
+    "free": 1.0,
+    "n": 72,
+    "read_again_minus_control": [
+     -0.0046,
+     [
+      -0.0139,
+      0.0
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.0231,
+     [
+      -0.0023,
+      0.0556
+     ]
+    ],
+    "read_again_minus_free": [
+     -0.0046,
+     [
+      -0.0139,
+      0.0
+     ]
+    ]
+   },
+   "multi-session": {
+    "single": 0.8589,
+    "dense": 0.8836,
+    "read_again": 0.8901,
+    "control": 0.8872,
+    "free": 0.8876,
+    "n": 125,
+    "read_again_minus_control": [
+     0.0029,
+     [
+      -0.0127,
+      0.0203
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.0065,
+     [
+      -0.0248,
+      0.0392
+     ]
+    ],
+    "read_again_minus_free": [
+     0.0025,
+     [
+      -0.0184,
+      0.0223
+     ]
+    ]
+   },
+   "single-session-assistant": {
+    "single": 1.0,
+    "dense": 1.0,
+    "read_again": 1.0,
+    "control": 1.0,
+    "free": 1.0,
+    "n": 5,
+    "read_again_minus_control": [
+     0.0,
+     [
+      0.0,
+      0.0
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.0,
+     [
+      0.0,
+      0.0
+     ]
+    ],
+    "read_again_minus_free": [
+     0.0,
+     [
+      0.0,
+      0.0
+     ]
+    ]
+   },
+   "single-session-preference": {
+    "single": 0.6944,
+    "dense": 0.8444,
+    "read_again": 0.7889,
+    "control": 0.8556,
+    "free": 0.8556,
+    "n": 30,
+    "read_again_minus_control": [
+     -0.0667,
+     [
+      -0.2333,
+      0.1
+     ]
+    ],
+    "read_again_minus_dense": [
+     -0.0556,
+     [
+      -0.2167,
+      0.0944
+     ]
+    ],
+    "read_again_minus_free": [
+     -0.0667,
+     [
+      -0.2333,
+      0.1
+     ]
+    ]
+   },
+   "single-session-user": {
+    "single": 0.9688,
+    "dense": 0.9688,
+    "read_again": 0.9844,
+    "control": 1.0,
+    "free": 0.9844,
+    "n": 64,
+    "read_again_minus_control": [
+     -0.0156,
+     [
+      -0.0469,
+      0.0
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.0156,
+     [
+      -0.0312,
+      0.0625
+     ]
+    ],
+    "read_again_minus_free": [
+     0.0,
+     [
+      -0.0469,
+      0.0469
+     ]
+    ]
+   },
+   "temporal-reasoning": {
+    "single": 0.8907,
+    "dense": 0.7995,
+    "read_again": 0.8861,
+    "control": 0.8768,
+    "free": 0.8705,
+    "n": 132,
+    "read_again_minus_control": [
+     0.0093,
+     [
+      -0.0237,
+      0.0422
+     ]
+    ],
+    "read_again_minus_dense": [
+     0.0866,
+     [
+      0.0333,
+      0.1379
+     ]
+    ],
+    "read_again_minus_free": [
+     0.0157,
+     [
+      -0.0187,
+      0.05
+     ]
+    ]
+   }
+  }
+ }
+}

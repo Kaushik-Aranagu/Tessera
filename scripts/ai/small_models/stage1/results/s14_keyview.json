@@ -1,0 +1,457 @@
+{
+ "check": "stage 1.4, P2: move rule toward the key-view target n(A e_q) instead of the state s_q",
+ "n_questions": 1536,
+ "orders": 3,
+ "etas": [
+  0.1,
+  0.05
+ ],
+ "self_check_against_s12": "passed",
+ "baseline": {
+  "dense": 0.6622,
+  "fused": 0.6553,
+  "dense_multi_hop": 0.4798
+ },
+ "arms": {
+  "old η0.1 | clean": {
+   "dense": 0.6781,
+   "gain": 0.0159,
+   "ci": [
+    0.003,
+    0.0286
+   ],
+   "fused": 0.6596,
+   "fused_gain": 0.0042,
+   "fused_ci": [
+    -0.0003,
+    0.0095
+   ],
+   "multi_hop_gain": 0.0323,
+   "chats_up": 8,
+   "per_chat": [
+    0.0017,
+    0.0104,
+    -0.016,
+    0.0075,
+    0.0343,
+    0.0086,
+    0.0511,
+    0.0402,
+    0.017,
+    -0.0057
+   ]
+  },
+  "old η0.1 | self": {
+   "dense": 0.6392,
+   "gain": -0.023,
+   "ci": [
+    -0.0322,
+    -0.0134
+   ],
+   "fused": 0.6553,
+   "fused_gain": -0.0001,
+   "fused_ci": [
+    -0.0027,
+    0.0029
+   ],
+   "multi_hop_gain": -0.0155,
+   "chats_up": 0,
+   "per_chat": [
+    -0.0354,
+    -0.0109,
+    -0.0215,
+    -0.0322,
+    -0.0025,
+    -0.0333,
+    -0.007,
+    -0.032,
+    -0.0031,
+    -0.0463
+   ]
+  },
+  "new η0.1 | clean": {
+   "dense": 0.6799,
+   "gain": 0.0177,
+   "ci": [
+    0.0095,
+    0.0261
+   ],
+   "fused": 0.6591,
+   "fused_gain": 0.0037,
+   "fused_ci": [
+    0.0013,
+    0.0062
+   ],
+   "multi_hop_gain": 0.0223,
+   "chats_up": 9,
+   "per_chat": [
+    -0.0011,
+    0.0226,
+    0.0069,
+    0.0107,
+    0.0204,
+    0.0026,
+    0.0337,
+    0.0404,
+    0.0244,
+    0.0114
+   ]
+  },
+  "new η0.1 | self": {
+   "dense": 0.6596,
+   "gain": -0.0025,
+   "ci": [
+    -0.0076,
+    0.0019
+   ],
+   "fused": 0.6551,
+   "fused_gain": -0.0002,
+   "fused_ci": [
+    -0.0033,
+    0.0028
+   ],
+   "multi_hop_gain": 0.0042,
+   "chats_up": 4,
+   "per_chat": [
+    -0.0061,
+    -0.0041,
+    0.004,
+    0.0092,
+    -0.0055,
+    -0.0117,
+    -0.0022,
+    0.0001,
+    0.0017,
+    -0.0167
+   ]
+  },
+  "old η0.05 | clean": {
+   "dense": 0.6748,
+   "gain": 0.0126,
+   "ci": [
+    0.0054,
+    0.0193
+   ],
+   "fused": 0.6572,
+   "fused_gain": 0.0018,
+   "fused_ci": [
+    -0.0015,
+    0.0055
+   ],
+   "multi_hop_gain": 0.0193,
+   "chats_up": 8,
+   "per_chat": [
+    -0.0033,
+    0.0123,
+    0.0009,
+    0.0126,
+    0.0239,
+    -0.0008,
+    0.0283,
+    0.0249,
+    0.0171,
+    0.0023
+   ]
+  },
+  "old η0.05 | self": {
+   "dense": 0.6538,
+   "gain": -0.0084,
+   "ci": [
+    -0.0134,
+    -0.0042
+   ],
+   "fused": 0.6561,
+   "fused_gain": 0.0007,
+   "fused_ci": [
+    -0.0028,
+    0.0052
+   ],
+   "multi_hop_gain": -0.0014,
+   "chats_up": 1,
+   "per_chat": [
+    -0.0081,
+    -0.0082,
+    -0.0104,
+    -0.0019,
+    0.0005,
+    -0.0219,
+    -0.0037,
+    -0.0095,
+    -0.0042,
+    -0.0221
+   ]
+  },
+  "new η0.05 | clean": {
+   "dense": 0.6762,
+   "gain": 0.0141,
+   "ci": [
+    0.0103,
+    0.018
+   ],
+   "fused": 0.6546,
+   "fused_gain": -0.0008,
+   "fused_ci": [
+    -0.0063,
+    0.0038
+   ],
+   "multi_hop_gain": 0.0173,
+   "chats_up": 10,
+   "per_chat": [
+    0.0044,
+    0.0226,
+    0.0069,
+    0.0125,
+    0.0144,
+    0.0105,
+    0.025,
+    0.0218,
+    0.0126,
+    0.0118
+   ]
+  },
+  "new η0.05 | self": {
+   "dense": 0.662,
+   "gain": -0.0002,
+   "ci": [
+    -0.0036,
+    0.0029
+   ],
+   "fused": 0.6557,
+   "fused_gain": 0.0004,
+   "fused_ci": [
+    -0.0022,
+    0.0032
+   ],
+   "multi_hop_gain": 0.0056,
+   "chats_up": 3,
+   "per_chat": [
+    0.0011,
+    0.0031,
+    -0.0,
+    0.0084,
+    -0.0,
+    -0.0011,
+    0.0,
+    -0.0006,
+    -0.0018,
+    -0.0118
+   ]
+  }
+ },
+ "new_minus_old": {
+  "new - old η0.1 | clean": {
+   "diff": 0.0018,
+   "ci": [
+    -0.0056,
+    0.0094
+   ],
+   "fused_diff": -0.0005,
+   "fused_ci": [
+    -0.0041,
+    0.0031
+   ],
+   "multi_hop_diff": -0.01,
+   "chats_new_better": 6,
+   "per_chat": [
+    -0.0028,
+    0.0123,
+    0.0229,
+    0.0032,
+    -0.0138,
+    -0.0061,
+    -0.0174,
+    0.0002,
+    0.0074,
+    0.0171
+   ]
+  },
+  "new - old η0.1 | self": {
+   "diff": 0.0204,
+   "ci": [
+    0.0106,
+    0.0295
+   ],
+   "fused_diff": -0.0002,
+   "fused_ci": [
+    -0.0027,
+    0.0023
+   ],
+   "multi_hop_diff": 0.0197,
+   "chats_new_better": 9,
+   "per_chat": [
+    0.0293,
+    0.0068,
+    0.0255,
+    0.0414,
+    -0.003,
+    0.0216,
+    0.0048,
+    0.0321,
+    0.0048,
+    0.0296
+   ]
+  },
+  "new - old η0.05 | clean": {
+   "diff": 0.0015,
+   "ci": [
+    -0.0026,
+    0.0058
+   ],
+   "fused_diff": -0.0026,
+   "fused_ci": [
+    -0.0059,
+    0.0003
+   ],
+   "multi_hop_diff": -0.0019,
+   "chats_new_better": 5,
+   "per_chat": [
+    0.0078,
+    0.0103,
+    0.006,
+    -0.0001,
+    -0.0095,
+    0.0113,
+    -0.0033,
+    -0.0031,
+    -0.0045,
+    0.0094
+   ]
+  },
+  "new - old η0.05 | self": {
+   "diff": 0.0082,
+   "ci": [
+    0.005,
+    0.0117
+   ],
+   "fused_diff": -0.0003,
+   "fused_ci": [
+    -0.004,
+    0.0023
+   ],
+   "multi_hop_diff": 0.0071,
+   "chats_new_better": 9,
+   "per_chat": [
+    0.0093,
+    0.0113,
+    0.0104,
+    0.0103,
+    -0.0005,
+    0.0208,
+    0.0037,
+    0.0089,
+    0.0024,
+    0.0103
+   ]
+  }
+ },
+ "self_condition_stats": {
+  "old η0.1": {
+   "wrong_share": 0.7703,
+   "leader_share": 0.329
+  },
+  "new η0.1": {
+   "wrong_share": 0.6566,
+   "leader_share": 0.072
+  },
+  "old η0.05": {
+   "wrong_share": 0.6998,
+   "leader_share": 0.187
+  },
+  "new η0.05": {
+   "wrong_share": 0.6441,
+   "leader_share": 0.0626
+  }
+ },
+ "diagnostics": {
+  "cos_state_vs_keyview_target": {
+   "mean": 0.7619,
+   "min": 0.5665
+  },
+  "h_eq_6_1_clean_cites": {
+   "old": 0.3179,
+   "new": 0.0863
+  },
+  "target_dot_mean_state": {
+   "old": 0.3769,
+   "new": 0.1496
+  },
+  "note": "h and <d, s_bar> use the held-out chat's own mean question state (descriptive only, nothing chosen on it)"
+ },
+ "verdict": {
+  "η0.1": {
+   "role": "primary",
+   "old_self_loss": -0.023,
+   "old_self_ci": [
+    -0.0322,
+    -0.0134
+   ],
+   "new_self_loss": -0.0025,
+   "new_self_ci": [
+    -0.0076,
+    0.0019
+   ],
+   "old_clean_gain": 0.0159,
+   "old_clean_ci": [
+    0.003,
+    0.0286
+   ],
+   "new_clean_gain": 0.0177,
+   "new_clean_ci": [
+    0.0095,
+    0.0261
+   ],
+   "D_self": 0.0204,
+   "D_self_ci": [
+    0.0106,
+    0.0295
+   ],
+   "shrinks": true,
+   "D_clean": 0.0018,
+   "D_clean_ci": [
+    -0.0056,
+    0.0094
+   ],
+   "clean": "near",
+   "clean_ci_inside_pm_0_005": false,
+   "call": "pass"
+  },
+  "η0.05": {
+   "role": "secondary",
+   "old_self_loss": -0.0084,
+   "old_self_ci": [
+    -0.0134,
+    -0.0042
+   ],
+   "new_self_loss": -0.0002,
+   "new_self_ci": [
+    -0.0036,
+    0.0029
+   ],
+   "old_clean_gain": 0.0126,
+   "old_clean_ci": [
+    0.0054,
+    0.0193
+   ],
+   "new_clean_gain": 0.0141,
+   "new_clean_ci": [
+    0.0103,
+    0.018
+   ],
+   "D_self": 0.0082,
+   "D_self_ci": [
+    0.005,
+    0.0117
+   ],
+   "shrinks": true,
+   "D_clean": 0.0015,
+   "D_clean_ci": [
+    -0.0026,
+    0.0058
+   ],
+   "clean": "near",
+   "clean_ci_inside_pm_0_005": false,
+   "call": "pass"
+  }
+ },
+ "seconds": 7.8
+}

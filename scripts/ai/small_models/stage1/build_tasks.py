@@ -71,7 +71,7 @@ def main():
     tasks = []
     for (tid, r), vec in zip(todo, vecs):
         t = prev_tasks[tid]; q = by_tag[tid]
-        shown = {s["node"] for s in t["kept"] + t["snippets"]}
+        shown = set(t.get("seen", [])) | {s["node"] for s in t["kept"] + t["snippets"]}
         number = {s["n"]: s for s in t["kept"] + t["snippets"]}
         kept = t["kept"] + [number[n] for n in r["cites"] if n in number and number[n] not in t["kept"]]
         top = R.probe(q, r["next_search"], vec)
@@ -81,7 +81,8 @@ def main():
                 new.append(dict(n=nxt, node=int(v), **R.snippet(q, int(v)))); nxt += 1
         history = t["history"] + [dict(hop=t["hop"], search=t.get("probe") or t["question"], answer=r["answer"])]
         tasks.append(dict(id=tid, set=t["set"], hop=a.hop, question=t["question"], today=t["today"], history=history,
-                          kept=kept, snippets=new, probe=r["next_search"], next_n=nxt, last=a.hop == MAX_HOPS - 1))
+                          kept=kept, snippets=new, probe=r["next_search"], next_n=nxt, last=a.hop == MAX_HOPS - 1,
+                          seen=sorted(shown | {s["node"] for s in new})))
     write(os.path.join(RUNS, f"tasks_hop{a.hop}.jsonl.gz"), tasks)
     print(f"hop {a.hop}: {len(tasks)} tasks from {len(prev)} answers at hop {a.hop - 1}")
 

@@ -1,0 +1,229 @@
+{
+ "test": "1.9",
+ "prediction": "P10",
+ "eta": 0.1,
+ "nu": 9.0,
+ "forget_fraction": 0.2,
+ "seeds": 3,
+ "orders": 3,
+ "self_checks": {
+  "move_reads_equal_s12": true,
+  "base_keys_equal_reader": true,
+  "additive_initial_keys_equal_K0": true
+ },
+ "max_abs_state_cache_vs_reader_S": 1.4901161193847656e-07,
+ "baseline": {
+  "dense": 0.6622,
+  "fused": 0.6553,
+  "dense_multi_hop": 0.4798
+ },
+ "gains_clean": {
+  "move": {
+   "dense": {
+    "value": 0.6781,
+    "gain": 0.0159,
+    "ci": [
+     0.003,
+     0.0286
+    ]
+   },
+   "fused": {
+    "value": 0.6596,
+    "gain": 0.0042,
+    "ci": [
+     -0.0003,
+     0.0095
+    ]
+   },
+   "multi_hop_gain": 0.0323
+  },
+  "centred": {
+   "dense": {
+    "value": 0.6818,
+    "gain": 0.0197,
+    "ci": [
+     0.0101,
+     0.0293
+    ]
+   },
+   "fused": {
+    "value": 0.6585,
+    "gain": 0.0031,
+    "ci": [
+     0.0007,
+     0.0056
+    ]
+   },
+   "multi_hop_gain": 0.0236
+  },
+  "additive": {
+   "dense": {
+    "value": 0.682,
+    "gain": 0.0198,
+    "ci": [
+     0.0102,
+     0.0295
+    ]
+   },
+   "fused": {
+    "value": 0.6585,
+    "gain": 0.0031,
+    "ci": [
+     0.0007,
+     0.0057
+    ]
+   },
+   "multi_hop_gain": 0.0235
+  },
+  "literal": {
+   "dense": {
+    "value": 0.6815,
+    "gain": 0.0193,
+    "ci": [
+     0.0101,
+     0.0289
+    ]
+   },
+   "fused": {
+    "value": 0.6583,
+    "gain": 0.0029,
+    "ci": [
+     0.0002,
+     0.0057
+    ]
+   },
+   "multi_hop_gain": 0.0219
+  }
+ },
+ "reproduces_s12": {
+  "baseline_dense": true,
+  "move_gain": true,
+  "centred_gain": true
+ },
+ "additive_minus_centred": {
+  "dense": {
+   "D": 0.0001338252314814815,
+   "ci": [
+    -0.0005972059595451037,
+    0.0008203976034858388
+   ],
+   "per_chat": [
+    0.0,
+    -0.00103,
+    0.0,
+    0.00201,
+    -0.0,
+    0.0,
+    0.0,
+    0.00116,
+    0.0,
+    -0.00214
+   ]
+  },
+  "fused": {
+   "D": 1.8084490740740702e-05,
+   "ci": [
+    -0.00016502742266284867,
+    0.0002006853422117125
+   ],
+   "per_chat": [
+    0.0,
+    0.0,
+    0.0,
+    0.00056,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.00053,
+    0.0
+   ]
+  },
+  "literal_minus_centred_dense": {
+   "D": -0.00034722222222222186,
+   "ci": [
+    -0.00248892367159757,
+    0.0013037790281755727
+   ]
+  }
+ },
+ "p10_first_order": {
+  "cited_nodes": 1428,
+  "with_2plus_cites": 583,
+  "share_2plus": 0.4083,
+  "one_cite_max_key_diff": 9.159240630707038e-08,
+  "multi_cite_key_diff_mean": 0.008321975388367226,
+  "multi_cite_key_diff_median": 0.005233709358150583,
+  "multi_cite_key_diff_max": 0.05335774667886846,
+  "multi_cite_share_above_1e_4": 1.0
+ },
+ "deletion": {
+  "L1": {
+   "cases": 90,
+   "byte_equal": 90,
+   "sha_equal": 90,
+   "differing_blobs": {}
+  },
+  "L2": {
+   "cases": 90,
+   "byte_equal": 90,
+   "sha_equal": 90,
+   "differing_blobs": {}
+  },
+  "X": {
+   "cases": 90,
+   "byte_equal": 0,
+   "sha_equal": null,
+   "differing_blobs": {
+    "acc": 90,
+    "keys": 90
+   },
+   "keys_differ_cases": 90
+  },
+  "dirty_set_size_mean": {
+   "L1": 41.93333333333333,
+   "L2": 41.93333333333333
+  },
+  "N1": {
+   "cases": 90,
+   "byte_equal_arrival_rebuild": 0,
+   "differ_arrival_rebuild": 90,
+   "differ_sorted_rebuild": 90,
+   "nodes_differ_mean": 41.93333333333333,
+   "max_abs_key_diff_mean": 0.044226890698903135,
+   "residual_influence_mean": 0.08817284070328411,
+   "residual_influence_share_positive": 1.0,
+   "residual_pairs": 4194
+  },
+  "N2": {
+   "cases": 90,
+   "byte_equal_arrival_rebuild": 0,
+   "differ_arrival_rebuild": 90,
+   "differ_sorted_rebuild": 90,
+   "nodes_differ_mean": 41.93333333333333,
+   "max_abs_key_diff_mean": 0.03216803167015314,
+   "residual_influence_mean": 0.0825265807321257,
+   "residual_influence_share_positive": 1.0,
+   "residual_pairs": 4194
+  }
+ },
+ "order_independent_chats": {
+  "L1": 10,
+  "L2": 10,
+  "N1": 0,
+  "N2": 0
+ },
+ "verdict": {
+  "B_bytes_equal_all": true,
+  "N_nolog_move_fails": true,
+  "G_gain": "pass",
+  "D": 0.00013,
+  "D_ci": [
+   -0.0006,
+   0.00082
+  ],
+  "bar": 0.005,
+  "overall": "pass"
+ },
+ "seconds": 29.6
+}

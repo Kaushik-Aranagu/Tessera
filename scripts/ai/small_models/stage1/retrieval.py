@@ -47,7 +47,7 @@ class Reader:
 
     def ids(self):
         out = [("locomo", i, r) for i, c in enumerate(self.chats) for r in range(len(c["qs"]))]
-        return out + [("lme", j) for j in range(len(self.items))]
+        return out + [("lme", j) for j in range(len(getattr(self, "items", [])))]
 
     def tag(self, q):
         return f"locomo:{q[1]}:{q[2]}" if q[0] == "locomo" else f"lme:{self.items[q[1]]['qid']}"

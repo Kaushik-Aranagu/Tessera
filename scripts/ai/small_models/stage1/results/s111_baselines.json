@@ -1,0 +1,2046 @@
+{
+ "test": "1.11 prior-art baselines",
+ "protocol": "Stage 1.11: prior-art baselines on the same cites (required for the paper).\n\nQuestion. Does our best use-driven key rule (s12_cites.RULES, run with s12_cites.run_order) at least match two prior-art\nbaselines: (a) RMM-style residual heads trained online by REINFORCE from the reader's cites (Tan et al., ACL 2025), and\n(b) an LLM-free learned ranker in the AgentMemRec style (a LightGBM ranker trained on gold evidence)?\n\nData. Public only: LoCoMo (1,536 questions, sha-pinned) and LongMemEval-S (428 questions with user-turn evidence).\nCites come from runs/answers_hop0.jsonl (Haiku's hop-0 reads; rows with kind \"read\", \"cites\" are snippet numbers n,\nmapped to nodes through the hop-0 task's snippets). The opened set of a question is the 10 snippet nodes of its hop-0\ntask (the fused rank-16 top 10 the reader saw). Cite sources (option --cites):\n  haiku    what Haiku cited (the real signal; used only if the answers file has at least 3,900 rows)\n  visible  the marked evidence inside the opened top 10 (reference oracle)\nIf the answers file is missing or short, only \"visible\" is run and the report says so. --answers points at another\nanswers file, so the test can be re-run on new Haiku cites.\n\nShared protocol (from s12_cites.py, unchanged). LoCoMo chat i is read with the rank-16 bridge of the outer fold that\nheld it out (retrieval.Reader keys). Each chat is run in the same 3 shuffled orders,\nnp.random.default_rng([chat, order, 2027]).permutation; after each question the method learns from that question's cites\n(static cites: what was cited from the hop-0 opened top 10, not re-read after anything moves); recall@10 of the dense\nlist and of the dense list fused with BM25 (RRF k 60) is scored before that question's update; per question the 3 orders\nare averaged. Every learner is reset at the start of each chat and order (learning is within a held-out chat only).\n\nArms on LoCoMo (per cite source):\n  base    no learning: the rank-16 read (dense 0.662, fused 0.655 in s11/s12; recomputed here)\n  ours    each of the 5 s12 rules (move η0.1, move η0.05, contrastive, centred, combo; settings fixed in s12), the mean\n          state of the centred rules frozen per bridge (mean ask state of that bridge's training chats).\n  RMM     residual linear heads on the question state and on the memory keys, in the tuned rank-16 bridge space:\n          q' = n(s + W_q s), k'_v = n(k_v + W_k k_v), W_q and W_k 384 x 384, initialised at zero (so the first read is\n          exactly the base read). Dense list: order of q'.k'. After each question one REINFORCE step on the cites:\n          reward r_v = +1 for an opened node that was cited, -1 for an opened node not cited (REINFORCE baseline b = 0),\n          policy pi = softmax(alpha q'.k') with alpha = 20 (the bridges' fixed logit scale) over a pool P, objective\n          J = sum over opened v of r_v log pi(v), one plain SGD ascent step W <- W + lr dJ/dW on both heads.\n          Off-policy note: the opened set is the logged hop-0 read, not a sample from the current heads (as for our\n          rules). Tuned on dev chats only: pool P in {opened (softmax over the 10 opened, RMM's reranker over its\n          retrieved set), chat (softmax over every node)} x lr in {1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1}.\n          Gradients are written by hand (numpy) and checked against torch autograd at start-up (reported).\n  ranker  LightGBM over the top 50 candidates of each question's fused rank-16 read; the reranked top 10 is scored, so\n          it can only reorder those 50. Labels: 1 for a marked evidence node, else 0. Features (25, all LLM-free):\n            bridge cosine, frozen bge cosine, BM25 score; log(1 + rank) in the bridge, frozen and BM25 lists; position in\n            the fused list; RRF score; bridge cosine minus the best candidate's; frozen cosine minus the best\n            candidate's; BM25 over the best candidate's BM25; z-score of the bridge cosine among the 50; log(1 + turn\n            length in BM25 tokens); position in the whole history (0..1); session index (0..1, oldest 0); position\n            inside the session (0..1); query-token overlap count; overlap fraction; query length in tokens; best bridge\n            cosine of the turn's neighbours in its session (itself if none); same session as the fused top 1;\n            share of the 50 candidates in the turn's session; log(history size); bridge cosine of the session's best\n            turn among the 50 minus the turn's; neighbour in the fused top 10.\n          LoCoMo: for outer fold f, trained on the gold evidence of its 8 training chats, scored on the test pair. The\n          bridge features of a training chat come from an inner rank-16 bridge that held that chat's pair out (trained\n          on the other 6 training chats with fold f's tuned lr and s11's dev seed 1000 + 10 f + pair[0]); the test pair\n          uses the outer bridge, as the read does. So no feature of any chat comes from a bridge that saw its labels.\n          Hyperparameters, chosen on dev chats only: objective {lambdarank, binary} x num_leaves {7, 31} x trees\n          {50, 100, 200, 400} (learning rate 0.05, min 20 rows per leaf, no subsampling, deterministic, one thread),\n          fit on the 6 training chats outside the dev pair, scored on the dev pair.\n          LongMemEval-S: trained on all 10 LoCoMo chats (bridge features from the bridge that held each chat out); the\n          config with the best pooled dev recall over the 5 LoCoMo folds; scored on the 428 questions with features from\n          the rank-16 bridge trained on all 10 LoCoMo chats (the read of retrieval.Reader).\n\nDev chats and selection (no test chat is used to choose anything). For outer fold f the dev chats are the test pair of\nfold (f + 1) mod 5 (they are training chats of fold f). Dev runs read them with fold f's inner bridge that held that pair\nout (never trained on fold f's test chats), centred rules use that inner bridge's mean ask state, and the cites and\nopened sets are the same logged hop-0 ones. Per fold, cite source and metric (dense or fused recall@10): \"ours\" is the\ns12 rule with the best mean dev recall (ties: first in s12's RULES order) and RMM's config is the one with the best mean\ndev recall (ties: first in grid order, pool then lr). The ranker's config per fold is its best dev fused recall.\n\nPre-registered decision rule (front matter table, test 1.11: \"our best rule at least matches them, [chat]\"; fails if \"a\nbaseline wins\"). PRIMARY: LoCoMo, cite source haiku (visible if haiku is unavailable), metric fused recall@10 (the list the\nreader opens), ours = the dev-selected rule. d_RMM = ours - RMM(dev-selected), d_RK = ours - ranker, per question, with\na chat-clustered paired bootstrap (common.cluster_boot, 4,000 draws, seed 0) for the 95% interval.\n  PASS iff the point estimates of d_RMM and d_RK are both >= 0.\n  FAIL otherwise; a failing baseline whose interval for (ours - baseline) lies wholly below zero is reported as a clear win\n  for that baseline, otherwise as a win by point estimate only.\nSecondary, reported, not part of the verdict: the visible-oracle cites; dense recall (ours vs RMM, each dev-selected on\ndense); every fixed rule against each baseline; the post-hoc best rule on the test chats (optimistic for ours); RMM with\nits config picked on the test chats (optimistic for RMM); multi-hop means; per-chat signs. LongMemEval-S: one question per\nhaystack, so neither our rules nor online RMM can learn there (nothing is asked twice; RMM is not run on it); \"ours\" is the\nfused rank-16 read itself, and the ranker is compared with it under a question-clustered bootstrap. If the ranker beats\nthe fused read there with an interval above zero, the report says a baseline wins on LongMemEval-S, where our rules\ncannot act. Compute: about 25 CPU minutes; nothing cut from the plan above.",
+ "checks": {
+  "grad_check_max_rel_err": {
+   "opened": 6.333868414438021e-16,
+   "chat": 3.527203233114638e-16
+  },
+  "opened_not_equal_fused_top10": 0,
+  "cites_per_question": {
+   "haiku": 1.743,
+   "visible": 0.838
+  },
+  "inner_bridge_dev_dense_vs_s11": {
+   "0": {
+    "here": 0.6596,
+    "s11": 0.6596
+   },
+   "1": {
+    "here": 0.6552,
+    "s11": 0.6552
+   },
+   "2": {
+    "here": 0.658,
+    "s11": 0.658
+   },
+   "3": {
+    "here": 0.6492,
+    "s11": 0.6492
+   },
+   "4": {
+    "here": 0.6702,
+    "s11": 0.6702
+   }
+  }
+ },
+ "cites": {
+  "answers": "answers_hop0.jsonl",
+  "answer_rows": 3928,
+  "sources": [
+   "haiku",
+   "visible"
+  ],
+  "primary": "haiku",
+  "note": null
+ },
+ "picks": {
+  "ranker": {
+   "0": [
+    "lambdarank",
+    "31",
+    "200"
+   ],
+   "1": [
+    "lambdarank",
+    "31",
+    "100"
+   ],
+   "2": [
+    "lambdarank",
+    "31",
+    "50"
+   ],
+   "3": [
+    "lambdarank",
+    "7",
+    "100"
+   ],
+   "4": [
+    "lambdarank",
+    "31",
+    "50"
+   ]
+  },
+  "ranker_lme": [
+   "lambdarank",
+   "31",
+   "50"
+  ],
+  "ranker_dev": {
+   "0": {
+    "lambdarank/7/50": 0.7489,
+    "lambdarank/7/100": 0.7426,
+    "lambdarank/7/200": 0.7485,
+    "lambdarank/7/400": 0.7524,
+    "lambdarank/31/50": 0.7547,
+    "lambdarank/31/100": 0.7495,
+    "lambdarank/31/200": 0.7585,
+    "lambdarank/31/400": 0.7536,
+    "binary/7/50": 0.7304,
+    "binary/7/100": 0.7395,
+    "binary/7/200": 0.7495,
+    "binary/7/400": 0.7516,
+    "binary/31/50": 0.7431,
+    "binary/31/100": 0.7429,
+    "binary/31/200": 0.7392,
+    "binary/31/400": 0.7406
+   },
+   "1": {
+    "lambdarank/7/50": 0.7366,
+    "lambdarank/7/100": 0.7475,
+    "lambdarank/7/200": 0.7451,
+    "lambdarank/7/400": 0.7458,
+    "lambdarank/31/50": 0.7456,
+    "lambdarank/31/100": 0.7516,
+    "lambdarank/31/200": 0.7438,
+    "lambdarank/31/400": 0.7385,
+    "binary/7/50": 0.7191,
+    "binary/7/100": 0.7281,
+    "binary/7/200": 0.7362,
+    "binary/7/400": 0.7384,
+    "binary/31/50": 0.7364,
+    "binary/31/100": 0.7362,
+    "binary/31/200": 0.7387,
+    "binary/31/400": 0.7387
+   },
+   "2": {
+    "lambdarank/7/50": 0.7594,
+    "lambdarank/7/100": 0.7571,
+    "lambdarank/7/200": 0.7588,
+    "lambdarank/7/400": 0.755,
+    "lambdarank/31/50": 0.763,
+    "lambdarank/31/100": 0.7582,
+    "lambdarank/31/200": 0.7447,
+    "lambdarank/31/400": 0.7266,
+    "binary/7/50": 0.7424,
+    "binary/7/100": 0.7488,
+    "binary/7/200": 0.7449,
+    "binary/7/400": 0.7548,
+    "binary/31/50": 0.7337,
+    "binary/31/100": 0.7363,
+    "binary/31/200": 0.7366,
+    "binary/31/400": 0.7337
+   },
+   "3": {
+    "lambdarank/7/50": 0.7087,
+    "lambdarank/7/100": 0.7266,
+    "lambdarank/7/200": 0.7256,
+    "lambdarank/7/400": 0.7231,
+    "lambdarank/31/50": 0.7055,
+    "lambdarank/31/100": 0.7031,
+    "lambdarank/31/200": 0.6876,
+    "lambdarank/31/400": 0.6868,
+    "binary/7/50": 0.6924,
+    "binary/7/100": 0.6916,
+    "binary/7/200": 0.7105,
+    "binary/7/400": 0.7241,
+    "binary/31/50": 0.7011,
+    "binary/31/100": 0.6991,
+    "binary/31/200": 0.6933,
+    "binary/31/400": 0.7005
+   },
+   "4": {
+    "lambdarank/7/50": 0.7442,
+    "lambdarank/7/100": 0.7478,
+    "lambdarank/7/200": 0.7427,
+    "lambdarank/7/400": 0.7463,
+    "lambdarank/31/50": 0.7627,
+    "lambdarank/31/100": 0.7584,
+    "lambdarank/31/200": 0.7584,
+    "lambdarank/31/400": 0.7359,
+    "binary/7/50": 0.7467,
+    "binary/7/100": 0.7546,
+    "binary/7/200": 0.7503,
+    "binary/7/400": 0.7488,
+    "binary/31/50": 0.7608,
+    "binary/31/100": 0.7616,
+    "binary/31/200": 0.7486,
+    "binary/31/400": 0.7447
+   }
+  }
+ },
+ "lme": {
+  "n_questions": 428,
+  "fused_rank16": 0.8982,
+  "dense_rank16": 0.8839,
+  "ranker": 0.9187,
+  "ranker_minus_fused": {
+   "mean": 0.0204,
+   "ci": [
+    0.0002,
+    0.0416
+   ]
+  },
+  "ranker_config": [
+   "lambdarank",
+   "31",
+   "50"
+  ],
+  "ranker_by_config": {
+   "lambdarank/7/50": 0.912,
+   "lambdarank/7/100": 0.9184,
+   "lambdarank/7/200": 0.9183,
+   "lambdarank/7/400": 0.9161,
+   "lambdarank/31/50": 0.9187,
+   "lambdarank/31/100": 0.9203,
+   "lambdarank/31/200": 0.919,
+   "lambdarank/31/400": 0.9136,
+   "binary/7/50": 0.9238,
+   "binary/7/100": 0.9253,
+   "binary/7/200": 0.919,
+   "binary/7/400": 0.9106,
+   "binary/31/50": 0.9189,
+   "binary/31/100": 0.9246,
+   "binary/31/200": 0.9252,
+   "binary/31/400": 0.922
+  },
+  "note": "one question per haystack: our rules and online RMM cannot learn here, so ours = the fused read"
+ },
+ "locomo": {
+  "n_questions": 1536,
+  "base": {
+   "dense": 0.6622,
+   "fused": 0.6553,
+   "fused_multi_hop": 0.396
+  },
+  "ranker": {
+   "fused": 0.7492,
+   "multi_hop": 0.5149,
+   "minus_base": {
+    "mean": 0.0939,
+    "ci": [
+     0.0714,
+     0.117
+    ]
+   }
+  },
+  "by_source": {
+   "haiku": {
+    "picks": {
+     "ours": {
+      "dense": [
+       "contrastive",
+       "centred",
+       "combo",
+       "centred",
+       "combo"
+      ],
+      "fused": [
+       "combo",
+       "move η0.1",
+       "centred",
+       "combo",
+       "contrastive"
+      ]
+     },
+     "rmm": {
+      "dense": [
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001"
+      ],
+      "fused": [
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0003",
+       "opened lr 0.0003",
+       "opened lr 0.0003"
+      ]
+     },
+     "rmm_test_oracle": {
+      "dense": [
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001"
+      ],
+      "fused": [
+       "opened lr 0.0003",
+       "opened lr 0.0001",
+       "opened lr 0.0003",
+       "opened lr 0.0003",
+       "opened lr 0.0001"
+      ]
+     },
+     "posthoc_best_rule_fused": "contrastive"
+    },
+    "dev": {
+     "rules": {
+      "fold0": {
+       "move η0.1": [
+        0.6296,
+        0.6636
+       ],
+       "move η0.05": [
+        0.6523,
+        0.6672
+       ],
+       "contrastive": [
+        0.6722,
+        0.6673
+       ],
+       "centred": [
+        0.6607,
+        0.6697
+       ],
+       "combo": [
+        0.6598,
+        0.6706
+       ]
+      },
+      "fold1": {
+       "move η0.1": [
+        0.6313,
+        0.6648
+       ],
+       "move η0.05": [
+        0.6489,
+        0.6588
+       ],
+       "contrastive": [
+        0.6402,
+        0.6569
+       ],
+       "centred": [
+        0.6503,
+        0.6607
+       ],
+       "combo": [
+        0.6495,
+        0.6583
+       ]
+      },
+      "fold2": {
+       "move η0.1": [
+        0.7043,
+        0.6463
+       ],
+       "move η0.05": [
+        0.7076,
+        0.6434
+       ],
+       "contrastive": [
+        0.7042,
+        0.6516
+       ],
+       "centred": [
+        0.7076,
+        0.6517
+       ],
+       "combo": [
+        0.7092,
+        0.6493
+       ]
+      },
+      "fold3": {
+       "move η0.1": [
+        0.6136,
+        0.6248
+       ],
+       "move η0.05": [
+        0.6078,
+        0.6217
+       ],
+       "contrastive": [
+        0.5994,
+        0.6248
+       ],
+       "centred": [
+        0.6187,
+        0.6228
+       ],
+       "combo": [
+        0.6177,
+        0.6259
+       ]
+      },
+      "fold4": {
+       "move η0.1": [
+        0.6842,
+        0.6747
+       ],
+       "move η0.05": [
+        0.6882,
+        0.6744
+       ],
+       "contrastive": [
+        0.6862,
+        0.681
+       ],
+       "centred": [
+        0.6929,
+        0.6731
+       ],
+       "combo": [
+        0.6976,
+        0.6742
+       ]
+      }
+     },
+     "rmm": {
+      "fold0": {
+       "opened 0.0001": [
+        0.6621,
+        0.6661
+       ],
+       "opened 0.0003": [
+        0.6265,
+        0.6426
+       ],
+       "opened 0.001": [
+        0.3368,
+        0.5762
+       ],
+       "opened 0.003": [
+        0.1597,
+        0.4855
+       ],
+       "opened 0.01": [
+        0.0932,
+        0.4211
+       ],
+       "opened 0.03": [
+        0.0559,
+        0.3795
+       ],
+       "opened 0.1": [
+        0.0437,
+        0.3941
+       ],
+       "chat 0.0001": [
+        0.654,
+        0.6595
+       ],
+       "chat 0.0003": [
+        0.4964,
+        0.6218
+       ],
+       "chat 0.001": [
+        0.1908,
+        0.5436
+       ],
+       "chat 0.003": [
+        0.0996,
+        0.4853
+       ],
+       "chat 0.01": [
+        0.0486,
+        0.4589
+       ],
+       "chat 0.03": [
+        0.042,
+        0.4235
+       ],
+       "chat 0.1": [
+        0.0237,
+        0.3141
+       ]
+      },
+      "fold1": {
+       "opened 0.0001": [
+        0.6524,
+        0.6623
+       ],
+       "opened 0.0003": [
+        0.6347,
+        0.6607
+       ],
+       "opened 0.001": [
+        0.3665,
+        0.5582
+       ],
+       "opened 0.003": [
+        0.1465,
+        0.4465
+       ],
+       "opened 0.01": [
+        0.0754,
+        0.3777
+       ],
+       "opened 0.03": [
+        0.047,
+        0.2856
+       ],
+       "opened 0.1": [
+        0.0322,
+        0.2907
+       ],
+       "chat 0.0001": [
+        0.6443,
+        0.6618
+       ],
+       "chat 0.0003": [
+        0.5568,
+        0.6508
+       ],
+       "chat 0.001": [
+        0.1996,
+        0.501
+       ],
+       "chat 0.003": [
+        0.0724,
+        0.4143
+       ],
+       "chat 0.01": [
+        0.0341,
+        0.3866
+       ],
+       "chat 0.03": [
+        0.0195,
+        0.3317
+       ],
+       "chat 0.1": [
+        0.0139,
+        0.2961
+       ]
+      },
+      "fold2": {
+       "opened 0.0001": [
+        0.7033,
+        0.6391
+       ],
+       "opened 0.0003": [
+        0.6431,
+        0.6481
+       ],
+       "opened 0.001": [
+        0.3628,
+        0.5779
+       ],
+       "opened 0.003": [
+        0.1669,
+        0.5036
+       ],
+       "opened 0.01": [
+        0.1043,
+        0.4618
+       ],
+       "opened 0.03": [
+        0.0721,
+        0.407
+       ],
+       "opened 0.1": [
+        0.0437,
+        0.4272
+       ],
+       "chat 0.0001": [
+        0.6969,
+        0.6332
+       ],
+       "chat 0.0003": [
+        0.5738,
+        0.6398
+       ],
+       "chat 0.001": [
+        0.2363,
+        0.5722
+       ],
+       "chat 0.003": [
+        0.1213,
+        0.5236
+       ],
+       "chat 0.01": [
+        0.0752,
+        0.5186
+       ],
+       "chat 0.03": [
+        0.0358,
+        0.4756
+       ],
+       "chat 0.1": [
+        0.0247,
+        0.4144
+       ]
+      },
+      "fold3": {
+       "opened 0.0001": [
+        0.6096,
+        0.6266
+       ],
+       "opened 0.0003": [
+        0.6064,
+        0.6331
+       ],
+       "opened 0.001": [
+        0.3655,
+        0.5828
+       ],
+       "opened 0.003": [
+        0.1713,
+        0.4578
+       ],
+       "opened 0.01": [
+        0.0966,
+        0.386
+       ],
+       "opened 0.03": [
+        0.053,
+        0.3333
+       ],
+       "opened 0.1": [
+        0.041,
+        0.3281
+       ],
+       "chat 0.0001": [
+        0.6049,
+        0.6245
+       ],
+       "chat 0.0003": [
+        0.5752,
+        0.6209
+       ],
+       "chat 0.001": [
+        0.2533,
+        0.5044
+       ],
+       "chat 0.003": [
+        0.1013,
+        0.4268
+       ],
+       "chat 0.01": [
+        0.0387,
+        0.392
+       ],
+       "chat 0.03": [
+        0.0312,
+        0.3393
+       ],
+       "chat 0.1": [
+        0.0238,
+        0.3192
+       ]
+      },
+      "fold4": {
+       "opened 0.0001": [
+        0.6854,
+        0.671
+       ],
+       "opened 0.0003": [
+        0.631,
+        0.6747
+       ],
+       "opened 0.001": [
+        0.3739,
+        0.6048
+       ],
+       "opened 0.003": [
+        0.1886,
+        0.5504
+       ],
+       "opened 0.01": [
+        0.1161,
+        0.502
+       ],
+       "opened 0.03": [
+        0.0782,
+        0.4121
+       ],
+       "opened 0.1": [
+        0.0577,
+        0.3166
+       ],
+       "chat 0.0001": [
+        0.6832,
+        0.6733
+       ],
+       "chat 0.0003": [
+        0.5831,
+        0.6567
+       ],
+       "chat 0.001": [
+        0.2687,
+        0.5987
+       ],
+       "chat 0.003": [
+        0.15,
+        0.5392
+       ],
+       "chat 0.01": [
+        0.0997,
+        0.5045
+       ],
+       "chat 0.03": [
+        0.0687,
+        0.4924
+       ],
+       "chat 0.1": [
+        0.0617,
+        0.4223
+       ]
+      }
+     },
+     "columns": [
+      "dense",
+      "fused"
+     ]
+    },
+    "means": {
+     "ours": {
+      "dense": 0.6694,
+      "fused": 0.6603
+     },
+     "rmm": {
+      "dense": 0.6666,
+      "fused": 0.6592
+     },
+     "rmm_test_oracle": {
+      "dense": 0.6666,
+      "fused": 0.6615
+     },
+     "ranker_fused": 0.7492,
+     "rules": {
+      "move η0.1": {
+       "dense": 0.6557,
+       "fused": 0.6573
+      },
+      "move η0.05": {
+       "dense": 0.6652,
+       "fused": 0.6591
+      },
+      "contrastive": {
+       "dense": 0.6673,
+       "fused": 0.6645
+      },
+      "centred": {
+       "dense": 0.6702,
+       "fused": 0.6602
+      },
+      "combo": {
+       "dense": 0.6701,
+       "fused": 0.6618
+      }
+     },
+     "rmm_grid": {
+      "opened 0.0001": {
+       "dense": 0.6666,
+       "fused": 0.6585
+      },
+      "opened 0.0003": {
+       "dense": 0.6244,
+       "fused": 0.6563
+      },
+      "opened 0.001": {
+       "dense": 0.3619,
+       "fused": 0.5844
+      },
+      "opened 0.003": {
+       "dense": 0.1697,
+       "fused": 0.502
+      },
+      "opened 0.01": {
+       "dense": 0.1005,
+       "fused": 0.4335
+      },
+      "opened 0.03": {
+       "dense": 0.0654,
+       "fused": 0.3798
+      },
+      "opened 0.1": {
+       "dense": 0.0428,
+       "fused": 0.3587
+      },
+      "chat 0.0001": {
+       "dense": 0.6607,
+       "fused": 0.6576
+      },
+      "chat 0.0003": {
+       "dense": 0.5577,
+       "fused": 0.6413
+      },
+      "chat 0.001": {
+       "dense": 0.2418,
+       "fused": 0.5523
+      },
+      "chat 0.003": {
+       "dense": 0.114,
+       "fused": 0.4931
+      },
+      "chat 0.01": {
+       "dense": 0.0633,
+       "fused": 0.4565
+      },
+      "chat 0.03": {
+       "dense": 0.0433,
+       "fused": 0.4173
+      },
+      "chat 0.1": {
+       "dense": 0.0308,
+       "fused": 0.3529
+      }
+     },
+     "multi_hop_fused": {
+      "ours": 0.3976,
+      "rmm": 0.3988,
+      "ranker": 0.5149,
+      "base": 0.396
+     }
+    },
+    "comparisons": {
+     "ours - RMM (fused)": {
+      "mean": 0.0011,
+      "ci": [
+       -0.004,
+       0.0064
+      ]
+     },
+     "ours - ranker (fused)": {
+      "mean": -0.0889,
+      "ci": [
+       -0.1084,
+       -0.0679
+      ]
+     },
+     "ours - RMM (dense)": {
+      "mean": 0.0028,
+      "ci": [
+       -0.0035,
+       0.0109
+      ]
+     },
+     "ours - base (fused)": {
+      "mean": 0.005,
+      "ci": [
+       -0.0005,
+       0.0111
+      ]
+     },
+     "ours - base (dense)": {
+      "mean": 0.0072,
+      "ci": [
+       0.0002,
+       0.0155
+      ]
+     },
+     "RMM - base (fused)": {
+      "mean": 0.0039,
+      "ci": [
+       0.0012,
+       0.007
+      ]
+     },
+     "RMM - base (dense)": {
+      "mean": 0.0044,
+      "ci": [
+       -0.0003,
+       0.009
+      ]
+     },
+     "ranker - base (fused)": {
+      "mean": 0.0939,
+      "ci": [
+       0.0714,
+       0.117
+      ]
+     },
+     "ours - RMM test-oracle (fused)": {
+      "mean": -0.0012,
+      "ci": [
+       -0.0057,
+       0.0045
+      ]
+     },
+     "ours - RMM test-oracle (dense)": {
+      "mean": 0.0028,
+      "ci": [
+       -0.0035,
+       0.0109
+      ]
+     },
+     "post-hoc best rule (contrastive) - RMM (fused)": {
+      "mean": 0.0053,
+      "ci": [
+       0.0014,
+       0.0101
+      ]
+     },
+     "post-hoc best rule (contrastive) - ranker (fused)": {
+      "mean": -0.0847,
+      "ci": [
+       -0.1061,
+       -0.0622
+      ]
+     },
+     "move η0.1 - RMM (fused)": {
+      "mean": -0.0019,
+      "ci": [
+       -0.0064,
+       0.0036
+      ]
+     },
+     "move η0.1 - ranker (fused)": {
+      "mean": -0.0919,
+      "ci": [
+       -0.1117,
+       -0.0708
+      ]
+     },
+     "move η0.05 - RMM (fused)": {
+      "mean": -0.0001,
+      "ci": [
+       -0.0034,
+       0.0036
+      ]
+     },
+     "move η0.05 - ranker (fused)": {
+      "mean": -0.0901,
+      "ci": [
+       -0.1109,
+       -0.0693
+      ]
+     },
+     "contrastive - RMM (fused)": {
+      "mean": 0.0053,
+      "ci": [
+       0.0014,
+       0.0101
+      ]
+     },
+     "contrastive - ranker (fused)": {
+      "mean": -0.0847,
+      "ci": [
+       -0.1061,
+       -0.0622
+      ]
+     },
+     "centred - RMM (fused)": {
+      "mean": 0.001,
+      "ci": [
+       -0.0028,
+       0.0047
+      ]
+     },
+     "centred - ranker (fused)": {
+      "mean": -0.089,
+      "ci": [
+       -0.11,
+       -0.0679
+      ]
+     },
+     "combo - RMM (fused)": {
+      "mean": 0.0026,
+      "ci": [
+       -0.0022,
+       0.0073
+      ]
+     },
+     "combo - ranker (fused)": {
+      "mean": -0.0874,
+      "ci": [
+       -0.1071,
+       -0.0673
+      ]
+     }
+    },
+    "per_chat": {
+     "ours - RMM (fused)": [
+      0.007,
+      0.0021,
+      0.0185,
+      -0.0089,
+      -0.0066,
+      -0.0099,
+      -0.0022,
+      0.0061,
+      0.0039,
+      0.0025
+     ],
+     "ours - ranker (fused)": [
+      -0.0937,
+      -0.0601,
+      -0.1464,
+      -0.0648,
+      -0.1028,
+      -0.0627,
+      -0.0867,
+      -0.1102,
+      -0.0263,
+      -0.1173
+     ]
+    }
+   },
+   "visible": {
+    "picks": {
+     "ours": {
+      "dense": [
+       "contrastive",
+       "centred",
+       "centred",
+       "move η0.1",
+       "move η0.05"
+      ],
+      "fused": [
+       "move η0.05",
+       "combo",
+       "combo",
+       "contrastive",
+       "combo"
+      ]
+     },
+     "rmm": {
+      "dense": [
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001"
+      ],
+      "fused": [
+       "opened lr 0.0001",
+       "chat lr 0.0001",
+       "opened lr 0.0003",
+       "opened lr 0.0003",
+       "chat lr 0.0001"
+      ]
+     },
+     "rmm_test_oracle": {
+      "dense": [
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0001"
+      ],
+      "fused": [
+       "chat lr 0.0001",
+       "opened lr 0.0001",
+       "opened lr 0.0003",
+       "opened lr 0.0003",
+       "opened lr 0.0001"
+      ]
+     },
+     "posthoc_best_rule_fused": "contrastive"
+    },
+    "dev": {
+     "rules": {
+      "fold0": {
+       "move η0.1": [
+        0.6524,
+        0.6704
+       ],
+       "move η0.05": [
+        0.659,
+        0.6714
+       ],
+       "contrastive": [
+        0.6726,
+        0.6666
+       ],
+       "centred": [
+        0.6621,
+        0.6709
+       ],
+       "combo": [
+        0.6668,
+        0.6692
+       ]
+      },
+      "fold1": {
+       "move η0.1": [
+        0.6431,
+        0.6561
+       ],
+       "move η0.05": [
+        0.6495,
+        0.658
+       ],
+       "contrastive": [
+        0.6389,
+        0.6547
+       ],
+       "centred": [
+        0.6534,
+        0.6586
+       ],
+       "combo": [
+        0.65,
+        0.6601
+       ]
+      },
+      "fold2": {
+       "move η0.1": [
+        0.7064,
+        0.6472
+       ],
+       "move η0.05": [
+        0.7061,
+        0.641
+       ],
+       "contrastive": [
+        0.6881,
+        0.6464
+       ],
+       "centred": [
+        0.7066,
+        0.6467
+       ],
+       "combo": [
+        0.6981,
+        0.6506
+       ]
+      },
+      "fold3": {
+       "move η0.1": [
+        0.6088,
+        0.6173
+       ],
+       "move η0.05": [
+        0.6047,
+        0.6169
+       ],
+       "contrastive": [
+        0.5885,
+        0.6241
+       ],
+       "centred": [
+        0.6084,
+        0.6173
+       ],
+       "combo": [
+        0.6063,
+        0.6224
+       ]
+      },
+      "fold4": {
+       "move η0.1": [
+        0.6823,
+        0.6691
+       ],
+       "move η0.05": [
+        0.6825,
+        0.6689
+       ],
+       "contrastive": [
+        0.6804,
+        0.6684
+       ],
+       "centred": [
+        0.6821,
+        0.6691
+       ],
+       "combo": [
+        0.6819,
+        0.6701
+       ]
+      }
+     },
+     "rmm": {
+      "fold0": {
+       "opened 0.0001": [
+        0.6619,
+        0.6655
+       ],
+       "opened 0.0003": [
+        0.5977,
+        0.6404
+       ],
+       "opened 0.001": [
+        0.2956,
+        0.5494
+       ],
+       "opened 0.003": [
+        0.1447,
+        0.4875
+       ],
+       "opened 0.01": [
+        0.0856,
+        0.4039
+       ],
+       "opened 0.03": [
+        0.046,
+        0.3599
+       ],
+       "opened 0.1": [
+        0.0243,
+        0.3035
+       ],
+       "chat 0.0001": [
+        0.6416,
+        0.6574
+       ],
+       "chat 0.0003": [
+        0.441,
+        0.613
+       ],
+       "chat 0.001": [
+        0.184,
+        0.539
+       ],
+       "chat 0.003": [
+        0.0918,
+        0.4981
+       ],
+       "chat 0.01": [
+        0.0443,
+        0.4264
+       ],
+       "chat 0.03": [
+        0.0363,
+        0.4168
+       ],
+       "chat 0.1": [
+        0.0225,
+        0.3252
+       ]
+      },
+      "fold1": {
+       "opened 0.0001": [
+        0.649,
+        0.6605
+       ],
+       "opened 0.0003": [
+        0.6194,
+        0.6557
+       ],
+       "opened 0.001": [
+        0.317,
+        0.5213
+       ],
+       "opened 0.003": [
+        0.1201,
+        0.4052
+       ],
+       "opened 0.01": [
+        0.0533,
+        0.3012
+       ],
+       "opened 0.03": [
+        0.0454,
+        0.2952
+       ],
+       "opened 0.1": [
+        0.0282,
+        0.2697
+       ],
+       "chat 0.0001": [
+        0.635,
+        0.6613
+       ],
+       "chat 0.0003": [
+        0.506,
+        0.6324
+       ],
+       "chat 0.001": [
+        0.1691,
+        0.4944
+       ],
+       "chat 0.003": [
+        0.0635,
+        0.4227
+       ],
+       "chat 0.01": [
+        0.0379,
+        0.3929
+       ],
+       "chat 0.03": [
+        0.0266,
+        0.3642
+       ],
+       "chat 0.1": [
+        0.0205,
+        0.3256
+       ]
+      },
+      "fold2": {
+       "opened 0.0001": [
+        0.6994,
+        0.6394
+       ],
+       "opened 0.0003": [
+        0.6237,
+        0.6439
+       ],
+       "opened 0.001": [
+        0.325,
+        0.5698
+       ],
+       "opened 0.003": [
+        0.1554,
+        0.4974
+       ],
+       "opened 0.01": [
+        0.0987,
+        0.4597
+       ],
+       "opened 0.03": [
+        0.0805,
+        0.4458
+       ],
+       "opened 0.1": [
+        0.0546,
+        0.4011
+       ],
+       "chat 0.0001": [
+        0.6943,
+        0.6383
+       ],
+       "chat 0.0003": [
+        0.5299,
+        0.6293
+       ],
+       "chat 0.001": [
+        0.2182,
+        0.5633
+       ],
+       "chat 0.003": [
+        0.1124,
+        0.5252
+       ],
+       "chat 0.01": [
+        0.0631,
+        0.4911
+       ],
+       "chat 0.03": [
+        0.037,
+        0.4673
+       ],
+       "chat 0.1": [
+        0.0254,
+        0.3897
+       ]
+      },
+      "fold3": {
+       "opened 0.0001": [
+        0.6059,
+        0.6248
+       ],
+       "opened 0.0003": [
+        0.5983,
+        0.6303
+       ],
+       "opened 0.001": [
+        0.3407,
+        0.5484
+       ],
+       "opened 0.003": [
+        0.1631,
+        0.4371
+       ],
+       "opened 0.01": [
+        0.0708,
+        0.3156
+       ],
+       "opened 0.03": [
+        0.0287,
+        0.2368
+       ],
+       "opened 0.1": [
+        0.0473,
+        0.2862
+       ],
+       "chat 0.0001": [
+        0.5959,
+        0.6197
+       ],
+       "chat 0.0003": [
+        0.5132,
+        0.5783
+       ],
+       "chat 0.001": [
+        0.1829,
+        0.384
+       ],
+       "chat 0.003": [
+        0.0738,
+        0.3747
+       ],
+       "chat 0.01": [
+        0.0389,
+        0.3697
+       ],
+       "chat 0.03": [
+        0.0298,
+        0.3449
+       ],
+       "chat 0.1": [
+        0.0187,
+        0.3109
+       ]
+      },
+      "fold4": {
+       "opened 0.0001": [
+        0.6828,
+        0.6722
+       ],
+       "opened 0.0003": [
+        0.6073,
+        0.6612
+       ],
+       "opened 0.001": [
+        0.3333,
+        0.5825
+       ],
+       "opened 0.003": [
+        0.1707,
+        0.5494
+       ],
+       "opened 0.01": [
+        0.1035,
+        0.4774
+       ],
+       "opened 0.03": [
+        0.0586,
+        0.3592
+       ],
+       "opened 0.1": [
+        0.0391,
+        0.2523
+       ],
+       "chat 0.0001": [
+        0.6753,
+        0.6756
+       ],
+       "chat 0.0003": [
+        0.5405,
+        0.6416
+       ],
+       "chat 0.001": [
+        0.2367,
+        0.5803
+       ],
+       "chat 0.003": [
+        0.1449,
+        0.5198
+       ],
+       "chat 0.01": [
+        0.0825,
+        0.4517
+       ],
+       "chat 0.03": [
+        0.0521,
+        0.4679
+       ],
+       "chat 0.1": [
+        0.0488,
+        0.3896
+       ]
+      }
+     },
+     "columns": [
+      "dense",
+      "fused"
+     ]
+    },
+    "means": {
+     "ours": {
+      "dense": 0.67,
+      "fused": 0.6592
+     },
+     "rmm": {
+      "dense": 0.6653,
+      "fused": 0.6585
+     },
+     "rmm_test_oracle": {
+      "dense": 0.6653,
+      "fused": 0.6608
+     },
+     "ranker_fused": 0.7492,
+     "rules": {
+      "move η0.1": {
+       "dense": 0.665,
+       "fused": 0.6593
+      },
+      "move η0.05": {
+       "dense": 0.6683,
+       "fused": 0.6573
+      },
+      "contrastive": {
+       "dense": 0.6664,
+       "fused": 0.6614
+      },
+      "centred": {
+       "dense": 0.6721,
+       "fused": 0.6559
+      },
+      "combo": {
+       "dense": 0.6731,
+       "fused": 0.6599
+      }
+     },
+     "rmm_grid": {
+      "opened 0.0001": {
+       "dense": 0.6653,
+       "fused": 0.657
+      },
+      "opened 0.0003": {
+       "dense": 0.6095,
+       "fused": 0.6517
+      },
+      "opened 0.001": {
+       "dense": 0.3272,
+       "fused": 0.5653
+      },
+      "opened 0.003": {
+       "dense": 0.1555,
+       "fused": 0.4818
+      },
+      "opened 0.01": {
+       "dense": 0.0926,
+       "fused": 0.4165
+      },
+      "opened 0.03": {
+       "dense": 0.0484,
+       "fused": 0.3516
+      },
+      "opened 0.1": {
+       "dense": 0.0347,
+       "fused": 0.3111
+      },
+      "chat 0.0001": {
+       "dense": 0.6589,
+       "fused": 0.6562
+      },
+      "chat 0.0003": {
+       "dense": 0.52,
+       "fused": 0.6316
+      },
+      "chat 0.001": {
+       "dense": 0.2211,
+       "fused": 0.5407
+      },
+      "chat 0.003": {
+       "dense": 0.1018,
+       "fused": 0.4707
+      },
+      "chat 0.01": {
+       "dense": 0.0617,
+       "fused": 0.4398
+      },
+      "chat 0.03": {
+       "dense": 0.0377,
+       "fused": 0.4082
+      },
+      "chat 0.1": {
+       "dense": 0.0308,
+       "fused": 0.3522
+      }
+     },
+     "multi_hop_fused": {
+      "ours": 0.3966,
+      "rmm": 0.3971,
+      "ranker": 0.5149,
+      "base": 0.396
+     }
+    },
+    "comparisons": {
+     "ours - RMM (fused)": {
+      "mean": 0.0008,
+      "ci": [
+       -0.0041,
+       0.0054
+      ]
+     },
+     "ours - ranker (fused)": {
+      "mean": -0.09,
+      "ci": [
+       -0.1122,
+       -0.0672
+      ]
+     },
+     "ours - RMM (dense)": {
+      "mean": 0.0048,
+      "ci": [
+       -0.004,
+       0.0139
+      ]
+     },
+     "ours - base (fused)": {
+      "mean": 0.0039,
+      "ci": [
+       0.0011,
+       0.0065
+      ]
+     },
+     "ours - base (dense)": {
+      "mean": 0.0079,
+      "ci": [
+       -0.0013,
+       0.0164
+      ]
+     },
+     "RMM - base (fused)": {
+      "mean": 0.0031,
+      "ci": [
+       -0.0006,
+       0.0071
+      ]
+     },
+     "RMM - base (dense)": {
+      "mean": 0.0031,
+      "ci": [
+       -0.0013,
+       0.0071
+      ]
+     },
+     "ranker - base (fused)": {
+      "mean": 0.0939,
+      "ci": [
+       0.0714,
+       0.117
+      ]
+     },
+     "ours - RMM test-oracle (fused)": {
+      "mean": -0.0015,
+      "ci": [
+       -0.0055,
+       0.002
+      ]
+     },
+     "ours - RMM test-oracle (dense)": {
+      "mean": 0.0048,
+      "ci": [
+       -0.004,
+       0.0139
+      ]
+     },
+     "post-hoc best rule (contrastive) - RMM (fused)": {
+      "mean": 0.0029,
+      "ci": [
+       -0.0016,
+       0.0075
+      ]
+     },
+     "post-hoc best rule (contrastive) - ranker (fused)": {
+      "mean": -0.0879,
+      "ci": [
+       -0.1091,
+       -0.0648
+      ]
+     },
+     "move η0.1 - RMM (fused)": {
+      "mean": 0.0008,
+      "ci": [
+       -0.0042,
+       0.0062
+      ]
+     },
+     "move η0.1 - ranker (fused)": {
+      "mean": -0.09,
+      "ci": [
+       -0.1113,
+       -0.0677
+      ]
+     },
+     "move η0.05 - RMM (fused)": {
+      "mean": -0.0012,
+      "ci": [
+       -0.0049,
+       0.0027
+      ]
+     },
+     "move η0.05 - ranker (fused)": {
+      "mean": -0.0919,
+      "ci": [
+       -0.1149,
+       -0.069
+      ]
+     },
+     "contrastive - RMM (fused)": {
+      "mean": 0.0029,
+      "ci": [
+       -0.0016,
+       0.0075
+      ]
+     },
+     "contrastive - ranker (fused)": {
+      "mean": -0.0879,
+      "ci": [
+       -0.1091,
+       -0.0648
+      ]
+     },
+     "centred - RMM (fused)": {
+      "mean": -0.0026,
+      "ci": [
+       -0.0062,
+       0.0013
+      ]
+     },
+     "centred - ranker (fused)": {
+      "mean": -0.0933,
+      "ci": [
+       -0.1162,
+       -0.0705
+      ]
+     },
+     "combo - RMM (fused)": {
+      "mean": 0.0014,
+      "ci": [
+       -0.0035,
+       0.006
+      ]
+     },
+     "combo - ranker (fused)": {
+      "mean": -0.0893,
+      "ci": [
+       -0.1114,
+       -0.0668
+      ]
+     }
+    },
+    "per_chat": {
+     "ours - RMM (fused)": [
+      -0.002,
+      0.0093,
+      0.0059,
+      0.0139,
+      -0.0096,
+      -0.0047,
+      0.0,
+      0.0019,
+      -0.0092,
+      0.0027
+     ],
+     "ours - ranker (fused)": [
+      -0.1056,
+      -0.0529,
+      -0.1573,
+      -0.0508,
+      -0.1074,
+      -0.0566,
+      -0.0822,
+      -0.1152,
+      -0.0354,
+      -0.1159
+     ]
+    }
+   }
+  }
+ },
+ "verdict": {
+  "primary_source": "haiku",
+  "primary": {
+   "RMM": {
+    "diff": 0.0011,
+    "ci": [
+     -0.004,
+     0.0064
+    ],
+    "ours_at_least_matches": true,
+    "baseline_clear_win": false
+   },
+   "ranker": {
+    "diff": -0.0889,
+    "ci": [
+     -0.1084,
+     -0.0679
+    ],
+    "ours_at_least_matches": false,
+    "baseline_clear_win": true
+   },
+   "pass": false
+  },
+  "all_sources": {
+   "haiku": {
+    "RMM": {
+     "diff": 0.0011,
+     "ci": [
+      -0.004,
+      0.0064
+     ],
+     "ours_at_least_matches": true,
+     "baseline_clear_win": false
+    },
+    "ranker": {
+     "diff": -0.0889,
+     "ci": [
+      -0.1084,
+      -0.0679
+     ],
+     "ours_at_least_matches": false,
+     "baseline_clear_win": true
+    },
+    "pass": false
+   },
+   "visible": {
+    "RMM": {
+     "diff": 0.0008,
+     "ci": [
+      -0.0041,
+      0.0054
+     ],
+     "ours_at_least_matches": true,
+     "baseline_clear_win": false
+    },
+    "ranker": {
+     "diff": -0.09,
+     "ci": [
+      -0.1122,
+      -0.0672
+     ],
+     "ours_at_least_matches": false,
+     "baseline_clear_win": true
+    },
+    "pass": false
+   }
+  },
+  "result": "fail",
+  "lme_ranker_beats_fused_read": true
+ },
+ "seconds": 556,
+ "post_hoc": {
+  "note": "post hoc, added after the pre-registered verdict; not part of it",
+  "ceiling": {
+   "locomo_fused_recall_at_50": 0.8563,
+   "locomo_best_reorder_of_50_recall_at_10": 0.8563,
+   "lme_fused_recall_at_50": 0.9769
+  },
+  "ranker_variants": {
+   "all": {
+    "locomo": 0.7492,
+    "locomo_minus_base": {
+     "mean": 0.0939,
+     "ci": [
+      0.0714,
+      0.117
+     ]
+    },
+    "locomo_multi_hop": 0.5149,
+    "lme": 0.9187,
+    "lme_minus_fused": {
+     "mean": 0.0204,
+     "ci": [
+      0.0002,
+      0.0416
+     ]
+    }
+   },
+   "perm": {
+    "locomo": 0.633,
+    "locomo_minus_base": {
+     "mean": -0.0223,
+     "ci": [
+      -0.0357,
+      -0.0115
+     ]
+    },
+    "locomo_multi_hop": 0.3685,
+    "lme": 0.8675,
+    "lme_minus_fused": {
+     "mean": -0.0307,
+     "ci": [
+      -0.0456,
+      -0.0164
+     ]
+    }
+   },
+   "scores": {
+    "locomo": 0.7172,
+    "locomo_minus_base": {
+     "mean": 0.0619,
+     "ci": [
+      0.0459,
+      0.0788
+     ]
+    },
+    "locomo_multi_hop": 0.4841,
+    "lme": 0.923,
+    "lme_minus_fused": {
+     "mean": 0.0248,
+     "ci": [
+      0.0064,
+      0.044
+     ]
+    }
+   },
+   "nocontext": {
+    "locomo": 0.7219,
+    "locomo_minus_base": {
+     "mean": 0.0666,
+     "ci": [
+      0.0525,
+      0.0804
+     ]
+    },
+    "locomo_multi_hop": 0.493,
+    "lme": 0.919,
+    "lme_minus_fused": {
+     "mean": 0.0208,
+     "ci": [
+      0.0001,
+      0.0412
+     ]
+    }
+   }
+  },
+  "ranker_variants_note": "all = the pre-registered ranker refit (same config); perm = labels of another training question; scores = the 12 score and rank features; nocontext = all but history position, session index, position in session, neighbour bridge cos, same session as top 1, session share of 50, session best minus own, neighbour in top 10",
+  "feature_gain_share": {
+   "rrf": 0.2423,
+   "bridge gap to best": 0.1322,
+   "bridge z": 0.0847,
+   "fused position": 0.0707,
+   "same session as top 1": 0.0636,
+   "bm25 / best": 0.0587,
+   "log turn length": 0.0414,
+   "neighbour bridge cos": 0.028,
+   "log rank bm25": 0.0262,
+   "position in session": 0.0255,
+   "overlap fraction": 0.022,
+   "frozen cos": 0.0215,
+   "neighbour in top 10": 0.0199,
+   "history position": 0.0196,
+   "session best minus own": 0.019,
+   "bm25": 0.0187,
+   "bridge cos": 0.0184,
+   "log rank frozen": 0.018,
+   "frozen gap to best": 0.017,
+   "log rank bridge": 0.0136,
+   "session share of 50": 0.0114,
+   "session index": 0.0096,
+   "overlap count": 0.0067,
+   "log history size": 0.0057,
+   "query length": 0.0057
+  },
+  "rmm_extended": {
+   "haiku": {
+    "dense": {
+     "picks": [
+      "opened lr 3e-05",
+      "opened lr 0.0001",
+      "opened lr 0.0001",
+      "opened lr 0.0001",
+      "opened lr 0.0001"
+     ],
+     "rmm": 0.6671,
+     "ours_minus_rmm": {
+      "mean": 0.0023,
+      "ci": [
+       -0.0041,
+       0.0102
+      ]
+     },
+     "rmm_minus_base": {
+      "mean": 0.0049,
+      "ci": [
+       0.0004,
+       0.0093
+      ]
+     }
+    },
+    "fused": {
+     "picks": [
+      "opened lr 1e-05",
+      "opened lr 0.0001",
+      "opened lr 0.0003",
+      "opened lr 0.0003",
+      "opened lr 0.0003"
+     ],
+     "rmm": 0.6581,
+     "ours_minus_rmm": {
+      "mean": 0.0022,
+      "ci": [
+       -0.0037,
+       0.0086
+      ]
+     },
+     "rmm_minus_base": {
+      "mean": 0.0028,
+      "ci": [
+       0.0009,
+       0.0051
+      ]
+     }
+    },
+    "test_means_extra_lrs": {
+     "opened 1e-05": [
+      0.6608,
+      0.6547
+     ],
+     "opened 3e-05": [
+      0.6619,
+      0.6546
+     ],
+     "chat 1e-05": [
+      0.6611,
+      0.6547
+     ],
+     "chat 3e-05": [
+      0.6622,
+      0.654
+     ]
+    }
+   },
+   "visible": {
+    "dense": {
+     "picks": [
+      "opened lr 3e-05",
+      "opened lr 0.0001",
+      "opened lr 1e-05",
+      "opened lr 0.0001",
+      "chat lr 3e-05"
+     ],
+     "rmm": 0.6628,
+     "ours_minus_rmm": {
+      "mean": 0.0072,
+      "ci": [
+       -0.0015,
+       0.0148
+      ]
+     },
+     "rmm_minus_base": {
+      "mean": 0.0007,
+      "ci": [
+       -0.0028,
+       0.0042
+      ]
+     }
+    },
+    "fused": {
+     "picks": [
+      "chat lr 3e-05",
+      "opened lr 3e-05",
+      "opened lr 0.0003",
+      "opened lr 0.0003",
+      "chat lr 0.0001"
+     ],
+     "rmm": 0.659,
+     "ours_minus_rmm": {
+      "mean": 0.0003,
+      "ci": [
+       -0.0038,
+       0.004
+      ]
+     },
+     "rmm_minus_base": {
+      "mean": 0.0036,
+      "ci": [
+       0.0012,
+       0.0066
+      ]
+     }
+    },
+    "test_means_extra_lrs": {
+     "opened 1e-05": [
+      0.6611,
+      0.6548
+     ],
+     "opened 3e-05": [
+      0.6614,
+      0.6547
+     ],
+     "chat 1e-05": [
+      0.6605,
+      0.6547
+     ],
+     "chat 3e-05": [
+      0.6609,
+      0.6543
+     ]
+    }
+   }
+  }
+ }
+}
