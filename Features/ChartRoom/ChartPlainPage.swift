@@ -280,7 +280,7 @@ struct ChartPlainPage: View {
                 routineLines(parts: parts, scale: scale)
                 if LaunchFlags.has("-chartMistedPart") {
                     let linked = model.store.linkedObjects("misted", of: object)
-                    Text("seed \(seedError ?? "ok") parts \(parts.map(\.id).joined(separator: ",")) linked \(linked.map(\.title)) parent \(linked.first?.parent?.title ?? "none")")
+                    Text("seed \(seedError ?? "ok") parts \(parts.map(\.id).joined(separator: ",")) linked \(linked.map(\.title)) parent \(linked.first?.parent?.title ?? "none") routines \(model.classDef(.routine).map { model.store.objects(of: $0).map(\.title) } ?? []) steps \(model.classDef(.routineStep).map { model.store.objects(of: $0).count } ?? -1) raw \(String(describing: model.store.value("misted", of: object)))")
                         .font(.system(size: 11)).offset(x: 24, y: 560 * scale)
                 }
                 if pages?.wasWatered() == true {
