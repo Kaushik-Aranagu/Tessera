@@ -120,13 +120,11 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(door.waitForExistence(timeout: 15))
         door.tap()
         XCTAssertTrue(app.descendants(matching: .any)["chart.plainPage"].waitForExistence(timeout: 10))
-        if !app.buttons["chart.routineLink"].waitForExistence(timeout: 10) {
-            let lines = app.debugDescription.split(separator: "\n").filter {
-                $0.contains("StaticText") || $0.contains("Button")
-            }
-            print("CHART-DEBUG", lines.joined(separator: "\n"))
-        }
-        XCTAssertTrue(app.buttons["chart.routineLink"].exists, "The routine name is a link")
+        XCTAssertTrue(app.buttons["chart.routineLink"].waitForExistence(timeout: 15), "The routine name is a link")
+        // The store keeps the step's state between runs, so the test reads where the line starts and expects a toggle.
+        let lineQuery = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Last misted"))
+        XCTAssertTrue(lineQuery.firstMatch.waitForExistence(timeout: 10), "The orchid's page has the Last misted line")
+        let wasToday = lineQuery.firstMatch.label.contains("today")
         app.buttons["chart.routineLink"].tap()
         let back = app.buttons["Back to Orchid"]
         XCTAssertTrue(back.waitForExistence(timeout: 10), "The routine page's back word is Orchid")
@@ -149,10 +147,12 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         back.tap()
         XCTAssertTrue(app.descendants(matching: .any)["chart.plainPage"].waitForExistence(timeout: 10),
                       "The back word came back to the orchid's page")
-        XCTAssertTrue(
-            app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Last misted today"))
-                .firstMatch.waitForExistence(timeout: 10),
-            "Checking the step updated the orchid's line"
+        let word = wasToday ? "never" : "today"
+        let updated = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Last misted", word),
+            object: lineQuery.firstMatch
         )
+        XCTAssertEqual(XCTWaiter().wait(for: [updated], timeout: 10), .completed,
+                       "Checking the step toggled the orchid's line to \(word)")
     }
 }
