@@ -24,6 +24,21 @@ enum DateLine {
         return (String(text[..<range.lowerBound]), dates)
     }
 
+    /// A sortable number for "Oct 23" (month, then day); 0 when it is not a date. Used to tell which way a roll goes.
+    static func ordinal(_ date: String) -> Int {
+        let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        let parts = date.split(separator: " ")
+        guard parts.count == 2, let month = months.firstIndex(of: String(parts[0])),
+              let day = Int(parts[1]) else { return 0 }
+        return (month + 1) * 32 + day
+    }
+
+    /// Undo rolls the other way: the front date moved to an earlier one.
+    static func rollsDown(from old: [String], to new: [String]) -> Bool {
+        guard let before = old.first, let after = new.first else { return false }
+        return ordinal(after) < ordinal(before)
+    }
+
     /// When a place rolls, after the change: front first. Reduce Motion: at once.
     static func delay(place: Int, reduceMotion: Bool) -> Double {
         reduceMotion ? 0 : Double(place) * stagger
@@ -40,8 +55,11 @@ struct RollingDates: View {
     let text: String
     var countsDown = false
     var size: CGFloat = 20
+    var weight: Font.Weight = .medium
+    var color: Color = Theme.Colors.ink
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var down = false
 
     var body: some View {
         if let line = DateLine.parse(text) {
@@ -52,7 +70,7 @@ struct RollingDates: View {
                         Text(DateLine.separator(before: place, of: line.dates.count))
                     }
                     Text(date)
-                        .contentTransition(.numericText(countsDown: countsDown))
+                        .contentTransition(.numericText(countsDown: countsDown || down))
                         .animation(
                             reduceMotion ? nil : Theme.Motion.house.delay(DateLine.delay(
                                 place: place,
@@ -62,9 +80,13 @@ struct RollingDates: View {
                         )
                 }
             }
-            .font(.custom("Figtree", size: size, relativeTo: .body).weight(.medium))
-            .foregroundStyle(Theme.Colors.ink)
+            .font(.custom("Figtree", size: size, relativeTo: .body).weight(weight))
+            .foregroundStyle(color)
             .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .onChange(of: text) { old, new in
+                down = DateLine.rollsDown(from: DateLine.parse(old)?.dates ?? [], to: DateLine.parse(new)?.dates ?? [])
+            }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(text)
         } else {
@@ -74,6 +96,6 @@ struct RollingDates: View {
 }
 
 extension EnvironmentValues {
-    // True while an Undo rolls a page's dates back (they roll the other way).
+    /// True while an Undo rolls a page's dates back (they roll the other way).
     @Entry var datesCountDown: Bool = false
 }

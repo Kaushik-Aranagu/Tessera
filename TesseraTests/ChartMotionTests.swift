@@ -116,3 +116,23 @@ struct ChartMotionTests {
         #expect(SoulLife.smile(since: 0.8, seconds: SoulLife.drinkSmileSeconds) == 1)
     }
 }
+
+@MainActor
+struct DateLineTests {
+    @Test func parsesTrailingDatesAndKeepsThePrefix() {
+        let line = DateLine.parse("Watered Oct 25, Oct 23 and Oct 20")
+        #expect(line?.prefix == "Watered ")
+        #expect(line?.dates == ["Oct 25", "Oct 23", "Oct 20"])
+        #expect(DateLine.parse("Never watered") == nil)
+    }
+
+    @Test func staggerIsSixtyMillisecondsFrontFirstAndNoneUnderReduceMotion() {
+        #expect(abs(DateLine.delay(place: 2, reduceMotion: false) - 0.12) < 1e-9)
+        #expect(DateLine.delay(place: 2, reduceMotion: true) == 0)
+    }
+
+    @Test func undoRollsTheOtherWay() {
+        #expect(DateLine.rollsDown(from: ["Oct 25"], to: ["Oct 23"]))
+        #expect(!DateLine.rollsDown(from: ["Oct 23"], to: ["Oct 25"]))
+    }
+}

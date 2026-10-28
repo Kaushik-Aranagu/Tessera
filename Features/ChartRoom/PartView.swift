@@ -34,6 +34,7 @@ struct PartsView: View {
 struct PartView: View {
     let node: PartNode
     let accent: Color
+    @Environment(\.datesCountDown) private var datesCountDown
 
     var body: some View {
         switch node {
@@ -46,10 +47,19 @@ struct PartView: View {
         case let .lines(_, texts):
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(texts.enumerated()), id: \.offset) { index, text in
-                    FitLine(forms: FitLine.cuts(text), size: 15,
-                            color: index == 0 ? Theme.Colors.ink : Theme.Colors.inkSecondary,
-                            weight: index == 0 ? .semibold : .regular)
-                        .frame(height: 24, alignment: .leading)
+                    Group {
+                        if DateLine.parse(text) != nil {
+                            // Sheet 381: dates roll in place, front first, 60 ms apart; Undo rolls the other way.
+                            RollingDates(text: text, countsDown: datesCountDown, size: 15,
+                                         weight: index == 0 ? .semibold : .regular,
+                                         color: index == 0 ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                        } else {
+                            FitLine(forms: FitLine.cuts(text), size: 15,
+                                    color: index == 0 ? Theme.Colors.ink : Theme.Colors.inkSecondary,
+                                    weight: index == 0 ? .semibold : .regular)
+                        }
+                    }
+                    .frame(height: 24, alignment: .leading)
                 }
             }
         case let .number(_, value, unit, label):
