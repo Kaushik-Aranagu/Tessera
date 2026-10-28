@@ -127,7 +127,10 @@ final class ChartRoomUITests: SimulatorOnlyTestCase {
         ))
         .firstMatch
         if step.waitForExistence(timeout: 5) {
+            // Let the pushed page settle before the tap, and the check settle before coming back.
+            sleep(2)
             step.tap()
+            sleep(2)
         }
         // Checking the step off updates the orchid's line: proven on a real engine in ChartPagesTests
         // (`theOrchidsLineReadsNeverThenTodayAfterItsRoutineStepIsChecked`). The routine page's own check control is
