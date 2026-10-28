@@ -18,11 +18,11 @@ public enum RoomKit {
 
     public nonisolated static let kinds: [Kind] = [
         Kind(name: "title", places: ["title"], props: ["text", "color"], summary: "The room's title, 40 pt"),
-        Kind(name: "line", places: ["switcher", "caption"], props: ["text", "color", "words"],
+        Kind(name: "line", places: ["switcher", "caption", "page"], props: ["text", "color", "words"],
              summary: "One sentence, or static words; {count}, {top} and {fieldKey} fill in from the bound class"),
-        Kind(name: "lines", places: ["needs", "caption"], props: ["lines", "windows"],
+        Kind(name: "lines", places: ["needs", "caption", "page"], props: ["lines", "windows"],
              summary: "Up to two short lines; windows are static records, a|b|c with | between the parts"),
-        Kind(name: "number", places: ["keystone", "widget"], props: ["label", "unit", "field", "agg"],
+        Kind(name: "number", places: ["keystone", "widget", "page"], props: ["label", "unit", "field", "agg"],
              summary: "One big number from the bound class: agg is count, sum, avg, min, max or latest"),
         Kind(name: "row", places: ["keystone", "widget"], props: ["big", "small", "sort", "max"],
              summary: "A ranked row of numerals over names, at most 4"),

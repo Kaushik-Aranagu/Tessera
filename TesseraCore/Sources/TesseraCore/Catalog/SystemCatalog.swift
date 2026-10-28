@@ -34,7 +34,7 @@ public enum SystemCatalog {
         case belief
         case routineRun, rest
         case tessAgent, notebookPage, agentEpisode
-        case room, roomPart
+        case room, roomPart, pageLayer
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -607,6 +607,15 @@ public enum SystemCatalog {
                       FieldSpec(key: "props", name: "Props", kind: .text),
                       // The class (and optionally a query) whose objects the part shows, resolved at render time.
                       FieldSpec(key: "bind", name: "Bind", kind: .text),
+                  ]),
+        // A layer on an object's plain page (Design sheets 375 to 378): over a whole class ("every plant's page") or over
+        // one object ("just for the orchid"). Its parts are `roomPart` children, so a patch is the same four ops.
+        ClassSpec(key: .pageLayer, name: "Page Layer", parent: .thing, symbol: "doc.text", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "name", name: "Name", kind: .text),
+                      // The class (its id) the layer is for, or the one object (its id); exactly one is set.
+                      FieldSpec(key: "forClass", name: "For class", kind: .text),
+                      FieldSpec(key: "forObject", name: "For object", kind: .text),
                   ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning", fields: [

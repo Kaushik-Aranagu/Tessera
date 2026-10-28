@@ -134,16 +134,12 @@
       }
     },
     {
+      "bind" : "Plant",
       "id" : "doors",
       "kind" : "doors",
       "place" : "dial",
       "props" : {
-        "doors" : [
-          {
-            "bind" : "Plant",
-            "name" : "Plants"
-          }
-        ]
+        "summary" : "lastWatered"
       }
     },
     {
