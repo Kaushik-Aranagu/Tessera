@@ -353,7 +353,9 @@ final class ChartRoomModel {
 
     /// The reach line a widening patch shows in wine, with Allow.
     var reachLine: String? {
-        guard let pending, pending.needsAllow, let grant = pending.patch.grantLine else { return nil }
+        // The wine line comes when the drying line has ended: a change waiting for Allow (r1-spec section 9).
+        guard change == .waiting, let pending, pending.needsAllow,
+              let grant = pending.patch.grantLine else { return nil }
         return "This room can now " + Self.words(for: grant)
     }
 
@@ -446,7 +448,7 @@ final class ChartRoomModel {
         if let engine, let record {
             guard RoomPatcher.stop([record], in: engine) else { return false }
         }
-        guard fire(.touchWords) else { return false }
+        guard fire(ChangeEvent.touchWords) else { return false }
         dryTask?.cancel()
         let again = current.patch.heard
         record = nil

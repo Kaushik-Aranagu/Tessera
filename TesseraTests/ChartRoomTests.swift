@@ -235,11 +235,12 @@ struct ChartRoomTests {
         #expect(room.document.reach.isEmpty, "undo takes the grant back with the change")
     }
 
-    @Test func theActionWordWaterstheThirstiestAndUndoPutsItBack() {
+    @Test func theActionWordWaterstheThirstiestAndUndoPutsItBack() async throws {
         let said = Said()
         let room = model(said: said)
         upToTheWideningPatch(room)
         room.saySomething()
+        try await Task.sleep(for: .milliseconds(250))
         room.allow()
         room.does("water")
         #expect(said.lines.last == "Orchid, watered")
@@ -449,7 +450,7 @@ struct ChartRoomTests {
         #expect(stored.reach == ["write Plant.lastWatered"])
     }
 
-    @Test func allTwelveSentencesGoThroughTheRealPatcherAndMatchTheInMemoryRoom() throws {
+    @Test func allTwelveSentencesGoThroughTheRealPatcherAndMatchTheInMemoryRoom() async throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
         let app = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let room = model()
@@ -458,6 +459,7 @@ struct ChartRoomTests {
             room.saySomething()
             #expect(room.pending != nil, "sentence \(index + 1) refused: \(room.note?.line ?? "nothing")")
             if room.pending?.needsAllow == true {
+                try await Task.sleep(for: .milliseconds(250))
                 room.allow()
             } else {
                 room.tapGhost()
